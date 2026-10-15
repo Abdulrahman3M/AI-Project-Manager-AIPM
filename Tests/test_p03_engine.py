@@ -15,6 +15,34 @@ from aipm_core.storage import initialize_project_state, _atomic_json
 
 
 class CoreEngineTests(unittest.TestCase):
+    def test_invalid_pending_commit_preserves_state_history_and_evidence(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+            project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
+            engine = CoreEngine({'managed': project})
+            engine.execute(CommandEnvelope('first', 'state.set-next-action', 'tester', 'managed', 0, 'first-key', {'next_action': 'Existing'}))
+            manifest_path = project.state_root / 'State-Manifest.json'
+            manifest = json.loads(manifest_path.read_text())
+            manifest.update(revision=2, tasks=[])
+            pending = project.state_root / 'History/Pending-Commit.json'
+            pending.write_text(json.dumps({'schema_version': '1.0', 'manifest': manifest, 'event': {'schema_version': '1.0', 'request_id': 'bad', 'command': 'state.set-next-action', 'actor': 'tester', 'project_id': 'managed', 'revision': 2, 'idempotency_key': None, 'input': {'next_action': 'Bad'}}}))
+            before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+            result = engine.execute(CommandEnvelope('read', 'state.read', 'tester', 'managed', 0, None, {}))
+            self.assertEqual(result['status'], 'BLOCKED')
+            after = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+            self.assertEqual(after, before)
+
+    def test_corrupt_history_blocks_idempotency_without_writes(self):
+        for content in ('{truncated', '[]'):
+            with self.subTest(content=content), tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+                project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
+                event = project.state_root / 'History/Events/00000000000000000001.json'
+                event.write_text(content)
+                before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+                result = CoreEngine({'managed': project}).execute(CommandEnvelope('change', 'state.set-next-action', 'tester', 'managed', 0, 'key', {'next_action': 'Unsafe'}))
+                self.assertEqual(result['status'], 'BLOCKED')
+                self.assertEqual(result['reason'], 'INVALID_HISTORY')
+                after = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+                self.assertEqual(after, before)
     def test_git_observation_write_conflict_and_replay(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
