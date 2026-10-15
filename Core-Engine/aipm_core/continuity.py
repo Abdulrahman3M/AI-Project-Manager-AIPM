@@ -1,7 +1,7 @@
 """P05 state-only continuity, snapshots, and nonce-protected writer leases."""
 from __future__ import annotations
 from datetime import datetime, timezone, timedelta
-import json, secrets, shutil
+import json, secrets, shutil, os
 from pathlib import Path
 from .storage import ManagedProject, _atomic_json
 
@@ -26,12 +26,18 @@ class ContinuityManager:
  def acquire_lock(self, resource: str, actor: str, lease_seconds: int=300) -> str:
   path=self.project.state_root/"Locks"/f"{resource}.json"
   if path.exists(): raise LockError("LOCK_HELD")
-  now=datetime.now(timezone.utc); nonce=secrets.token_urlsafe(16); _atomic_json(path,{"actor":actor,"nonce":nonce,"created_at":now.isoformat(),"expires_at":(now+timedelta(seconds=lease_seconds)).isoformat()}); return nonce
- def recover_expired_lock(self, resource: str, pid_is_alive: bool) -> None:
+  now=datetime.now(timezone.utc); nonce=secrets.token_urlsafe(16); _atomic_json(path,{"actor":actor,"pid":os.getpid(),"nonce":nonce,"created_at":now.isoformat(),"expires_at":(now+timedelta(seconds=lease_seconds)).isoformat()}); return nonce
+ def recover_expired_lock(self, resource: str, pid_is_alive: bool|None=None) -> None:
   path=self.project.state_root/"Locks"/f"{resource}.json"; data=json.loads(path.read_text(encoding="utf-8"))
-  if pid_is_alive or datetime.fromisoformat(data["expires_at"])>datetime.now(timezone.utc): raise LockError("LOCK_NOT_SAFE_TO_RECOVER")
+  alive=pid_is_alive if pid_is_alive is not None else _pid_alive(data.get("pid"))
+  if alive or datetime.fromisoformat(data["expires_at"])>datetime.now(timezone.utc): raise LockError("LOCK_NOT_SAFE_TO_RECOVER")
   path.unlink()
  def release_lock(self, resource: str, nonce: str) -> None:
   path=self.project.state_root/"Locks"/f"{resource}.json"
   if not path.exists() or json.loads(path.read_text(encoding="utf-8"))["nonce"]!=nonce: raise LockError("LOCK_NONCE_MISMATCH")
   path.unlink()
+
+def _pid_alive(pid: int|None) -> bool:
+ if not pid: return False
+ try: os.kill(pid,0); return True
+ except OSError: return False
