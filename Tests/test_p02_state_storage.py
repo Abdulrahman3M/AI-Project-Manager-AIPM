@@ -8,10 +8,14 @@ import unittest
 
 TEST_WORKSPACE = Path(__file__).resolve().parents[1] / ".test-workspace"
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Core-Engine"))
-from aipm_core.storage import ProjectRegistry, StateError, initialize_project_state
+from aipm_core.storage import ProjectRegistry, StateError, default_registry_path, initialize_project_state
 
 
 class StateStorageTests(unittest.TestCase):
+    def test_default_registry_is_outside_platform_root(self) -> None:
+        path = default_registry_path()
+        self.assertEqual(path.name, "registry.json")
+        self.assertIn("AI-Project-Manager", str(path.parent))
     def test_initializes_two_distinct_external_projects_and_registry_has_pointers_only(self) -> None:
         TEST_WORKSPACE.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:

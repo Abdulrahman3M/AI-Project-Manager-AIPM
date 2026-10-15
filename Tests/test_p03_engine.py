@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -13,6 +14,12 @@ from aipm_core.storage import initialize_project_state
 
 
 class CoreEngineTests(unittest.TestCase):
+    def test_cli_lists_pointer_only_registry_as_json(self) -> None:
+        with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
+            registry = Path(temporary) / "registry.json"
+            registry.write_text(json.dumps({"schema_version":"1.0","projects":[{"project_id":"one","root_path":"C:/One","alias":"One"}],"preferences":{}}))
+            result = subprocess.run([sys.executable, str(ROOT / "Core-Engine" / "aipm.py"), "list", "--registry", str(registry)], capture_output=True, text=True, check=True)
+            self.assertEqual(json.loads(result.stdout)["projects"][0]["project_id"], "one")
     def test_state_read_and_revisioned_event_write_are_idempotent(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
             project = initialize_project_state(Path(temporary) / "Managed", "managed", "Managed")

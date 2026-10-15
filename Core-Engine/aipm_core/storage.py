@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import re
 import tempfile
+import os
 
 STATE_ROOT_NAME = "Shared-Project-State-Manager"
 LEGACY_ROOT_NAME = "Shared-Project-State"
@@ -15,6 +16,12 @@ PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$")
 
 class StateError(ValueError):
     """Raised when a state operation would violate AIPM isolation rules."""
+
+
+def default_registry_path() -> Path:
+    """Return the pointer-only per-user registry location, never a repo path."""
+    base = Path(os.environ.get("LOCALAPPDATA", Path.home() / ".local"))
+    return base / "AI-Project-Manager" / "registry.json"
 
 
 @dataclass(frozen=True)
@@ -84,6 +91,8 @@ class ProjectRegistry:
 
     def __init__(self, path: Path) -> None:
         self.path = _canonical(path)
+        if self.path.name != "registry.json":
+            raise StateError("registry must be named registry.json")
 
     def register(self, project: ManagedProject) -> None:
         data = {"schema_version": "1.0", "projects": [], "preferences": {}}
