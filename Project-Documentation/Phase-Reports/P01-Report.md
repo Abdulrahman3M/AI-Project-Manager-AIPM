@@ -11,6 +11,7 @@ PASS — 2026-10-15
 - Migrated 17 approved General Skills from the read-only attached source.
 - Excluded `import-memory`, `morning`, and the entire `02-Skills-Personal` tree.
 - Preserved 16 Skills byte-for-byte. Applied the owner-approved Personal Skill catalog removal to `project-orchestrator`.
+- Registered the owner-added standalone Prompt library at `02-Prompt-General`; it is an explicit AIPM naming exception and contains no Skill-owned Prompt.
 
 ## Evidence
 
