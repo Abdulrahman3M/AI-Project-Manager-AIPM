@@ -171,6 +171,53 @@ class TaskLifecycleTests(unittest.TestCase):
         self.assertEqual(result['reason'], 'INVALID_STATE')
         self.assertEqual({p.relative_to(self.project.state_root): p.read_bytes() for p in self.project.state_root.rglob('*') if p.is_file()}, before)
 
+    def test_non_task_pending_cannot_smuggle_task_state(self):
+        original = Path.replace
+        def fail_event(source, target):
+            if Path(target).parent.name == 'Events':
+                raise OSError('Injected Event Replace Failure')
+            return original(source, target)
+        cases = [('state.set-next-action', {'next_action': 'Next'}), ('state.record-git-observation', {'branch': 'main', 'head_sha': 'a' * 40, 'diff_fingerprint': 'b' * 64})]
+        for number, (name, payload) in enumerate(cases):
+            with self.subTest(command=name):
+                project = initialize_project_state(Path(self.workspace.name) / f'Case-{number}', 'managed', 'Managed')
+                engine = CoreEngine({'managed': project})
+                task = TaskOperations(engine, project).create('Demo', 'Scope')
+                pending = project.state_root / 'History/Pending-Commit.json'
+                command = CommandEnvelope('pending', name, 'tester', 'managed', 1, None, payload)
+                with patch.object(Path, 'replace', fail_event):
+                    self.assertEqual(engine.execute(command)['reason'], 'STATE_COMMIT_FAILED')
+                intent = json.loads(pending.read_text())
+                intent['manifest']['tasks'][task.name]['verification'] = {'result': 'PASS', 'evidence': 'Forged Evidence'}
+                intent['manifest']['tasks'][task.name]['report'] = 'Forged Report'
+                intent['manifest']['task_status'] = 'COMPLETE'
+                pending.write_text(json.dumps(intent))
+                before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+                fresh = CoreEngine({'managed': project})
+                result = fresh.execute(CommandEnvelope('read', 'state.read', 'tester', 'managed', 0, None, {}))
+                self.assertEqual(result['status'], 'BLOCKED')
+                self.assertEqual({p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}, before)
+
+    def test_pending_task_cannot_add_unrelated_fields(self):
+        task = self.ops().create('Demo', 'Scope')
+        original = Path.replace
+        def fail_event(source, target):
+            if Path(target).parent.name == 'Events':
+                raise OSError('Injected Event Replace Failure')
+            return original(source, target)
+        command = CommandEnvelope('plan', 'task.plan', 'tester', 'managed', 1, None, {'task_id': task.name, 'text': 'Plan'})
+        with patch.object(Path, 'replace', fail_event):
+            self.assertEqual(self.engine.execute(command)['reason'], 'STATE_COMMIT_FAILED')
+        pending = self.project.state_root / 'History/Pending-Commit.json'
+        intent = json.loads(pending.read_text())
+        intent['manifest']['unrelated_field'] = 'Injected'
+        pending.write_text(json.dumps(intent))
+        before = {p.relative_to(self.project.state_root): p.read_bytes() for p in self.project.state_root.rglob('*') if p.is_file()}
+        fresh = CoreEngine({'managed': self.project})
+        result = fresh.execute(CommandEnvelope('read', 'state.read', 'tester', 'managed', 0, None, {}))
+        self.assertEqual(result['status'], 'BLOCKED')
+        self.assertEqual({p.relative_to(self.project.state_root): p.read_bytes() for p in self.project.state_root.rglob('*') if p.is_file()}, before)
+
 
 class OrchestratorTests(unittest.TestCase):
     def test_task_operations_create_plan_status_verify_report_and_blockers(self) -> None:

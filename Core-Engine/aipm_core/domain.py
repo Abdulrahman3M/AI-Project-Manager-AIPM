@@ -149,6 +149,20 @@ class CoreEngine:
             raise StateError("Pending Commit Conflicts With State")
         if manifest["schema_version"] != "1.1" or manifest["updated_by"] != event["actor"]:
             raise StateError("Pending Commit Metadata Mismatch")
+        if current['revision'] == revision - 1:
+            permitted = {'revision', 'schema_version', 'updated_at', 'updated_by'}
+            if event['command'] in cls.TASK_COMMANDS:
+                permitted.update({'tasks', 'task_id', 'task_status'})
+            elif event['command'] == 'state.set-next-action':
+                permitted.add('next_action')
+            elif event['command'] == 'state.record-git-observation':
+                permitted.update({'branch', 'head_sha', 'diff_fingerprint'})
+            previous = {**current}
+            previous.setdefault('tasks', {})
+            previous.setdefault('diff_fingerprint', None)
+            unrelated = (previous.keys() | manifest.keys()) - permitted
+            if any(key not in previous or key not in manifest or previous[key] != manifest[key] for key in unrelated):
+                raise StateError('Pending Commit Changes Unrelated State')
         history = cls._history(project, revision, pending_revision=revision)
         if any(record["revision"] == revision and record != event for record in history):
             raise StateError("Pending Commit Conflicts With History")
@@ -163,10 +177,6 @@ class CoreEngine:
             cls._apply_task(expected, event['command'], event['input'])
             if any(manifest[key] != expected[key] for key in ('tasks', 'task_id', 'task_status')):
                 raise StateError('Pending Commit Task Mismatch')
-            if current['revision'] == revision - 1:
-                allowed = {'tasks', 'task_id', 'task_status', 'revision', 'schema_version', 'updated_at', 'updated_by'}
-                if any(manifest.get(key) != value for key, value in current.items() if key not in allowed):
-                    raise StateError('Pending Commit Task Changes Unrelated State')
         elif event["command"] == "state.set-next-action":
             action = event["input"].get("next_action")
             if not isinstance(action, str) or not action.strip() or manifest["next_action"] != action:
