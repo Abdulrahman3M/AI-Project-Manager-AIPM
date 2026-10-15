@@ -51,6 +51,33 @@ class StateStorageTests(unittest.TestCase):
                     self.assertFalse((project / "Shared-Project-State-Manager").exists())
                     self.assertEqual(list(project.glob(".aipm-*")), [])
 
+    def test_inherited_directory_acl_denial_leaves_no_partial_state_tree(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            project = Path(temporary) / "Project"
+            project.mkdir()
+            access_check = project / "Access-Check"
+            access_check.mkdir()
+            identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, check=True)
+            sid = next(csv.reader(identity.stdout.splitlines()))[1]
+            denial = subprocess.run(["icacls", str(project), "/deny", f"*{sid}:(CI)(IO)(AD)"], capture_output=True, text=True)
+            try:
+                self.assertEqual(denial.returncode, 0, f"UNVERIFIED: Windows ACL denial failed: {denial.stdout} {denial.stderr}")
+                permitted_file = access_check / "Permitted.txt"
+                permitted_file.write_text("File Creation Is Allowed", encoding="utf-8")
+                permitted_file.unlink()
+                with self.assertRaises(PermissionError, msg="UNVERIFIED: ACL did not deny real child-directory creation"):
+                    (access_check / "Denied-Directory").mkdir()
+                try:
+                    with self.assertRaisesRegex(StateError, "access denied"):
+                        initialize_project_state(project, "project", "Project")
+                finally:
+                    self.assertFalse((project / "Shared-Project-State-Manager").exists())
+                    self.assertEqual(set(project.iterdir()), {access_check})
+            finally:
+                restore = subprocess.run(["icacls", str(project), "/remove:d", f"*{sid}", "/t", "/c"], capture_output=True, text=True)
+                self.assertEqual(restore.returncode, 0, f"ACL restoration failed: {restore.stdout} {restore.stderr}")
+
     def test_registry_acl_denial_preserves_existing_registry(self) -> None:
         TEST_WORKSPACE.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:

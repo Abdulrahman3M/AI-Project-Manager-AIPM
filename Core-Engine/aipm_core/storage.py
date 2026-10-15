@@ -6,9 +6,11 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+import shutil
 import stat
 import tempfile
 import os
+from uuid import uuid4
 
 STATE_ROOT_NAME = "Shared-Project-State-Manager"
 LEGACY_ROOT_NAME = "Shared-Project-State"
@@ -108,13 +110,36 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
     except PermissionError as error:
         raise StateError(f"access denied: {root}") from error
     _probe_access(root)
-    state_root.mkdir()
-    for relative in ("Tasks", "Tool-State", "Temporary-Files", "Cache", "Test-Workspace", "Logs", "Quarantine/Items", "Quarantine/Records", "History/Snapshots", "History/Events", "Locks", "Archive"):
-        (state_root / relative).mkdir(parents=True, exist_ok=True)
-    now = _timestamp()
-    _atomic_json(state_root / "Project-Manifest.json", {"schema_version": "1.0", "project_id": project_id, "project_alias": alias, "state_root_name": STATE_ROOT_NAME, "created_at": now, "source_root_fingerprint": None, "active_task_id": None})
-    _atomic_json(state_root / "State-Manifest.json", {"schema_version": "1.1", "tasks": {}, "diff_fingerprint": None, "revision": 0, "project_id": project_id, "task_id": None, "task_status": "NOT-STARTED", "active_phase": None, "state_health": "CONSISTENT", "last_verified_action": "P02 initialization", "next_action": None, "branch": None, "head_sha": None, "updated_at": now, "updated_by": "aipm-core"})
-    (state_root / "README.md").write_text("# Shared Project State Manager\n\nManaged operational state for this project.\n", encoding="utf-8")
+    staging = None
+    try:
+        # Exercise inherited permissions while building a complete, owned tree.
+        # The public state path is published only after every operation succeeds.
+        # Default mkdir permissions preserve the project's inherited Windows ACL.
+        # tempfile.mkdtemp uses mode 0700, which installs a private Windows ACL.
+        candidate = root / f".aipm-init-{uuid4().hex}"
+        candidate.mkdir()
+        staging = candidate
+        _probe_access(staging)
+        for relative in ("Tasks", "Tool-State", "Temporary-Files", "Cache", "Test-Workspace", "Logs", "Quarantine/Items", "Quarantine/Records", "History/Snapshots", "History/Events", "Locks", "Archive"):
+            (staging / relative).mkdir(parents=True, exist_ok=True)
+        now = _timestamp()
+        _atomic_json(staging / "Project-Manifest.json", {"schema_version": "1.0", "project_id": project_id, "project_alias": alias, "state_root_name": STATE_ROOT_NAME, "created_at": now, "source_root_fingerprint": None, "active_task_id": None})
+        _atomic_json(staging / "State-Manifest.json", {"schema_version": "1.1", "tasks": {}, "diff_fingerprint": None, "revision": 0, "project_id": project_id, "task_id": None, "task_status": "NOT-STARTED", "active_phase": None, "state_health": "CONSISTENT", "last_verified_action": "P02 initialization", "next_action": None, "branch": None, "head_sha": None, "updated_at": now, "updated_by": "aipm-core"})
+        (staging / "README.md").write_text("# Shared Project State Manager\n\nManaged operational state for this project.\n", encoding="utf-8")
+        if state_root.exists():
+            raise StateError("managed state root already exists; initialization never overwrites")
+        staging.rename(state_root)
+        staging = None
+    except PermissionError as error:
+        raise StateError(f"access denied: {root}") from error
+    except OSError as error:
+        raise StateError(f"state initialization failed: {root}") from error
+    finally:
+        if staging is not None:
+            try:
+                shutil.rmtree(staging)
+            except PermissionError as error:
+                raise StateError(f"access denied during initialization cleanup: {staging}") from error
     return ManagedProject(project_id, alias, root, state_root)
 
 
