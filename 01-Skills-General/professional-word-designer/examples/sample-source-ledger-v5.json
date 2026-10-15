@@ -1,0 +1,25 @@
+{
+  "sources": [
+    {
+      "source_id": "SRC-001",
+      "type": "official-document",
+      "title": "Demonstration Source Title",
+      "authors": [],
+      "organization": "Example authority",
+      "date": "2026",
+      "publisher": null,
+      "journal": null,
+      "doi": null,
+      "url": "https://example.com/source",
+      "retrieved": "2026-10-04",
+      "source_class": "primary/original",
+      "verification_status": "VERIFIED",
+      "limitations": [
+        "Demonstration metadata only; replace with real consulted evidence."
+      ],
+      "supports_claims": [
+        "CLM-001"
+      ]
+    }
+  ]
+}

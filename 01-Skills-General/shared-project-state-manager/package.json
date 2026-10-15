@@ -1,0 +1,13 @@
+{
+  "name": "shared-project-state-manager-tools",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Local helper CLI for Shared Project State Manager",
+  "type": "module",
+  "engines": {"node": ">=18"},
+  "scripts": {
+    "sps": "node scripts/sps.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:python": "python -m unittest discover -s tests -p 'test_*.py'"
+  }
+}

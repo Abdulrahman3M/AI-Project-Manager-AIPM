@@ -1,0 +1,16 @@
+{
+  "schema_version": "2.0",
+  "task_id": "{{TASK_ID}}",
+  "task_title": "{{TASK_TITLE}}",
+  "task_status": "IN-PROGRESS",
+  "active_phase": "P01",
+  "last_completed_phase": null,
+  "updated_by": "{{AGENT}}",
+  "updated_at": "{{UPDATED_AT}}",
+  "branch": "{{BRANCH}}",
+  "head_sha": "{{HEAD_SHA}}",
+  "working_tree": "{{WORKING_TREE}}",
+  "state_health": "CONSISTENT",
+  "next_action": "Reconcile Shared Project State with actual project/repository/runtime state.",
+  "file_operations_policy": "QUARANTINE-FIRST"
+}

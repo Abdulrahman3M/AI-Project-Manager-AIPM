@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared Project State Manifest",
+  "type": "object",
+  "required": ["schema_version","task_id","task_title","task_status","active_phase","updated_by","updated_at","state_health","next_action","file_operations_policy"],
+  "properties": {
+    "schema_version": {"const": "2.0"},
+    "task_id": {"type": "string", "minLength": 1},
+    "task_title": {"type": "string", "minLength": 1},
+    "task_status": {"enum": ["NOT-STARTED","IN-PROGRESS","BLOCKED","READY-FOR-VERIFY","COMPLETE"]},
+    "active_phase": {"type": ["string","null"]},
+    "last_completed_phase": {"type": ["string","null"]},
+    "updated_by": {"type": "string", "minLength": 1},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "branch": {"type": ["string","null"]},
+    "head_sha": {"type": ["string","null"]},
+    "working_tree": {"enum": ["clean","dirty","UNKNOWN"]},
+    "state_health": {"enum": ["CONSISTENT","STATE-DIVERGED","RECOVERY-IN-PROGRESS","BLOCKED"]},
+    "next_action": {"type": "string", "minLength": 1},
+    "file_operations_policy": {"const": "QUARANTINE-FIRST"}
+  },
+  "additionalProperties": true
+}

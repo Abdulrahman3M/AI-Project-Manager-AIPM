@@ -1,0 +1,1746 @@
+{
+  "version": "5.0.0",
+  "policy": "Every normative v5 requirement must have at least one mapped example.",
+  "requirement_count": 124,
+  "example_count": 124,
+  "requirements": [
+    {
+      "id": "REQ-DC-01",
+      "capability": "Document Contract",
+      "rule": "Create the contract before substantive drafting.",
+      "reference": "references/document-contract-v5.md"
+    },
+    {
+      "id": "REQ-DC-02",
+      "capability": "Document Contract",
+      "rule": "Preserve explicit owner constraints verbatim in the contract.",
+      "reference": "references/document-contract-v5.md"
+    },
+    {
+      "id": "REQ-DC-03",
+      "capability": "Document Contract",
+      "rule": "Label inferred defaults as defaults rather than owner instructions.",
+      "reference": "references/document-contract-v5.md"
+    },
+    {
+      "id": "REQ-DC-04",
+      "capability": "Document Contract",
+      "rule": "Resolve large-document and template-fidelity modes explicitly.",
+      "reference": "references/document-contract-v5.md"
+    },
+    {
+      "id": "REQ-PL-01",
+      "capability": "Research Plan",
+      "rule": "Map each research question to planned evidence.",
+      "reference": "references/research-plan.md"
+    },
+    {
+      "id": "REQ-PL-02",
+      "capability": "Research Plan",
+      "rule": "Write inclusion and exclusion criteria before broad synthesis.",
+      "reference": "references/research-plan.md"
+    },
+    {
+      "id": "REQ-PL-03",
+      "capability": "Research Plan",
+      "rule": "Define evidence-based stopping criteria.",
+      "reference": "references/research-plan.md"
+    },
+    {
+      "id": "REQ-PL-04",
+      "capability": "Research Plan",
+      "rule": "Record tool and access limits before relying on unavailable evidence.",
+      "reference": "references/research-plan.md"
+    },
+    {
+      "id": "REQ-RI-01",
+      "capability": "Research Intelligence",
+      "rule": "Start research with explicit questions and scope.",
+      "reference": "references/research-intelligence.md"
+    },
+    {
+      "id": "REQ-RI-02",
+      "capability": "Research Intelligence",
+      "rule": "Separate candidate-source discovery from source acceptance.",
+      "reference": "references/research-intelligence.md"
+    },
+    {
+      "id": "REQ-RI-03",
+      "capability": "Research Intelligence",
+      "rule": "Stop research by evidence criteria rather than arbitrary source count.",
+      "reference": "references/research-intelligence.md"
+    },
+    {
+      "id": "REQ-RI-04",
+      "capability": "Research Intelligence",
+      "rule": "Carry unresolved evidence gaps into limitations and QA.",
+      "reference": "references/research-intelligence.md"
+    },
+    {
+      "id": "REQ-SQ-01",
+      "capability": "Source Quality",
+      "rule": "Record a source class for every accepted source.",
+      "reference": "references/source-quality-model.md"
+    },
+    {
+      "id": "REQ-SQ-02",
+      "capability": "Source Quality",
+      "rule": "Prefer primary evidence for authoritative claims when feasible.",
+      "reference": "references/source-quality-model.md"
+    },
+    {
+      "id": "REQ-SQ-03",
+      "capability": "Source Quality",
+      "rule": "Assess freshness relative to the claim and domain.",
+      "reference": "references/source-quality-model.md"
+    },
+    {
+      "id": "REQ-SQ-04",
+      "capability": "Source Quality",
+      "rule": "Do not treat repeated secondary reporting as a substitute for primary support.",
+      "reference": "references/source-quality-model.md"
+    },
+    {
+      "id": "REQ-RM-01",
+      "capability": "Reference Metadata and Interchange",
+      "rule": "Validate bibliographic metadata appropriate to source type.",
+      "reference": "references/reference-metadata-interchange.md"
+    },
+    {
+      "id": "REQ-RM-02",
+      "capability": "Reference Metadata and Interchange",
+      "rule": "Never guess a DOI, URL, author, date, page or publisher field.",
+      "reference": "references/reference-metadata-interchange.md"
+    },
+    {
+      "id": "REQ-RM-03",
+      "capability": "Reference Metadata and Interchange",
+      "rule": "Deduplicate without merging distinct editions or versions.",
+      "reference": "references/reference-metadata-interchange.md"
+    },
+    {
+      "id": "REQ-RM-04",
+      "capability": "Reference Metadata and Interchange",
+      "rule": "Export CSL-JSON, BibTeX/BibLaTeX or RIS without inventing absent fields.",
+      "reference": "references/reference-metadata-interchange.md"
+    },
+    {
+      "id": "REQ-EL-01",
+      "capability": "Evidence Ledger",
+      "rule": "Assign a stable SRC identifier to every accepted source.",
+      "reference": "schemas/source-ledger.schema.json"
+    },
+    {
+      "id": "REQ-EL-02",
+      "capability": "Evidence Ledger",
+      "rule": "Record which claims each source actually supports.",
+      "reference": "schemas/source-ledger.schema.json"
+    },
+    {
+      "id": "REQ-EL-03",
+      "capability": "Evidence Ledger",
+      "rule": "Preserve source limitations and verification status.",
+      "reference": "schemas/source-ledger.schema.json"
+    },
+    {
+      "id": "REQ-EL-04",
+      "capability": "Evidence Ledger",
+      "rule": "Keep source identifiers stable across citations, visuals and QA artifacts.",
+      "reference": "schemas/source-ledger.schema.json"
+    },
+    {
+      "id": "REQ-CE-01",
+      "capability": "Claim–Evidence Matrix",
+      "rule": "Assign stable IDs to critical and major factual claims.",
+      "reference": "references/claim-evidence-system.md"
+    },
+    {
+      "id": "REQ-CE-02",
+      "capability": "Claim–Evidence Matrix",
+      "rule": "Map each supported claim to the exact supporting source proposition.",
+      "reference": "references/claim-evidence-system.md"
+    },
+    {
+      "id": "REQ-CE-03",
+      "capability": "Claim–Evidence Matrix",
+      "rule": "Preserve materially contradictory evidence.",
+      "reference": "references/claim-evidence-system.md"
+    },
+    {
+      "id": "REQ-CE-04",
+      "capability": "Claim–Evidence Matrix",
+      "rule": "Block clean release for unsupported critical claims unless explicitly treated as unresolved.",
+      "reference": "references/claim-evidence-system.md"
+    },
+    {
+      "id": "REQ-CG-01",
+      "capability": "Contradiction and Gap Analysis",
+      "rule": "Normalize scope before declaring two sources contradictory.",
+      "reference": "references/contradiction-gap-analysis.md"
+    },
+    {
+      "id": "REQ-CG-02",
+      "capability": "Contradiction and Gap Analysis",
+      "rule": "Disclose material genuine conflicts.",
+      "reference": "references/contradiction-gap-analysis.md"
+    },
+    {
+      "id": "REQ-CG-03",
+      "capability": "Contradiction and Gap Analysis",
+      "rule": "Record evidence gaps and their impact.",
+      "reference": "references/contradiction-gap-analysis.md"
+    },
+    {
+      "id": "REQ-CG-04",
+      "capability": "Contradiction and Gap Analysis",
+      "rule": "Never fabricate consensus from incompatible evidence.",
+      "reference": "references/contradiction-gap-analysis.md"
+    },
+    {
+      "id": "REQ-AD-01",
+      "capability": "Academic Document Modes",
+      "rule": "Select the document mode before outline generation.",
+      "reference": "references/academic-document-types.md"
+    },
+    {
+      "id": "REQ-AD-02",
+      "capability": "Academic Document Modes",
+      "rule": "Use section grammar appropriate to the selected mode.",
+      "reference": "references/academic-document-types.md"
+    },
+    {
+      "id": "REQ-AD-03",
+      "capability": "Academic Document Modes",
+      "rule": "Reserve labels such as systematic review for matching methodology.",
+      "reference": "references/academic-document-types.md"
+    },
+    {
+      "id": "REQ-AD-04",
+      "capability": "Academic Document Modes",
+      "rule": "Allow owner or journal rules to override generic mode defaults.",
+      "reference": "references/academic-document-types.md"
+    },
+    {
+      "id": "REQ-AS-01",
+      "capability": "Academic Structure Router",
+      "rule": "Generate structure from mode, audience and research question.",
+      "reference": "references/academic-structure-router.md"
+    },
+    {
+      "id": "REQ-AS-02",
+      "capability": "Academic Structure Router",
+      "rule": "Give every major section a declared purpose.",
+      "reference": "references/academic-structure-router.md"
+    },
+    {
+      "id": "REQ-AS-03",
+      "capability": "Academic Structure Router",
+      "rule": "Remove unjustified placeholder sections.",
+      "reference": "references/academic-structure-router.md"
+    },
+    {
+      "id": "REQ-AS-04",
+      "capability": "Academic Structure Router",
+      "rule": "Keep heading hierarchy stable for navigation and chapter splitting.",
+      "reference": "references/academic-structure-router.md"
+    },
+    {
+      "id": "REQ-LR-01",
+      "capability": "Literature Review Engine",
+      "rule": "Define the review question and inclusion boundary.",
+      "reference": "references/literature-review-engine.md"
+    },
+    {
+      "id": "REQ-LR-02",
+      "capability": "Literature Review Engine",
+      "rule": "Group evidence by meaningful themes, methods, populations or explanations.",
+      "reference": "references/literature-review-engine.md"
+    },
+    {
+      "id": "REQ-LR-03",
+      "capability": "Literature Review Engine",
+      "rule": "Do not accept serial one-source summaries as final synthesis.",
+      "reference": "references/literature-review-engine.md"
+    },
+    {
+      "id": "REQ-LR-04",
+      "capability": "Literature Review Engine",
+      "rule": "Link gaps and contradictions back to evidence records.",
+      "reference": "references/literature-review-engine.md"
+    },
+    {
+      "id": "REQ-CS-01",
+      "capability": "Citation Style Engine",
+      "rule": "Select and record one citation style.",
+      "reference": "references/citation-style-engine.md"
+    },
+    {
+      "id": "REQ-CS-02",
+      "capability": "Citation Style Engine",
+      "rule": "Keep in-text citations or notes consistent with the bibliography style.",
+      "reference": "references/citation-style-engine.md"
+    },
+    {
+      "id": "REQ-CS-03",
+      "capability": "Citation Style Engine",
+      "rule": "Use real Word notes when claiming note-based citations.",
+      "reference": "references/citation-style-engine.md"
+    },
+    {
+      "id": "REQ-CS-04",
+      "capability": "Citation Style Engine",
+      "rule": "Never fabricate live citation-manager behavior.",
+      "reference": "references/citation-style-engine.md"
+    },
+    {
+      "id": "REQ-AF-01",
+      "capability": "Academic Front Matter",
+      "rule": "Choose front matter from document type and submission rules.",
+      "reference": "references/academic-front-matter.md"
+    },
+    {
+      "id": "REQ-AF-02",
+      "capability": "Academic Front Matter",
+      "rule": "Regenerate the abstract from the final content.",
+      "reference": "references/academic-front-matter.md"
+    },
+    {
+      "id": "REQ-AF-03",
+      "capability": "Academic Front Matter",
+      "rule": "Use keywords that represent actual searchable concepts.",
+      "reference": "references/academic-front-matter.md"
+    },
+    {
+      "id": "REQ-AF-04",
+      "capability": "Academic Front Matter",
+      "rule": "Never invent authorship, affiliation, funding, ORCID or compliance statements.",
+      "reference": "references/academic-front-matter.md"
+    },
+    {
+      "id": "REQ-ME-01",
+      "capability": "Math and Equations",
+      "rule": "Keep mathematics semantically correct and editable where supported.",
+      "reference": "references/math-equations.md"
+    },
+    {
+      "id": "REQ-ME-02",
+      "capability": "Math and Equations",
+      "rule": "Define symbols and variables consistently.",
+      "reference": "references/math-equations.md"
+    },
+    {
+      "id": "REQ-ME-03",
+      "capability": "Math and Equations",
+      "rule": "Use stable equation numbering and references when needed.",
+      "reference": "references/math-equations.md"
+    },
+    {
+      "id": "REQ-ME-04",
+      "capability": "Math and Equations",
+      "rule": "Treat rasterized equations as a disclosed fallback, not the default.",
+      "reference": "references/math-equations.md"
+    },
+    {
+      "id": "REQ-GI-01",
+      "capability": "Glossary, Acronyms and Index",
+      "rule": "Include only glossary terms actually used and needed.",
+      "reference": "references/glossary-acronyms-index.md"
+    },
+    {
+      "id": "REQ-GI-02",
+      "capability": "Glossary, Acronyms and Index",
+      "rule": "Maintain one canonical expansion for each acronym.",
+      "reference": "references/glossary-acronyms-index.md"
+    },
+    {
+      "id": "REQ-GI-03",
+      "capability": "Glossary, Acronyms and Index",
+      "rule": "Do not add unused glossary or index filler.",
+      "reference": "references/glossary-acronyms-index.md"
+    },
+    {
+      "id": "REQ-GI-04",
+      "capability": "Glossary, Acronyms and Index",
+      "rule": "Claim dynamic Word indexing only when real fields are present and verified.",
+      "reference": "references/glossary-acronyms-index.md"
+    },
+    {
+      "id": "REQ-LD-01",
+      "capability": "Long Document Layout",
+      "rule": "Prevent stranded headings and captions.",
+      "reference": "references/long-document-layout.md"
+    },
+    {
+      "id": "REQ-LD-02",
+      "capability": "Long Document Layout",
+      "rule": "Use section breaks for orientation changes.",
+      "reference": "references/long-document-layout.md"
+    },
+    {
+      "id": "REQ-LD-03",
+      "capability": "Long Document Layout",
+      "rule": "Repeat headers and manage continuation for long tables.",
+      "reference": "references/long-document-layout.md"
+    },
+    {
+      "id": "REQ-LD-04",
+      "capability": "Long Document Layout",
+      "rule": "Verify page, chapter, appendix and equation numbering after final pagination.",
+      "reference": "references/long-document-layout.md"
+    },
+    {
+      "id": "REQ-TF-01",
+      "capability": "Template Fidelity",
+      "rule": "Treat an authoritative supplied template as controlling.",
+      "reference": "references/template-fidelity.md"
+    },
+    {
+      "id": "REQ-TF-02",
+      "capability": "Template Fidelity",
+      "rule": "Reuse existing semantic template styles before creating alternatives.",
+      "reference": "references/template-fidelity.md"
+    },
+    {
+      "id": "REQ-TF-03",
+      "capability": "Template Fidelity",
+      "rule": "Do not substitute unauthorized brands or logos.",
+      "reference": "references/template-fidelity.md"
+    },
+    {
+      "id": "REQ-TF-04",
+      "capability": "Template Fidelity",
+      "rule": "Document and visually verify unavoidable template deviations.",
+      "reference": "references/template-fidelity.md"
+    },
+    {
+      "id": "REQ-JS-01",
+      "capability": "Journal Submission",
+      "rule": "Obtain target submission rules from the identified publication.",
+      "reference": "references/journal-submission.md"
+    },
+    {
+      "id": "REQ-JS-02",
+      "capability": "Journal Submission",
+      "rule": "Anonymize only when required and only on a derived copy.",
+      "reference": "references/journal-submission.md"
+    },
+    {
+      "id": "REQ-JS-03",
+      "capability": "Journal Submission",
+      "rule": "Check word, figure and reference limits before release.",
+      "reference": "references/journal-submission.md"
+    },
+    {
+      "id": "REQ-JS-04",
+      "capability": "Journal Submission",
+      "rule": "Report submission compliance as PASS, FAIL or UNVERIFIED.",
+      "reference": "references/journal-submission.md"
+    },
+    {
+      "id": "REQ-RV-01",
+      "capability": "Review and Revision",
+      "rule": "Preserve the original before revision.",
+      "reference": "references/review-revision-workflow.md"
+    },
+    {
+      "id": "REQ-RV-02",
+      "capability": "Review and Revision",
+      "rule": "Track a disposition for every reviewer comment.",
+      "reference": "references/review-revision-workflow.md"
+    },
+    {
+      "id": "REQ-RV-03",
+      "capability": "Review and Revision",
+      "rule": "Verify native comments or Track Changes structurally when claimed.",
+      "reference": "references/review-revision-workflow.md"
+    },
+    {
+      "id": "REQ-RV-04",
+      "capability": "Review and Revision",
+      "rule": "Give a reasoned response to rejected reviewer requests.",
+      "reference": "references/review-revision-workflow.md"
+    },
+    {
+      "id": "REQ-RP-01",
+      "capability": "Reproducibility Package",
+      "rule": "Keep audit artifacts synchronized with the delivered document version.",
+      "reference": "references/reproducibility-package.md"
+    },
+    {
+      "id": "REQ-RP-02",
+      "capability": "Reproducibility Package",
+      "rule": "Preserve stable source IDs across all audit artifacts.",
+      "reference": "references/reproducibility-package.md"
+    },
+    {
+      "id": "REQ-RP-03",
+      "capability": "Reproducibility Package",
+      "rule": "Do not redistribute protected full-text source content without permission.",
+      "reference": "references/reproducibility-package.md"
+    },
+    {
+      "id": "REQ-RP-04",
+      "capability": "Reproducibility Package",
+      "rule": "State exactly what was verified and what remains unverified.",
+      "reference": "references/reproducibility-package.md"
+    },
+    {
+      "id": "REQ-EC-01",
+      "capability": "Editorial Consistency",
+      "rule": "Normalize terminology or document intentional variants.",
+      "reference": "references/editorial-consistency.md"
+    },
+    {
+      "id": "REQ-EC-02",
+      "capability": "Editorial Consistency",
+      "rule": "Flag duplicated substantive passages.",
+      "reference": "references/editorial-consistency.md"
+    },
+    {
+      "id": "REQ-EC-03",
+      "capability": "Editorial Consistency",
+      "rule": "Resolve or disclose contradictory internal statements.",
+      "reference": "references/editorial-consistency.md"
+    },
+    {
+      "id": "REQ-EC-04",
+      "capability": "Editorial Consistency",
+      "rule": "Preserve meaning and evidence support when applying consistency fixes.",
+      "reference": "references/editorial-consistency.md"
+    },
+    {
+      "id": "REQ-OR-01",
+      "capability": "Citation-Safe Originality",
+      "rule": "Quote or genuinely paraphrase distinctive borrowed wording.",
+      "reference": "references/citation-safe-originality.md"
+    },
+    {
+      "id": "REQ-OR-02",
+      "capability": "Citation-Safe Originality",
+      "rule": "Preserve attribution after paraphrase.",
+      "reference": "references/citation-safe-originality.md"
+    },
+    {
+      "id": "REQ-OR-03",
+      "capability": "Citation-Safe Originality",
+      "rule": "Keep direct quotations exact and located when available.",
+      "reference": "references/citation-safe-originality.md"
+    },
+    {
+      "id": "REQ-OR-04",
+      "capability": "Citation-Safe Originality",
+      "rule": "Never fabricate plagiarism or AI-detector scores.",
+      "reference": "references/citation-safe-originality.md"
+    },
+    {
+      "id": "REQ-TI-01",
+      "capability": "Tables and Figures Intelligence",
+      "rule": "Choose table or figure type from the information shape.",
+      "reference": "references/tables-figures-intelligence.md"
+    },
+    {
+      "id": "REQ-TI-02",
+      "capability": "Tables and Figures Intelligence",
+      "rule": "Retain source data, units and provenance for quantitative visuals.",
+      "reference": "references/tables-figures-intelligence.md"
+    },
+    {
+      "id": "REQ-TI-03",
+      "capability": "Tables and Figures Intelligence",
+      "rule": "Route oversized tables to landscape, appendix or a justified split.",
+      "reference": "references/tables-figures-intelligence.md"
+    },
+    {
+      "id": "REQ-TI-04",
+      "capability": "Tables and Figures Intelligence",
+      "rule": "Keep captions, numbering and cross-references stable after edits.",
+      "reference": "references/tables-figures-intelligence.md"
+    },
+    {
+      "id": "REQ-QD-01",
+      "capability": "Research QA Dashboard",
+      "rule": "Calculate dashboard counts from machine-readable ledgers.",
+      "reference": "references/research-qa-dashboard.md"
+    },
+    {
+      "id": "REQ-QD-02",
+      "capability": "Research QA Dashboard",
+      "rule": "Separate blocking failures from informational warnings.",
+      "reference": "references/research-qa-dashboard.md"
+    },
+    {
+      "id": "REQ-QD-03",
+      "capability": "Research QA Dashboard",
+      "rule": "Do not invent a composite quality score without a defined validated model.",
+      "reference": "references/research-qa-dashboard.md"
+    },
+    {
+      "id": "REQ-QD-04",
+      "capability": "Research QA Dashboard",
+      "rule": "Reflect unresolved blockers in final release status.",
+      "reference": "references/research-qa-dashboard.md"
+    },
+    {
+      "id": "REQ-PW-01",
+      "capability": "Research-to-Word Pipeline",
+      "rule": "Execute dependent stages in the required order.",
+      "reference": "references/research-to-word-pipeline.md"
+    },
+    {
+      "id": "REQ-PW-02",
+      "capability": "Research-to-Word Pipeline",
+      "rule": "Use stable IDs and machine-readable handoff artifacts where defined.",
+      "reference": "references/research-to-word-pipeline.md"
+    },
+    {
+      "id": "REQ-PW-03",
+      "capability": "Research-to-Word Pipeline",
+      "rule": "Route blocking defects back to the stage that owns them.",
+      "reference": "references/research-to-word-pipeline.md"
+    },
+    {
+      "id": "REQ-PW-04",
+      "capability": "Research-to-Word Pipeline",
+      "rule": "Report verified and unverified stages explicitly at release.",
+      "reference": "references/research-to-word-pipeline.md"
+    },
+    {
+      "id": "REQ-VE-01",
+      "capability": "Visual Explanation System",
+      "rule": "Add a visual only when it produces a real comprehension gain.",
+      "reference": "references/visual-explanation-system.md"
+    },
+    {
+      "id": "REQ-VE-02",
+      "capability": "Visual Explanation System",
+      "rule": "Choose visual type deterministically from the reader task and information shape.",
+      "reference": "references/visual-explanation-system.md"
+    },
+    {
+      "id": "REQ-VE-03",
+      "capability": "Visual Explanation System",
+      "rule": "Require provenance, rights, caption, alt text and legibility for factual visuals.",
+      "reference": "references/visual-explanation-system.md"
+    },
+    {
+      "id": "REQ-VE-04",
+      "capability": "Visual Explanation System",
+      "rule": "Inspect the final rendered page and remove redundant or defective visuals.",
+      "reference": "references/visual-explanation-system.md"
+    },
+    {
+      "id": "REQ-WN-01",
+      "capability": "Word-Native Structures",
+      "rule": "Use real Word styles and fields rather than visually faked equivalents.",
+      "reference": "references/word-implementation.md"
+    },
+    {
+      "id": "REQ-WN-02",
+      "capability": "Word-Native Structures",
+      "rule": "Use real PAGE/TOC/SEQ/REF/STYLEREF features only when actually present.",
+      "reference": "references/word-implementation.md"
+    },
+    {
+      "id": "REQ-WN-03",
+      "capability": "Word-Native Structures",
+      "rule": "Keep textual content editable instead of rasterizing whole pages.",
+      "reference": "references/word-implementation.md"
+    },
+    {
+      "id": "REQ-WN-04",
+      "capability": "Word-Native Structures",
+      "rule": "Disclose unsupported native Word features instead of pretending they were created.",
+      "reference": "references/word-implementation.md"
+    },
+    {
+      "id": "REQ-AM-01",
+      "capability": "Accessibility and Multilingual",
+      "rule": "Preserve semantic headings, table headers, reading order and meaningful alt text.",
+      "reference": "references/publishing-accessibility.md"
+    },
+    {
+      "id": "REQ-AM-02",
+      "capability": "Accessibility and Multilingual",
+      "rule": "Apply real RTL/bidi behavior for Arabic rather than right alignment only.",
+      "reference": "references/publishing-accessibility.md"
+    },
+    {
+      "id": "REQ-AM-03",
+      "capability": "Accessibility and Multilingual",
+      "rule": "Perform independent language-specific proofreading and terminology QA.",
+      "reference": "references/publishing-accessibility.md"
+    },
+    {
+      "id": "REQ-AM-04",
+      "capability": "Accessibility and Multilingual",
+      "rule": "Do not encode essential meaning by color alone.",
+      "reference": "references/publishing-accessibility.md"
+    },
+    {
+      "id": "REQ-NE-01",
+      "capability": "Normative Example System",
+      "rule": "Assign a stable REQ ID to every v5 normative rule.",
+      "reference": "references/normative-example-contract.md"
+    },
+    {
+      "id": "REQ-NE-02",
+      "capability": "Normative Example System",
+      "rule": "Map every REQ ID to at least one example.",
+      "reference": "references/normative-example-contract.md"
+    },
+    {
+      "id": "REQ-NE-03",
+      "capability": "Normative Example System",
+      "rule": "Give each example a scenario, correct path, incorrect path and acceptance evidence.",
+      "reference": "references/normative-example-contract.md"
+    },
+    {
+      "id": "REQ-NE-04",
+      "capability": "Normative Example System",
+      "rule": "Require 100 percent example coverage before release.",
+      "reference": "references/normative-example-contract.md"
+    },
+    {
+      "id": "REQ-LA-01",
+      "capability": "Large Document Chapter Package",
+      "rule": "Default estimated or rendered documents of 100 pages or more to Chapter Package Mode unless overridden.",
+      "reference": "references/large-document-architecture.md"
+    },
+    {
+      "id": "REQ-LA-02",
+      "capability": "Large Document Chapter Package",
+      "rule": "List every chapter exactly once in both manifest and Index.",
+      "reference": "references/large-document-architecture.md"
+    },
+    {
+      "id": "REQ-LA-03",
+      "capability": "Large Document Chapter Package",
+      "rule": "Use relative external hyperlinks from the Word Index to chapter DOCX files when possible.",
+      "reference": "references/large-document-architecture.md"
+    },
+    {
+      "id": "REQ-LA-04",
+      "capability": "Large Document Chapter Package",
+      "rule": "Run independent chapter QA plus package-level consistency QA.",
+      "reference": "references/large-document-architecture.md"
+    },
+    {
+      "id": "REQ-PK-01",
+      "capability": "Release Package",
+      "rule": "Make package contents match the Document Contract.",
+      "reference": "references/release-package-v5.md"
+    },
+    {
+      "id": "REQ-PK-02",
+      "capability": "Release Package",
+      "rule": "Verify that every claimed artifact exists and validates where tooling allows.",
+      "reference": "references/release-package-v5.md"
+    },
+    {
+      "id": "REQ-PK-03",
+      "capability": "Release Package",
+      "rule": "State verified and unverified status explicitly.",
+      "reference": "references/release-package-v5.md"
+    },
+    {
+      "id": "REQ-PK-04",
+      "capability": "Release Package",
+      "rule": "Include Index, manifest and every declared chapter file in Chapter Package Mode.",
+      "reference": "references/release-package-v5.md"
+    }
+  ],
+  "examples": [
+    {
+      "id": "EX-DC-01",
+      "requirement_id": "REQ-DC-01",
+      "scenario": "A document task reaches the Document Contract step and must decide how to apply: “Create the contract before substantive drafting.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-DC-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-DC-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-DC-02",
+      "requirement_id": "REQ-DC-02",
+      "scenario": "A document task reaches the Document Contract step and must decide how to apply: “Preserve explicit owner constraints verbatim in the contract.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-DC-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-DC-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-DC-03",
+      "requirement_id": "REQ-DC-03",
+      "scenario": "A document task reaches the Document Contract step and must decide how to apply: “Label inferred defaults as defaults rather than owner instructions.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-DC-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-DC-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-DC-04",
+      "requirement_id": "REQ-DC-04",
+      "scenario": "A document task reaches the Document Contract step and must decide how to apply: “Resolve large-document and template-fidelity modes explicitly.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-DC-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-DC-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PL-01",
+      "requirement_id": "REQ-PL-01",
+      "scenario": "A document task reaches the Research Plan step and must decide how to apply: “Map each research question to planned evidence.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PL-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PL-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PL-02",
+      "requirement_id": "REQ-PL-02",
+      "scenario": "A document task reaches the Research Plan step and must decide how to apply: “Write inclusion and exclusion criteria before broad synthesis.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PL-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PL-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PL-03",
+      "requirement_id": "REQ-PL-03",
+      "scenario": "A document task reaches the Research Plan step and must decide how to apply: “Define evidence-based stopping criteria.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PL-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PL-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PL-04",
+      "requirement_id": "REQ-PL-04",
+      "scenario": "A document task reaches the Research Plan step and must decide how to apply: “Record tool and access limits before relying on unavailable evidence.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PL-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PL-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RI-01",
+      "requirement_id": "REQ-RI-01",
+      "scenario": "A document task reaches the Research Intelligence step and must decide how to apply: “Start research with explicit questions and scope.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RI-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RI-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RI-02",
+      "requirement_id": "REQ-RI-02",
+      "scenario": "A document task reaches the Research Intelligence step and must decide how to apply: “Separate candidate-source discovery from source acceptance.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RI-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RI-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RI-03",
+      "requirement_id": "REQ-RI-03",
+      "scenario": "A document task reaches the Research Intelligence step and must decide how to apply: “Stop research by evidence criteria rather than arbitrary source count.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RI-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RI-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RI-04",
+      "requirement_id": "REQ-RI-04",
+      "scenario": "A document task reaches the Research Intelligence step and must decide how to apply: “Carry unresolved evidence gaps into limitations and QA.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RI-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RI-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-SQ-01",
+      "requirement_id": "REQ-SQ-01",
+      "scenario": "A document task reaches the Source Quality step and must decide how to apply: “Record a source class for every accepted source.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-SQ-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-SQ-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-SQ-02",
+      "requirement_id": "REQ-SQ-02",
+      "scenario": "A document task reaches the Source Quality step and must decide how to apply: “Prefer primary evidence for authoritative claims when feasible.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-SQ-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-SQ-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-SQ-03",
+      "requirement_id": "REQ-SQ-03",
+      "scenario": "A document task reaches the Source Quality step and must decide how to apply: “Assess freshness relative to the claim and domain.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-SQ-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-SQ-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-SQ-04",
+      "requirement_id": "REQ-SQ-04",
+      "scenario": "A document task reaches the Source Quality step and must decide how to apply: “Do not treat repeated secondary reporting as a substitute for primary support.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-SQ-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-SQ-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RM-01",
+      "requirement_id": "REQ-RM-01",
+      "scenario": "A document task reaches the Reference Metadata and Interchange step and must decide how to apply: “Validate bibliographic metadata appropriate to source type.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RM-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RM-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RM-02",
+      "requirement_id": "REQ-RM-02",
+      "scenario": "A document task reaches the Reference Metadata and Interchange step and must decide how to apply: “Never guess a DOI, URL, author, date, page or publisher field.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RM-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RM-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RM-03",
+      "requirement_id": "REQ-RM-03",
+      "scenario": "A document task reaches the Reference Metadata and Interchange step and must decide how to apply: “Deduplicate without merging distinct editions or versions.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RM-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RM-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RM-04",
+      "requirement_id": "REQ-RM-04",
+      "scenario": "A document task reaches the Reference Metadata and Interchange step and must decide how to apply: “Export CSL-JSON, BibTeX/BibLaTeX or RIS without inventing absent fields.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RM-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RM-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EL-01",
+      "requirement_id": "REQ-EL-01",
+      "scenario": "A document task reaches the Evidence Ledger step and must decide how to apply: “Assign a stable SRC identifier to every accepted source.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EL-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EL-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EL-02",
+      "requirement_id": "REQ-EL-02",
+      "scenario": "A document task reaches the Evidence Ledger step and must decide how to apply: “Record which claims each source actually supports.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EL-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EL-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EL-03",
+      "requirement_id": "REQ-EL-03",
+      "scenario": "A document task reaches the Evidence Ledger step and must decide how to apply: “Preserve source limitations and verification status.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EL-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EL-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EL-04",
+      "requirement_id": "REQ-EL-04",
+      "scenario": "A document task reaches the Evidence Ledger step and must decide how to apply: “Keep source identifiers stable across citations, visuals and QA artifacts.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EL-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EL-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CE-01",
+      "requirement_id": "REQ-CE-01",
+      "scenario": "A document task reaches the Claim–Evidence Matrix step and must decide how to apply: “Assign stable IDs to critical and major factual claims.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CE-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CE-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CE-02",
+      "requirement_id": "REQ-CE-02",
+      "scenario": "A document task reaches the Claim–Evidence Matrix step and must decide how to apply: “Map each supported claim to the exact supporting source proposition.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CE-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CE-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CE-03",
+      "requirement_id": "REQ-CE-03",
+      "scenario": "A document task reaches the Claim–Evidence Matrix step and must decide how to apply: “Preserve materially contradictory evidence.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CE-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CE-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CE-04",
+      "requirement_id": "REQ-CE-04",
+      "scenario": "A document task reaches the Claim–Evidence Matrix step and must decide how to apply: “Block clean release for unsupported critical claims unless explicitly treated as unresolved.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CE-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CE-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CG-01",
+      "requirement_id": "REQ-CG-01",
+      "scenario": "A document task reaches the Contradiction and Gap Analysis step and must decide how to apply: “Normalize scope before declaring two sources contradictory.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CG-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CG-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CG-02",
+      "requirement_id": "REQ-CG-02",
+      "scenario": "A document task reaches the Contradiction and Gap Analysis step and must decide how to apply: “Disclose material genuine conflicts.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CG-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CG-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CG-03",
+      "requirement_id": "REQ-CG-03",
+      "scenario": "A document task reaches the Contradiction and Gap Analysis step and must decide how to apply: “Record evidence gaps and their impact.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CG-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CG-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CG-04",
+      "requirement_id": "REQ-CG-04",
+      "scenario": "A document task reaches the Contradiction and Gap Analysis step and must decide how to apply: “Never fabricate consensus from incompatible evidence.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CG-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CG-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AD-01",
+      "requirement_id": "REQ-AD-01",
+      "scenario": "A document task reaches the Academic Document Modes step and must decide how to apply: “Select the document mode before outline generation.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AD-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AD-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AD-02",
+      "requirement_id": "REQ-AD-02",
+      "scenario": "A document task reaches the Academic Document Modes step and must decide how to apply: “Use section grammar appropriate to the selected mode.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AD-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AD-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AD-03",
+      "requirement_id": "REQ-AD-03",
+      "scenario": "A document task reaches the Academic Document Modes step and must decide how to apply: “Reserve labels such as systematic review for matching methodology.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AD-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AD-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AD-04",
+      "requirement_id": "REQ-AD-04",
+      "scenario": "A document task reaches the Academic Document Modes step and must decide how to apply: “Allow owner or journal rules to override generic mode defaults.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AD-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AD-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AS-01",
+      "requirement_id": "REQ-AS-01",
+      "scenario": "A document task reaches the Academic Structure Router step and must decide how to apply: “Generate structure from mode, audience and research question.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AS-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AS-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AS-02",
+      "requirement_id": "REQ-AS-02",
+      "scenario": "A document task reaches the Academic Structure Router step and must decide how to apply: “Give every major section a declared purpose.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AS-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AS-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AS-03",
+      "requirement_id": "REQ-AS-03",
+      "scenario": "A document task reaches the Academic Structure Router step and must decide how to apply: “Remove unjustified placeholder sections.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AS-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AS-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AS-04",
+      "requirement_id": "REQ-AS-04",
+      "scenario": "A document task reaches the Academic Structure Router step and must decide how to apply: “Keep heading hierarchy stable for navigation and chapter splitting.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AS-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AS-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LR-01",
+      "requirement_id": "REQ-LR-01",
+      "scenario": "A document task reaches the Literature Review Engine step and must decide how to apply: “Define the review question and inclusion boundary.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LR-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LR-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LR-02",
+      "requirement_id": "REQ-LR-02",
+      "scenario": "A document task reaches the Literature Review Engine step and must decide how to apply: “Group evidence by meaningful themes, methods, populations or explanations.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LR-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LR-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LR-03",
+      "requirement_id": "REQ-LR-03",
+      "scenario": "A document task reaches the Literature Review Engine step and must decide how to apply: “Do not accept serial one-source summaries as final synthesis.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LR-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LR-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LR-04",
+      "requirement_id": "REQ-LR-04",
+      "scenario": "A document task reaches the Literature Review Engine step and must decide how to apply: “Link gaps and contradictions back to evidence records.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LR-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LR-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CS-01",
+      "requirement_id": "REQ-CS-01",
+      "scenario": "A document task reaches the Citation Style Engine step and must decide how to apply: “Select and record one citation style.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CS-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CS-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CS-02",
+      "requirement_id": "REQ-CS-02",
+      "scenario": "A document task reaches the Citation Style Engine step and must decide how to apply: “Keep in-text citations or notes consistent with the bibliography style.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CS-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CS-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CS-03",
+      "requirement_id": "REQ-CS-03",
+      "scenario": "A document task reaches the Citation Style Engine step and must decide how to apply: “Use real Word notes when claiming note-based citations.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CS-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CS-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-CS-04",
+      "requirement_id": "REQ-CS-04",
+      "scenario": "A document task reaches the Citation Style Engine step and must decide how to apply: “Never fabricate live citation-manager behavior.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-CS-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-CS-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AF-01",
+      "requirement_id": "REQ-AF-01",
+      "scenario": "A document task reaches the Academic Front Matter step and must decide how to apply: “Choose front matter from document type and submission rules.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AF-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AF-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AF-02",
+      "requirement_id": "REQ-AF-02",
+      "scenario": "A document task reaches the Academic Front Matter step and must decide how to apply: “Regenerate the abstract from the final content.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AF-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AF-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AF-03",
+      "requirement_id": "REQ-AF-03",
+      "scenario": "A document task reaches the Academic Front Matter step and must decide how to apply: “Use keywords that represent actual searchable concepts.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AF-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AF-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AF-04",
+      "requirement_id": "REQ-AF-04",
+      "scenario": "A document task reaches the Academic Front Matter step and must decide how to apply: “Never invent authorship, affiliation, funding, ORCID or compliance statements.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AF-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AF-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-ME-01",
+      "requirement_id": "REQ-ME-01",
+      "scenario": "A document task reaches the Math and Equations step and must decide how to apply: “Keep mathematics semantically correct and editable where supported.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-ME-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-ME-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-ME-02",
+      "requirement_id": "REQ-ME-02",
+      "scenario": "A document task reaches the Math and Equations step and must decide how to apply: “Define symbols and variables consistently.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-ME-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-ME-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-ME-03",
+      "requirement_id": "REQ-ME-03",
+      "scenario": "A document task reaches the Math and Equations step and must decide how to apply: “Use stable equation numbering and references when needed.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-ME-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-ME-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-ME-04",
+      "requirement_id": "REQ-ME-04",
+      "scenario": "A document task reaches the Math and Equations step and must decide how to apply: “Treat rasterized equations as a disclosed fallback, not the default.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-ME-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-ME-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-GI-01",
+      "requirement_id": "REQ-GI-01",
+      "scenario": "A document task reaches the Glossary, Acronyms and Index step and must decide how to apply: “Include only glossary terms actually used and needed.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-GI-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-GI-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-GI-02",
+      "requirement_id": "REQ-GI-02",
+      "scenario": "A document task reaches the Glossary, Acronyms and Index step and must decide how to apply: “Maintain one canonical expansion for each acronym.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-GI-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-GI-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-GI-03",
+      "requirement_id": "REQ-GI-03",
+      "scenario": "A document task reaches the Glossary, Acronyms and Index step and must decide how to apply: “Do not add unused glossary or index filler.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-GI-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-GI-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-GI-04",
+      "requirement_id": "REQ-GI-04",
+      "scenario": "A document task reaches the Glossary, Acronyms and Index step and must decide how to apply: “Claim dynamic Word indexing only when real fields are present and verified.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-GI-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-GI-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LD-01",
+      "requirement_id": "REQ-LD-01",
+      "scenario": "A document task reaches the Long Document Layout step and must decide how to apply: “Prevent stranded headings and captions.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LD-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LD-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LD-02",
+      "requirement_id": "REQ-LD-02",
+      "scenario": "A document task reaches the Long Document Layout step and must decide how to apply: “Use section breaks for orientation changes.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LD-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LD-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LD-03",
+      "requirement_id": "REQ-LD-03",
+      "scenario": "A document task reaches the Long Document Layout step and must decide how to apply: “Repeat headers and manage continuation for long tables.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LD-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LD-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LD-04",
+      "requirement_id": "REQ-LD-04",
+      "scenario": "A document task reaches the Long Document Layout step and must decide how to apply: “Verify page, chapter, appendix and equation numbering after final pagination.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LD-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LD-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TF-01",
+      "requirement_id": "REQ-TF-01",
+      "scenario": "A document task reaches the Template Fidelity step and must decide how to apply: “Treat an authoritative supplied template as controlling.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TF-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TF-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TF-02",
+      "requirement_id": "REQ-TF-02",
+      "scenario": "A document task reaches the Template Fidelity step and must decide how to apply: “Reuse existing semantic template styles before creating alternatives.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TF-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TF-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TF-03",
+      "requirement_id": "REQ-TF-03",
+      "scenario": "A document task reaches the Template Fidelity step and must decide how to apply: “Do not substitute unauthorized brands or logos.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TF-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TF-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TF-04",
+      "requirement_id": "REQ-TF-04",
+      "scenario": "A document task reaches the Template Fidelity step and must decide how to apply: “Document and visually verify unavoidable template deviations.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TF-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TF-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-JS-01",
+      "requirement_id": "REQ-JS-01",
+      "scenario": "A document task reaches the Journal Submission step and must decide how to apply: “Obtain target submission rules from the identified publication.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-JS-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-JS-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-JS-02",
+      "requirement_id": "REQ-JS-02",
+      "scenario": "A document task reaches the Journal Submission step and must decide how to apply: “Anonymize only when required and only on a derived copy.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-JS-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-JS-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-JS-03",
+      "requirement_id": "REQ-JS-03",
+      "scenario": "A document task reaches the Journal Submission step and must decide how to apply: “Check word, figure and reference limits before release.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-JS-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-JS-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-JS-04",
+      "requirement_id": "REQ-JS-04",
+      "scenario": "A document task reaches the Journal Submission step and must decide how to apply: “Report submission compliance as PASS, FAIL or UNVERIFIED.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-JS-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-JS-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RV-01",
+      "requirement_id": "REQ-RV-01",
+      "scenario": "A document task reaches the Review and Revision step and must decide how to apply: “Preserve the original before revision.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RV-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RV-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RV-02",
+      "requirement_id": "REQ-RV-02",
+      "scenario": "A document task reaches the Review and Revision step and must decide how to apply: “Track a disposition for every reviewer comment.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RV-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RV-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RV-03",
+      "requirement_id": "REQ-RV-03",
+      "scenario": "A document task reaches the Review and Revision step and must decide how to apply: “Verify native comments or Track Changes structurally when claimed.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RV-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RV-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RV-04",
+      "requirement_id": "REQ-RV-04",
+      "scenario": "A document task reaches the Review and Revision step and must decide how to apply: “Give a reasoned response to rejected reviewer requests.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RV-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RV-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RP-01",
+      "requirement_id": "REQ-RP-01",
+      "scenario": "A document task reaches the Reproducibility Package step and must decide how to apply: “Keep audit artifacts synchronized with the delivered document version.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RP-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RP-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RP-02",
+      "requirement_id": "REQ-RP-02",
+      "scenario": "A document task reaches the Reproducibility Package step and must decide how to apply: “Preserve stable source IDs across all audit artifacts.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RP-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RP-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RP-03",
+      "requirement_id": "REQ-RP-03",
+      "scenario": "A document task reaches the Reproducibility Package step and must decide how to apply: “Do not redistribute protected full-text source content without permission.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RP-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RP-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-RP-04",
+      "requirement_id": "REQ-RP-04",
+      "scenario": "A document task reaches the Reproducibility Package step and must decide how to apply: “State exactly what was verified and what remains unverified.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-RP-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-RP-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EC-01",
+      "requirement_id": "REQ-EC-01",
+      "scenario": "A document task reaches the Editorial Consistency step and must decide how to apply: “Normalize terminology or document intentional variants.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EC-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EC-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EC-02",
+      "requirement_id": "REQ-EC-02",
+      "scenario": "A document task reaches the Editorial Consistency step and must decide how to apply: “Flag duplicated substantive passages.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EC-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EC-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EC-03",
+      "requirement_id": "REQ-EC-03",
+      "scenario": "A document task reaches the Editorial Consistency step and must decide how to apply: “Resolve or disclose contradictory internal statements.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EC-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EC-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-EC-04",
+      "requirement_id": "REQ-EC-04",
+      "scenario": "A document task reaches the Editorial Consistency step and must decide how to apply: “Preserve meaning and evidence support when applying consistency fixes.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-EC-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-EC-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-OR-01",
+      "requirement_id": "REQ-OR-01",
+      "scenario": "A document task reaches the Citation-Safe Originality step and must decide how to apply: “Quote or genuinely paraphrase distinctive borrowed wording.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-OR-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-OR-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-OR-02",
+      "requirement_id": "REQ-OR-02",
+      "scenario": "A document task reaches the Citation-Safe Originality step and must decide how to apply: “Preserve attribution after paraphrase.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-OR-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-OR-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-OR-03",
+      "requirement_id": "REQ-OR-03",
+      "scenario": "A document task reaches the Citation-Safe Originality step and must decide how to apply: “Keep direct quotations exact and located when available.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-OR-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-OR-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-OR-04",
+      "requirement_id": "REQ-OR-04",
+      "scenario": "A document task reaches the Citation-Safe Originality step and must decide how to apply: “Never fabricate plagiarism or AI-detector scores.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-OR-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-OR-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TI-01",
+      "requirement_id": "REQ-TI-01",
+      "scenario": "A document task reaches the Tables and Figures Intelligence step and must decide how to apply: “Choose table or figure type from the information shape.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TI-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TI-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TI-02",
+      "requirement_id": "REQ-TI-02",
+      "scenario": "A document task reaches the Tables and Figures Intelligence step and must decide how to apply: “Retain source data, units and provenance for quantitative visuals.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TI-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TI-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TI-03",
+      "requirement_id": "REQ-TI-03",
+      "scenario": "A document task reaches the Tables and Figures Intelligence step and must decide how to apply: “Route oversized tables to landscape, appendix or a justified split.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TI-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TI-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-TI-04",
+      "requirement_id": "REQ-TI-04",
+      "scenario": "A document task reaches the Tables and Figures Intelligence step and must decide how to apply: “Keep captions, numbering and cross-references stable after edits.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-TI-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-TI-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-QD-01",
+      "requirement_id": "REQ-QD-01",
+      "scenario": "A document task reaches the Research QA Dashboard step and must decide how to apply: “Calculate dashboard counts from machine-readable ledgers.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-QD-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-QD-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-QD-02",
+      "requirement_id": "REQ-QD-02",
+      "scenario": "A document task reaches the Research QA Dashboard step and must decide how to apply: “Separate blocking failures from informational warnings.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-QD-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-QD-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-QD-03",
+      "requirement_id": "REQ-QD-03",
+      "scenario": "A document task reaches the Research QA Dashboard step and must decide how to apply: “Do not invent a composite quality score without a defined validated model.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-QD-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-QD-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-QD-04",
+      "requirement_id": "REQ-QD-04",
+      "scenario": "A document task reaches the Research QA Dashboard step and must decide how to apply: “Reflect unresolved blockers in final release status.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-QD-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-QD-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PW-01",
+      "requirement_id": "REQ-PW-01",
+      "scenario": "A document task reaches the Research-to-Word Pipeline step and must decide how to apply: “Execute dependent stages in the required order.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PW-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PW-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PW-02",
+      "requirement_id": "REQ-PW-02",
+      "scenario": "A document task reaches the Research-to-Word Pipeline step and must decide how to apply: “Use stable IDs and machine-readable handoff artifacts where defined.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PW-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PW-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PW-03",
+      "requirement_id": "REQ-PW-03",
+      "scenario": "A document task reaches the Research-to-Word Pipeline step and must decide how to apply: “Route blocking defects back to the stage that owns them.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PW-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PW-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PW-04",
+      "requirement_id": "REQ-PW-04",
+      "scenario": "A document task reaches the Research-to-Word Pipeline step and must decide how to apply: “Report verified and unverified stages explicitly at release.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PW-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PW-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-VE-01",
+      "requirement_id": "REQ-VE-01",
+      "scenario": "A document task reaches the Visual Explanation System step and must decide how to apply: “Add a visual only when it produces a real comprehension gain.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-VE-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-VE-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-VE-02",
+      "requirement_id": "REQ-VE-02",
+      "scenario": "A document task reaches the Visual Explanation System step and must decide how to apply: “Choose visual type deterministically from the reader task and information shape.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-VE-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-VE-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-VE-03",
+      "requirement_id": "REQ-VE-03",
+      "scenario": "A document task reaches the Visual Explanation System step and must decide how to apply: “Require provenance, rights, caption, alt text and legibility for factual visuals.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-VE-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-VE-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-VE-04",
+      "requirement_id": "REQ-VE-04",
+      "scenario": "A document task reaches the Visual Explanation System step and must decide how to apply: “Inspect the final rendered page and remove redundant or defective visuals.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-VE-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-VE-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-WN-01",
+      "requirement_id": "REQ-WN-01",
+      "scenario": "A document task reaches the Word-Native Structures step and must decide how to apply: “Use real Word styles and fields rather than visually faked equivalents.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-WN-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-WN-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-WN-02",
+      "requirement_id": "REQ-WN-02",
+      "scenario": "A document task reaches the Word-Native Structures step and must decide how to apply: “Use real PAGE/TOC/SEQ/REF/STYLEREF features only when actually present.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-WN-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-WN-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-WN-03",
+      "requirement_id": "REQ-WN-03",
+      "scenario": "A document task reaches the Word-Native Structures step and must decide how to apply: “Keep textual content editable instead of rasterizing whole pages.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-WN-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-WN-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-WN-04",
+      "requirement_id": "REQ-WN-04",
+      "scenario": "A document task reaches the Word-Native Structures step and must decide how to apply: “Disclose unsupported native Word features instead of pretending they were created.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-WN-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-WN-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AM-01",
+      "requirement_id": "REQ-AM-01",
+      "scenario": "A document task reaches the Accessibility and Multilingual step and must decide how to apply: “Preserve semantic headings, table headers, reading order and meaningful alt text.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AM-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AM-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AM-02",
+      "requirement_id": "REQ-AM-02",
+      "scenario": "A document task reaches the Accessibility and Multilingual step and must decide how to apply: “Apply real RTL/bidi behavior for Arabic rather than right alignment only.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AM-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AM-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AM-03",
+      "requirement_id": "REQ-AM-03",
+      "scenario": "A document task reaches the Accessibility and Multilingual step and must decide how to apply: “Perform independent language-specific proofreading and terminology QA.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AM-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AM-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-AM-04",
+      "requirement_id": "REQ-AM-04",
+      "scenario": "A document task reaches the Accessibility and Multilingual step and must decide how to apply: “Do not encode essential meaning by color alone.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-AM-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-AM-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-NE-01",
+      "requirement_id": "REQ-NE-01",
+      "scenario": "A document task reaches the Normative Example System step and must decide how to apply: “Assign a stable REQ ID to every v5 normative rule.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-NE-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-NE-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-NE-02",
+      "requirement_id": "REQ-NE-02",
+      "scenario": "A document task reaches the Normative Example System step and must decide how to apply: “Map every REQ ID to at least one example.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-NE-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-NE-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-NE-03",
+      "requirement_id": "REQ-NE-03",
+      "scenario": "A document task reaches the Normative Example System step and must decide how to apply: “Give each example a scenario, correct path, incorrect path and acceptance evidence.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-NE-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-NE-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-NE-04",
+      "requirement_id": "REQ-NE-04",
+      "scenario": "A document task reaches the Normative Example System step and must decide how to apply: “Require 100 percent example coverage before release.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-NE-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-NE-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LA-01",
+      "requirement_id": "REQ-LA-01",
+      "scenario": "A document task reaches the Large Document Chapter Package step and must decide how to apply: “Default estimated or rendered documents of 100 pages or more to Chapter Package Mode unless overridden.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LA-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LA-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LA-02",
+      "requirement_id": "REQ-LA-02",
+      "scenario": "A document task reaches the Large Document Chapter Package step and must decide how to apply: “List every chapter exactly once in both manifest and Index.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LA-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LA-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LA-03",
+      "requirement_id": "REQ-LA-03",
+      "scenario": "A document task reaches the Large Document Chapter Package step and must decide how to apply: “Use relative external hyperlinks from the Word Index to chapter DOCX files when possible.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LA-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LA-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-LA-04",
+      "requirement_id": "REQ-LA-04",
+      "scenario": "A document task reaches the Large Document Chapter Package step and must decide how to apply: “Run independent chapter QA plus package-level consistency QA.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-LA-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-LA-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PK-01",
+      "requirement_id": "REQ-PK-01",
+      "scenario": "A document task reaches the Release Package step and must decide how to apply: “Make package contents match the Document Contract.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PK-01.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PK-01 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PK-02",
+      "requirement_id": "REQ-PK-02",
+      "scenario": "A document task reaches the Release Package step and must decide how to apply: “Verify that every claimed artifact exists and validates where tooling allows.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PK-02.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PK-02 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PK-03",
+      "requirement_id": "REQ-PK-03",
+      "scenario": "A document task reaches the Release Package step and must decide how to apply: “State verified and unverified status explicitly.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PK-03.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PK-03 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    },
+    {
+      "id": "EX-PK-04",
+      "requirement_id": "REQ-PK-04",
+      "scenario": "A document task reaches the Release Package step and must decide how to apply: “Include Index, manifest and every declared chapter file in Chapter Package Mode.”",
+      "correct": "Apply the rule explicitly, record the resulting artifact or decision, and keep the evidence linked to REQ-PK-04.",
+      "incorrect": "Skip, silently infer, cosmetically imitate, or claim completion of this requirement without the required artifact/evidence.",
+      "acceptance": "A reviewer can point to the document/research artifact or QA record proving REQ-PK-04 was satisfied; otherwise mark it FAIL or UNVERIFIED."
+    }
+  ]
+}

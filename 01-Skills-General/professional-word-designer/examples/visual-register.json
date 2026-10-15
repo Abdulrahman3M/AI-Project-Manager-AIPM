@@ -1,0 +1,20 @@
+{
+  "purpose": "Template only; illustrative no external sources",
+  "visuals": [
+    {
+      "figure_id": "EX-1",
+      "section": "Flow sequence",
+      "learning_goal": "Follow ordered water-filter stages",
+      "visual_type": "process-flow",
+      "trigger": "consequential ordered actions",
+      "source_ledger_ids": [],
+      "asset_license": "original schematic by document author",
+      "caption": "Illustrative flow stages; not a measured performance claim",
+      "alt_text": "Three sequential stages from intake to filtration to output",
+      "direction": "LTR",
+      "editability": "SVG source supplied; PNG fallback inside Word",
+      "word_fallback": "static vector/PNG",
+      "review_status": "example only"
+    }
+  ]
+}

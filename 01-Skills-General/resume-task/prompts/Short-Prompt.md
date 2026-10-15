@@ -1,0 +1,1 @@
+Resume the interrupted task, whatever the cause or AI agent. Recover available context, requirements and progress; verify actual state before repeating actions. Preserve completed work, finish and check all remaining steps, then audit the original requirements. Report verified results and blockers; never invent missing context or claim unverified success.

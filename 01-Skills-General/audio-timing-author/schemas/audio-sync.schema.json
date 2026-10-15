@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://universal-ai-toolkit.local/schemas/audio-sync.schema.json",
+  "title": "Audio Sync",
+  "type": "object",
+  "required": ["schema","version","audio","alignment","segments"],
+  "properties": {
+    "schema": {"const":"audio-sync"},
+    "version": {"type":"string"},
+    "audio": {"type":"object","required":["file","duration_ms"],"properties":{"file":{"type":"string","minLength":1},"duration_ms":{"type":"integer","minimum":1},"format":{"type":"string"}},"additionalProperties":true},
+    "alignment": {"type":"object","required":["language","transcript_is_authoritative","speaker_labels_consume_timing","review"],"properties":{"language":{"type":"string"},"method":{"type":"string"},"transcript_is_authoritative":{"const":true},"speaker_labels_consume_timing":{"const":false},"review":{"enum":["verified","needs_review","unverified"]}},"additionalProperties":true},
+    "segments": {"type":"array","items":{"type":"object","required":["id","start_ms","end_ms","text","normalized_text","words","review"],"properties":{"id":{"type":"string","minLength":1},"speaker":{"type":["string","null"]},"start_ms":{"type":"integer","minimum":0},"end_ms":{"type":"integer","minimum":1},"text":{"type":"string"},"normalized_text":{"type":"string"},"review":{"enum":["verified","needs_review","unverified"]},"confidence":{"type":["number","null"],"minimum":0,"maximum":1},"words":{"type":"array","items":{"type":"object","required":["text","normalized_text","start_ms","end_ms","review"],"properties":{"text":{"type":"string"},"normalized_text":{"type":"string"},"start_ms":{"type":"integer","minimum":0},"end_ms":{"type":"integer","minimum":1},"confidence":{"type":["number","null"],"minimum":0,"maximum":1},"review":{"enum":["verified","needs_review","unverified"]}},"additionalProperties":false}}},"additionalProperties":true}}
+  },
+  "additionalProperties": true
+}

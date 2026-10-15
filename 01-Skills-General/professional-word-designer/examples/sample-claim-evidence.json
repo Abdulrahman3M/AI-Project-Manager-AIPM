@@ -1,0 +1,18 @@
+{
+  "claims": [
+    {
+      "claim_id": "CLM-001",
+      "claim": "Demonstration claim for schema/tooling tests only.",
+      "section_id": "SEC-01",
+      "importance": "major",
+      "status": "VERIFIED",
+      "supporting_source_ids": [
+        "SRC-001"
+      ],
+      "contradictory_source_ids": [],
+      "qualification": "Replace with a real evidence-backed claim in production.",
+      "citation_placement": "near supported sentence",
+      "review_status": "DEMO"
+    }
+  ]
+}

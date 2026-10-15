@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Professional Word Designer Document Contract v5",
+  "type": "object",
+  "required": [
+    "title",
+    "document_type",
+    "audience",
+    "language",
+    "citation_style",
+    "large_document_mode"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "research_question": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "audience": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locale": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "direction": {
+      "enum": [
+        "LTR",
+        "RTL",
+        "mixed"
+      ]
+    },
+    "citation_style": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expected_pages": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "expected_words": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "large_document_mode": {
+      "type": "boolean"
+    },
+    "template_fidelity_mode": {
+      "type": "boolean",
+      "default": false
+    },
+    "required_sections": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_source_classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prohibited_source_classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "owner_constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaults_applied": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unresolved_assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

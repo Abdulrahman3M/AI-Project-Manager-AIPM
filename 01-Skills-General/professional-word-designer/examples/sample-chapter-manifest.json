@@ -1,0 +1,36 @@
+{
+  "publication_title": "Demonstration Long Publication",
+  "description": "Example only; chapter files are placeholders until generated.",
+  "index_file": "00-Index.docx",
+  "numbering_policy": "Stable chapter order",
+  "reference_strategy": "Defined by Document Contract",
+  "chapters": [
+    {
+      "chapter_id": "CH-01",
+      "order": 1,
+      "title": "Introduction",
+      "file": "01-Chapter-Introduction.docx",
+      "description": "Purpose and scope.",
+      "estimated_pages": 18,
+      "status": "PLANNED"
+    },
+    {
+      "chapter_id": "CH-02",
+      "order": 2,
+      "title": "Evidence Review",
+      "file": "02-Chapter-Evidence-Review.docx",
+      "description": "Evidence synthesis.",
+      "estimated_pages": 48,
+      "status": "PLANNED"
+    },
+    {
+      "chapter_id": "CH-03",
+      "order": 3,
+      "title": "Analysis and Conclusions",
+      "file": "03-Chapter-Analysis.docx",
+      "description": "Integrated analysis and conclusions.",
+      "estimated_pages": 42,
+      "status": "PLANNED"
+    }
+  ]
+}
