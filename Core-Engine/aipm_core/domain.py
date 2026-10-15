@@ -4,7 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import copy
 from pathlib import Path
+import re
 from typing import Any
 
 from .storage import ManagedProject, StateError, _atomic_json
@@ -27,6 +29,53 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report'}
+
+    @staticmethod
+    def task_status(task: dict[str, Any]) -> str:
+        if task['blockers']:
+            return 'BLOCKED'
+        verification = task['verification']
+        return 'COMPLETE' if verification and verification['result'] == 'PASS' and verification['evidence'].strip() and task['report'].strip() else 'IN-PROGRESS'
+
+    @classmethod
+    def _apply_task(cls, manifest: dict[str, Any], command: str, payload: dict[str, Any]) -> None:
+        task_id = payload.get('task_id')
+        if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id):
+            raise StateError('Invalid Task Identity')
+        tasks = manifest.setdefault('tasks', {})
+        if command == 'task.create':
+            if task_id in tasks:
+                raise StateError('Task Already Exists')
+            if any(not isinstance(payload.get(key), str) or not payload[key].strip() for key in ('title', 'scope')):
+                raise StateError('Invalid Task Input')
+            tasks[task_id] = {'title': payload['title'], 'scope': payload['scope'], 'plan': f"# {payload['title']}\n\n{payload['scope']}\n", 'blockers': [], 'verification': None, 'report': ''}
+        else:
+            if task_id not in tasks:
+                raise StateError('Task Not Found')
+            task = tasks[task_id]
+            if command in {'task.plan', 'task.blocker.add', 'task.report'}:
+                text = payload.get('text')
+                if not isinstance(text, str) or not text.strip():
+                    raise StateError('Invalid Task Text')
+                if command == 'task.plan':
+                    task.update(plan=text, verification=None, report='')
+                elif command == 'task.report':
+                    task['report'] = text
+                else:
+                    task['blockers'].append(text)
+            elif command == 'task.blocker.clear':
+                task['blockers'] = []
+            elif command == 'task.verify':
+                result, evidence = payload.get('result'), payload.get('evidence')
+                if result not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(evidence, str) or not evidence.strip():
+                    raise StateError('Invalid Task Evidence')
+                task['verification'] = {'result': result, 'evidence': evidence}
+            else:
+                raise StateError('Unsupported Task Command')
+        manifest['task_id'] = task_id
+        manifest['task_status'] = cls.task_status(tasks[task_id])
+
     @staticmethod
     def _validate_manifest(manifest: Any, project: ManagedProject) -> None:
         if not isinstance(manifest, dict) or manifest.get("schema_version") not in ("1.0", "1.1") or type(manifest.get("revision")) is not int or manifest["revision"] < 0 or manifest.get("project_id") != project.project_id:
@@ -41,6 +90,14 @@ class CoreEngine:
             raise StateError("Missing State Manifest Fields")
         if not isinstance(manifest.get("tasks", {}), dict) or (manifest.get("diff_fingerprint") is not None and not isinstance(manifest["diff_fingerprint"], str)):
             raise StateError("Invalid State Manifest Fields")
+        for task_id, task in manifest.get('tasks', {}).items():
+            if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id) or not isinstance(task, dict):
+                raise StateError('Invalid Task State')
+            if any(not isinstance(task.get(key), str) or not task[key].strip() for key in ('title', 'scope', 'plan')) or not isinstance(task.get('report'), str) or not isinstance(task.get('blockers'), list) or any(not isinstance(text, str) or not text.strip() for text in task['blockers']):
+                raise StateError('Invalid Task State')
+            verification = task.get('verification')
+            if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
+                raise StateError('Invalid Task Evidence')
 
     @staticmethod
     def _validate_event(event: Any, project: ManagedProject) -> None:
@@ -92,7 +149,25 @@ class CoreEngine:
             raise StateError("Pending Commit Conflicts With State")
         if manifest["schema_version"] != "1.1" or manifest["updated_by"] != event["actor"]:
             raise StateError("Pending Commit Metadata Mismatch")
-        if event["command"] == "state.set-next-action":
+        history = cls._history(project, revision, pending_revision=revision)
+        if any(record["revision"] == revision and record != event for record in history):
+            raise StateError("Pending Commit Conflicts With History")
+        if event['command'] in cls.TASK_COMMANDS:
+            # Replay accepted task intents before publishing either transaction file.
+            expected = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+            for record in sorted(history, key=lambda record: record['revision']):
+                if record['revision'] < revision and record['command'] in cls.TASK_COMMANDS:
+                    cls._apply_task(expected, record['command'], record['input'])
+            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks']:
+                raise StateError('Task History Conflicts With State')
+            cls._apply_task(expected, event['command'], event['input'])
+            if any(manifest[key] != expected[key] for key in ('tasks', 'task_id', 'task_status')):
+                raise StateError('Pending Commit Task Mismatch')
+            if current['revision'] == revision - 1:
+                allowed = {'tasks', 'task_id', 'task_status', 'revision', 'schema_version', 'updated_at', 'updated_by'}
+                if any(manifest.get(key) != value for key, value in current.items() if key not in allowed):
+                    raise StateError('Pending Commit Task Changes Unrelated State')
+        elif event["command"] == "state.set-next-action":
             action = event["input"].get("next_action")
             if not isinstance(action, str) or not action.strip() or manifest["next_action"] != action:
                 raise StateError("Pending Commit Action Mismatch")
@@ -101,9 +176,6 @@ class CoreEngine:
                 raise StateError("Pending Commit Git Mismatch")
         else:
             raise StateError("Unsupported Pending Commit Command")
-        history = cls._history(project, revision, pending_revision=revision)
-        if any(record["revision"] == revision and record != event for record in history):
-            raise StateError("Pending Commit Conflicts With History")
         event_path = project.state_root / "History" / "Events" / f"{revision:020d}.json"
         if event_path.exists():
             if json.loads(event_path.read_text(encoding="utf-8")) != event:
@@ -140,7 +212,13 @@ class CoreEngine:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_HISTORY"}
         if command.command == "state.read":
             return {"schema_version": "1.0", "status": "PASS", "state": manifest, "revision": manifest["revision"]}
-        if command.command not in {"state.set-next-action", "state.record-git-observation"}:
+        if command.command == 'task.read':
+            task_id = command.input.get('task_id')
+            task = manifest['tasks'].get(task_id) if isinstance(task_id, str) else None
+            if task is None:
+                return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': 'TASK_NOT_FOUND'}
+            return {'schema_version': '1.0', 'status': 'PASS', 'task': task, 'task_status': self.task_status(task), 'revision': manifest['revision']}
+        if command.command not in {"state.set-next-action", "state.record-git-observation"} | self.TASK_COMMANDS:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:
             for event in history:
@@ -148,7 +226,13 @@ class CoreEngine:
                     return {"schema_version": "1.0", "status": "PASS", "revision": manifest["revision"], "replayed": True}
         if command.expected_revision != manifest["revision"]:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "STATE_CONFLICT", "revision": manifest["revision"]}
-        if command.command == "state.set-next-action":
+        if command.command in self.TASK_COMMANDS:
+            manifest = copy.deepcopy(manifest)
+            try:
+                self._apply_task(manifest, command.command, command.input)
+            except (StateError, TypeError):
+                return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': 'INVALID_INPUT'}
+        elif command.command == "state.set-next-action":
             next_action = command.input.get("next_action")
             if not isinstance(next_action, str) or not next_action.strip():
                 return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
