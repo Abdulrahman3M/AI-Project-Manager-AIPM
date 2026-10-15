@@ -15,6 +15,19 @@ from aipm_core.storage import initialize_project_state, _atomic_json
 
 
 class CoreEngineTests(unittest.TestCase):
+    def test_missing_history_revision_blocks_mutation_without_writes(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+            project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
+            engine = CoreEngine({'managed': project})
+            engine.execute(CommandEnvelope('first', 'state.set-next-action', 'tester', 'managed', 0, None, {'next_action': 'Existing'}))
+            for event in (project.state_root / 'History/Events').glob('*.json'):
+                event.unlink()
+            before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+            for command in ('state.set-next-action', 'state.read'):
+                result = engine.execute(CommandEnvelope('second', command, 'tester', 'managed', 1, None, {'next_action': 'Unsafe'}))
+                self.assertEqual(result['status'], 'BLOCKED')
+                self.assertEqual(result['reason'], 'INVALID_HISTORY')
+            self.assertEqual({p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}, before)
     def test_invalid_pending_commit_preserves_state_history_and_evidence(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')

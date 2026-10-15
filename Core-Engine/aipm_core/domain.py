@@ -52,7 +52,7 @@ class CoreEngine:
             raise StateError("Invalid History Event Key")
 
     @classmethod
-    def _history(cls, project: ManagedProject, maximum_revision: int) -> list[dict[str, Any]]:
+    def _history(cls, project: ManagedProject, maximum_revision: int, *, pending_revision: int | None = None) -> list[dict[str, Any]]:
         records = []
         revisions = set()
         for path in (project.state_root / "History" / "Events").glob("*.json"):
@@ -62,6 +62,11 @@ class CoreEngine:
                 raise StateError("Invalid History Revision")
             revisions.add(event["revision"])
             records.append(event)
+        required_count = maximum_revision if pending_revision is None else pending_revision - 1
+        committed = revisions - ({pending_revision} if pending_revision is not None else set())
+        # Positive, unique, bounded revisions with this count are exactly 1..N.
+        if len(committed) != required_count:
+            raise StateError("Missing History Revision")
         return records
 
     @classmethod
@@ -96,7 +101,7 @@ class CoreEngine:
                 raise StateError("Pending Commit Git Mismatch")
         else:
             raise StateError("Unsupported Pending Commit Command")
-        history = cls._history(project, revision)
+        history = cls._history(project, revision, pending_revision=revision)
         if any(record["revision"] == revision and record != event for record in history):
             raise StateError("Pending Commit Conflicts With History")
         event_path = project.state_root / "History" / "Events" / f"{revision:020d}.json"
@@ -129,14 +134,14 @@ class CoreEngine:
                 raise StateError("Invalid Task State")
         except (OSError, ValueError, KeyError, TypeError):
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_STATE"}
-        if command.command == "state.read":
-            return {"schema_version": "1.0", "status": "PASS", "state": manifest, "revision": manifest["revision"]}
-        if command.command not in {"state.set-next-action", "state.record-git-observation"}:
-            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         try:
             history = self._history(project, manifest["revision"])
         except (OSError, ValueError, KeyError, TypeError):
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_HISTORY"}
+        if command.command == "state.read":
+            return {"schema_version": "1.0", "status": "PASS", "state": manifest, "revision": manifest["revision"]}
+        if command.command not in {"state.set-next-action", "state.record-git-observation"}:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:
             for event in history:
                 if event["idempotency_key"] == command.idempotency_key:
