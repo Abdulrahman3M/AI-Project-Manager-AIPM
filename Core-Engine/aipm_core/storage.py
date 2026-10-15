@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+import stat
 import tempfile
 import os
 
@@ -33,8 +34,17 @@ class ManagedProject:
 
 
 def _canonical(path: Path) -> Path:
-    if path.is_symlink():
-        raise StateError(f"symlink root is not allowed: {path}")
+    # Inspect the lexical components before resolve() can erase a redirect.
+    absolute = path.absolute()
+    for component in (*reversed(absolute.parents), absolute):
+        try:
+            attributes = component.lstat()
+        except FileNotFoundError:
+            continue
+        except PermissionError as error:
+            raise StateError(f"access denied: {component}") from error
+        if stat.S_ISLNK(attributes.st_mode) or getattr(attributes, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+            raise StateError(f"reparse point is not allowed: {component}")
     return path.resolve(strict=False)
 
 
@@ -51,13 +61,31 @@ def _timestamp() -> str:
 
 
 def _atomic_json(path: Path, data: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, prefix=".aipm-", suffix=".tmp") as stream:
-        json.dump(data, stream, indent=2, sort_keys=True)
-        stream.write("\n")
-        stream.flush()
-        temporary = Path(stream.name)
-    temporary.replace(path)
+    temporary = None
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _probe_access(path.parent)
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False, prefix=".aipm-", suffix=".tmp") as stream:
+            temporary = Path(stream.name)
+            json.dump(data, stream, indent=2, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+        temporary.replace(path)
+    except PermissionError as error:
+        raise StateError(f"access denied: {path}") from error
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def _probe_access(directory: Path) -> None:
+    """Exercise effective file access, including delete-on-close cleanup."""
+    try:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=directory, prefix=".aipm-probe-", suffix=".tmp") as probe:
+            probe.write("AIPM Access Probe\n")
+            probe.flush()
+    except PermissionError as error:
+        raise StateError(f"access denied: {directory}") from error
 
 
 def initialize_project_state(project_root: Path, project_id: str, alias: str, *, platform_root: Path | None = None) -> ManagedProject:
@@ -69,19 +97,23 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
     platform = _canonical(platform_root) if platform_root is not None else None
     if platform is not None and _inside(root, platform):
         raise StateError("managed project root cannot be inside the AIPM platform repository")
-    legacy = root / LEGACY_ROOT_NAME
-    state_root = root / STATE_ROOT_NAME
+    legacy = _canonical(root / LEGACY_ROOT_NAME)
+    state_root = _canonical(root / STATE_ROOT_NAME)
     if legacy.exists():
         raise StateError("legacy Shared-Project-State detected; use a read-only compatibility workflow")
     if state_root.exists():
         raise StateError("managed state root already exists; initialization never overwrites")
-    root.mkdir(parents=True, exist_ok=True)
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+    except PermissionError as error:
+        raise StateError(f"access denied: {root}") from error
+    _probe_access(root)
     state_root.mkdir()
     for relative in ("Tasks", "Tool-State", "Temporary-Files", "Cache", "Test-Workspace", "Logs", "Quarantine/Items", "Quarantine/Records", "History/Snapshots", "History/Events", "Locks", "Archive"):
         (state_root / relative).mkdir(parents=True, exist_ok=True)
     now = _timestamp()
     _atomic_json(state_root / "Project-Manifest.json", {"schema_version": "1.0", "project_id": project_id, "project_alias": alias, "state_root_name": STATE_ROOT_NAME, "created_at": now, "source_root_fingerprint": None, "active_task_id": None})
-    _atomic_json(state_root / "State-Manifest.json", {"schema_version": "1.0", "revision": 0, "project_id": project_id, "task_id": None, "task_status": "NOT-STARTED", "active_phase": None, "state_health": "CONSISTENT", "last_verified_action": "P02 initialization", "next_action": None, "branch": None, "head_sha": None, "updated_at": now, "updated_by": "aipm-core"})
+    _atomic_json(state_root / "State-Manifest.json", {"schema_version": "1.1", "tasks": {}, "diff_fingerprint": None, "revision": 0, "project_id": project_id, "task_id": None, "task_status": "NOT-STARTED", "active_phase": None, "state_health": "CONSISTENT", "last_verified_action": "P02 initialization", "next_action": None, "branch": None, "head_sha": None, "updated_at": now, "updated_by": "aipm-core"})
     (state_root / "README.md").write_text("# Shared Project State Manager\n\nManaged operational state for this project.\n", encoding="utf-8")
     return ManagedProject(project_id, alias, root, state_root)
 

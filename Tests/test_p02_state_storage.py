@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import csv
+from contextlib import contextmanager
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -12,6 +15,97 @@ from aipm_core.storage import ProjectRegistry, StateError, default_registry_path
 
 
 class StateStorageTests(unittest.TestCase):
+    @contextmanager
+    def _junction(self, link: Path, target: Path) -> None:
+        result = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, f"UNVERIFIED: Windows junction creation failed: {result.stdout} {result.stderr}")
+        try:
+            yield
+        finally:
+            link.rmdir()
+
+    @contextmanager
+    def _deny_file_creation(self, directory: Path) -> None:
+        identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], capture_output=True, text=True, check=True)
+        sid = next(csv.reader(identity.stdout.splitlines()))[1]
+        denial = subprocess.run(["icacls", str(directory), "/deny", f"*{sid}:(OI)(CI)(WD)"], capture_output=True, text=True)
+        try:
+            self.assertEqual(denial.returncode, 0, f"UNVERIFIED: Windows ACL denial failed: {denial.stdout} {denial.stderr}")
+            with self.assertRaises(PermissionError, msg="UNVERIFIED: ACL did not deny real file creation"):
+                (directory / "Denied-Probe.txt").write_text("Denied", encoding="utf-8")
+            yield
+        finally:
+            restore = subprocess.run(["icacls", str(directory), "/remove:d", f"*{sid}", "/t", "/c"], capture_output=True, text=True)
+            self.assertEqual(restore.returncode, 0, f"ACL restoration failed: {restore.stdout} {restore.stderr}")
+
+    def test_acl_denial_leaves_no_partial_state_tree(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            project = Path(temporary) / "Project"
+            project.mkdir()
+            with self._deny_file_creation(project):
+                try:
+                    with self.assertRaisesRegex(StateError, "access denied"):
+                        initialize_project_state(project, "project", "Project")
+                finally:
+                    self.assertFalse((project / "Shared-Project-State-Manager").exists())
+                    self.assertEqual(list(project.glob(".aipm-*")), [])
+
+    def test_registry_acl_denial_preserves_existing_registry(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            registry = ProjectRegistry(base / "User-Data" / "registry.json")
+            first = initialize_project_state(base / "Project-One", "project-one", "Project One")
+            second = initialize_project_state(base / "Project-Two", "project-two", "Project Two")
+            registry.register(first)
+            original = registry.path.read_bytes()
+            with self._deny_file_creation(registry.path.parent):
+                try:
+                    with self.assertRaisesRegex(StateError, "access denied"):
+                        registry.register(second)
+                finally:
+                    self.assertEqual(registry.path.read_bytes(), original)
+                    self.assertEqual(list(registry.path.parent.glob(".aipm-*")), [])
+
+    def test_rejects_junction_in_project_root_path(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            target = base / "Target"
+            target.mkdir()
+            link = base / "Junction"
+            with self._junction(link, target):
+                with self.assertRaises(StateError):
+                    initialize_project_state(link / "Project", "project", "Project")
+                self.assertFalse((target / "Project" / "Shared-Project-State-Manager").exists())
+
+    def test_rejects_junction_in_existing_state_path(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            project = base / "Project"
+            project.mkdir()
+            target = base / "Target"
+            target.mkdir()
+            link = project / "Shared-Project-State-Manager"
+            with self._junction(link, target):
+                with self.assertRaisesRegex(StateError, "reparse"):
+                    initialize_project_state(project, "project", "Project")
+                self.assertEqual(list(target.iterdir()), [])
+
+    def test_new_state_manifest_uses_schema_1_1_fields(self) -> None:
+        TEST_WORKSPACE.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            project = initialize_project_state(Path(temporary) / "Project", "project", "Project")
+            state = json.loads((project.state_root / "State-Manifest.json").read_text())
+            self.assertEqual(state["schema_version"], "1.1")
+            self.assertEqual(state["tasks"], {})
+            self.assertIsNone(state["diff_fingerprint"])
+            manifest = json.loads((project.state_root / "Project-Manifest.json").read_text())
+            self.assertEqual(manifest["schema_version"], "1.0")
+            self.assertEqual(list(Path(temporary).rglob(".aipm-*")), [])
+
     def test_default_registry_is_outside_platform_root(self) -> None:
         path = default_registry_path()
         self.assertEqual(path.name, "registry.json")
