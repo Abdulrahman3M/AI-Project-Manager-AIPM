@@ -15,6 +15,28 @@ from aipm_core.storage import initialize_project_state, _atomic_json
 
 
 class CoreEngineTests(unittest.TestCase):
+    def test_invalid_command_metadata_leaves_state_unchanged_and_usable(self):
+        # Publishing invalid event metadata would strand an unrecoverable intent.
+        cases = [('actor', ''), ('actor', ' '), ('actor', 7),
+                 ('request_id', ''), ('request_id', 7), ('request_id', []),
+                 ('idempotency_key', 7), ('idempotency_key', []), ('idempotency_key', {})]
+        for field, value in cases:
+            with self.subTest(field=field, value=value), tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+                project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
+                engine = CoreEngine({'managed': project})
+                before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
+                arguments = dict(request_id='invalid', command='state.set-next-action', actor='tester', project_id='managed', expected_revision=0, idempotency_key=None, input={'next_action': 'Unsafe'})
+                arguments[field] = value
+                result = engine.execute(CommandEnvelope(**arguments))
+                self.assertEqual((result['status'], result['reason']), ('BLOCKED', 'INVALID_INPUT'))
+                self.assertFalse((project.state_root / 'History/Pending-Commit.json').exists())
+                self.assertEqual({p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}, before)
+                fresh = CoreEngine({'managed': project})
+                read = fresh.execute(CommandEnvelope('read', 'state.read', 'tester', 'managed', 0, None, {}))
+                self.assertEqual((read['status'], read['revision']), ('PASS', 0))
+                changed = fresh.execute(CommandEnvelope('valid', 'state.set-next-action', 'tester', 'managed', 0, 'valid-key', {'next_action': 'Safe Action'}))
+                self.assertEqual((changed['status'], changed['revision']), ('PASS', 1))
+
     def test_missing_history_revision_blocks_mutation_without_writes(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')

@@ -99,6 +99,25 @@ class HardeningTests(unittest.TestCase):
    with self.assertRaises(LockError): self.manager.acquire_lock(resource,'actor')
   for lease in (0,-1):
    with self.assertRaises(LockError): self.manager.acquire_lock('task','actor',lease)
+ def test_lock_guard_rejects_reparse_path_before_opening_redirected_target(self):
+  # A real junction exercises canonical rejection; the narrow open shim models
+  # a file redirect because this Windows token cannot create file symlinks.
+  external=Path(self.temp.name)/'External'; external.mkdir(); target=external/'Guard.bin'; target.write_bytes(b'')
+  guard=self.project.state_root/'Locks'/'task.guard'
+  result=subprocess.run(['cmd','/c','mklink','/J',str(guard),str(external)],capture_output=True,text=True)
+  self.assertEqual(result.returncode,0,f'UNVERIFIED: Windows junction creation failed: {result.stdout} {result.stderr}')
+  try:
+   self.assertTrue(guard.is_junction()); original=Path.open; opened=[]
+   def redirected_open(path,*args,**kwargs):
+    if path==guard:
+     opened.append(path); return original(target,*args,**kwargs)
+    return original(path,*args,**kwargs)
+   with patch.object(Path,'open',redirected_open):
+    with self.assertRaises(LockError): self.manager.acquire_lock('task','actor')
+   self.assertEqual(opened,[],'Guard Was Opened Before Reparse Validation')
+   self.assertEqual(target.read_bytes(),b'')
+   self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+  finally: guard.rmdir()
  def test_competing_stale_lock_cleanup_cannot_remove_new_lease(self):
   for operation in ('release','recover'):
    with self.subTest(operation=operation):

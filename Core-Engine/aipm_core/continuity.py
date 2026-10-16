@@ -272,8 +272,8 @@ class ContinuityManager:
     def _lock_guard(self, resource: str):
         # Keep this file permanently: unlinking a guard would create two lock
         # domains for waiters holding its old inode and new arrivals.
-        path = self._lock_path(resource).with_suffix('.guard')
         try:
+            path = self._bounded(self._lock_path(resource).with_suffix('.guard'))
             with path.open('a+b') as guard:
                 if os.fstat(guard.fileno()).st_size == 0:
                     guard.write(b'\0'); guard.flush()
@@ -292,7 +292,7 @@ class ContinuityManager:
                         msvcrt.locking(guard.fileno(), msvcrt.LK_UNLCK, 1)
                     else:
                         fcntl.flock(guard.fileno(), fcntl.LOCK_UN)
-        except OSError as error:
+        except (OSError, StateError) as error:
             raise LockError('LOCK_GUARD_UNAVAILABLE') from error
 
     @staticmethod

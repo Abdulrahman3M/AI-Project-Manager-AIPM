@@ -205,6 +205,12 @@ class CoreEngine:
         project = self.projects.get(command.project_id)
         if project is None:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "PROJECT_NOT_REGISTERED"}
+        event = {"schema_version": "1.0", "request_id": command.request_id, "command": command.command, "actor": command.actor, "project_id": command.project_id, "revision": 1, "idempotency_key": command.idempotency_key, "input": command.input}
+        try:
+            # Reject invalid caller metadata before recovery or any publication.
+            self._validate_event(event, project)
+        except StateError:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
         manifest_path = project.state_root / "State-Manifest.json"
         try:
             self._recover(project)
@@ -231,8 +237,8 @@ class CoreEngine:
         if command.command not in {"state.set-next-action", "state.record-git-observation"} | self.TASK_COMMANDS:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:
-            for event in history:
-                if event["idempotency_key"] == command.idempotency_key:
+            for record in history:
+                if record["idempotency_key"] == command.idempotency_key:
                     return {"schema_version": "1.0", "status": "PASS", "revision": manifest["revision"], "replayed": True}
         if command.expected_revision != manifest["revision"]:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "STATE_CONFLICT", "revision": manifest["revision"]}
@@ -256,7 +262,12 @@ class CoreEngine:
         manifest["schema_version"] = "1.1"
         manifest["updated_by"] = command.actor
         manifest["updated_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        event = {"schema_version": "1.0", "request_id": command.request_id, "command": command.command, "actor": command.actor, "project_id": command.project_id, "revision": manifest["revision"], "idempotency_key": command.idempotency_key, "input": command.input}
+        event['revision'] = manifest['revision']
+        try:
+            self._validate_manifest(manifest, project)
+            self._validate_event(event, project)
+        except StateError:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
         try:
             self._commit(project, manifest, event)
         except (OSError, ValueError, KeyError, TypeError):
