@@ -1,5 +1,7 @@
 # App.psm1 - the application: main menu loop and the actions. Business logic lives in Core modules, never in the TUI modules.
 Set-StrictMode -Version 2.0
+$script:SessionCoreReader = $null
+$script:SessionDependencyReader = $null
 
 function Get-AipmField {
     param($Object, [string]$Name, $Default = $null)
@@ -7,6 +9,106 @@ function Get-AipmField {
     $property = $Object.PSObject.Properties[$Name]
     if ($property) { return $property.Value }
     return $Default
+}
+
+function Invoke-AipmSessionCore {
+    param([string]$AppRoot, [string]$Command, [string]$RegistryPath = '')
+    try {
+        $result = if ($script:SessionCoreReader) {
+            & $script:SessionCoreReader $AppRoot $Command $RegistryPath
+        } else {
+            Invoke-AipmCore -AppRoot $AppRoot -Command $Command -RegistryPath $RegistryPath -ErrorAction Stop
+        }
+        if ($null -eq $result -or -not $result.PSObject.Properties['Status']) {
+            return [pscustomobject]@{ Status='BLOCKED'; Reason='CORE_RESPONSE_INVALID'; Data=$null }
+        }
+        return $result
+    } catch {
+        return [pscustomobject]@{ Status='BLOCKED'; Reason='CORE_REQUEST_FAILED'; Data=$null }
+    }
+}
+
+function Get-AipmSessionDependency {
+    param([string]$AppRoot)
+    try {
+        $result = if ($script:SessionDependencyReader) {
+            & $script:SessionDependencyReader $AppRoot
+        } else {
+            Get-AipmDependencyStatus -AppRoot $AppRoot -ErrorAction Stop
+        }
+        if ($null -eq $result -or -not $result.PSObject.Properties['Status']) {
+            return [pscustomobject]@{ Status='BLOCKED'; Reason='DEPENDENCY_STATUS_INVALID'; Version='' }
+        }
+        return $result
+    } catch {
+        return [pscustomobject]@{ Status='BLOCKED'; Reason='DEPENDENCY_CHECK_FAILED'; Version='' }
+    }
+}
+
+function New-AipmBlockedSessionSnapshot {
+    param($Dependency, $Dashboard, $Catalog, $Hosts, [string[]]$CoreCommands, [string]$Reason)
+    return [pscustomobject]@{
+        Status = 'BLOCKED'
+        Reason = $(if ($Reason) { $Reason } else { 'CORE_REQUEST_BLOCKED' })
+        Dependency = $Dependency
+        Dashboard = $Dashboard
+        Catalog = $Catalog
+        Hosts = $Hosts
+        CoreCommands = [string[]]$CoreCommands
+        CapturedAt = [DateTime]::UtcNow.ToString('o')
+    }
+}
+
+function Get-AipmSessionSnapshot {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Root, [string]$RegistryPath = '')
+    $commands = New-Object System.Collections.Generic.List[string]
+    $dependency = Get-AipmSessionDependency -AppRoot $Root
+    if ($dependency.Status -ne 'PASS') {
+        return (New-AipmBlockedSessionSnapshot -Dependency $dependency -CoreCommands @() -Reason ([string]$dependency.Reason))
+    }
+    $dashboard = Invoke-AipmSessionCore -AppRoot $Root -Command 'dashboard' -RegistryPath $RegistryPath
+    $commands.Add('dashboard')
+    if ($dashboard.Status -ne 'PASS') {
+        return (New-AipmBlockedSessionSnapshot -Dependency $dependency -Dashboard $dashboard -CoreCommands $commands.ToArray() -Reason ([string]$dashboard.Reason))
+    }
+    $catalog = Invoke-AipmSessionCore -AppRoot $Root -Command 'catalog'
+    $commands.Add('catalog')
+    if ($catalog.Status -ne 'PASS') {
+        return (New-AipmBlockedSessionSnapshot -Dependency $dependency -Dashboard $dashboard -Catalog $catalog -CoreCommands $commands.ToArray() -Reason ([string]$catalog.Reason))
+    }
+    $hosts = Invoke-AipmSessionCore -AppRoot $Root -Command 'host-capabilities'
+    $commands.Add('host-capabilities')
+    if ($hosts.Status -ne 'PASS') {
+        return (New-AipmBlockedSessionSnapshot -Dependency $dependency -Dashboard $dashboard -Catalog $catalog -Hosts $hosts -CoreCommands $commands.ToArray() -Reason ([string]$hosts.Reason))
+    }
+    return [pscustomobject]@{
+        Status = 'PASS'
+        Reason = ''
+        Dependency = $dependency
+        Dashboard = $dashboard
+        Catalog = $catalog
+        Hosts = $hosts
+        CoreCommands = $commands.ToArray()
+        CapturedAt = [DateTime]::UtcNow.ToString('o')
+    }
+}
+
+function Refresh-AipmSessionSnapshot {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Root, [string]$RegistryPath = '', $CurrentSnapshot)
+    $candidate = Get-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath
+    if ($candidate.Status -eq 'PASS') {
+        return [pscustomobject]@{ Status='PASS'; Snapshot=$candidate; Preserved=$false; Reason=''; FailedCandidate=$null }
+    }
+    $preserved = ($null -ne $CurrentSnapshot -and $CurrentSnapshot.Status -eq 'PASS')
+    return [pscustomobject]@{
+        Status = 'BLOCKED'
+        Snapshot = $(if ($preserved) { $CurrentSnapshot } else { $candidate })
+        Preserved = $preserved
+        Reason = $candidate.Reason
+        FailedCandidate = $candidate
+    }
 }
 
 function ConvertTo-AipmDisplayStatus {
@@ -458,8 +560,10 @@ function Show-AipmPage {
     param([string]$Title, [string[]]$Lines)
     while ($true) {
         Clear-Ui
+        $productShell = Get-TuiProductShell
+        if ($productShell.Version) { Write-AipmProductHeader -Version $productShell.Version -Status $productShell.Status -Width (Get-TerminalSize).Width }
         Write-UiLine ('  ' + $Title) 'Title'
-        Write-UiLine ('  ' + ('-' * [Math]::Min(48, (Get-TerminalSize).Width - 5))) 'Dim'
+        Write-TuiRule -Width (Get-TerminalSize).Width
         foreach ($line in $Lines) {
             $role = 'Normal'
             if ($line -match '(?i)\b(Ready|Passed|Complete)\b') { $role = 'Success' }
@@ -484,19 +588,21 @@ function Start-TuiApp {
     $script:AppRoot = $Root
     Apply-AppDesign -Root $Root
     $version = Get-AppVersion $Root
+    $session = Get-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath
+    $refreshNotice = ''
     $quit = $false
     while (-not $quit) {
         $lines = $null
-        $dependency = Get-AipmDependencyStatus -AppRoot $Root
-        if ($dependency.Status -eq 'PASS') {
-            $core = Invoke-AipmCore -AppRoot $Root -Command dashboard -RegistryPath $RegistryPath
-            $catalog = Invoke-AipmCore -AppRoot $Root -Command catalog
-            $hosts = Invoke-AipmCore -AppRoot $Root -Command host-capabilities
+        if ($session.Status -eq 'PASS') {
+            $core = $session.Dashboard
+            $catalog = $session.Catalog
+            $hosts = $session.Hosts
+            $data = $core.Data
         } else {
-            $core = [pscustomobject]@{ Status='BLOCKED'; Reason=$dependency.Reason; Data=[pscustomobject]@{ status='BLOCKED'; registry_status='UNVERIFIED'; projects=@() } }
+            $core = [pscustomobject]@{ Status='BLOCKED'; Reason=$session.Reason; Data=[pscustomobject]@{ status='BLOCKED'; registry_status='UNVERIFIED'; projects=@() } }
             $catalog = [pscustomobject]@{ Data=$null }; $hosts = [pscustomobject]@{ Data=$null }
+            $data = $core.Data
         }
-        $data = $core.Data
         $items = @()
         $projects = @(Get-AipmField $data 'projects' @())
         foreach ($project in $projects) {
@@ -528,14 +634,23 @@ function Start-TuiApp {
         Set-TuiColorStyle -Mode $design.colors -Accent (Get-TuiPreset -Id $menuPreset).Accent
         $registryStatus = [string](Get-AipmField $data 'registry_status' 'UNVERIFIED')
         $statusText = $coreText + ' | Registry ' + $registryStatus + ' | ' + $items.Count + ' Options'
-        $choice = Show-Menu -Title $mode -Description $statusText -Items $items -Preset $menuPreset -Navigation $menuNavigation
+        $headerStatus = if ($refreshNotice) { $coreText + ' | ' + $refreshNotice } else { $statusText }
+        Set-TuiProductShell -Version $version -Status $headerStatus
+        $choice = Show-Menu -Title $mode -Items $items -Preset $menuPreset -Navigation $menuNavigation
         if ($choice -eq '__QUIT__') {
             if (Show-Confirm -Title 'Exit AI Project Manager?' -Message 'No project data will be changed.' -YesLabel 'Exit AIPM' -NoLabel 'Stay Here' -Default $false) { $quit = $true }
             continue
         }
         if ($choice -eq '__HELP__') { $section = 'Help' }
         elseif ($choice -eq 'Exit' -or $null -eq $choice) { $quit = $true; continue }
-        elseif ($choice -eq 'Refresh') { continue }
+        elseif ($choice -eq 'Refresh') {
+            $refresh = Refresh-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath -CurrentSnapshot $session
+            $session = $refresh.Snapshot
+            if ($refresh.Status -eq 'PASS') { $refreshNotice = '' }
+            elseif ($refresh.Preserved) { $refreshNotice = 'Refresh Failed: ' + $refresh.Reason + ' | Last Snapshot Preserved' }
+            else { $refreshNotice = 'Refresh Failed: ' + $refresh.Reason + ' | No Snapshot Available' }
+            continue
+        }
         elseif ($choice -like 'project:*') {
             $id = $choice.Substring(8)
             $project = @($projects | Where-Object { $_.project_id -eq $id }) | Select-Object -First 1
@@ -573,7 +688,7 @@ function Start-TuiApp {
             else { $section = 'Settings' }
         }
         if ($section -eq 'Skills & Plugins') {
-            $pageResult = Show-AipmCapabilityLibrary -Catalog $catalog.Data -Version $version -Status $statusText
+            $pageResult = Show-AipmCapabilityLibrary -Catalog $catalog.Data -Version $version -Status $headerStatus
         } else {
             if (-not $lines) { $lines = @(Get-AipmPageLines -Section $section -Dashboard $data -Catalog $catalog.Data -HostMatrix $hosts.Data -Version $version) }
             $pageResult = Show-AipmPage -Title $section -Lines $lines
@@ -588,4 +703,4 @@ function Start-TuiApp {
     }
 }
 
-Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage
+Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage

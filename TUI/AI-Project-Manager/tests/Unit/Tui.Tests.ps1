@@ -11,6 +11,13 @@ Assert-Contains 'product header shows the full product name' $headerUi.Output 'A
 Assert-Contains 'product header keeps the version next to the product name' $headerUi.Output 'AI Project Manager v0.2.1'
 Assert-Contains 'product header is framed and reports current status' $headerUi.Output '+'
 Assert-Contains 'product header reports the supplied status' $headerUi.Output 'Core Ready'
+$refreshHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready | Refresh Failed: TEST_REFRESH_BLOCKED | Last Snapshot Preserved' -Width 80 } ''
+Assert-Contains '80-column product header keeps the refresh failure and snapshot-preservation status visible' $refreshHeaderUi.Output 'Last Snapshot Preserved'
+$compactHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready' -Width 20 } ''
+Assert-Contains 'narrow product header keeps the compact product name and version adjacent' $compactHeaderUi.Output 'AIPM v0.2.1'
+Assert-True 'narrow product header omits lower-priority status to preserve vertical space' (-not $compactHeaderUi.Output.Contains('Core Ready'))
+$compactHeaderLines = @($compactHeaderUi.Output -split "`n" | Where-Object { $_ })
+Assert-Equal 'narrow product header stays within the terminal width' 0 @($compactHeaderLines | Where-Object { $_.Length -gt 20 }).Count
 $rendererPath = Join-Path (Join-Path (Get-TestRoot) 'src/TUI') 'Renderer.psm1'
 $rendererText = [System.IO.File]::ReadAllText($rendererPath)
 Assert-True 'legacy renderer never assigns a console background color' ($rendererText -notmatch '\[Console\]::BackgroundColor\s*=')
@@ -199,6 +206,7 @@ Assert-Contains 'short terminal indicates the visible option range' $viewportOut
 Assert-Contains 'short terminal keeps the navigation footer reachable' $viewportOutput 'Esc Back'
 Initialize-Renderer -Ansi $false -Sink Buffer
 $narrowItems = @((New-MenuItem -Label 'A Narrow Option' -Desc 'A concise explanation.' -Value 'narrow'))
+Set-TuiProductShell -Version '0.2.1' -Status 'Core Ready | Registry Registered | 13 Options'
 Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 20 -CaptureHeight 10
 Set-ScriptedInput '{Enter}'
 $narrowChoice = Show-Menu -Title 'Narrow' -Items $narrowItems -Navigation Arrows
@@ -206,6 +214,7 @@ $narrowOutput = Get-CapturedOutput
 Clear-ScriptedInput
 Assert-Equal 'narrow terminal still selects the visible item' 'narrow' $narrowChoice
 Assert-Contains 'narrow terminal keeps Esc Back visible' $narrowOutput 'Esc Back'
+Set-TuiProductShell
 Initialize-Renderer -Ansi $false -Sink Buffer
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '{Esc}'
 Assert-True 'Esc returns $null (Back)' ($null -eq $ui.Value -and $ui.Error -eq '')
@@ -252,6 +261,7 @@ Set-TestGroup 'Whole application (scripted)'
 $registry = Join-Path (Get-TestWork) 'registry.json'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '12{Enter}13'
 Assert-True 'the Core-backed dashboard, About page and safe Exit run without errors' ($ui.Error -eq '' -and $ui.Output.Contains('Task Dashboard') -and $ui.Output.Contains('About')) $ui.Error
+Assert-True 'the product name and 0.2.1 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v0.2.1')).Count -ge 2)
 $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 [System.IO.File]::WriteAllText($malformedRegistry, '{"schema_version":"invalid"}', (New-Object System.Text.UTF8Encoding($false)))
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '13'

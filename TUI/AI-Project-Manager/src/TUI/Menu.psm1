@@ -8,6 +8,7 @@ function Set-TuiProductShell {
     param([string]$Version = '', [string]$Status = '')
     $script:ProductShell = @{ Version = $Version; Status = $Status }
 }
+function Get-TuiProductShell { return $script:ProductShell.Clone() }
 function Write-TuiRule {
     param([int]$Width)
     $width = [Math]::Min(240, [Math]::Max(20, $Width))
@@ -72,6 +73,10 @@ function Write-AipmProductHeader {
     if ($versionText) { Write-Ui ' ' 'Frame'; Write-Ui $versionText 'Info' }
     Write-Ui (' ' * ($titlePadding - $leftTitlePadding)) 'Frame'
     Write-UiLine ' |' 'Frame'
+    if ($width -lt 34) {
+        Write-TuiRule -Width $width
+        return
+    }
     $statusText = [string]$Status
     if ($statusText.Length -gt $innerWidth) {
         $statusText = $statusText.Substring(0, [Math]::Max(0, $innerWidth - 3)) + '...'
@@ -306,7 +311,9 @@ function Show-Menu {
             'Onboarding' { Write-UiLine ('  Get Started  /  ' + $Title) 'Title'; Write-UiLine '  Select An Option To Continue' 'Dim' }
             default { Write-UiLine ('  ' + $profile.Name + '  /  ' + $Title) 'Title' }
         } }
-        if ($profile.Density -ne 'Compact') { Write-UiLine ('  ' + ('-' * [math]::Min(48,(Get-TerminalSize).Width-5))) 'Dim' }
+        $terminalSize = Get-TerminalSize
+        $compactVerticalShell = ($script:ProductShell.Version -and $terminalSize.Height -le 10)
+        if ($profile.Density -ne 'Compact' -and -not $compactVerticalShell) { Write-UiLine ('  ' + ('-' * [math]::Min(48,$terminalSize.Width-5))) 'Dim' }
         if ($Description) { Write-MenuWrapped -Text $Description -Width (Get-TerminalSize).Width -Role 'Dim' -Indent '  ' }
         if ($searchActive) { Write-UiLine ('  Search: ' + $query + '_') 'Key' }
         if ($profile.Density -eq 'Spacious') { Write-UiLine '' }
@@ -319,8 +326,10 @@ function Show-Menu {
             $selectedDetails = $selectedItem.Desc
             if (-not $selectedItem.Enabled -and $selectedItem.Reason) { $selectedDetails = $selectedItem.Reason }
         }
+        $renderDescriptionStyle = $DescriptionStyle
+        if ($compactVerticalShell) { $renderDescriptionStyle = 'Off' }
         $panelRows = 0
-        if ($DescriptionStyle -eq 'Panel' -and $selectedDetails) {
+        if ($renderDescriptionStyle -eq 'Panel' -and $selectedDetails) {
             $panelRows = Measure-MenuWrappedLineCount -Text ('Details: ' + $selectedDetails) -Width $size.Width -Indent '  '
         }
         $prefixRows = Get-UiFrameLineCount
@@ -328,7 +337,7 @@ function Show-Menu {
         $availableRows = [Math]::Max(0, $size.Height - 1 - $prefixRows - $footerRows - $panelRows)
         $metricItems = @()
         for ($pos = 0; $pos -lt $visible.Count; $pos++) { $metricItems += $items[$visible[$pos]] }
-        $metrics = Get-MenuLayoutMetrics -Items $metricItems -Layout $profile.Layout -Density $profile.Density -DescriptionStyle $DescriptionStyle -Width $size.Width -Height $size.Height
+        $metrics = Get-MenuLayoutMetrics -Items $metricItems -Layout $profile.Layout -Density $profile.Density -DescriptionStyle $renderDescriptionStyle -Width $size.Width -Height $size.Height
         $lineCosts = @($metrics.LineCosts)
         $hasOverflow = ($metrics.TotalRows -gt $availableRows)
         if ($hasOverflow) { $availableRows = [Math]::Max(0, $availableRows - 1) }
@@ -360,23 +369,23 @@ function Show-Menu {
                 if ($ico) { Write-Ui $ico $it.IconRole; Write-Ui '  ' $role }
                 Write-Ui (Limit-MenuText -Text $it.Label -Width 32).PadRight(34) $role
                 Write-Ui '| ' 'Dim'
-                if ($DescriptionStyle -ne 'Off') { Write-UiLine $d 'Dim' } else { Write-UiLine '' }
+                if ($renderDescriptionStyle -ne 'Off') { Write-UiLine $d 'Dim' } else { Write-UiLine '' }
             } else {
                 Write-Ui $markerPrefix $markerRole
                 Write-Ui $prefix $role
                 if ($ico) { Write-Ui $ico $it.IconRole; Write-Ui '  ' $role }
                 $label = Limit-MenuText -Text $it.Label -Width ([Math]::Max(8, (Get-TerminalSize).Width - $markerPrefix.Length - $prefix.Length - [string]$ico.Length - 8))
                 Write-Ui $label $role
-                if ($DescriptionStyle -eq 'Inline' -and $d) { Write-Ui ('  -  ' + $d) 'Dim' }
+            if ($renderDescriptionStyle -eq 'Inline' -and $d) { Write-Ui ('  -  ' + $d) 'Dim' }
                 Write-UiLine ''
             }
-            if (-not $isSplit -and $DescriptionStyle -in @('Muted','Shade','Panel') -and $d) {
-                $descRole = $(if ($DescriptionStyle -eq 'Shade') { 'Description' } else { 'Dim' })
+            if (-not $isSplit -and $renderDescriptionStyle -in @('Muted','Shade','Panel') -and $d) {
+                $descRole = $(if ($renderDescriptionStyle -eq 'Shade') { 'Description' } else { 'Dim' })
                 Write-MenuWrapped -Text $d -Width (Get-TerminalSize).Width -Role $descRole
             }
             if ($profile.Density -eq 'Spacious') { Write-UiLine '' }
         }
-        if ($DescriptionStyle -eq 'Panel' -and $visible.Count -gt 0 -and $selectedDetails) {
+        if ($renderDescriptionStyle -eq 'Panel' -and $visible.Count -gt 0 -and $selectedDetails) {
             Write-MenuWrapped -Text ('Details: ' + $selectedDetails) -Width $size.Width -Role 'Dim' -Indent '  '
         }
         Write-UiLine ''
@@ -419,4 +428,4 @@ function Show-Menu {
         }
     }
 }
-Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, Write-TuiTable, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange, Get-MenuLayoutMetrics, Get-MenuLayoutCacheStats
+Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Get-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, Write-TuiTable, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange, Get-MenuLayoutMetrics, Get-MenuLayoutCacheStats

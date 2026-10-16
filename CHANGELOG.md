@@ -6,6 +6,13 @@
 - Added Search-First And Assistant Console View Modes, Shared Theme Roles, A11Y Markers, And Differential Rendering.
 - Actual Interactive Windows Terminal And Legacy Console Visual Verification Remains Unverified.
 
+## [0.2.1] — Product Shell, Capability Library, And Session Efficiency
+
+- Added a framed product name and version header across the dashboard and primary pages.
+- Added responsive Capability Library tables while retaining imported Skill source-license metadata and unverified Plugin installation/publication status.
+- Cached stable menu geometry, captured one Core-backed session snapshot, and limited subsequent Core reads to explicit Refresh actions.
+- Synchronized the platform and TUI package versions at 0.2.1; the protected capability registry baseline remains unchanged.
+
 ## [0.2.0] — Host Adapters And Intelligent TUI Design
 
 - Added the first-party `tui-intelligence` Skill, scoped to Apache-2.0 and distinct from imported Skills.

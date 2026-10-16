@@ -61,3 +61,69 @@ Assert-Equal 'first-party row retains its declared Apache-2.0 license' 'Apache-2
 Assert-Equal 'imported row retains its source license without AIPM relicensing' 'Universal AI ToolKit Personal Use License' $(if ($capabilityRows -and $capabilityRows.Imported.Count) { $capabilityRows.Imported[0].License } else { '' })
 Assert-Equal 'Plugin package remains uninstalled and unpublished unless evidenced' 'Unverified,Unverified' $(if ($capabilityRows -and $capabilityRows.Plugins.Count) { $capabilityRows.Plugins[0].Installation + ',' + $capabilityRows.Plugins[0].Publication } else { '' })
 Assert-Equal 'missing catalog is unverified and does not invent capability rows' 'Unverified,0,0' $(if ($missingCapabilityRows) { $missingCapabilityRows.CatalogStatus + ',' + $missingCapabilityRows.FirstParty.Count + ',' + $missingCapabilityRows.Imported.Count } else { '' })
+
+Set-TestGroup 'Session Snapshot lifecycle'
+$appModulePath = Join-Path (Join-Path (Get-TestRoot) 'src/Core') 'App.psm1'
+$appModule = @(Get-Module | Where-Object { $_.Path -eq $appModulePath }) | Select-Object -First 1
+$snapshotApiAvailable = [bool](Get-Command Get-AipmSessionSnapshot -ErrorAction SilentlyContinue) -and [bool](Get-Command Refresh-AipmSessionSnapshot -ErrorAction SilentlyContinue)
+$sessionCoreLog = New-Object System.Collections.ArrayList
+$sessionCoreFailure = @{ Enabled = $false; FailAt = 0 }
+$sessionCoreResponses = @{
+    dashboard = [pscustomobject]@{ Status='PASS'; Reason=''; Data=[pscustomobject]@{ status='PASS'; registry_status='REGISTERED'; projects=@() } }
+    catalog = [pscustomobject]@{ Status='PASS'; Reason=''; Data=$capabilityCatalog }
+    'host-capabilities' = [pscustomobject]@{ Status='PASS'; Reason=''; Data=[pscustomobject]@{ matrix=[pscustomobject]@{ policy='READ_ONLY' } } }
+}
+$sessionCoreReader = {
+    param($AppRoot, $Command, $RegistryPath)
+    [void]$sessionCoreLog.Add($Command)
+    if ($Command -eq 'dashboard' -and ($sessionCoreFailure.Enabled -or ($sessionCoreFailure.FailAt -gt 0 -and $sessionCoreLog.Count -ge $sessionCoreFailure.FailAt))) { return [pscustomobject]@{ Status='BLOCKED'; Reason='TEST_REFRESH_BLOCKED'; Data=$null } }
+    return $sessionCoreResponses[$Command]
+}.GetNewClosure()
+$sessionDependencyReader = { param($AppRoot) [pscustomobject]@{ Status='PASS'; Reason=''; Version='3.12.0' } }
+$snapshotLifecycleResults = @{
+    NavigationUi = [pscustomobject]@{ Error='Snapshot API unavailable.' }
+    NavigationReadCount = -1
+    InitialSnapshot = [pscustomobject]@{ Status='UNAVAILABLE'; Dashboard=$null; Catalog=$null; Hosts=$null }
+    SuccessfulRefresh = [pscustomobject]@{ Status='UNAVAILABLE'; Snapshot=$null }
+    SuccessfulRefreshReadCount = 0
+    FailedRefresh = [pscustomobject]@{ Status='UNAVAILABLE'; Preserved=$false; Reason='Snapshot API unavailable.'; Snapshot=$null }
+}
+if ($snapshotApiAvailable -and $appModule) {
+    & $appModule {
+        param($CoreReader, $DependencyReader)
+        $script:SessionCoreReader = $CoreReader
+        $script:SessionDependencyReader = $DependencyReader
+    } $sessionCoreReader $sessionDependencyReader
+    $navigationUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '12{Enter}13'
+    $snapshotLifecycleResults.NavigationUi = $navigationUi
+    $snapshotLifecycleResults.NavigationReadCount = $sessionCoreLog.Count
+    $sessionCoreLog.Clear()
+    $initialSnapshot = Get-AipmSessionSnapshot -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json')
+    $snapshotLifecycleResults.InitialSnapshot = $initialSnapshot
+    $snapshotLifecycleResults.InitialReadCount = $sessionCoreLog.Count
+    $sessionCoreLog.Clear()
+    $successfulRefresh = Refresh-AipmSessionSnapshot -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') -CurrentSnapshot $initialSnapshot
+    $snapshotLifecycleResults.SuccessfulRefresh = $successfulRefresh
+    $snapshotLifecycleResults.SuccessfulRefreshReadCount = $sessionCoreLog.Count
+    $sessionCoreFailure.Enabled = $true
+    $sessionCoreLog.Clear()
+    $failedRefresh = Refresh-AipmSessionSnapshot -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') -CurrentSnapshot $successfulRefresh.Snapshot
+    $snapshotLifecycleResults.FailedRefresh = $failedRefresh
+    $snapshotLifecycleResults.FailedRefreshReadCount = $sessionCoreLog.Count
+    $sessionCoreFailure.Enabled = $false
+    $sessionCoreFailure.FailAt = 4
+    $sessionCoreLog.Clear()
+    $failedRefreshUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '1113'
+    $snapshotLifecycleResults.FailedRefreshUi = $failedRefreshUi
+    $snapshotLifecycleResults.FailedRefreshUiReadCount = $sessionCoreLog.Count
+    $sessionCoreFailure.FailAt = 0
+    & $appModule { $script:SessionCoreReader = $null; $script:SessionDependencyReader = $null }
+}
+Assert-True 'ordinary menu and page navigation use one complete initial Core snapshot' ($snapshotApiAvailable -and $snapshotLifecycleResults.NavigationUi.Error -eq '' -and $snapshotLifecycleResults.NavigationReadCount -eq 3) $(if ($snapshotLifecycleResults.NavigationUi) { $snapshotLifecycleResults.NavigationUi.Error } else { 'Snapshot API unavailable.' })
+Assert-True 'session snapshot contains dashboard, catalog, and host capability facts' ($snapshotLifecycleResults.InitialSnapshot.Status -eq 'PASS' -and $null -ne $snapshotLifecycleResults.InitialSnapshot.Dashboard -and $null -ne $snapshotLifecycleResults.InitialSnapshot.Catalog -and $null -ne $snapshotLifecycleResults.InitialSnapshot.Hosts)
+Assert-Equal 'each explicit successful refresh requests one complete new snapshot' 3 $snapshotLifecycleResults.SuccessfulRefreshReadCount
+Assert-True 'successful refresh replaces the previous immutable snapshot' ($snapshotLifecycleResults.SuccessfulRefresh.Status -eq 'PASS' -and -not [object]::ReferenceEquals($snapshotLifecycleResults.InitialSnapshot, $snapshotLifecycleResults.SuccessfulRefresh.Snapshot))
+Assert-Equal 'a failed refresh reports blocked status and preserves the last known-good snapshot' 'BLOCKED,True,TEST_REFRESH_BLOCKED' $(if ($snapshotLifecycleResults.FailedRefresh) { $snapshotLifecycleResults.FailedRefresh.Status + ',' + $snapshotLifecycleResults.FailedRefresh.Preserved + ',' + $snapshotLifecycleResults.FailedRefresh.Reason } else { '' })
+Assert-True 'failed refresh exposes the exact last known-good snapshot instance' ($snapshotLifecycleResults.FailedRefresh -and $snapshotLifecycleResults.SuccessfulRefresh.Snapshot -and $snapshotLifecycleResults.FailedRefresh.Snapshot -and [object]::ReferenceEquals($snapshotLifecycleResults.SuccessfulRefresh.Snapshot, $snapshotLifecycleResults.FailedRefresh.Snapshot))
+Assert-True 'the dashboard surfaces a failed Refresh while retaining the known-good session' ($snapshotLifecycleResults.FailedRefreshUi -and $snapshotLifecycleResults.FailedRefreshUi.Error -eq '' -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Refresh Failed: TEST_REFRESH_BLOCKED') -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Last Snapshot Preserved') -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Core Ready'))
+Assert-Equal 'failed Refresh makes only one new Core call before preserving the snapshot' 4 $snapshotLifecycleResults.FailedRefreshUiReadCount

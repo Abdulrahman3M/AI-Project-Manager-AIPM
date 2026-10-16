@@ -23,3 +23,8 @@ Assert-Equal '$IsWindows/$IsLinux are read only in Platform.psm1' 0 $winVar.Coun
 $bat = Get-ChildItem -LiteralPath $root -Filter '*.bat' -File | Select-Object -First 1
 if ($bat) { $b = [System.IO.File]::ReadAllBytes($bat.FullName); $lf = 0; for ($i = 1; $i -lt $b.Length; $i++) { if ($b[$i] -eq 10 -and $b[$i - 1] -ne 13) { $lf++ } }; Assert-Equal 'the .bat launcher has CRLF line endings' 0 $lf }
 Assert-True 'VERSION is a Semantic Version' ((Get-Content -LiteralPath (Join-Path $root 'VERSION') -TotalCount 1) -match '^\d+\.\d+\.\d+')
+$repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $root '..\..'))
+$packageVersion = Get-AppVersion -Root $root
+$platformVersion = (Get-Content -LiteralPath (Join-Path $repositoryRoot 'VERSION') -TotalCount 1).Trim()
+Assert-Equal 'AIPM package and platform versions release together as 0.2.1' '0.2.1,0.2.1' ($packageVersion + ',' + $platformVersion)
+Assert-True 'the coupled release versions are valid Semantic Version values' ($packageVersion -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$' -and $platformVersion -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')
