@@ -131,6 +131,51 @@ $cacheNavigation = Invoke-Ui { Show-Menu -Title 'Cache Navigation' -Items $cache
 $cacheAfterNavigation = Get-MenuLayoutCacheStats
 Assert-Equal 'geometry-backed menu navigation still selects the intended action' 'cache-first' $cacheNavigation.Value
 Assert-True 'arrow navigation reuses geometry instead of recomputing row layout' ($cacheAfterNavigation.Hits -ge ($cacheBeforeNavigation.Hits + 2))
+
+Set-TestGroup 'Capability Library tables'
+$tableUi = $null
+if (Get-Command Write-TuiTable -ErrorAction SilentlyContinue) {
+    $tableUi = Invoke-Ui {
+        Write-TuiTable -Headers @('Type','Capability','Version','Source License') -Fields @('Type','Capability','Version','License') `
+            -Rows @([pscustomobject]@{Type='Imported';Capability='Audio Timing Author';Version='1.0.0';License='Universal AI ToolKit Personal Use License'}) `
+            -ColumnWidths @(12,22,8,34) -Width 90
+    } ''
+}
+Assert-True 'Capability Library table renders columns and imported source-license detail' ($null -ne $tableUi -and $tableUi.Error -eq '' -and $tableUi.Output.Contains('Capability') -and $tableUi.Output.Contains('Source License') -and $tableUi.Output.Contains('Audio Timing Author'))
+Assert-Equal 'Capability Library table honors the requested terminal width' 0 $(if ($tableUi) { @($tableUi.Output -split "`n" | Where-Object { $_.Length -gt 90 }).Count } else { -1 })
+$pageCatalog = [pscustomobject]@{
+    status='PASS'
+    catalog=[pscustomobject]@{
+        integrity_status='UNVERIFIED'; skill_count=2; first_party_skills=@('tui-intelligence')
+        skills=@(
+            [pscustomobject]@{slug='tui-intelligence';version='0.1.0';source_license='Apache-2.0';aipm_apache_applies=$true}
+            [pscustomobject]@{slug='audio-timing-author';version='1.0.0';source_license='Universal AI ToolKit Personal Use License';aipm_apache_applies=$false}
+        )
+        plugin_sample=[pscustomobject]@{version='0.1.0';status='PACKAGE_SAMPLE_ONLY';installation='UNVERIFIED';publication='UNVERIFIED';manifests=@('plugin.json')}
+    }
+}
+$wideCapabilityText = ''; $mediumCapabilityText = ''; $compactCapabilityText = ''; $capabilityPageError = ''
+if (Get-Command Show-AipmCapabilityLibrary -ErrorAction SilentlyContinue) {
+    Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 120 -CaptureHeight 32
+    Set-ScriptedInput '{Enter}'
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    $wideCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
+    Clear-ScriptedInput
+    Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 100 -CaptureHeight 32
+    Set-ScriptedInput '{Enter}'
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    $mediumCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
+    Clear-ScriptedInput
+    Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 76 -CaptureHeight 32
+    Set-ScriptedInput '{Enter}'
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    $compactCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
+    Clear-ScriptedInput
+    Initialize-Renderer -Ansi $false -Sink Buffer
+}
+Assert-True 'wide Capability Library uses framed tables and keeps Plugin installation unverified' ($capabilityPageError -eq '' -and $wideCapabilityText.Contains('Source License') -and $wideCapabilityText.Contains('Plugin Package') -and $wideCapabilityText.Contains('Unverified')) $capabilityPageError
+Assert-True 'medium Capability Library avoids tables wider than the terminal' ($capabilityPageError -eq '' -and $mediumCapabilityText.Contains('AIPM General Skills Plugin') -and $mediumCapabilityText.Contains('Installation: Unverified')) $capabilityPageError
+Assert-True 'narrow Capability Library switches to compact rows without losing license text' ($capabilityPageError -eq '' -and $compactCapabilityText.Contains('TUI Intelligence') -and $compactCapabilityText.Contains('Universal AI ToolKit Personal Use License')) $capabilityPageError
 $items = @((New-MenuItem -Label 'First' -Desc 'd1' -Value 'a'), (New-MenuItem -Label 'Second' -Desc 'd2' -Value 'b'), (New-MenuItem -Label 'Third' -Desc 'd3' -Value 'c'))
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '02'
 Assert-Equal 'typing 02 chooses the second item' 'b' $ui.Value
@@ -212,7 +257,7 @@ $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '13'
 Assert-True 'a blocked Core registry stays visibly Unverified without crashing the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Core Blocked') -and $ui.Output.Contains('UNVERIFIED')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '07{Enter}13'
-Assert-True 'Skills and Plugins page reports source licenses and package status' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('Universal AI ToolKit Personal Use License') -and $ui.Output.Contains('UNVERIFIED')) $ui.Error
+Assert-True 'Skills and Plugins page reports source licenses and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('Universal AI ToolKit Personal Use License') -and $ui.Output.Contains('Unverified')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '?{Enter}13'
 Assert-True 'question mark opens keyboard and evidence Help' ($ui.Error -eq '' -and $ui.Output.Contains('Up/Down: Move Selection')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '/help{Enter}{Enter}13'

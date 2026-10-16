@@ -13,6 +13,41 @@ function Write-TuiRule {
     $width = [Math]::Min(240, [Math]::Max(20, $Width))
     Write-UiLine ('+' + ('-' * ($width - 2)) + '+') 'Frame'
 }
+function Write-TuiTable {
+    param([string[]]$Headers, [string[]]$Fields, [object[]]$Rows, [int[]]$ColumnWidths, [int]$Width)
+    if (-not $Headers -or $Headers.Count -eq 0 -or $Headers.Count -ne $Fields.Count -or $Headers.Count -ne $ColumnWidths.Count) {
+        throw 'A TUI table requires matching headers, fields, and column widths.'
+    }
+    $tableWidth = 1
+    foreach ($columnWidth in $ColumnWidths) {
+        if ($columnWidth -lt 1) { throw 'TUI table columns must have a positive width.' }
+        $tableWidth += $columnWidth + 3
+    }
+    if ($tableWidth -gt $Width) { throw ('TUI table width {0} exceeds the terminal width {1}.' -f $tableWidth,$Width) }
+    $border = '+'
+    foreach ($columnWidth in $ColumnWidths) { $border += ('-' * ($columnWidth + 2)) + '+' }
+    Write-UiLine $border 'Frame'
+    $allRows = @([pscustomobject]@{ Values = $Headers; Role = 'Heading' })
+    foreach ($row in $Rows) {
+        $cells = @()
+        for ($index = 0; $index -lt $Fields.Count; $index++) {
+            $value = ''
+            if ($row -is [System.Collections.IDictionary]) { $value = [string]$row[$Fields[$index]] }
+            elseif ($row -and $row.PSObject.Properties[$Fields[$index]]) { $value = [string]$row.PSObject.Properties[$Fields[$index]].Value }
+            $cells += $value
+        }
+        $allRows += [pscustomobject]@{ Values = $cells; Role = 'Normal' }
+    }
+    foreach ($row in $allRows) {
+        $line = '|'
+        for ($index = 0; $index -lt $ColumnWidths.Count; $index++) {
+            $cell = Limit-MenuText -Text ([string]$row.Values[$index]) -Width $ColumnWidths[$index]
+            $line += ' ' + $cell.PadRight($ColumnWidths[$index]) + ' |'
+        }
+        Write-UiLine $line $row.Role
+    }
+    Write-UiLine $border 'Frame'
+}
 function Write-AipmProductHeader {
     param([string]$Version, [string]$Status, [int]$Width)
     $width = [Math]::Min(240, [Math]::Max(20, $Width))
@@ -384,4 +419,4 @@ function Show-Menu {
         }
     }
 }
-Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange, Get-MenuLayoutMetrics, Get-MenuLayoutCacheStats
+Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, Write-TuiTable, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange, Get-MenuLayoutMetrics, Get-MenuLayoutCacheStats

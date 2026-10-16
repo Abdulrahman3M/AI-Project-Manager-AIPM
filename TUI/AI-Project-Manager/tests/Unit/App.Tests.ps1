@@ -35,3 +35,29 @@ Assert-Equal 'unreadable project phase is unknown' 'Unknown' $safeSummary.Phase
 Assert-Equal 'unreadable project progress is unknown rather than zero' 'Unknown' $safeSummary.Progress
 Assert-Equal 'zero task records do not become zero percent progress' 'Evidence Coverage: Unknown (No Verifiable Tasks)' (Format-AipmEvidenceCoverage -Verified 0 -Total 0)
 Assert-Equal 'verified evidence coverage uses a separate, explicit denominator' '[##########] Evidence Coverage: 100% (4/4 Verified Tasks)' (Format-AipmEvidenceCoverage -Verified 4 -Total 4)
+
+Set-TestGroup 'Capability Library projection'
+$capabilityCatalog = [pscustomobject]@{
+    status = 'PASS'
+    catalog = [pscustomobject]@{
+        integrity_status = 'UNVERIFIED'
+        skill_count = 2
+        first_party_skills = @('tui-intelligence')
+        skills = @(
+            [pscustomobject]@{ slug='tui-intelligence'; version='0.1.0'; source_license='Apache-2.0'; aipm_apache_applies=$true }
+            [pscustomobject]@{ slug='audio-timing-author'; version='1.0.0'; source_license='Universal AI ToolKit Personal Use License'; aipm_apache_applies=$false }
+        )
+        plugin_sample = [pscustomobject]@{ version='0.1.0'; status='PACKAGE_SAMPLE_ONLY'; installation='UNVERIFIED'; publication='UNVERIFIED'; manifests=@('plugin.json') }
+    }
+}
+$capabilityRows = $null
+$missingCapabilityRows = $null
+if (Get-Command Get-AipmCapabilityLibraryRows -ErrorAction SilentlyContinue) {
+    $capabilityRows = Get-AipmCapabilityLibraryRows -Catalog $capabilityCatalog -Width 120
+    $missingCapabilityRows = Get-AipmCapabilityLibraryRows -Catalog $null -Width 120
+}
+Assert-True 'catalog projection separates first-party and imported Skills' ($null -ne $capabilityRows -and @($capabilityRows.FirstParty).Count -eq 1 -and @($capabilityRows.Imported).Count -eq 1)
+Assert-Equal 'first-party row retains its declared Apache-2.0 license' 'Apache-2.0' $(if ($capabilityRows -and $capabilityRows.FirstParty.Count) { $capabilityRows.FirstParty[0].License } else { '' })
+Assert-Equal 'imported row retains its source license without AIPM relicensing' 'Universal AI ToolKit Personal Use License' $(if ($capabilityRows -and $capabilityRows.Imported.Count) { $capabilityRows.Imported[0].License } else { '' })
+Assert-Equal 'Plugin package remains uninstalled and unpublished unless evidenced' 'Unverified,Unverified' $(if ($capabilityRows -and $capabilityRows.Plugins.Count) { $capabilityRows.Plugins[0].Installation + ',' + $capabilityRows.Plugins[0].Publication } else { '' })
+Assert-Equal 'missing catalog is unverified and does not invent capability rows' 'Unverified,0,0' $(if ($missingCapabilityRows) { $missingCapabilityRows.CatalogStatus + ',' + $missingCapabilityRows.FirstParty.Count + ',' + $missingCapabilityRows.Imported.Count } else { '' })

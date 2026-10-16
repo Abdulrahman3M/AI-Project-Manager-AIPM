@@ -219,6 +219,138 @@ function Get-AipmStateTasks {
     return @()
 }
 
+function ConvertTo-AipmCapabilityName {
+    param([string]$Slug)
+    $knownNames = @{ 'tui-intelligence' = 'TUI Intelligence'; 'project-orchestrator' = 'Project Orchestrator' }
+    if ($knownNames.ContainsKey($Slug)) { return $knownNames[$Slug] }
+    $name = [System.Globalization.CultureInfo]::CurrentCulture.TextInfo.ToTitleCase(($Slug -replace '-', ' ').ToLowerInvariant())
+    foreach ($acronym in @('AI','API','CLI','CUA','MCP','TUI','UI')) {
+        $name = [regex]::Replace($name, ('(?i)\b' + $acronym + '\b'), $acronym)
+    }
+    return $name
+}
+
+function Get-AipmCapabilityLibraryRows {
+    param($Catalog, [int]$Width = 100)
+    $catalogData = Get-AipmField $Catalog 'catalog'
+    $firstPartyRows = New-Object System.Collections.Generic.List[object]
+    $importedRows = New-Object System.Collections.Generic.List[object]
+    $pluginRows = New-Object System.Collections.Generic.List[object]
+    $summaryRows = New-Object System.Collections.Generic.List[object]
+    $catalogStatus = 'Unverified'
+    $catalogUsable = ([string](Get-AipmField $Catalog 'status' '')) -eq 'PASS' -and $null -ne $catalogData
+    if ($catalogUsable) {
+        $skills = @(Get-AipmField $catalogData 'skills' @())
+        $firstPartySlugs = @((Get-AipmField $catalogData 'first_party_skills' @()) | ForEach-Object { [string]$_ })
+        foreach ($skill in $skills) {
+            $slug = [string](Get-AipmField $skill 'slug' '')
+            if (-not $slug) { continue }
+            $isFirstParty = $firstPartySlugs -contains $slug
+            $license = [string](Get-AipmField $skill 'source_license' 'Unverified')
+            if ([bool](Get-AipmField $skill 'aipm_apache_applies' $false)) { $license = 'Apache-2.0' }
+            $row = [pscustomobject]@{
+                Type = $(if ($isFirstParty) { 'First-Party' } else { 'Imported' })
+                Capability = ConvertTo-AipmCapabilityName $slug
+                Slug = $slug
+                Version = [string](Get-AipmField $skill 'version' 'Unverified')
+                License = $(if ($license) { $license } else { 'Unverified' })
+            }
+            if ($isFirstParty) { $firstPartyRows.Add($row) } else { $importedRows.Add($row) }
+        }
+        $firstPartyRows = [System.Collections.Generic.List[object]]::new([object[]]@($firstPartyRows | Sort-Object Slug))
+        $importedRows = [System.Collections.Generic.List[object]]::new([object[]]@($importedRows | Sort-Object Slug))
+        $integrity = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $catalogData 'integrity_status' 'UNVERIFIED'))
+        $declaredCount = Get-AipmField $catalogData 'skill_count'
+        if ($null -ne $declaredCount -and [int]$declaredCount -eq ($firstPartyRows.Count + $importedRows.Count)) { $catalogStatus = $integrity }
+        $summaryRows.Add([pscustomobject]@{ Metric='Catalog Integrity'; Value=$catalogStatus })
+        $summaryRows.Add([pscustomobject]@{ Metric='Registered Skills'; Value=$(if ($null -ne $declaredCount) { [string]$declaredCount } else { 'Unverified' }) })
+        $summaryRows.Add([pscustomobject]@{ Metric='First-Party Skills'; Value=[string]$firstPartyRows.Count })
+        $summaryRows.Add([pscustomobject]@{ Metric='Imported Skills'; Value=[string]$importedRows.Count })
+        $plugin = Get-AipmField $catalogData 'plugin_sample'
+        if ($plugin) {
+            $pluginStatus = [string](Get-AipmField $plugin 'status' 'UNVERIFIED')
+            if ($pluginStatus -eq 'PACKAGE_SAMPLE_ONLY') { $pluginStatus = 'Package Sample Only' }
+            $pluginRows.Add([pscustomobject]@{
+                Package = 'AIPM General Skills Plugin'
+                Version = [string](Get-AipmField $plugin 'version' 'Unverified')
+                Status = $pluginStatus
+                Installation = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $plugin 'installation' 'UNVERIFIED'))
+                Publication = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $plugin 'publication' 'UNVERIFIED'))
+            })
+        }
+    }
+    if ($summaryRows.Count -eq 0) {
+        $summaryRows.Add([pscustomobject]@{ Metric='Catalog Integrity'; Value='Unverified' })
+        $summaryRows.Add([pscustomobject]@{ Metric='Registered Skills'; Value='Unverified' })
+    }
+    if ($pluginRows.Count -eq 0) {
+        $pluginRows.Add([pscustomobject]@{ Package='AIPM General Skills Plugin'; Version='Unverified'; Status='Unverified'; Installation='Unverified'; Publication='Unverified' })
+    }
+    return [pscustomobject]@{
+        CatalogStatus = $catalogStatus
+        IsCompact = ($Width -lt 112)
+        Summary = $summaryRows.ToArray()
+        FirstParty = $firstPartyRows.ToArray()
+        Imported = $importedRows.ToArray()
+        Plugins = $pluginRows.ToArray()
+    }
+}
+
+function Show-AipmCapabilityLibrary {
+    param($Catalog, [string]$Version = '', [string]$Status = '')
+    while ($true) {
+        $size = Get-TerminalSize
+        $projection = Get-AipmCapabilityLibraryRows -Catalog $Catalog -Width $size.Width
+        Clear-Ui
+        Write-AipmProductHeader -Version $Version -Status $Status -Width $size.Width
+        Write-UiLine '  Skills & Plugins' 'Heading'
+        Write-UiLine '  Capability Library  |  Read-Only Catalog View' 'Dim'
+        if ($size.Width -ge 76) {
+            Write-TuiTable -Headers @('Metric','Value') -Fields @('Metric','Value') -Rows $projection.Summary -ColumnWidths @(26,40) -Width $size.Width
+        } else {
+            foreach ($row in $projection.Summary) { Write-MenuWrapped -Text ($row.Metric + ': ' + $row.Value) -Width $size.Width -Role 'Normal' -Indent '  ' }
+        }
+        foreach ($group in @(
+            @{ Title='First-Party Skills'; Rows=@($projection.FirstParty) },
+            @{ Title='Imported Skills'; Rows=@($projection.Imported) }
+        )) {
+            Write-UiLine ('  ' + $group.Title) 'Heading'
+            Write-TuiRule -Width $size.Width
+            if ($group.Rows.Count -eq 0) {
+                Write-UiLine '  Unverified - No Capability Rows Are Available.' 'Dim'
+            } elseif ($size.Width -ge 112) {
+                Write-TuiTable -Headers @('Type','Capability','Version','Source License') -Fields @('Type','Capability','Version','License') `
+                    -Rows $group.Rows -ColumnWidths @(14,32,10,42) -Width $size.Width
+            } else {
+                foreach ($row in $group.Rows) {
+                    Write-UiLine ('  ' + $row.Type + '  |  ' + $row.Capability + '  v' + $row.Version) 'Normal'
+                    Write-MenuWrapped -Text ('Source License: ' + $row.License) -Width $size.Width -Role 'Dim' -Indent '      '
+                }
+            }
+        }
+        Write-UiLine '  Plugin Packages' 'Heading'
+        Write-TuiRule -Width $size.Width
+        if ($size.Width -ge 106) {
+            Write-TuiTable -Headers @('Package','Version','Status','Installation','Publication') `
+                -Fields @('Package','Version','Status','Installation','Publication') -Rows $projection.Plugins `
+                -ColumnWidths @(30,10,22,14,14) -Width $size.Width
+        } else {
+            foreach ($plugin in $projection.Plugins) {
+                Write-UiLine ('  ' + $plugin.Package + '  v' + $plugin.Version) 'Normal'
+                Write-MenuWrapped -Text ('Status: ' + $plugin.Status + ' | Installation: ' + $plugin.Installation + ' | Publication: ' + $plugin.Publication) -Width $size.Width -Role 'Dim' -Indent '      '
+            }
+        }
+        Write-MenuWrapped -Text 'Imported Skills Keep Their Source Licenses; AIPM Apache-2.0 Does Not Re-License Them.' -Width $size.Width -Role 'Dim' -Indent '  '
+        Write-UiLine ''
+        Write-Ui 'Enter / Esc ' 'Key'; Write-UiLine 'Back  |  ? / F1 Help  |  Q Request Exit' 'Dim'
+        Complete-UiFrame
+        $key = Read-AppKey
+        if ($key.Name -in @('Enter','Esc')) { return $null }
+        if ($key.Name -eq 'Help' -or ($key.Name -eq 'Char' -and $key.Char -eq '?')) { return '__HELP__' }
+        if ($key.Name -eq 'Char' -and $key.Char -match '^[qQ]$') { return '__QUIT__' }
+    }
+}
+
 function Get-AipmPageLines {
     param([string]$Section, $Dashboard, $Catalog, $HostMatrix, [string]$Version)
     $lines = New-Object System.Collections.Generic.List[string]
@@ -440,8 +572,12 @@ function Start-TuiApp {
             elseif ($settingsChoice -ne 'View') { continue }
             else { $section = 'Settings' }
         }
-        if (-not $lines) { $lines = @(Get-AipmPageLines -Section $section -Dashboard $data -Catalog $catalog.Data -HostMatrix $hosts.Data -Version $version) }
-        $pageResult = Show-AipmPage -Title $section -Lines $lines
+        if ($section -eq 'Skills & Plugins') {
+            $pageResult = Show-AipmCapabilityLibrary -Catalog $catalog.Data -Version $version -Status $statusText
+        } else {
+            if (-not $lines) { $lines = @(Get-AipmPageLines -Section $section -Dashboard $data -Catalog $catalog.Data -HostMatrix $hosts.Data -Version $version) }
+            $pageResult = Show-AipmPage -Title $section -Lines $lines
+        }
         if ($pageResult -eq '__QUIT__') {
             if (Show-Confirm -Title 'Exit AI Project Manager?' -Message 'No project data will be changed.' -YesLabel 'Exit AIPM' -NoLabel 'Stay Here' -Default $false) { $quit = $true }
         } elseif ($pageResult -eq '__HELP__' -and $section -ne 'Help') {
@@ -452,4 +588,4 @@ function Start-TuiApp {
     }
 }
 
-Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmPageLines, Show-AipmPage
+Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage
