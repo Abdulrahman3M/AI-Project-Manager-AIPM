@@ -2,6 +2,7 @@
 Set-StrictMode -Version 2.0
 $script:MenuDesign = @{ Navigation = 'Hybrid'; Preset = 'classic-numbered'; Descriptions = 'Muted' }
 $script:ProductShell = @{ Version = ''; Status = '' }
+$script:MenuGeometryCache = @{ Key = ''; Metrics = $null; Hits = 0; Misses = 0 }
 
 function Set-TuiProductShell {
     param([string]$Version = '', [string]$Status = '')
@@ -112,6 +113,55 @@ function Get-MenuItemRowCount {
     }
     if ($Density -eq 'Spacious') { $rows++ }
     return [int]$rows
+}
+function Get-MenuLayoutMetrics {
+    param([object[]]$Items, [string]$Layout, [string]$Density, [string]$DescriptionStyle, [int]$Width, [int]$Height)
+    $metricItems = @()
+    foreach ($item in $Items) {
+        $metricItems += [ordered]@{
+            Label = [string]$item.Label
+            Desc = [string]$item.Desc
+            Enabled = [bool]$item.Enabled
+            Reason = [string]$item.Reason
+        }
+    }
+    $key = ConvertTo-Json -InputObject ([ordered]@{
+        Layout = $Layout
+        Density = $Density
+        DescriptionStyle = $DescriptionStyle
+        Width = $Width
+        Height = $Height
+        Items = @($metricItems)
+    }) -Depth 8 -Compress
+    if ($script:MenuGeometryCache.Metrics -and $script:MenuGeometryCache.Key -ceq $key) {
+        $script:MenuGeometryCache.Hits++
+        return $script:MenuGeometryCache.Metrics
+    }
+    $lineCosts = @()
+    foreach ($item in $Items) {
+        $measureItem = $item
+        if (-not $item.Enabled -and $item.Reason) { $measureItem = @{ Desc = $item.Reason } }
+        $lineCosts += (Get-MenuItemRowCount -Item $measureItem -Layout $Layout -Density $Density -DescriptionStyle $DescriptionStyle -Width $Width)
+    }
+    $totalRows = 0
+    foreach ($cost in $lineCosts) { $totalRows += $cost }
+    $metrics = [pscustomobject]@{
+        LineCosts = [int[]]$lineCosts
+        TotalRows = [int]$totalRows
+        Width = $Width
+        Height = $Height
+        Layout = $Layout
+        Density = $Density
+        DescriptionStyle = $DescriptionStyle
+        ItemCount = $Items.Count
+    }
+    $script:MenuGeometryCache.Key = $key
+    $script:MenuGeometryCache.Metrics = $metrics
+    $script:MenuGeometryCache.Misses++
+    return $metrics
+}
+function Get-MenuLayoutCacheStats {
+    return [pscustomobject]@{ Hits = $script:MenuGeometryCache.Hits; Misses = $script:MenuGeometryCache.Misses }
 }
 function Get-MenuViewportRange {
     param([int[]]$LineCosts, [int]$Selected, [int]$AvailableLines)
@@ -241,16 +291,11 @@ function Show-Menu {
         $prefixRows = Get-UiFrameLineCount
         $footerRows = 3
         $availableRows = [Math]::Max(0, $size.Height - 1 - $prefixRows - $footerRows - $panelRows)
-        $lineCosts = @()
-        for ($pos = 0; $pos -lt $visible.Count; $pos++) {
-            $it = $items[$visible[$pos]]
-            $measureItem = $it
-            if (-not $it.Enabled -and $it.Reason) { $measureItem = @{ Desc = $it.Reason } }
-            $lineCosts += (Get-MenuItemRowCount -Item $measureItem -Layout $profile.Layout -Density $profile.Density -DescriptionStyle $DescriptionStyle -Width $size.Width)
-        }
-        $totalItemRows = 0
-        foreach ($cost in $lineCosts) { $totalItemRows += $cost }
-        $hasOverflow = ($totalItemRows -gt $availableRows)
+        $metricItems = @()
+        for ($pos = 0; $pos -lt $visible.Count; $pos++) { $metricItems += $items[$visible[$pos]] }
+        $metrics = Get-MenuLayoutMetrics -Items $metricItems -Layout $profile.Layout -Density $profile.Density -DescriptionStyle $DescriptionStyle -Width $size.Width -Height $size.Height
+        $lineCosts = @($metrics.LineCosts)
+        $hasOverflow = ($metrics.TotalRows -gt $availableRows)
         if ($hasOverflow) { $availableRows = [Math]::Max(0, $availableRows - 1) }
         $viewport = Get-MenuViewportRange -LineCosts $lineCosts -Selected $sel -AvailableLines $availableRows
         if ($visible.Count -gt 0 -and -not $viewport.SelectedFits) {
@@ -339,4 +384,4 @@ function Show-Menu {
         }
     }
 }
-Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange
+Export-ModuleMember -Function Format-MenuNumber, Resolve-NumberInput, Set-TuiMenuStyle, Get-TuiMenuStyle, Set-TuiProductShell, Write-AipmProductHeader, Write-TuiRule, New-MenuItem, Show-Menu, Write-MenuWrapped, Limit-MenuText, Get-MenuViewportRange, Get-MenuLayoutMetrics, Get-MenuLayoutCacheStats

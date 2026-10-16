@@ -100,6 +100,37 @@ Assert-Equal 'number 100 is not truncated' '100' (Format-MenuNumber 100)
 Assert-Equal 'two-digit number selects at once' 'Select' (Resolve-NumberInput '05' 12).State
 Assert-Equal 'a prefix of a longer number waits' 'Wait' (Resolve-NumberInput '1' 12).State
 Assert-Equal 'a number outside the list is invalid' 'Invalid' (Resolve-NumberInput '99' 12).State
+
+Set-TestGroup 'Stable menu geometry cache'
+$geometryItems = @(
+    (New-MenuItem -Label 'Geometry Alpha' -Desc 'First cache row.' -Value 'geometry-alpha'),
+    (New-MenuItem -Label 'Geometry Beta' -Desc 'Second cache row.' -Value 'geometry-beta'),
+    (New-MenuItem -Label 'Geometry Gamma' -Desc 'Third cache row.' -Value 'geometry-gamma')
+)
+$geometryFirst = $null; $geometrySame = $null; $geometryBeforeHit = $null; $geometryAfterHit = $null
+$geometryWide = $null; $geometrySearch = $null; $geometryDescriptionStyle = $null; $geometryResize = $null
+if (Get-Command Get-MenuLayoutMetrics -ErrorAction SilentlyContinue) {
+    $geometryFirst = Get-MenuLayoutMetrics -Items $geometryItems -Layout Classic -Density Standard -DescriptionStyle Muted -Width 80 -Height 24
+    $geometryBeforeHit = Get-MenuLayoutCacheStats
+    $geometrySame = Get-MenuLayoutMetrics -Items $geometryItems -Layout Classic -Density Standard -DescriptionStyle Muted -Width 80 -Height 24
+    $geometryAfterHit = Get-MenuLayoutCacheStats
+    $geometryWide = Get-MenuLayoutMetrics -Items $geometryItems -Layout Classic -Density Standard -DescriptionStyle Muted -Width 81 -Height 24
+    $geometrySearch = Get-MenuLayoutMetrics -Items @($geometryItems[1]) -Layout Classic -Density Standard -DescriptionStyle Muted -Width 80 -Height 24
+    $geometryDescriptionStyle = Get-MenuLayoutMetrics -Items $geometryItems -Layout Classic -Density Standard -DescriptionStyle Inline -Width 80 -Height 24
+    $geometryResize = Get-MenuLayoutMetrics -Items $geometryItems -Layout Classic -Density Standard -DescriptionStyle Muted -Width 80 -Height 25
+}
+Assert-True 'equal menu measurements reuse the same cached metrics object' ($null -ne $geometryFirst -and [object]::ReferenceEquals($geometryFirst, $geometrySame))
+Assert-True 'equal menu measurements record a cache hit' ($null -ne $geometryBeforeHit -and $null -ne $geometryAfterHit -and $geometryAfterHit.Hits -eq ($geometryBeforeHit.Hits + 1))
+Assert-True 'width changes invalidate cached menu geometry' ($null -ne $geometryWide -and -not [object]::ReferenceEquals($geometryFirst, $geometryWide))
+Assert-True 'a changed search-visible item set invalidates cached menu geometry' ($null -ne $geometrySearch -and -not [object]::ReferenceEquals($geometryFirst, $geometrySearch))
+Assert-True 'description style changes invalidate cached menu geometry' ($null -ne $geometryDescriptionStyle -and -not [object]::ReferenceEquals($geometryFirst, $geometryDescriptionStyle))
+Assert-True 'terminal height changes invalidate cached menu geometry' ($null -ne $geometryResize -and -not [object]::ReferenceEquals($geometryFirst, $geometryResize))
+$cacheNavigationItems = @((New-MenuItem -Label 'Cache First' -Desc 'First navigation row.' -Value 'cache-first'), (New-MenuItem -Label 'Cache Second' -Desc 'Second navigation row.' -Value 'cache-second'))
+$cacheBeforeNavigation = Get-MenuLayoutCacheStats
+$cacheNavigation = Invoke-Ui { Show-Menu -Title 'Cache Navigation' -Items $cacheNavigationItems -Navigation Arrows } '{Down}{Down}{Enter}'
+$cacheAfterNavigation = Get-MenuLayoutCacheStats
+Assert-Equal 'geometry-backed menu navigation still selects the intended action' 'cache-first' $cacheNavigation.Value
+Assert-True 'arrow navigation reuses geometry instead of recomputing row layout' ($cacheAfterNavigation.Hits -ge ($cacheBeforeNavigation.Hits + 2))
 $items = @((New-MenuItem -Label 'First' -Desc 'd1' -Value 'a'), (New-MenuItem -Label 'Second' -Desc 'd2' -Value 'b'), (New-MenuItem -Label 'Third' -Desc 'd3' -Value 'c'))
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '02'
 Assert-Equal 'typing 02 chooses the second item' 'b' $ui.Value
