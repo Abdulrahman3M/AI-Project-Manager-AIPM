@@ -1,0 +1,32 @@
+{
+  "research_questions": [
+    {
+      "id": "RQ-01",
+      "question": "What verified evidence answers the document's main research question?",
+      "planned_evidence": [
+        "primary sources",
+        "authoritative synthesis"
+      ]
+    }
+  ],
+  "inclusion_criteria": [
+    "Directly relevant to the defined research question",
+    "Traceable publication/source metadata"
+  ],
+  "exclusion_criteria": [
+    "Unverifiable claims",
+    "Sources outside the defined scope"
+  ],
+  "preferred_source_classes": [
+    "primary/original",
+    "authoritative synthesis"
+  ],
+  "freshness_rule": "Use the newest authoritative evidence where recency affects the claim.",
+  "search_channels": [
+    "available research/search tools"
+  ],
+  "stopping_criteria": [
+    "All critical claims have adequate evidence or are explicitly marked unresolved."
+  ],
+  "access_constraints": []
+}

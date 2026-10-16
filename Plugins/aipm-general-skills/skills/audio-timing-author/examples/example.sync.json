@@ -1,0 +1,6 @@
+{
+  "schema":"audio-sync","version":"1.0.0",
+  "audio":{"file":"example.mp3","duration_ms":5000,"format":"mp3"},
+  "alignment":{"language":"ar","method":"transcript-constrained-forced-alignment","transcript_is_authoritative":true,"speaker_labels_consume_timing":false,"review":"needs_review"},
+  "segments":[{"id":"seg-001","speaker":"خَالِدٌ","start_ms":100,"end_ms":1300,"text":"السَّلَامُ عَلَيْكُمْ","normalized_text":"السلام عليكم","confidence":null,"review":"needs_review","words":[{"text":"السَّلَامُ","normalized_text":"السلام","start_ms":100,"end_ms":650,"confidence":null,"review":"needs_review"},{"text":"عَلَيْكُمْ","normalized_text":"عليكم","start_ms":670,"end_ms":1300,"confidence":null,"review":"needs_review"}]}]
+}

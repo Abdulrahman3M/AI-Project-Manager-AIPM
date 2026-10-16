@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normative Example Coverage",
+  "type": "object",
+  "required": [
+    "requirements",
+    "examples"
+  ],
+  "properties": {
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "capability",
+          "rule"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^REQ-"
+          },
+          "capability": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "requirement_id",
+          "scenario",
+          "correct",
+          "incorrect",
+          "acceptance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^EX-"
+          },
+          "requirement_id": {
+            "type": "string",
+            "pattern": "^REQ-"
+          },
+          "scenario": {
+            "type": "string"
+          },
+          "correct": {
+            "type": "string"
+          },
+          "incorrect": {
+            "type": "string"
+          },
+          "acceptance": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

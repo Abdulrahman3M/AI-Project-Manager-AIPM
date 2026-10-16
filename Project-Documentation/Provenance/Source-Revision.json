@@ -1,0 +1,14 @@
+{
+  "repository": "Abdulrahman3M/Universal-AI-ToolKit",
+  "ref": "main",
+  "commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+  "commit_status": "VERIFIED",
+  "verified_on": "2026-10-16",
+  "verification_method": "Read-only GitHub API fetch of the main ref and commit",
+  "source_archive_sha256": "6A1B15D7F3C0D297160FF51F6E00D14512354898F1C78EF789E7194E44F09631",
+  "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+  "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+  "source_license_git_blob_sha1": "cc7e6e9d8f1dab28c25b536424942aecf7e8e7e1",
+  "source_writes": 0,
+  "distribution_authorization": "Owner-requested local P06 Plugin sample; not published or installed"
+}

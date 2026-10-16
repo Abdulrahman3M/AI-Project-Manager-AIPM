@@ -1,0 +1,236 @@
+[
+  {
+    "id": "01-cover",
+    "feature": "cover + introduction",
+    "trigger": "substantive report, guide or course",
+    "pass": "Exact title from brief; organization/logo only with permission; readable cover; first-page header hidden",
+    "fail": "Invented institutional logo or cluttered text",
+    "svg": "assets/visual-examples/01-cover.svg",
+    "png": "assets/visual-examples/01-cover.png"
+  },
+  {
+    "id": "02-toc",
+    "feature": "true Word TOC",
+    "trigger": "longform has multiple sections",
+    "pass": "Heading styles + actual TOC field + dotted page leaders after supported refresh",
+    "fail": "Hardcoded page numbers presented as dynamic",
+    "svg": "assets/visual-examples/02-toc.svg",
+    "png": "assets/visual-examples/02-toc.png"
+  },
+  {
+    "id": "03-header-footer",
+    "feature": "running section header, footer and page",
+    "trigger": "more than one substantive page",
+    "pass": "STYLEREF or section fallback; PAGE field; clean first page",
+    "fail": "Manually typed page number",
+    "svg": "assets/visual-examples/03-header-footer.svg",
+    "png": "assets/visual-examples/03-header-footer.png"
+  },
+  {
+    "id": "04-icon-rule",
+    "feature": "semantic icon",
+    "trigger": "one short scan cue",
+    "pass": "Single-family icon + readable adjacent label",
+    "fail": "Icon without explanatory words",
+    "svg": "assets/visual-examples/04-icon-rule.svg",
+    "png": "assets/visual-examples/04-icon-rule.png"
+  },
+  {
+    "id": "05-annotated-image",
+    "feature": "annotated authentic instructional image",
+    "trigger": "real-world appearance necessary",
+    "pass": "Rights verified, key parts labelled, alt text, explanatory caption",
+    "fail": "Unsourced stock photo or fabricated evidence",
+    "svg": "assets/visual-examples/05-annotated-image.svg",
+    "png": "assets/visual-examples/05-annotated-image.png"
+  },
+  {
+    "id": "06-illustration",
+    "feature": "labeled schematic drawing",
+    "trigger": "internal structure cannot be shown clearly by text alone",
+    "pass": "Clean vector diagram explicitly labelled schematic",
+    "fail": "Unlabelled eye candy",
+    "svg": "assets/visual-examples/06-illustration.svg",
+    "png": "assets/visual-examples/06-illustration.png"
+  },
+  {
+    "id": "07-process-flow",
+    "feature": "sequential process",
+    "trigger": "ordered actions",
+    "pass": "Arrows flow from start through steps to result; names on each step",
+    "fail": "Mind map falsely representing a process",
+    "svg": "assets/visual-examples/07-process-flow.svg",
+    "png": "assets/visual-examples/07-process-flow.png"
+  },
+  {
+    "id": "08-decision",
+    "feature": "conditional decision tree",
+    "trigger": "choice controls next step",
+    "pass": "Every branch says YES/NO or exact condition",
+    "fail": "Unlabelled branches or made-up rules",
+    "svg": "assets/visual-examples/08-decision.svg",
+    "png": "assets/visual-examples/08-decision.png"
+  },
+  {
+    "id": "09-mindmap",
+    "feature": "concept/mind map",
+    "trigger": "relationships are nonsequential",
+    "pass": "Central concept, grouped subtopics and real relationship labels",
+    "fail": "Arrows implying unsupported chronology",
+    "svg": "assets/visual-examples/09-mindmap.svg",
+    "png": "assets/visual-examples/09-mindmap.png"
+  },
+  {
+    "id": "10-comparison",
+    "feature": "side-by-side comparison table",
+    "trigger": "same criteria across items",
+    "pass": "Equal metrics and units; missing entries clearly identified",
+    "fail": "Rating scales invented to fill blanks",
+    "svg": "assets/visual-examples/10-comparison.svg",
+    "png": "assets/visual-examples/10-comparison.png"
+  },
+  {
+    "id": "11-data-chart",
+    "feature": "sourced quantitative chart",
+    "trigger": "observed real measurements and provenance",
+    "pass": "Axes, units, honest scale, dated cited dataset and accessible table",
+    "fail": "Synthetic data in a factual report",
+    "svg": "assets/visual-examples/11-data-chart.svg",
+    "png": "assets/visual-examples/11-data-chart.png"
+  },
+  {
+    "id": "12-timeline",
+    "feature": "dated timeline",
+    "trigger": "real chronological milestones",
+    "pass": "Ordered dates, event labels, cited factual dates",
+    "fail": "Made-up or mixed date order",
+    "svg": "assets/visual-examples/12-timeline.svg",
+    "png": "assets/visual-examples/12-timeline.png"
+  },
+  {
+    "id": "13-map",
+    "feature": "data-verified map",
+    "trigger": "spatial learning outcome",
+    "pass": "Verified coordinates, geographic source/license and legend",
+    "fail": "Guessed routes and coordinates",
+    "svg": "assets/visual-examples/13-map.svg",
+    "png": "assets/visual-examples/13-map.png"
+  },
+  {
+    "id": "14-callouts",
+    "feature": "semantic callout family",
+    "trigger": "short caution, example or high-value aside",
+    "pass": "Real editable Word box with side-aware stripe; explanatory heading",
+    "fail": "Colored box dominating the article without purpose",
+    "svg": "assets/visual-examples/14-callouts.svg",
+    "png": "assets/visual-examples/14-callouts.png"
+  },
+  {
+    "id": "15-inline-code",
+    "feature": "inline code style",
+    "trigger": "short literal identifier in prose",
+    "pass": "Selectable monospaced code in correctly isolated LTR run",
+    "fail": "Code shown as image or broken Arabic bidi",
+    "svg": "assets/visual-examples/15-inline-code.svg",
+    "png": "assets/visual-examples/15-inline-code.png"
+  },
+  {
+    "id": "16-code-block",
+    "feature": "separate code box",
+    "trigger": "multiline code or copyable terminal command",
+    "pass": "Native Word code styling; preserve indentation/newlines and wrapping",
+    "fail": "Rasterized nonselectable code",
+    "svg": "assets/visual-examples/16-code-block.svg",
+    "png": "assets/visual-examples/16-code-block.png"
+  },
+  {
+    "id": "17-cross-reference",
+    "feature": "bookmarks and REF field",
+    "trigger": "refer to a caption or section internally",
+    "pass": "Accurate real SEQ/REF field after refreshed and checked",
+    "fail": "Unverified manually typed cross-reference",
+    "svg": "assets/visual-examples/17-cross-reference.svg",
+    "png": "assets/visual-examples/17-cross-reference.png"
+  },
+  {
+    "id": "18-no-visual",
+    "feature": "no-visual rule",
+    "trigger": "strong prose already makes idea clear",
+    "pass": "Keep uncluttered text with meaningful spacing",
+    "fail": "Add arbitrary stock photo to every heading",
+    "svg": "assets/visual-examples/18-no-visual.svg",
+    "png": "assets/visual-examples/18-no-visual.png"
+  },
+  {
+    "id": "19-citation",
+    "feature": "source mentions close to factual claims",
+    "trigger": "external facts require traceable support",
+    "pass": "Use the same stable [n] for same verified source",
+    "fail": "Invented citation or number with no ledger",
+    "svg": "assets/visual-examples/19-citation.svg",
+    "png": "assets/visual-examples/19-citation.png"
+  },
+  {
+    "id": "20-bibliography",
+    "feature": "final bibliography",
+    "trigger": "source-ledger used",
+    "pass": "Every cited source matches complete verifiable reference data",
+    "fail": "Unconsulted filler references",
+    "svg": "assets/visual-examples/20-bibliography.svg",
+    "png": "assets/visual-examples/20-bibliography.png"
+  },
+  {
+    "id": "21-list-of-figures",
+    "feature": "figures/tables index",
+    "trigger": "multi-figure long report",
+    "pass": "Captions with SEQ, list generated from fields and checked after refresh",
+    "fail": "Hardcoded index described as automatic",
+    "svg": "assets/visual-examples/21-list-of-figures.svg",
+    "png": "assets/visual-examples/21-list-of-figures.png"
+  },
+  {
+    "id": "22-accessibility",
+    "feature": "accessible visual text and table semantics",
+    "trigger": "always for published content",
+    "pass": "Alt text, headings, semantic table header, equivalent complex chart description",
+    "fail": "Color-only meaning",
+    "svg": "assets/visual-examples/22-accessibility.svg",
+    "png": "assets/visual-examples/22-accessibility.png"
+  },
+  {
+    "id": "23-multilingual",
+    "feature": "proper language-specific editions",
+    "trigger": "Arabic, English, Russian or mixed-term text",
+    "pass": "RTL layout per locale, English terms preserved and per-language proofreading",
+    "fail": "Literal rough translation left unchecked",
+    "svg": "assets/visual-examples/23-multilingual.svg",
+    "png": "assets/visual-examples/23-multilingual.png"
+  },
+  {
+    "id": "24-html-companion",
+    "feature": "optional interactive companion",
+    "trigger": "user wants JS/InfoBank chart functionality",
+    "pass": "Accessible separate HTML + honest static Word counterpart",
+    "fail": "Claim JavaScript runs in Word",
+    "svg": "assets/visual-examples/24-html-companion.svg",
+    "png": "assets/visual-examples/24-html-companion.png"
+  },
+  {
+    "id": "25-review-diff",
+    "feature": "edit review and change comparison",
+    "trigger": "revising existing files",
+    "pass": "Preserve original; produce clean changes summary; native tracking only with correct tooling",
+    "fail": "Call a text diff native Track Changes",
+    "svg": "assets/visual-examples/25-review-diff.svg",
+    "png": "assets/visual-examples/25-review-diff.png"
+  },
+  {
+    "id": "26-render-qa",
+    "feature": "page-by-page visual QA",
+    "trigger": "every final DOCX",
+    "pass": "Render all pages, review actual 100% sizes and repair defects",
+    "fail": "Declare success based on OOXML alone",
+    "svg": "assets/visual-examples/26-render-qa.svg",
+    "png": "assets/visual-examples/26-render-qa.png"
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "name": "Visual Textbook",
+  "version": "3.0.0",
+  "page_size": "A4",
+  "margin_mm": 20,
+  "body_pt": 11,
+  "leading": 1.3,
+  "tokens": {
+    "ink": "#173B51",
+    "accent": "#237C90",
+    "callout_bg": "#FFF5DC",
+    "warning_stripe": "#B33E34",
+    "page_bg": "#FFFFFF",
+    "divider": "#DFE6E9"
+  },
+  "icon_family": "consistent 2D outlined icons",
+  "figure_caption_pt": 9.5,
+  "print_label_min_pt": 9,
+  "design_note": "Optional decorations only when pedagogically meaningful; see visual decision table"
+}

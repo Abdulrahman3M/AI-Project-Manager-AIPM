@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared Project State Quarantine Record",
+  "type": "object",
+  "required": ["schema_version","operation","created_at","original_path","quarantined_path","restored","purged"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "operation": {"const": "quarantine"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "original_path": {"type": "string", "minLength": 1},
+    "quarantined_path": {"type": "string", "minLength": 1},
+    "restored": {"type": "boolean"},
+    "restored_at": {"type": "string", "format": "date-time"},
+    "purged": {"type": "boolean"},
+    "purged_at": {"type": "string", "format": "date-time"},
+    "error": {"type": "string"},
+    "diagnostics": {"type": "object"}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,20 @@
+{
+  "name": "InfoBank Style",
+  "version": "3.0.0",
+  "page_size": "A4",
+  "margin_mm": 21,
+  "body_pt": 11,
+  "leading": 1.3,
+  "tokens": {
+    "ink": "#18394F",
+    "accent": "#067D76",
+    "callout_bg": "#FFF1E6",
+    "warning_stripe": "#B33E34",
+    "page_bg": "#FFFFFF",
+    "divider": "#DFE6E9"
+  },
+  "icon_family": "consistent 2D outlined icons",
+  "figure_caption_pt": 9.5,
+  "print_label_min_pt": 9,
+  "design_note": "Optional decorations only when pedagogically meaningful; see visual decision table"
+}

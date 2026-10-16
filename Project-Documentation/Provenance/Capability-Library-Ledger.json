@@ -1,0 +1,259 @@
+{
+  "distribution": "Local sample only; not published or installed.",
+  "license_scope": "Root Apache-2.0 applies only to AIPM-authored files; imported Skill terms and notices remain controlling.",
+  "schema_version": "1.0",
+  "skills": [
+    {
+      "customization": "None",
+      "local_sha256": "c7257900e569cdd845e893aaf3fb12e1cf71b88e7ad7d3e34dfad16c47b25a67",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "audio-timing-author",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/audio-timing-author",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "13de7f47180e3a37418297e1c5316a68b9ca52a46f88a70af8e5152ff889a06e",
+      "local_version": "1.0.1",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "browser-environment-manager",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/browser-environment-manager",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "994bb512ff25adf6b03437070d90c29903f8d64d3bd04358b47ed4ca41cfaa7d",
+      "local_version": "1.4.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "create-strict-implementation-handoff",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/create-strict-implementation-handoff",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "55f1d0446971effe29cd63b8c2ec1a778b5d3da0941f63d500363ee65c873fc5",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE-THIRD-PARTY"
+      ],
+      "slug": "deep-brainstorming",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/deep-brainstorming",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "dcaf41d1ec5b274ab7d79117b41c8a0b526abd84d868fabcc2786527e0cef03b",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "doc-to-md",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/doc-to-md",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "32e3ddea078c5e1e3f6f14f524cca61373806fc5ffb37d2447b2a026af31e501",
+      "local_version": "1.0.1",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE-THIRD-PARTY"
+      ],
+      "slug": "find-skills",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/find-skills",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "376de31e199662b95eea50ec3b729d50b2c5d1f20f10f010a68fc6865b7f033f",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE.txt"
+      ],
+      "slug": "frontend-design",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/frontend-design",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "fb6920f442a404ae5256b36a484b2a33a74519c65a7ccc779510271a2537486a",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE.txt"
+      ],
+      "slug": "plugin-creator",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/plugin-creator",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "4402973321a3eaf8135befb97bb3a341a4ef945b1064ef34ba0e9a45db403d03",
+      "local_version": "2.0.3",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "powershell-tui-app-designer",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/powershell-tui-app-designer",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "8b73de8b6f124da58743b7a865a5f4c3e99000827bc9a0a287878d780da05068",
+      "local_version": "5.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "professional-word-designer",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/professional-word-designer",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "15dc7acbbda6aaee7dbb0ca6f2b7bc2da855dd20e7631a275fb1a9192931ab2b",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "project-governance-manager",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/project-governance-manager",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "P01 owner-approved derivative",
+      "local_sha256": "752b803d2961f808f155fbd00334b3a9b95ee0adab3094359d4982afff6b3969",
+      "local_version": "1.3.10",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "project-orchestrator",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/project-orchestrator",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "480444ffa8358c9b0b29153a64f80b8b3cd8ee104bfb11652ff5252165c53f36",
+      "local_version": "1.4.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "resume-task",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/resume-task",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "fe23f78911bec0647d4152d9763f45ce65af67792c8f7f2aa24f19250b44edcb",
+      "local_version": "2.1.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "shared-project-state-manager",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/shared-project-state-manager",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "2f45a272d3be570cacf91d00904f1eee67e292c269197f4cc0b589af16dbba59",
+      "local_version": "1.0.0",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE.txt"
+      ],
+      "slug": "skill-creator",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/skill-creator",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "2271b7667bab3350519d0d77be36c39937c67db04fef22f841d62be9e14e1111",
+      "local_version": "1.0.1",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [
+        "LICENSE-THIRD-PARTY"
+      ],
+      "slug": "teach",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/teach",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    },
+    {
+      "customization": "None",
+      "local_sha256": "487be6ca8c6285fa86efd79c3caadaf7b32437f4a82a83e09b1790243f078dc5",
+      "local_version": "1.0.1",
+      "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
+      "retained_skill_notices": [],
+      "slug": "token-optimization",
+      "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+      "source_license": "Universal AI ToolKit Personal Use License",
+      "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+      "source_path": "01-Skills-General/token-optimization",
+      "source_repository": "Abdulrahman3M/Universal-AI-ToolKit"
+    }
+  ],
+  "source": {
+    "commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
+    "commit_status": "VERIFIED",
+    "ref": "main",
+    "repository": "Abdulrahman3M/Universal-AI-ToolKit",
+    "source_archive_sha256": "6A1B15D7F3C0D297160FF51F6E00D14512354898F1C78EF789E7194E44F09631",
+    "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
+    "verified_on": "2026-10-16",
+    "writes": 0
+  },
+  "standalone_prompts": [
+    {
+      "license_scope": "AIPM-authored material; root Apache-2.0 applies",
+      "name": "Autonomous Task Execution",
+      "path": "02-Prompt-General/Autonomous-Task-Execution.md",
+      "sha256": "0b4c2ed5a1d27a39072306f59ba725e1a40712f6702f733a85e93fb2c5526001",
+      "version": "1.0.0"
+    }
+  ]
+}

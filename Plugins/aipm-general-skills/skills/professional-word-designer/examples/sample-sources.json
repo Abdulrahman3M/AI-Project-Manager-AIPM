@@ -1,0 +1,14 @@
+{
+  "note": "ILLUSTRATIVE SCHEMA ONLY. All example identifiers and titles below are fictional; they MUST NOT appear as real publication citations. Use actual verified references for a real research deliverable.",
+  "sources": [
+    {
+      "id": "EXAMPLE-S1",
+      "title": "REPLACE WITH REAL VERIFIED SOURCE",
+      "verified": false,
+      "url": null,
+      "usage": [
+        "filter explanation"
+      ]
+    }
+  ]
+}

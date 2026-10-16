@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "objective": "Finish the original task without changing scope (example only).",
+  "source": "Original request or authorized specification",
+  "requirements": [
+    "Preserve existing outputs",
+    "Finish all deliverables",
+    "Verify final result"
+  ],
+  "constraints": [
+    "Follow active project rules",
+    "Do not replay irreversible actions blindly"
+  ],
+  "workspace": "Project/path identifier",
+  "last_verified_step": "step-1",
+  "current_step": "step-2",
+  "steps": [
+    {
+      "id": "step-1",
+      "status": "VERIFIED",
+      "acceptance": "Output exists and direct check passed",
+      "evidence": [
+        "Example verified artifact or test reference"
+      ]
+    },
+    {
+      "id": "step-2",
+      "status": "IN_PROGRESS",
+      "acceptance": "Complete remaining output and inspect it",
+      "evidence": []
+    }
+  ],
+  "possible_side_effects": [
+    "Inspect whether prior remote change was applied"
+  ],
+  "next_action": "Inspect current step-2 output before attempting changes.",
+  "final_checks": [
+    "Audit original requirements",
+    "Run supported tests and report limitations"
+  ],
+  "blockers": []
+}

@@ -1,0 +1,22 @@
+{
+  "title": "How a Water Filter Works",
+  "audience": "Secondary learners",
+  "language": "en-US",
+  "style_profile": "visual-textbook",
+  "sections": [
+    "Filter layers",
+    "Flow sequence",
+    "Maintenance"
+  ],
+  "visuals": [
+    "cutaway educational illustration",
+    "process flow",
+    "note callout"
+  ],
+  "source_ledger": "sample-sources.json",
+  "output": [
+    "docx",
+    "page previews"
+  ],
+  "reference_policy": "Use sample sources only as explicitly marked illustrative placeholders, not external factual citations"
+}

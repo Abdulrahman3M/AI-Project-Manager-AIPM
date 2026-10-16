@@ -1,0 +1,7 @@
+{
+  "preset": "{{Preset}}",
+  "navigation": "{{Navigation}}",
+  "icons": "{{IconMode}}",
+  "colors": "{{ColorMode}}",
+  "descriptions": "{{DescriptionStyle}}"
+}

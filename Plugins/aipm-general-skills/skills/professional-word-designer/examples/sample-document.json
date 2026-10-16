@@ -1,0 +1,24 @@
+{
+  "sample": true,
+  "title": "Visual Teaching Methods",
+  "subtitle": "Editable editorial layout demonstration — not a factual research report",
+  "edition_note": "Version 3 demonstration · All statements and diagram data are schematic",
+  "language": "en-US",
+  "cover": true,
+  "toc": true,
+  "sections": [
+    {"id":"choosing_visuals","heading":"Choosing the right visual","content":[
+      {"type":"paragraph","text":"Choose visuals by the learner's task. A clear paragraph is often better than an unnecessary decoration."},
+      {"type":"subheading","text":"One purpose per component"},
+      {"type":"paragraph","text":"Use an icon for a recognizable short cue; a diagram for structure; and a table for a comparison on consistent criteria."},
+      {"type":"note","label":"IMPORTANT","text":"This file demonstrates design and implementation, not external factual evidence."},
+      {"type":"figure","path":"../assets/visual-examples/07-process-flow.png","alt":"Three equal stage cards labeled intake, filter and output, connected left to right by arrows","caption":"Example of the ordered-process visual grammar; illustration only."}
+    ]},
+    {"id":"technical_components","heading":"Editable technical components","content":[
+      {"type":"paragraph","text":"Keep real content editable whenever possible; screenshots are not a substitute for source code."},
+      {"type":"inline_code","before":"Name the function","code":"validate_visual()","after":"inside the paragraph."},
+      {"type":"code","text":"def validate_visual(item):\n    return item['educational_gain']"},
+      {"type":"table","headers":["Learning goal","Preferred component"],"rows":[["Sequential stages","Process diagram"],["Attribute comparison","Structured table"],["Short caveat","Callout"]]}
+    ]}
+  ]
+}
