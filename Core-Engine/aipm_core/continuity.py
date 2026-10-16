@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone, timedelta
+from contextlib import contextmanager
 import ctypes
 from ctypes import wintypes
 import hashlib
@@ -22,6 +23,36 @@ if TYPE_CHECKING:
 
 class LockError(RuntimeError):
     pass
+
+
+def _read_mapping(path: Path, error_type: type[Exception] = StateError) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+        if not isinstance(data, dict):
+            raise ValueError('Expected A Mapping')
+        return data
+    except (OSError, ValueError, TypeError) as error:
+        raise error_type('INVALID_RECORD') from error
+
+
+def _move_noreplace(source: Path, target: Path) -> None:
+    """Move atomically without replacing any independently created target."""
+    try:
+        if os.name == 'nt':
+            # Windows os.rename fails if the target exists, including files.
+            os.rename(source, target)
+            return
+        libc = ctypes.CDLL(None, use_errno=True)
+        rename = getattr(libc, 'renameat2', None)
+        if rename is None:
+            raise StateError('Atomic No-Replace Move Is Unavailable')
+        rename.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+        rename.restype = ctypes.c_int
+        if rename(-100, os.fsencode(source), -100, os.fsencode(target), 1):
+            code = ctypes.get_errno()
+            raise OSError(code, os.strerror(code))
+    except OSError as error:
+        raise StateError('No-Replace Move Failed') from error
 
 
 def _process_identity(pid: int) -> dict[str, Any]:
@@ -163,7 +194,7 @@ class ContinuityManager:
 
     def _move_to_store(self, source: Path, category: str, reason: str) -> Path:
         source = self._bounded(source)
-        if not reason.strip() or not source.exists():
+        if not isinstance(reason, str) or not reason.strip() or not source.exists():
             raise StateError('Existing Source And Reason Are Required')
         # Do not relocate manager roots, protocol records, or active manifests.
         relative = source.relative_to(self.project.state_root)
@@ -176,7 +207,7 @@ class ContinuityManager:
         stored, record = base / 'Payload', base / 'Record.json'
         data = {'schema_version': '1.0', 'category': category, 'reason': reason, 'source_path': relative.as_posix(), 'stored_path': stored.relative_to(self.project.state_root).as_posix(), 'hashes': hashes, 'created_at': datetime.now(timezone.utc).isoformat()}
         self._exclusive_json(record, data)  # Durable intent makes a failed move recoverable.
-        source.rename(stored)
+        _move_noreplace(source, stored)
         if self._hashes(stored) != hashes:
             raise StateError('Archived Content Hash Mismatch')
         self._exclusive_json(base / 'Moved.json', {'created_at': datetime.now(timezone.utc).isoformat()})
@@ -190,16 +221,25 @@ class ContinuityManager:
 
     def _restore_record(self, record: Path, category: str) -> Path:
         record = self._bounded(record)
-        data = json.loads(record.read_text(encoding='utf-8'))
-        if data.get('category') != category or record.name != 'Record.json' or record.parent.parent != self.project.state_root / category:
+        data = _read_mapping(record)
+        if data.get('schema_version') != '1.0' or any(not isinstance(data.get(key), str) or not data[key].strip() for key in ('category', 'reason', 'source_path', 'stored_path', 'created_at')) or not isinstance(data.get('hashes'), dict) or not data['hashes'] or any(not isinstance(key, str) or not isinstance(value, str) or (value != 'directory' and not re.fullmatch('[a-f0-9]{64}', value)) for key, value in data['hashes'].items()):
+            raise StateError('Invalid Recovery Record Fields')
+        if data['category'] != category or record.name != 'Record.json' or record.parent.parent != self.project.state_root / category:
             raise StateError('Invalid Recovery Record')
         stored = self._bounded(self.project.state_root / data['stored_path'])
         target = self._bounded(self.project.state_root / data['source_path'])
-        if stored != record.parent / 'Payload' or target.relative_to(self.project.state_root).parts[0] not in {'Tasks', 'Tool-State', 'Temporary-Files', 'Cache', 'Test-Workspace', 'Logs'}:
+        relative = target.relative_to(self.project.state_root)
+        if stored != record.parent / 'Payload' or len(relative.parts) < 2 or relative.parts[0] not in {'Tasks', 'Tool-State', 'Temporary-Files', 'Cache', 'Test-Workspace', 'Logs'}:
             raise StateError('Invalid Recovery Destination')
         intent, receipt = record.parent / 'Restore-Intent.json', record.parent / 'Restored.json'
-        if intent.exists() and json.loads(intent.read_text(encoding='utf-8')).get('target') != data['source_path']:
-            raise StateError('Recovery Intent Mismatch')
+        if intent.exists():
+            recovery = _read_mapping(intent)
+            if recovery.get('target') != data['source_path'] or not isinstance(recovery.get('created_at'), str) or not recovery['created_at']:
+                raise StateError('Recovery Intent Mismatch')
+        if receipt.exists():
+            restored = _read_mapping(receipt)
+            if not isinstance(restored.get('created_at'), str) or not restored['created_at']:
+                raise StateError('Invalid Recovery Receipt')
         if target.exists() and not stored.exists() and intent.exists():
             if self._hashes(target) != data['hashes']:
                 raise StateError('Restored Content Hash Mismatch')
@@ -213,7 +253,7 @@ class ContinuityManager:
         if not intent.exists():
             self._exclusive_json(intent, {'target': data['source_path'], 'created_at': datetime.now(timezone.utc).isoformat()})
         target.parent.mkdir(parents=True, exist_ok=True)
-        stored.rename(target)
+        _move_noreplace(stored, target)
         self._exclusive_json(receipt, {'created_at': datetime.now(timezone.utc).isoformat()})
         return target
 
@@ -224,41 +264,81 @@ class ContinuityManager:
         return self._restore_record(record, 'Archive')
 
     def _lock_path(self, resource: str) -> Path:
-        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,159}', resource):
+        if not isinstance(resource, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,159}', resource):
             raise LockError('INVALID_LOCK_RESOURCE')
         return self._bounded(self.project.state_root / 'Locks' / f'{resource}.json')
 
+    @contextmanager
+    def _lock_guard(self, resource: str):
+        # Keep this file permanently: unlinking a guard would create two lock
+        # domains for waiters holding its old inode and new arrivals.
+        path = self._lock_path(resource).with_suffix('.guard')
+        try:
+            with path.open('a+b') as guard:
+                if os.fstat(guard.fileno()).st_size == 0:
+                    guard.write(b'\0'); guard.flush()
+                guard.seek(0)
+                if os.name == 'nt':
+                    import msvcrt
+                    msvcrt.locking(guard.fileno(), msvcrt.LK_LOCK, 1)
+                else:
+                    import fcntl
+                    fcntl.flock(guard.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    guard.seek(0)
+                    if os.name == 'nt':
+                        msvcrt.locking(guard.fileno(), msvcrt.LK_UNLCK, 1)
+                    else:
+                        fcntl.flock(guard.fileno(), fcntl.LOCK_UN)
+        except OSError as error:
+            raise LockError('LOCK_GUARD_UNAVAILABLE') from error
+
+    @staticmethod
+    def _read_lock(path: Path) -> dict[str, Any]:
+        data = _read_mapping(path, LockError)
+        identity = data.get('process_identity')
+        if type(data.get('pid')) is not int or data['pid'] <= 0 or any(not isinstance(data.get(key), str) or not data[key] for key in ('actor', 'nonce', 'created_at', 'expires_at')) or not isinstance(identity, dict) or identity.get('status') != 'live' or any(not isinstance(identity.get(key), str) or not identity[key] for key in ('creation', 'session')):
+            raise LockError('INVALID_LOCK_RECORD')
+        try:
+            for key in ('created_at', 'expires_at'):
+                if datetime.fromisoformat(data[key]).utcoffset() is None:
+                    raise ValueError('Timezone Required')
+        except ValueError as error:
+            raise LockError('INVALID_LOCK_RECORD') from error
+        return data
+
     def acquire_lock(self, resource: str, actor: str, lease_seconds: int = 300) -> str:
         path = self._lock_path(resource)
-        if type(lease_seconds) is not int or lease_seconds <= 0:
+        if type(lease_seconds) is not int or lease_seconds <= 0 or not isinstance(actor, str) or not actor.strip():
             raise LockError('INVALID_LOCK_LEASE')
-        identity = _process_identity(os.getpid())
-        if identity.get('status') != 'live':
-            raise LockError('PROCESS_IDENTITY_UNAVAILABLE')
-        now, nonce = datetime.now(timezone.utc), secrets.token_urlsafe(16)
-        try:
-            self._exclusive_json(path, {'actor': actor, 'pid': os.getpid(), 'process_identity': identity, 'nonce': nonce, 'created_at': now.isoformat(), 'expires_at': (now + timedelta(seconds=lease_seconds)).isoformat()})
-        except FileExistsError as error:
-            raise LockError('LOCK_HELD') from error
-        return nonce
+        with self._lock_guard(resource):
+            identity = _process_identity(os.getpid())
+            if identity.get('status') != 'live':
+                raise LockError('PROCESS_IDENTITY_UNAVAILABLE')
+            now, nonce = datetime.now(timezone.utc), secrets.token_urlsafe(16)
+            try:
+                self._exclusive_json(path, {'actor': actor, 'pid': os.getpid(), 'process_identity': identity, 'nonce': nonce, 'created_at': now.isoformat(), 'expires_at': (now + timedelta(seconds=lease_seconds)).isoformat()})
+            except FileExistsError as error:
+                raise LockError('LOCK_HELD') from error
+            return nonce
 
     def recover_expired_lock(self, resource: str) -> None:
         path = self._lock_path(resource)
-        original = path.read_bytes()
-        try:
-            data = json.loads(original)
+        with self._lock_guard(resource):
+            data = self._read_lock(path)
             identity = data['process_identity']
             current = _process_identity(data['pid'])
             expired = datetime.fromisoformat(data['expires_at']) <= datetime.now(timezone.utc)
             safe = identity.get('status') == 'live' and all(isinstance(identity.get(key), str) and identity[key] for key in ('creation', 'session')) and (current.get('status') == 'gone' or (current.get('status') == 'live' and all(current.get(key) for key in ('creation', 'session')) and any(current[key] != identity[key] for key in ('creation', 'session'))))
-            if not expired or not safe or path.read_bytes() != original:
+            if not expired or not safe:
                 raise LockError('LOCK_NOT_SAFE_TO_RECOVER')
-        except (KeyError, ValueError, TypeError) as error:
-            raise LockError('LOCK_NOT_SAFE_TO_RECOVER') from error
-        path.unlink()
+            path.unlink()
 
     def release_lock(self, resource: str, nonce: str) -> None:
         path = self._lock_path(resource)
-        if not path.exists() or json.loads(path.read_text(encoding='utf-8'))['nonce'] != nonce:
-            raise LockError('LOCK_NONCE_MISMATCH')
-        path.unlink()
+        with self._lock_guard(resource):
+            if self._read_lock(path)['nonce'] != nonce:
+                raise LockError('LOCK_NONCE_MISMATCH')
+            path.unlink()

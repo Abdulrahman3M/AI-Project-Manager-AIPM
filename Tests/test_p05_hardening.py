@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
-import json, subprocess, sys, tempfile, unittest
+import json, subprocess, sys, tempfile, unittest, threading
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT/'Core-Engine'))
 from aipm_core.continuity import ContinuityManager, LockError
@@ -52,11 +53,8 @@ class HardeningTests(unittest.TestCase):
   with self.assertRaises(StateError): self.manager.restore_archive(record)
   self.assertFalse(source.exists()); (stored/'data.txt').write_bytes(b'preserve\x00\xff'); self.assertEqual(self.manager.restore_archive(record),source); self.assertTrue((source/'Empty').is_dir())
  def test_archive_restore_retries_after_interrupted_move(self):
-  source=self.payload(); record=self.manager.archive(source,'Release One'); original=Path.rename
-  def deny_move(path,target):
-   if path.name=='Payload': raise PermissionError('Injected Move Denial')
-   return original(path,target)
-  with patch.object(Path,'rename',deny_move):
+  source=self.payload(); record=self.manager.archive(source,'Release One')
+  with patch('aipm_core.continuity._move_noreplace',side_effect=PermissionError('Injected Move Denial')):
    with self.assertRaises(PermissionError): self.manager.restore_archive(record)
   self.assertEqual(self.manager.restore_archive(record),source)
  def test_archive_restore_recovers_after_post_move_audit_failure(self):
@@ -101,3 +99,54 @@ class HardeningTests(unittest.TestCase):
    with self.assertRaises(LockError): self.manager.acquire_lock(resource,'actor')
   for lease in (0,-1):
    with self.assertRaises(LockError): self.manager.acquire_lock('task','actor',lease)
+ def test_competing_stale_lock_cleanup_cannot_remove_new_lease(self):
+  for operation in ('release','recover'):
+   with self.subTest(operation=operation):
+    nonce=self.manager.acquire_lock('task','actor'); self.expire_lock(); path=self.project.state_root/'Locks'/'task.json'
+    paused, started, replaced=threading.Event(),threading.Event(),threading.Event(); original=Path.unlink
+    def pause_unlink(candidate,*args,**kwargs):
+     if candidate==path and threading.current_thread().name.startswith('Stale'):
+      paused.set(); self.assertTrue(started.wait(5)); replaced.wait(.3)
+     return original(candidate,*args,**kwargs)
+    def stale():
+     if operation=='release': self.manager.release_lock('task',nonce)
+     else: self.manager.recover_expired_lock('task')
+    def replace():
+     self.assertTrue(paused.wait(5)); started.set()
+     try: self.manager.release_lock('task',nonce)
+     except LockError: pass
+     new_nonce=self.manager.acquire_lock('task','replacement'); replaced.set(); return new_nonce
+    with patch.object(Path,'unlink',pause_unlink), patch('aipm_core.continuity._process_identity',return_value={'status':'live','creation':'replacement','session':'0'}):
+     with ThreadPoolExecutor(1,thread_name_prefix='Stale') as first, ThreadPoolExecutor(1,thread_name_prefix='Replacement') as second:
+      old=first.submit(stale); new=second.submit(replace); old.result(timeout=10); new_nonce=new.result(timeout=10)
+    self.assertTrue(path.exists(),'Stale Cleanup Deleted A Newly Acquired Lease'); self.assertEqual(json.loads(path.read_text())['nonce'],new_nonce); self.manager.release_lock('task',new_nonce)
+ def test_restore_destination_race_preserves_existing_file_and_payload(self):
+  source=self.project.state_root/'Tasks'/'Single.txt'; source.write_bytes(b'archive payload'); record=self.manager.archive(source,'Release'); original=Path.mkdir
+  def create_destination(candidate,*args,**kwargs):
+   result=original(candidate,*args,**kwargs)
+   if candidate==source.parent: source.write_bytes(b'concurrent owner')
+   return result
+  def race_move(candidate,target):
+   # Emulate overwrite semantics on POSIX even when running Windows.
+   return candidate.replace(target)
+  with patch.object(Path,'mkdir',create_destination),patch.object(Path,'rename',race_move):
+   with self.assertRaises(StateError): self.manager.restore_archive(record)
+  self.assertEqual(source.read_bytes(),b'concurrent owner'); stored=self.project.state_root/json.loads(record.read_text())['stored_path']; self.assertEqual(stored.read_bytes(),b'archive payload')
+ def test_resource_guard_serializes_a_real_child_process(self):
+  code="import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from aipm_core.storage import ManagedProject; from aipm_core.continuity import ContinuityManager; root=Path(sys.argv[2]); manager=ContinuityManager(ManagedProject('managed','Managed',root,root/'Shared-Project-State-Manager')); print('Ready',flush=True); print(manager.acquire_lock('task','child'),flush=True)"
+  with self.manager._lock_guard('task'):
+   process=subprocess.Popen([sys.executable,'-c',code,str(ROOT/'Core-Engine'),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertEqual(process.stdout.readline().strip(),'Ready')
+   with self.assertRaises(subprocess.TimeoutExpired): process.wait(timeout=.3)
+   self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+  output,error=process.communicate(timeout=10); self.assertEqual(process.returncode,0,error); nonce=output.strip(); self.assertTrue(nonce); self.manager.release_lock('task',nonce)
+ def test_malformed_records_and_lock_shapes_fail_with_domain_errors(self):
+  source=self.payload(); record=self.manager.archive(source,'Release'); original=record.read_bytes()
+  for malformed in ('[]','null','{"category":"Archive"}','{'):
+   record.write_text(malformed)
+   with self.subTest(record=malformed),self.assertRaises(StateError): self.manager.restore_archive(record)
+  record.write_bytes(original); intent=record.parent/'Restore-Intent.json'; intent.write_text('[]')
+  with self.assertRaises(StateError): self.manager.restore_archive(record)
+  for malformed in ('[]','null','{"nonce":"x"}','{'):
+   path=self.project.state_root/'Locks'/'task.json'; path.write_text(malformed)
+   with self.subTest(lock=malformed),self.assertRaises(LockError): self.manager.recover_expired_lock('task')
+   with self.subTest(release=malformed),self.assertRaises(LockError): self.manager.release_lock('task','x')
