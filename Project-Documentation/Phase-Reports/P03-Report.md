@@ -25,7 +25,7 @@ Fresh Windows acceptance on 2026-10-16, after the final review fixes:
 - Invalid caller metadata is rejected before pending intent or recovery writes, and proposed manifest/event data is validated before publication. The final guard path is canonical/reparse/boundary checked before opening it; corrupted-pending checks and persistent resource guards remain intact.
 - `python Core-Engine/aipm.py health`: exit 0; `{"schema_version": "1.0", "status": "PASS", "service": "aipm-core", "command": "health"}`.
 - Direct `import aipm` with invalid `sys.argv`, guarded `ArgumentParser.parse_args`, `subprocess.run`, `subprocess.Popen`, and `os.system`: exit 0, no import output or guarded action; callable `aipm.main`.
-- `git diff --check`: exit 0. Post-suite `.test-workspace` entry count: 0; disposable fixtures were removed. See the final review fix report for RED/GREEN evidence, the corrected intermediate integration failure, and final commit checks.
+- `git diff --check`: exit 0. Post-suite `.test-workspace` entry count: 0; disposable fixtures were removed. Final local repository state was clean on `main` at commit `a88ca75`.
 
 ## Validation Limits
 
