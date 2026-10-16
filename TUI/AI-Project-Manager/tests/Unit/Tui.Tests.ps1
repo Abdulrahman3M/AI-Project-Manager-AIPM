@@ -5,8 +5,41 @@ Assert-Equal 'Moving selection updates two rows' '0,1' (@(Get-UiChangedRows -Bef
 Assert-Equal 'Shorter frame erases stale trailing row' '1' (@(Get-UiChangedRows -Before @('A','B') -After @('A')) -join ',')
 Assert-Equal 'Larger frame draws newly added row' '1' (@(Get-UiChangedRows -Before @('A') -After @('A','B')) -join ',')
 
+Set-TestGroup 'Product shell header and legacy roles'
+$headerUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready' -Width 50 } ''
+Assert-Contains 'product header shows the full product name' $headerUi.Output 'AI Project Manager'
+Assert-Contains 'product header keeps the version next to the product name' $headerUi.Output 'AI Project Manager v0.2.1'
+Assert-Contains 'product header is framed and reports current status' $headerUi.Output '+'
+Assert-Contains 'product header reports the supplied status' $headerUi.Output 'Core Ready'
+$rendererPath = Join-Path (Join-Path (Get-TestRoot) 'src/TUI') 'Renderer.psm1'
+$rendererText = [System.IO.File]::ReadAllText($rendererPath)
+Assert-True 'legacy renderer never assigns a console background color' ($rendererText -notmatch '\[Console\]::BackgroundColor\s*=')
+$rendererModule = @(Get-Module | Where-Object { $_.Path -eq $rendererPath }) | Select-Object -First 1
+$legacySegments = @()
+if ($rendererModule) {
+    try {
+        $legacySegments = @(& $rendererModule {
+            param($row)
+            Get-LegacyStyledSegments -Row $row
+        } ([string][char]30 + 'Selected' + [string][char]31 + 'Choice' + [string][char]30 + 'SelectionMarker' + [string][char]31 + '> '))
+    } catch { $legacySegments = @() }
+}
+Assert-Equal 'legacy renderer parses selected labels and colored selection markers' 'Selected,SelectionMarker' (@($legacySegments | Where-Object { $_.Text.Length -gt 0 } | ForEach-Object { $_.Role }) -join ',')
+Assert-True 'legacy selection segments contain no background-color instruction' (@($legacySegments | Where-Object { $_.PSObject.Properties['Background'] -or $_.PSObject.Properties['BackgroundColor'] }).Count -eq 0)
+
 Set-TestGroup 'Captured Renderer Writes'
 $esc = [string][char]27
+$savedNoColor = $env:NO_COLOR
+Remove-Item Env:NO_COLOR -ErrorAction SilentlyContinue
+Set-TuiColorStyle -Mode Full -Accent Cyan
+$selectedStyle = Get-RoleStyle 'Selected'
+$selectionMarkerStyle = Get-RoleStyle 'SelectionMarker'
+Assert-True 'selected labels use foreground styling without a background fill' (-not $selectedStyle.Ansi.Contains('48;') -and -not $selectedStyle.Ansi.Contains('49;'))
+Assert-True 'selection marker has a colored foreground without a background fill' ($selectionMarkerStyle.Ansi.Contains('38;') -and -not $selectionMarkerStyle.Ansi.Contains('48;') -and -not $selectionMarkerStyle.Ansi.Contains('49;'))
+if ($null -ne $savedNoColor) { $env:NO_COLOR = $savedNoColor }
+$env:NO_COLOR = '1'
+Assert-Equal 'no-color selection stays bold without inverse background styling' '1' (Get-RoleStyle 'Selected').Ansi
+if ($null -eq $savedNoColor) { Remove-Item Env:NO_COLOR -ErrorAction SilentlyContinue } else { $env:NO_COLOR = $savedNoColor }
 function Write-TestFrame {
     param([string[]]$Rows, [string[]]$Roles)
     Clear-Ui
@@ -73,6 +106,31 @@ Assert-Equal 'typing 02 chooses the second item' 'b' $ui.Value
 Assert-True 'every option is shown as NN with its description' ($ui.Output.Contains('01') -and $ui.Output.Contains('02') -and $ui.Output.Contains('03') -and $ui.Output.Contains('d2'))
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '{Down}{Down}{Enter}'
 Assert-Equal 'arrows and Enter choose the third item' 'c' $ui.Value
+$viewportItems = @()
+for ($i = 1; $i -le 14; $i++) {
+    $label = 'Option ' + (Format-MenuNumber $i)
+    $viewportItems += New-MenuItem -Label $label -Desc ('Description For ' + $label) -Value ('option-' + $i)
+}
+Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 80 -CaptureHeight 24
+$viewportKeys = ((('{Down}' * 13) -join '') + '{Enter}')
+Set-ScriptedInput $viewportKeys
+$viewportChoice = Show-Menu -Title 'Short Terminal Menu' -Items $viewportItems -Navigation Hybrid
+$viewportOutput = Get-CapturedOutput
+Clear-ScriptedInput
+Assert-Equal 'short terminal arrow navigation reaches an off-screen option' 'option-14' $viewportChoice
+Assert-Contains 'short terminal scroll keeps the selected option visible' $viewportOutput 'Option 14'
+Assert-Contains 'short terminal indicates the visible option range' $viewportOutput 'Showing'
+Assert-Contains 'short terminal keeps the navigation footer reachable' $viewportOutput 'Esc Back'
+Initialize-Renderer -Ansi $false -Sink Buffer
+$narrowItems = @((New-MenuItem -Label 'A Narrow Option' -Desc 'A concise explanation.' -Value 'narrow'))
+Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 20 -CaptureHeight 10
+Set-ScriptedInput '{Enter}'
+$narrowChoice = Show-Menu -Title 'Narrow' -Items $narrowItems -Navigation Arrows
+$narrowOutput = Get-CapturedOutput
+Clear-ScriptedInput
+Assert-Equal 'narrow terminal still selects the visible item' 'narrow' $narrowChoice
+Assert-Contains 'narrow terminal keeps Esc Back visible' $narrowOutput 'Esc Back'
+Initialize-Renderer -Ansi $false -Sink Buffer
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '{Esc}'
 Assert-True 'Esc returns $null (Back)' ($null -eq $ui.Value -and $ui.Error -eq '')
 $dis = @((New-MenuItem -Label 'Off' -Desc 'x' -Value 'off' -Enabled $false -Reason 'Needs something that is missing.'), (New-MenuItem -Label 'On' -Desc 'y' -Value 'on'))

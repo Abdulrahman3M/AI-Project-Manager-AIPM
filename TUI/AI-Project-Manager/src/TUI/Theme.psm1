@@ -128,10 +128,11 @@ function Get-RoleStyle {
     $s = @{
         Title    = @{ Ansi = '1;36'; Legacy = 'Cyan' }
         Heading  = @{ Ansi = '1;37'; Legacy = 'White' }
+        Frame    = @{ Ansi = '38;5;7'; Legacy = 'DarkGray' }
         Normal   = @{ Ansi = '0';    Legacy = 'Gray' }
         Dim      = @{ Ansi = '90';   Legacy = 'DarkGray' }
-        Selected = @{ Ansi = '1;96'; Legacy = 'Cyan' }
-        Number   = @{ Ansi = '36';   Legacy = 'Cyan' }
+        Selected = @{ Ansi = '1;97'; Legacy = 'White' }
+        Number   = @{ Ansi = '90';   Legacy = 'DarkGray' }
         Key      = @{ Ansi = '96';   Legacy = 'Cyan' }
         Success  = @{ Ansi = '32';   Legacy = 'Green' }
         Warning  = @{ Ansi = '33';   Legacy = 'Yellow' }
@@ -143,25 +144,33 @@ function Get-RoleStyle {
     if ($Role -eq 'Description') {
         if ($script:ColorMode -eq 'None' -or $env:NO_COLOR) { return @{ Ansi = '2'; Legacy = 'DarkGray' } }
         $theme = Get-ThemeRoles
-        if ($theme) { return @{ Ansi = ('2;38;5;' + (Get-ThemeAnsiIndex ([string]$theme.muted) 7) + ';48;5;236'); Legacy = 'DarkGray' } }
-        return @{ Ansi = '2;37;48;5;236'; Legacy = 'DarkGray' }
+        if ($theme) { return @{ Ansi = ('2;38;5;' + (Get-ThemeAnsiIndex ([string]$theme.muted) 7)); Legacy = 'DarkGray' } }
+        return @{ Ansi = '2;37'; Legacy = 'DarkGray' }
     }
     if ($script:ColorMode -eq 'None' -or $env:NO_COLOR) {
-        return @{ Ansi = $(if ($Role -eq 'Selected') { '1;7' } else { '0' }); Legacy = $(if ($Role -eq 'Selected') { 'White' } else { 'Gray' }) }
+        return @{ Ansi = $(if ($Role -eq 'Selected' -or $Role -eq 'SelectionMarker') { '1' } else { '0' }); Legacy = $(if ($Role -eq 'Selected' -or $Role -eq 'SelectionMarker') { 'White' } else { 'Gray' }) }
     }
-    if ($Role -in @('Title','Selected','Number','Key')) {
+    if ($Role -eq 'SelectionMarker') {
+        $theme = Get-ThemeRoles
+        $index = if ($theme) { Get-ThemeAnsiIndex ([string]$theme.accent) 14 } else { 14 }
+        return @{ Ansi = ('1;38;5;' + $index); Legacy = $legacy[$script:Accent] }
+    }
+    if ($Role -eq 'Selected') {
+        return @{ Ansi = $(if ($script:ColorMode -eq 'Subtle') { '0;97' } else { '1;97' }); Legacy = 'White' }
+    }
+    if ($Role -eq 'Number') {
+        $theme = Get-ThemeRoles
+        $index = if ($theme) { Get-ThemeAnsiIndex ([string]$theme.muted) 7 } else { 7 }
+        return @{ Ansi = ('38;5;' + $index); Legacy = 'DarkGray' }
+    }
+    if ($Role -in @('Title','Key')) {
         $shade = $(if ($script:ColorMode -eq 'Subtle') { '0;' } else { '1;' })
-        if ($Role -eq 'Selected') {
-            $theme = Get-ThemeRoles
-            $selected = if ($theme) { Get-ThemeAnsiIndex ([string]$theme.selected) 24 } else { 24 }
-            return @{ Ansi = ($shade + '97;48;5;' + $selected); Legacy = $legacy[$script:Accent] }
-        }
         return @{ Ansi = ($shade + $acc[$script:Accent]); Legacy = $legacy[$script:Accent] }
     }
     if ($s.ContainsKey($Role)) {
         $theme = Get-ThemeRoles
         if ($theme) {
-            $themeKey = switch ($Role) { 'Normal' { 'text' } 'Dim' { 'muted' } 'Success' { 'success' } 'Warning' { 'warning' } 'Error' { 'error' } 'Info' { 'accent' } default { '' } }
+            $themeKey = switch ($Role) { 'Normal' { 'text' } 'Dim' { 'muted' } 'Frame' { 'muted' } 'Success' { 'success' } 'Warning' { 'warning' } 'Error' { 'error' } 'Info' { 'accent' } default { '' } }
             if ($themeKey -and $theme.PSObject.Properties[$themeKey]) {
                 $index = Get-ThemeAnsiIndex ([string]$theme.$themeKey) 7
                 return @{ Ansi = ('38;5;' + $index); Legacy = $s[$Role].Legacy }

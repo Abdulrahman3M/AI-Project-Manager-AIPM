@@ -97,6 +97,15 @@ function Clear-Ui {
     $script:FrameStarted = $true
 }
 
+function Get-UiFrameLineCount {
+    if (-not $script:FrameStarted) { return 0 }
+    $frame = $script:PendingFrame.ToString()
+    if (-not $frame) { return 0 }
+    $count = ([regex]::Matches($frame, "`n")).Count
+    if ($frame.EndsWith("`n")) { return $count }
+    return ($count + 1)
+}
+
 function Complete-UiFrame {
     if ($script:Sink -eq 'Buffer' -or -not $script:FrameStarted) { return }
     try {
@@ -148,8 +157,6 @@ function Complete-UiFrame {
                 try {
                     [Console]::SetCursorPosition(0, $i)
                     if ($i -lt $rows.Count) { Write-LegacyRow -Row $rows[$i] }
-                    [Console]::ForegroundColor = [ConsoleColor]::Gray
-                    [Console]::BackgroundColor = [ConsoleColor]::Black
                     if ($i -ge $rows.Count) { [Console]::Out.Write(' ' * [Math]::Max(1, $size.Width - 1)) }
                     else {
                         $visibleRow = [regex]::Replace($rows[$i], ([string][char]30) + '[^' + ([string][char]31) + ']*' + ([string][char]31), '')
@@ -181,23 +188,36 @@ function Exit-Screen {
 }
 
 function Write-RendererOutput { param([string]$Text) if ($script:Sink -eq 'Capture') { [void]$script:Capture.Append($Text) } else { [Console]::Out.Write($Text) } }
-function Write-LegacyRow {
+function Get-LegacyStyledSegments {
     param([string]$Row)
     $segments = [regex]::Split($Row, ([string][char]30) + '([^' + ([string][char]31) + ']*)' + ([string][char]31))
     $role = 'Normal'
     foreach ($segment in $segments) {
-        if ($segment -in @('Title','Heading','Normal','Dim','Description','Selected','Number','Key','Success','Warning','Error','Info')) { $role = $segment; continue }
-        if (-not $env:NO_COLOR) {
-            $style = Get-RoleStyle $role
-            try { [Console]::ForegroundColor = [ConsoleColor]$style.Legacy; if ($role -eq 'Selected') { [Console]::BackgroundColor = [ConsoleColor]::DarkCyan } } catch { }
+        if ($segment -in @('Title','Heading','Frame','Normal','Dim','Description','Selected','SelectionMarker','Number','Key','Success','Warning','Error','Info')) {
+            $role = $segment
+            continue
         }
-        [Console]::Out.Write($segment)
+        $style = Get-RoleStyle $role
+        [pscustomobject]@{ Role = $role; Text = $segment; Foreground = [string]$style.Legacy }
     }
-    try { [Console]::ForegroundColor = [ConsoleColor]::Gray; [Console]::BackgroundColor = [ConsoleColor]::Black } catch { }
+}
+function Write-LegacyRow {
+    param([string]$Row)
+    $previousForeground = [Console]::ForegroundColor
+    try {
+        foreach ($segment in @(Get-LegacyStyledSegments -Row $Row)) {
+            if (-not $env:NO_COLOR) {
+                try { [Console]::ForegroundColor = [ConsoleColor]$segment.Foreground } catch { }
+            }
+            [Console]::Out.Write([string]$segment.Text)
+        }
+    } finally {
+        try { [Console]::ForegroundColor = $previousForeground } catch { }
+    }
 }
 function Set-CaptureTerminalSize { param([int]$Width, [int]$Height) $script:CaptureWidth = [Math]::Max(20, $Width); $script:CaptureHeight = [Math]::Max(8, $Height) }
 function Get-CapturedOutput { if ($script:Sink -eq 'Capture') { return $script:Capture.ToString() }; return $script:Buffer.ToString() }
 function Clear-CapturedOutput { if ($script:Sink -eq 'Capture') { $script:Capture = New-Object System.Text.StringBuilder } else { $script:Buffer = New-Object System.Text.StringBuilder } }
 function Get-LastFrame { return (((Get-CapturedOutput) -split '=====CLEAR=====')[-1]) }
 
-Export-ModuleMember -Function Get-UiChangedRows, Test-AnsiSupport, Initialize-Renderer, Get-TerminalSize, Write-Ui, Write-UiLine, Clear-Ui, Complete-UiFrame, Enter-Screen, Exit-Screen, Get-CapturedOutput, Clear-CapturedOutput, Get-LastFrame, Set-CaptureTerminalSize
+Export-ModuleMember -Function Get-UiChangedRows, Test-AnsiSupport, Initialize-Renderer, Get-TerminalSize, Write-Ui, Write-UiLine, Clear-Ui, Get-UiFrameLineCount, Complete-UiFrame, Enter-Screen, Exit-Screen, Get-CapturedOutput, Clear-CapturedOutput, Get-LastFrame, Set-CaptureTerminalSize
