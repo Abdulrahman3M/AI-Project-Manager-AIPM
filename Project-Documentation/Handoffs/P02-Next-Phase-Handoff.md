@@ -1,16 +1,17 @@
 # P02 Next Phase Handoff
 
-## Entry Conditions
+## Acceptance Status
 
-P01 is complete. Read the P01 report, checkpoint, source migration record, P02 phase instructions, state contracts, and all applicable `AGENTS.md` files before changing files.
+PASS — fresh Windows full suite: 71/71, zero skips (2026-10-16, authorized fixture capability). See [P02 Phase Report](../Phase-Reports/P02-Report.md) for exact evidence and limits.
 
-## Preserve
+## Verified Prerequisites For P03
 
-- Do not modify the 16 byte-preserved migrated Skills.
-- Keep `project-orchestrator`'s documented derivative status and do not restore Personal Skill references.
-- Do not add `import-memory`, `morning`, or `02-Skills-Personal`.
-- Do not place managed-project operational data in this repository.
+P02 supplies canonical/reparse/access validation, new state schema `1.1`, and pointer-only registration. P03 is now implemented and accepted; this handoff records the contract it must continue to preserve.
 
-## First P02 Action
+## Downstream Requirements
 
-Inspect and validate project-root isolation, state schema contracts, and legacy `Shared-Project-State` compatibility without migrating any live state automatically.
+Use `initialize_project_state` and `ProjectRegistry`; preserve the managed-root boundary and legacy/existing-state refusal. Do not write operational project data into the platform repository in production, follow junctions, overwrite existing roots, or automatically migrate live legacy state.
+
+## Shared Boundaries
+
+The non-Windows PID fallback, actual OS PID reuse, power-loss durability, and multi-process Core Engine writer serialization were not proven. Preserve imported Skill bytes/notices and the documented `project-orchestrator` exception. Do not add `02-Skills-Personal`, `import-memory`, or `morning`; do not modify/publish the Universal AI ToolKit source without explicit owner authorization.
