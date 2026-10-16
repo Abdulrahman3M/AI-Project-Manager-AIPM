@@ -33,7 +33,7 @@ All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **A
 - Type A Shown Number To Select Immediately In Numbered Or Hybrid Menus.
 - Press **/** And Type To Filter Actions, Or Choose **Command Palette** For Search-First Navigation.
 - Press **?** Or **F1** For Help. Press **Q** To Request Exit; The Dashboard Requires Confirmation.
-- Descriptions Remain Visible Below Choices. Selection Uses A Shaded Background Where Color Is Supported And A High-Contrast Marker In Monochrome Mode.
+- Descriptions Remain Visible Below Choices In Muted, Unshaded Text. The Selected Action Uses A Colored Arrow And Brighter Text Without A Background Fill, Including In No-Color Mode.
 
 ## Theme And Settings
 

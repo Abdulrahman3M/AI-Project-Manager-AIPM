@@ -2,13 +2,13 @@
 
 ## Goal And Approved Design
 
-Build AIPM's first running PowerShell TUI in this repository. Use the approved Task Dashboard / Command Palette / Assistant Console references, with Task Dashboard as the default; hybrid arrows and stable numeric selection, Search, Help, Title Case labels, readable descriptions, semantic icons and selected shading. Preserve the P07 palette and icon maps, use the Core Engine as the only project-state source, and persist UI preferences only. The owner delegated ordinary design decisions and requested inline execution without subagents.
+Build AIPM's first running PowerShell TUI in this repository. Use the approved Task Dashboard / Command Palette / Assistant Console references, with Task Dashboard as the default; hybrid arrows and stable numeric selection, Search, Help, Title Case labels, readable descriptions, semantic icons, a colored selection arrow, and foreground-only selection emphasis. Descriptions stay unshaded. Preserve the P07 palette and icon maps, use the Core Engine as the only project-state source, and persist UI preferences only. The owner delegated ordinary design decisions and requested inline execution without subagents.
 
 ## Decisions And Boundaries
 
 - Layout: Task Dashboard preset by default; all 20 neutral presets remain selectable under Settings, independently from the three AIPM modes.
 - Interaction: Hybrid arrows/numbers, Enter, Esc, `/` Search, `?`/F1 Help, safe `q` exit; numbers are scoped to the visible menu.
-- Icons/colors/descriptions: automatic Emoji → Symbol → ASCII fallback, theme semantic roles, shaded selected rows where supported, muted explanatory rows always visible; `NO_COLOR` remains usable.
+- Icons/colors/descriptions: automatic Emoji → Symbol → ASCII fallback, theme semantic roles, a colored arrow and bright label without background fill, muted unshaded explanatory rows; `NO_COLOR` remains usable.
 - Host: Windows Terminal is the declared Windows default; native Console fallback is documented. PowerShell 5.1 and 7.x on Windows are targets; other runtimes are reported only when tested.
 - Assistant Console is a local read-only surface; it does not claim an AI session or provider connection.
 - Project/task data is read-only in P08. Unsupported agents, test counts, weights, or history are `Unknown`/`Unverified`; progress is never inferred from missing weights.
@@ -56,6 +56,21 @@ The Skill's module catalog is retained, with one scoped adaptation: an `AipmClie
 ## Execution Results
 
 - Implemented the Core-backed read-only dashboard/catalog projection, PowerShell app, three selectable modes, central theme/input/differential renderer, documentation, and local portable bundle.
-- All automated checks passed: 105/105 focused P02–P08 Python tests, 107/107 complete Python tests, 132/132 TUI tests on both PowerShell 7 and Windows PowerShell 5.1, and 22/22 TUI project rules on both editions.
+- Historical automated checks passed: 105/105 focused P02–P08 Python tests, 107/107 complete Python tests, 138/138 TUI tests on both PowerShell 7 and Windows PowerShell 5.1, and 22/22 TUI project rules on both editions. The current follow-up results are recorded below.
 - Capability `validate` and `validate-plugin` passed without refreshing protected records. The local ZIP SHA-256 is recorded in `Project-Documentation/Phase-Reports/P08-Report.md`.
 - P08 is implemented but its physical visual acceptance gate remains `UNVERIFIED`: this run had no interactive Windows Terminal/console host and captured no actual screenshot. Do not start P09 until the report/checkpoint's manual terminal review is complete.
+
+## Product-Shell Follow-Up — 2026-10-17
+
+- Implemented the approved framed `AI Project Manager v0.2.1` product header, responsive rules/tables, a foreground-only colored selection arrow, and muted unshaded descriptions. Refined the Capability Library table presentation without changing its source-license or unverified Plugin facts.
+- Cached stable menu geometry and connected Dashboard, Capability Library, and host-capability reads to one session snapshot. Only explicit Refresh performs a new read; failed refreshes preserve the last known-good snapshot and show a compact status that fits an 80-column header.
+- Fixed 20x10 layout clipping by suppressing optional menu separators/descriptions only when the compact vertical shell is active, keeping the selected action and `Esc Back` footer visible.
+- Current verification: full test runner **181/181** on PowerShell 7.6.5 and Windows PowerShell 5.1.26100.9444; TUI project rules **22/22** on both; 0.2.1 package source hashes match the project and packaged `-Version`/scripted Exit pass on both versions. The package remains local under `.test-workspace` and is not installed/published.
+- No fresh screenshot or human visual inspection of the 0.2.1 UI was obtained. Windows Terminal/native-console appearance and human-observed flicker remain `UNVERIFIED`; P08 stays open and P09 remains unstarted.
+
+## Interactive Verification Follow-Up — 2026-10-16
+
+- An interactive PowerShell 7.6.5 and Windows PowerShell 5.1.26100.9444 PTY session exposed a real 80x24 defect: the 14-action dashboard clipped its final items and footer. Added a measured vertical viewport, range indicator, and compact narrow-width footer, with regression tests.
+- The app was run in both PTY sessions with an in-repository registry fixture. Thirteen Down-arrow inputs reached the Exit action; `Showing 08-14/14 Options`, selected styling, descriptions, and footer remained in the rendered VT stream. Arrow updates emitted row cursor updates and no full-screen `CSI 2J` clear. Exit confirmation completed safely.
+- The follow-up TUI suite now passes 181/181 and project quality rules pass 22/22 on both PowerShell editions. Complete Python suite passes 107/107 when run with the Windows junction capability; the sandboxed attempt reports three `Access is denied` junction-creation failures.
+- The PTY did not expose `WT_SESSION`; ANSI was forced for the live review. No genuine Windows Terminal/native-console screenshot or human visual inspection was available. Actual host rendering and visible-flicker acceptance remain `UNVERIFIED`; P08 remains open and P09 is not started.

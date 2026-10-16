@@ -1,5 +1,7 @@
 # Screenshot Status
 
-Status: **UNVERIFIED — No Actual TUI Screenshot Captured In P08.**
+Status: **UNVERIFIED — No Actual Screenshot Of The Current 0.2.1 TUI Captured In P08.**
 
-The Files In `UX-TUI/Visual-References/` Are Design Illustrations, Not Captures Of The Running Application. This Work Session Is Redirected And Non-Interactive. The Windows UI Automation Skill Also Prohibits Automating Terminal Applications. Therefore No Screenshot, Font Rendering, Or Real-Terminal Flicker Claim Is Made.
+On 2026-10-16, The Application Was Run In Interactive Codex PTY Sessions Under PowerShell 7.6.5 And Windows PowerShell 5.1.26100.9444 At 80x24. The 14-Action Dashboard Was Navigated To The Last Choice; The `Showing 08-14/14 Options` Window, Selected Exit Action, Explanations, And Footer Remained In The Rendered Output. Arrow-Key Updates Emitted Row-Cursor Updates, Not A Full-Screen `CSI 2J` Clear. The Exit Confirmation Was Also Opened And Safely Accepted.
+
+These Are Interactive Terminal-Control Transcript Checks, Not Screen Captures Or Human Visual Inspection. `WT_SESSION` Was Not Present. ANSI Was Forced For The Initial Sessions; A Later Windows PowerShell 5.1 Run Without That Override Still Emitted VT Output. No Actual Windows Terminal Window Or Native Legacy Console Screenshot Was Captured. The Screenshot Supplied For The Redesign Shows The Prior Interface; It Is A Design Reference, Not A Capture Of The Current 0.2.1 UI. Therefore Windows Terminal Glyph/Color Rendering, Reference-Image Comparison, Resize Appearance, And Human-Observed Flicker Remain **UNVERIFIED**. Files In `UX-TUI/Visual-References/` Are Design Illustrations, Not Application Screenshots. The Current Windows Computer-Use Policy Explicitly Prohibits Automating Terminal Applications, Including Windows Terminal And PowerShell; Therefore This Session Cannot Perform The Required Native-Host Visual Inspection Or Capture Genuine Terminal Screenshots.
