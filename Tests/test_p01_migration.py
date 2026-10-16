@@ -34,7 +34,12 @@ class P01MigrationTests(unittest.TestCase):
         expected = source_skills - EXCLUDED
         installed = {path.name for path in TARGET.iterdir() if path.is_dir()}
 
-        self.assertEqual(expected, installed)
+        # tui-intelligence is AIPM-authored, not a migrated Universal AI ToolKit Skill.
+        # Keep the byte-preservation comparison scoped to imported source material.
+        first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
+        declared_first_party = {item["slug"] for item in first_party["skills"]}
+        self.assertEqual({"tui-intelligence"}, declared_first_party)
+        self.assertEqual(expected | declared_first_party, installed)
         self.assertFalse((ROOT / "02-Skills-Personal").exists())
 
         for skill in sorted(expected - {"project-orchestrator"}):

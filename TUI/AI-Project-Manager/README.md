@@ -1,21 +1,50 @@
 # AI Project Manager
 
-A PowerShell terminal (TUI) application generated from the *PowerShell TUI App Designer* skill.
+An Evidence-First, Read-Only PowerShell Terminal Dashboard For AIPM Core.
 
-Run (Windows PowerShell 5.1, PowerShell 7 on Windows, PowerShell 7 on Linux/macOS):
+## Requirements
 
-```text
-Windows:   AIPM.bat            (or: powershell -NoProfile -File .\Start-AIPM.ps1)
-Linux:     ./AIPM.sh            (or: pwsh -NoProfile -File ./Start-AIPM.ps1)
-Version:   Start-AIPM.ps1 -Version
-Demo/CI:   Start-AIPM.ps1 -ScriptedInput '04{Enter}05'
-Tests:     tests/Run-Tests.ps1
+- Windows PowerShell 5.1 Or PowerShell 7.x.
+- Python 3.10 Or Later On `PATH` (`python`, Then `python3`).
+- A Real Interactive Terminal For Keyboard Navigation. Redirected Output Is Refused Unless Scripted Input Is Explicitly Supplied.
+- The AIPM Repository Core And Capability Metadata In An Ancestor Project Folder.
+
+## Start
+
+On Windows, Run `AIPM.bat`. It Prefers Windows Terminal When Available, Starts PowerShell 7 First, And Falls Back To Windows PowerShell 5.1. Set `AIPM_TUI_WINDOW_HOST=console` To Force The Existing Console. On Linux Or macOS, Run `./AIPM.sh` From A Terminal With `pwsh` Installed.
+
+```powershell
+./Start-AIPM.ps1 -Version
+./Start-AIPM.ps1 -RegistryPath 'C:\Path With Spaces\registry.json'
+./tests/Run-Tests.ps1
 ```
 
-Every option is a two-digit number (`01`, `02` ...); type the number or use the arrow keys and Enter; `Esc` goes back; `Ctrl+C` quits.
-Icons are chosen automatically (emoji, simple symbols or plain text); override with `AIPM_ICONS=emoji|symbol|ascii`.
-Settings and the log live in the per-user data folder (`%APPDATA%\AIPM` on Windows, `~/.config/AIPM` on Linux; override with `AIPM_DATA_DIR`).
+`-RegistryPath` Reads A Registry Through The Core Dashboard Command; It Does Not Write To It. `-ScriptedInput` Is Reserved For Tests. Exit Codes: `0` Normal Exit, `1` Unexpected Runtime Error, `2` Non-Interactive Launch Refused, `3` Required PowerShell Launcher Missing.
 
-## Modern Design Options
+## View Modes
 
-The generated app ships with a configurable interactive design wizard under **Customize interface**. Choose any of 20 functional layout presets, arrow/number/hybrid/search navigation, emoji/symbol/ASCII/none icons, rich/subtle/no colors, and muted/shaded/inline/panel/off descriptions. Your selection is stored per user. The generator also accepts `-Preset`, `-Navigation`, `-IconMode`, `-ColorMode`, and `-DescriptionStyle`.
+The Default Is **Task Dashboard**. Open **Settings** And **Change View Mode** To Select **Command Palette** Or **Assistant Console**. The Choice Is Stored As A Per-User UI Preference Only. Assistant Console Is An Offline, Read-Only Evidence View; It Does Not Claim An AI Or Agent Session.
+
+All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **Agents & Handoffs**, **Timeline**, **Skills & Plugins**, **Settings**, **Help**, And **About**. Project Data Comes From AIPM Core. Missing Weights, Run Counts, Histories, Or Live Process Evidence Stay **Unknown** Or **Unverified**. No Project Mutations Are Available In This Phase.
+
+## Keyboard
+
+- **Up/Down** Moves The Highlight; **Enter** Opens Or Selects; **Esc** Goes Back.
+- Type A Shown Number To Select Immediately In Numbered Or Hybrid Menus.
+- Press **/** And Type To Filter Actions, Or Choose **Command Palette** For Search-First Navigation.
+- Press **?** Or **F1** For Help. Press **Q** To Request Exit; The Dashboard Requires Confirmation.
+- Descriptions Remain Visible Below Choices. Selection Uses A Shaded Background Where Color Is Supported And A High-Contrast Marker In Monochrome Mode.
+
+## Theme And Settings
+
+The TUI Loads Semantic Color Roles And Icon Tiers From The Repository's `UX-TUI/theme.json` And `UX-TUI/semantic-icons.json`. Automatic Icons Prefer Emoji In A Detected Modern Terminal, Then Symbols, Then ASCII. Use `AIPM_ICONS=emoji|symbol|ascii|none` Or `NO_COLOR=1` To Override. Symbol Font And Width Differences Are Terminal-Dependent; Set `AIPM_ICONS=ascii` If A Glyph Is Unavailable.
+
+Only UI Preferences Are Stored Under The Per-User `AIPM` Settings Directory (`%APPDATA%\AIPM` On Windows, `~/.config/AIPM` On Linux/macOS). `AIPM_DATA_DIR` Overrides That Location For Tests Or Portable Use. Core Project State Is Never Copied Into UI Settings.
+
+## Verification And Limits
+
+Automated Renderer Tests Cover Stable Frames, Changed-Row Styling, Removed Rows, Resize Invalidation, Cursor Restoration, Input Modes, Read-Only Core Integration, And The ASCII Fallback. This Does Not Prove Visual Appearance Or Flicker Behavior In A Specific Terminal. The P08 Verification Record Names The PowerShell Versions Run And Any Manual Terminal Checks That Remain Unverified. Files In `UX-TUI/Visual-References/` Are Illustrations, Not Application Screenshots.
+
+## License And Notices
+
+The Root Apache-2.0 License Applies To AIPM-Authored Material Only; It Does Not Re-License Imported Skills Or Source-Derived Templates. See `NOTICE` And `LICENSES/Universal-AI-ToolKit-Personal-Use-License.txt` For The Imported PowerShell TUI App Designer Terms. Per-Skill License Metadata Is Preserved In Generated Capability Distributions.

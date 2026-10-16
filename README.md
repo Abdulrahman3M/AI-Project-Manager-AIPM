@@ -4,7 +4,7 @@ AI Project Manager is a local-first platform for governed project orchestration,
 
 ## Project Status
 
-P01–P07 are complete. P07 adds a permission-gated Core Engine host-adapter contract, official-format local sample manifests, and the separately versioned first-party TUI Intelligence design Skill. P07 does not install/publish plugins or implement a live terminal renderer.
+P01–P07 are complete. P08 adds a Core-backed, read-only PowerShell TUI implementation with Task Dashboard, Command Palette, and Assistant Console modes. Automated tests exercise its rendering and state integration; actual Windows Terminal and legacy-console visual checks remain UNVERIFIED in this non-interactive run. No plugin is installed or published.
 
 ## Capability Library
 
@@ -19,10 +19,15 @@ The library registers 18 General Skills (16 byte-preserved imports, the document
 
 `Plugins/aipm-general-skills` is generated from the approved General Skill masters, with OpenAI portable/Codex compatibility, Claude Code, and Gemini CLI manifests. It is a local sample only; it is not published or installed. It contains no Personal Skills or standalone Prompts and records license scope per Skill.
 
-## Host Adapters And TUI Design
+## Host Adapters And Intelligent TUI
 
 - [Host Capability Matrix](Plugin-Adapters/Host-Capability-Matrix.json) and [Adapter Contract](Plugin-Adapters/Host-Adapter-Contract.md) define tested, conditional, and unavailable capabilities. The Generic CLI routes through Core Engine; manual handoffs remain unverified and read-only.
-- [Intelligent TUI Design System](UX-TUI/README.md) and the [TUI Intelligence Skill](01-Skills-General/tui-intelligence/SKILL.md) preserve the approved mockups, palette, layout, accessibility, and differential-rendering requirements. No live renderer or physical no-flicker behavior is claimed.
+- [Intelligent TUI Design System](UX-TUI/README.md) and the [TUI Intelligence Skill](01-Skills-General/tui-intelligence/SKILL.md) preserve the approved mockups, palette, layout, accessibility, and differential-rendering requirements. The [PowerShell TUI App](TUI/AI-Project-Manager/README.md) implements the required read-only views. Design mockups are not runtime screenshots; physical terminal appearance and flicker remain unverified until tested in their actual hosts.
+
+## P08 Verification
+
+- [P08 Implementation Plan](Project-Documentation/P08-Implementation-Plan.md)
+- [P08 Verification Record](Project-Documentation/Phase-Reports/P08-Report.md)
 
 ## License Scope
 

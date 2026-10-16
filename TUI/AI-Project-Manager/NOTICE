@@ -1,0 +1,3 @@
+AI Project Manager TUI License Scope
+
+The Apache-2.0 text in this package applies only to AIPM-authored material and does not relicense imported Skills or source-derived template material. The initial application scaffold was generated from the migrated powershell-tui-app-designer Skill. Its Universal AI ToolKit Personal Use License is included under LICENSES/ and remains applicable to that imported/source-derived material. The root LICENSE is included for AIPM-authored components; see the project provenance ledger and Capability-Library/Registry.json for per-Skill source-license metadata.

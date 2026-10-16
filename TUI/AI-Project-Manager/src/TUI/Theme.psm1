@@ -5,25 +5,60 @@ Set-StrictMode -Version 2.0
 $script:ColorMode = 'Full'
 $script:Accent = 'Cyan'
 $script:Tier = ''   # the tier in use; empty = detect on first use (tests and the settings screen can override it)
+$script:IconTableCache = $null
+$script:ThemeRoles = $null
 
 function ConvertFrom-CodePoint { param([int]$Code) return [char]::ConvertFromUtf32($Code) }
+function Get-AipmUxRoot {
+    $path = $PSScriptRoot
+    for ($i = 0; $i -lt 4; $i++) { $path = Split-Path -Parent $path }
+    return [System.IO.Path]::GetFullPath($path)
+}
+function Get-SemanticGlyph {
+    param([string]$Code, [string]$Ascii)
+    if ($Code -match '^U\+([0-9A-Fa-f]{4,6})$') { return (ConvertFrom-CodePoint ([Convert]::ToInt32($Matches[1],16))) }
+    return $Ascii
+}
+function Get-ThemeRoles {
+    if ($script:ThemeRoles) { return $script:ThemeRoles }
+    $path = Join-Path (Join-Path (Get-AipmUxRoot) 'UX-TUI') 'theme.json'
+    try { $script:ThemeRoles = ([System.IO.File]::ReadAllText($path) | ConvertFrom-Json -ErrorAction Stop).roles }
+    catch { $script:ThemeRoles = $null }
+    return $script:ThemeRoles
+}
+function Get-ThemeAnsiIndex {
+    param([string]$Hex, [int]$Default = 7)
+    if ($Hex -notmatch '^#([0-9A-Fa-f]{6})$') { return $Default }
+    $value = $Matches[1]
+    $r = [int][Math]::Round(([Convert]::ToInt32($value.Substring(0,2),16)) / 51.0)
+    $g = [int][Math]::Round(([Convert]::ToInt32($value.Substring(2,2),16)) / 51.0)
+    $b = [int][Math]::Round(([Convert]::ToInt32($value.Substring(4,2),16)) / 51.0)
+    return 16 + (36 * $r) + (6 * $g) + $b
+}
 
 function Get-IconTable {
-    # Name -> Emoji / Symbol / Ascii. Source stays ASCII-only: glyphs are built from code points.
-    return @{
-        Run      = @{ Emoji = (ConvertFrom-CodePoint 0x1F680); Symbol = (ConvertFrom-CodePoint 0x25BA); Ascii = '>' }
-        Form     = @{ Emoji = (ConvertFrom-CodePoint 0x1F4DD); Symbol = (ConvertFrom-CodePoint 0x2666); Ascii = '*' }
-        Settings = @{ Emoji = (ConvertFrom-CodePoint 0x1F527); Symbol = (ConvertFrom-CodePoint 0x263C); Ascii = '#' }
-        About    = @{ Emoji = (ConvertFrom-CodePoint 0x1F4A1); Symbol = (ConvertFrom-CodePoint 0x263A); Ascii = 'i' }
-        Exit     = @{ Emoji = (ConvertFrom-CodePoint 0x1F6AA); Symbol = (ConvertFrom-CodePoint 0x25C4); Ascii = '<' }
-        Success  = @{ Emoji = (ConvertFrom-CodePoint 0x2705); Symbol = (ConvertFrom-CodePoint 0x221A); Ascii = '+' }
-        Warning  = @{ Emoji = (ConvertFrom-CodePoint 0x1F536); Symbol = (ConvertFrom-CodePoint 0x25B2); Ascii = '!' }
-        Error    = @{ Emoji = (ConvertFrom-CodePoint 0x274C); Symbol = (ConvertFrom-CodePoint 0x00D7); Ascii = 'x' }
-        Info     = @{ Emoji = (ConvertFrom-CodePoint 0x1F4A1); Symbol = (ConvertFrom-CodePoint 0x263A); Ascii = 'i' }
-        Yes      = @{ Emoji = (ConvertFrom-CodePoint 0x2705); Symbol = (ConvertFrom-CodePoint 0x221A); Ascii = '+' }
-        No       = @{ Emoji = (ConvertFrom-CodePoint 0x274C); Symbol = (ConvertFrom-CodePoint 0x00D7); Ascii = 'x' }
-        Item     = @{ Emoji = (ConvertFrom-CodePoint 0x1F539); Symbol = (ConvertFrom-CodePoint 0x2666); Ascii = '-' }
+    if ($script:IconTableCache) { return $script:IconTableCache }
+    $fallback = @{
+        project=@{emoji='U+1F4C1';symbol='U+25A3';ascii='[P]'}; task=@{emoji='U+1F4CB';symbol='U+25A6';ascii='[T]'}
+        agent=@{emoji='U+1F916';symbol='U+25C9';ascii='[A]'}; 'test-pass'=@{emoji='U+2705';symbol='U+2713';ascii='[OK]'}
+        'test-fail'=@{emoji='U+274C';symbol='U+2717';ascii='[X]'}; warning=@{emoji='U+26A0';symbol='U+25B3';ascii='[!]'}
+        handoff=@{emoji='U+1F4E4';symbol='U+21C4';ascii='[H]'}; settings=@{emoji='U+2699';symbol='U+2699';ascii='[S]'}
+        arrow=@{emoji='U+27A1';symbol='U+2192';ascii='->'}; progress=@{emoji='U+1F7E2';symbol='U+25CF';ascii='[#]'}
     }
+    $path = Join-Path (Join-Path (Get-AipmUxRoot) 'UX-TUI') 'semantic-icons.json'
+    try {
+        $manifest = [System.IO.File]::ReadAllText($path) | ConvertFrom-Json -ErrorAction Stop
+        foreach ($name in $fallback.Keys) {
+            $item = $manifest.icons.PSObject.Properties[$name]
+            if ($item) { $fallback[$name] = @{ emoji=[string]$item.Value.emoji; symbol=[string]$item.Value.symbol; ascii=[string]$item.Value.ascii } }
+        }
+    } catch { }
+    $t = @{}
+    foreach ($name in $fallback.Keys) { $item=$fallback[$name]; $t[$name]=@{ Emoji=(Get-SemanticGlyph $item.emoji $item.ascii); Symbol=(Get-SemanticGlyph $item.symbol $item.ascii); Ascii=$item.ascii } }
+    $t.Run=$t.arrow; $t.Form=$t.task; $t.Settings=$t.settings; $t.About=$t.progress; $t.Exit=$t.arrow
+    $t.Success=$t['test-pass']; $t.Warning=$t.warning; $t.Error=$t['test-fail']; $t.Info=$t.progress; $t.Yes=$t['test-pass']; $t.No=$t['test-fail']; $t.Item=$t.project
+    $script:IconTableCache = $t
+    return $script:IconTableCache
 }
 
 function Resolve-IconTier {
@@ -105,16 +140,36 @@ function Get-RoleStyle {
     }
     $acc = @{ Cyan = '36'; Teal = '36'; Blue = '34'; Green = '32'; Purple = '35'; Yellow = '33'; Gray = '37'; White = '37'; Magenta = '35'; Red = '31' }
     $legacy = @{ Cyan = 'Cyan'; Teal = 'Cyan'; Blue = 'Blue'; Green = 'Green'; Purple = 'Magenta'; Yellow = 'Yellow'; Gray = 'Gray'; White = 'White'; Magenta = 'Magenta'; Red = 'Red' }
-    if ($Role -eq 'Description') { return @{ Ansi = '2;37;48;5;236'; Legacy = 'DarkGray' } }
+    if ($Role -eq 'Description') {
+        if ($script:ColorMode -eq 'None' -or $env:NO_COLOR) { return @{ Ansi = '2'; Legacy = 'DarkGray' } }
+        $theme = Get-ThemeRoles
+        if ($theme) { return @{ Ansi = ('2;38;5;' + (Get-ThemeAnsiIndex ([string]$theme.muted) 7) + ';48;5;236'); Legacy = 'DarkGray' } }
+        return @{ Ansi = '2;37;48;5;236'; Legacy = 'DarkGray' }
+    }
     if ($script:ColorMode -eq 'None' -or $env:NO_COLOR) {
-        return @{ Ansi = '0'; Legacy = $(if ($Role -eq 'Selected') { 'White' } else { 'Gray' }) }
+        return @{ Ansi = $(if ($Role -eq 'Selected') { '1;7' } else { '0' }); Legacy = $(if ($Role -eq 'Selected') { 'White' } else { 'Gray' }) }
     }
     if ($Role -in @('Title','Selected','Number','Key')) {
         $shade = $(if ($script:ColorMode -eq 'Subtle') { '0;' } else { '1;' })
+        if ($Role -eq 'Selected') {
+            $theme = Get-ThemeRoles
+            $selected = if ($theme) { Get-ThemeAnsiIndex ([string]$theme.selected) 24 } else { 24 }
+            return @{ Ansi = ($shade + '97;48;5;' + $selected); Legacy = $legacy[$script:Accent] }
+        }
         return @{ Ansi = ($shade + $acc[$script:Accent]); Legacy = $legacy[$script:Accent] }
     }
-    if ($s.ContainsKey($Role)) { return $s[$Role] }
+    if ($s.ContainsKey($Role)) {
+        $theme = Get-ThemeRoles
+        if ($theme) {
+            $themeKey = switch ($Role) { 'Normal' { 'text' } 'Dim' { 'muted' } 'Success' { 'success' } 'Warning' { 'warning' } 'Error' { 'error' } 'Info' { 'accent' } default { '' } }
+            if ($themeKey -and $theme.PSObject.Properties[$themeKey]) {
+                $index = Get-ThemeAnsiIndex ([string]$theme.$themeKey) 7
+                return @{ Ansi = ('38;5;' + $index); Legacy = $s[$Role].Legacy }
+            }
+        }
+        return $s[$Role]
+    }
     return $s['Normal']
 }
 
-Export-ModuleMember -Function Get-IconTable, Resolve-IconTier, Set-ConsoleUtf8Output, Get-IconTier, Get-Icon, Set-IconTier, Get-IconTierInUse, Set-TuiColorStyle, Get-RoleStyle
+Export-ModuleMember -Function Get-IconTable, Resolve-IconTier, Set-ConsoleUtf8Output, Get-IconTier, Get-Icon, Set-IconTier, Get-IconTierInUse, Set-TuiColorStyle, Get-RoleStyle, Get-ThemeRoles

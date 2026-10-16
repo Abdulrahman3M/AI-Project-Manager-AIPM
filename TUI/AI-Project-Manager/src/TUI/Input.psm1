@@ -1,5 +1,5 @@
 # Input.psm1 - the ONLY module that reads the keyboard. A scripted queue lets tests and CI drive the whole UI.
-# Tokens: {Enter} {Esc} {Up} {Down} {Backspace} {CtrlC}; every other character is typed literally.
+# Tokens: {Enter} {Esc} {Up} {Down} {Backspace} {F1} {CtrlC}; every other character is typed literally.
 Set-StrictMode -Version 2.0
 $script:Queue = New-Object System.Collections.Generic.Queue[object]
 $script:Scripted = $false
@@ -16,7 +16,7 @@ function Set-ScriptedInput {
             $close = $Keys.IndexOf('}', $i)
             if ($close -gt $i) {
                 $tok = $Keys.Substring($i + 1, $close - $i - 1)
-                if ($tok -in @('Enter', 'Esc', 'Up', 'Down', 'Backspace', 'CtrlC')) { $script:Queue.Enqueue((New-Key $tok)); $i = $close + 1; continue }
+                if ($tok -in @('Enter', 'Esc', 'Up', 'Down', 'Backspace', 'F1', 'CtrlC')) { $script:Queue.Enqueue((New-Key $tok)); $i = $close + 1; continue }
             }
         }
         $script:Queue.Enqueue((New-Key 'Char' ([string]$Keys[$i]))); $i++
@@ -39,6 +39,7 @@ function Read-AppKey {
         'UpArrow' { return (New-Key 'Up') }
         'DownArrow' { return (New-Key 'Down') }
         'Backspace' { return (New-Key 'Backspace') }
+        'F1' { return (New-Key 'Help') }
         default { if ($k.KeyChar -ne [char]0) { return (New-Key 'Char' ([string]$k.KeyChar)) } return (New-Key 'Other') }
     }
 }

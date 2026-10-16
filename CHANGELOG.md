@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [Unreleased]
+
+- Implemented AIPM's Core-Backed PowerShell TUI and Read-Only Project, Task, Evidence, Capability, And Host Views.
+- Added Search-First And Assistant Console View Modes, Shared Theme Roles, A11Y Markers, And Differential Rendering.
+- Actual Interactive Windows Terminal And Legacy Console Visual Verification Remains Unverified.
+
 ## [0.2.0] — Host Adapters And Intelligent TUI Design
 
 - Added the first-party `tui-intelligence` Skill, scoped to Apache-2.0 and distinct from imported Skills.
