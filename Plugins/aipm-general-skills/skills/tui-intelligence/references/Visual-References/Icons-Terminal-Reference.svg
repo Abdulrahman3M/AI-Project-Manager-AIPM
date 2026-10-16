@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="270" viewBox="0 0 960 270">
+<rect width="960" height="270" rx="26" fill="#101923"/>
+<text x="36" y="49" fill="#8ED3FF" font-family="DejaVu Sans,Arial" font-weight="bold" font-size="25">AIPM Semantic Icons — Documentation Only</text>
+<g stroke="#8ED3FF" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M60 104h52v53H60z M60 104l15-15h20l10 15"/><path d="M267 99h48v51h-48z M278 110h25 M278 122h25 M278 134h15"/><rect x="467" y="92" width="51" height="54" rx="13"/><path d="M492 82v10 M477 113h3 M505 113h3 M475 131h36"/><circle cx="689" cy="116" r="25"/><path d="m677 116 9 10 16-21"/><circle cx="851" cy="116" r="24"/><path d="M851 99v23 M851 132v2"/></g>
+<g font-family="DejaVu Sans,Arial" fill="#F0F5FA" font-size="18" text-anchor="middle"><text x="86" y="197">Project</text><text x="290" y="197">Tasks</text><text x="493" y="197">Agents</text><text x="689" y="197">Verified</text><text x="851" y="197">Warning</text></g>
+<text x="36" y="243" fill="#AAB9C9" font-family="DejaVu Sans,Arial" font-size="14">Use Unicode/ASCII TEXT glyphs inside terminal; these SVG shapes are illustrative assets for documents.</text>
+</svg>

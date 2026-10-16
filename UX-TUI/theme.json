@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "theme_name": "AIPM Midnight",
+  "roles": {
+    "background": "#101923",
+    "panel": "#172635",
+    "selected": "#203447",
+    "text": "#F0F5FA",
+    "muted": "#AAB9C9",
+    "accent": "#8ED3FF",
+    "success": "#46C89A",
+    "warning": "#F2B45C",
+    "error": "#F16F7B"
+  },
+  "fallbacks": {"true_color": "Probe Before Use", "sixteen_color": "Nearest Stable Semantic Role", "no_color": "Text Labels And Selection Markers"}
+}

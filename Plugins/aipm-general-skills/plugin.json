@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+  "name": "aipm-general-skills",
+  "version": "0.2.0"
+}

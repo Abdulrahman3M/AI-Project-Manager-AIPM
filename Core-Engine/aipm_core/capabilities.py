@@ -15,6 +15,7 @@ from typing import Any
 REGISTRY_PATH = Path("Capability-Library/Registry.json")
 PROVENANCE_PATH = Path("Project-Documentation/Provenance/Capability-Library-Ledger.json")
 MIGRATION_PATH = Path("Project-Documentation/Provenance/Skill-Migration-Record.json")
+FIRST_PARTY_SKILLS_PATH = Path("Capability-Library/First-Party-Skills.json")
 SOURCE_REVISION_PATH = Path("Project-Documentation/Provenance/Source-Revision.json")
 SOURCE_LICENSE_PATH = Path("Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt")
 PLUGIN_VERSION_INITIAL = "0.1.0"
@@ -215,13 +216,38 @@ def _migration_record(root: Path) -> dict[str, Any]:
     return record
 
 
+def _first_party_skills(root: Path) -> dict[str, dict[str, Any]]:
+    manifest = _json(root / FIRST_PARTY_SKILLS_PATH)
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != "1.0" or not isinstance(manifest.get("skills"), list):
+        raise CapabilityError("First-party Skill manifest is missing or invalid")
+    records: dict[str, dict[str, Any]] = {}
+    for item in manifest["skills"]:
+        if not isinstance(item, dict):
+            raise CapabilityError("First-party Skill record is invalid")
+        slug = item.get("slug")
+        required = {"slug", "owner", "origin", "license", "license_path", "version", "source_reference"}
+        if not required.issubset(item) or not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) or slug in records:
+            raise CapabilityError("First-party Skill record has invalid identity or fields")
+        if item.get("origin") != "AIPM_FIRST_PARTY" or item.get("license") != "Apache-2.0" or item.get("license_path") != "LICENSE":
+            raise CapabilityError(f"First-party Skill license/provenance is invalid: {slug}")
+        if not isinstance(item.get("owner"), str) or not item["owner"].strip() or not isinstance(item.get("source_reference"), str) or not item["source_reference"].strip():
+            raise CapabilityError(f"First-party Skill provenance is incomplete: {slug}")
+        _semver_tuple(item.get("version"))
+        if not (root / item["license_path"]).is_file():
+            raise CapabilityError(f"First-party Skill license file is missing: {slug}")
+        records[slug] = item
+    return records
+
+
 def _initial_migration_check(root: Path, skill_slugs: set[str], migration: dict[str, Any]) -> None:
     preserved = set(migration.get("byte_preserved_skills", []))
     derivative = migration.get("derivative_skill")
-    if not isinstance(derivative, str) or skill_slugs != preserved | {derivative}:
-        raise CapabilityError("Initial Skill inventory does not match the owner-approved migration record")
-    if len(skill_slugs) != 17 or skill_slugs & EXCLUDED_SKILLS:
-        raise CapabilityError("Initial inventory must contain the approved 17 Skills and no excluded Skill")
+    first_party = _first_party_skills(root)
+    baseline = preserved | ({derivative} if isinstance(derivative, str) else set())
+    if not isinstance(derivative, str) or skill_slugs != baseline | set(first_party):
+        raise CapabilityError("Skill inventory differs from the immutable migration baseline and declared first-party Skills")
+    if len(preserved) != 16 or len(skill_slugs) != 17 + len(first_party) or skill_slugs & EXCLUDED_SKILLS or set(first_party) & baseline:
+        raise CapabilityError("Skill inventory violates the approved 16+1 migration or first-party boundary")
     if (root / "02-Skills-Personal").exists():
         raise CapabilityError("Personal Skills root is forbidden in AIPM")
     source_hashes = migration.get("source_hashes", {})
@@ -235,6 +261,11 @@ def _initial_migration_check(root: Path, skill_slugs: set[str], migration: dict[
     derivative_files = actual_map[derivative]
     if not derivative_files or not changed_files.issubset(derivative_files):
         raise CapabilityError(f"Documented derivative is missing approved files: {derivative}")
+    for slug, record in first_party.items():
+        skill_root = root / "01-Skills-General" / slug
+        if not skill_root.is_dir() or not _tree_files(skill_root):
+            raise CapabilityError(f"Declared first-party Skill is missing: {slug}")
+        _read_version(skill_root / "VERSION", changelog=skill_root / "CHANGELOG.md")
 
 
 def _owned_prompt_paths(skill_root: Path) -> list[str]:
@@ -284,6 +315,7 @@ def _catalog(root: Path) -> dict[str, Any]:
     if active_slugs & EXCLUDED_SKILLS or (root / "02-Skills-Personal").exists():
         raise CapabilityError("Excluded or Personal Skills are present")
     migration = _migration_record(root)
+    first_party = _first_party_skills(root)
     # Keep the P01 migration record authoritative even after registry creation;
     # a registry refresh must never legitimize edits to the 16 byte-preserved imports.
     _initial_migration_check(root, active_slugs, migration)
@@ -298,6 +330,8 @@ def _catalog(root: Path) -> dict[str, Any]:
         files = _tree_files(skill_root)
         name, description = _parse_frontmatter(skill_root / "SKILL.md", slug)
         version = _read_version(skill_root / "VERSION", changelog=skill_root / "CHANGELOG.md")
+        if slug in first_party and version != first_party[slug]["version"]:
+            raise CapabilityError(f"First-party Skill manifest version differs from VERSION: {slug}")
         prompts = _owned_prompt_paths(skill_root)
         owned[slug] = prompts
         for relative in prompts:
@@ -313,12 +347,28 @@ def _catalog(root: Path) -> dict[str, Any]:
             "files": files,
             "skill_owned_prompts": prompts,
             "license": {
+                "source_license": "Apache-2.0",
+                "source_license_path": first_party[slug]["license_path"],
+                "source_license_sha256": _sha256_file(root / first_party[slug]["license_path"]),
+                "retained_skill_notices": notices,
+                "aipm_apache_applies": True,
+            } if slug in first_party else {
                 "source_license": "Universal AI ToolKit Personal Use License",
                 "source_license_path": SOURCE_LICENSE_PATH.as_posix(),
+                "source_license_sha256": source["source_license_sha256"],
                 "retained_skill_notices": notices,
                 "aipm_apache_applies": False,
             },
-            "customization": "P01 owner-approved derivative" if slug == migration.get("derivative_skill") else "None",
+            "provenance": {
+                "origin": first_party[slug]["origin"],
+                "owner": first_party[slug]["owner"],
+                "source_reference": first_party[slug]["source_reference"],
+            } if slug in first_party else {
+                "origin": "UNIVERSAL_AI_TOOLKIT_IMPORT",
+                "owner": "Abdulrahman Elbatrah",
+                "source_reference": source["repository"],
+            },
+            "customization": "AIPM first-party Skill" if slug in first_party else ("P01 owner-approved derivative" if slug == migration.get("derivative_skill") else "None"),
         })
     prompt_root = root / "02-Prompt-General"
     if not prompt_root.is_dir():
@@ -372,12 +422,15 @@ def _provenance_ledger(catalog: dict[str, Any]) -> dict[str, Any]:
         "skills": [
             {
                 "slug": skill["slug"],
-                "original_author": "Abdulrahman Elbatrah; see retained third-party notices where present",
-                "source_repository": catalog["source"]["repository"],
+                "original_author": skill["provenance"]["owner"] if skill["license"]["aipm_apache_applies"] else "Abdulrahman Elbatrah; see retained third-party notices where present",
+                "origin": skill["provenance"]["origin"],
+                "source_reference": skill["provenance"]["source_reference"],
+                "source_repository": "AIPM First-Party" if skill["license"]["aipm_apache_applies"] else catalog["source"]["repository"],
                 "source_path": skill["path"],
-                "source_commit_sha": catalog["source"]["commit_sha"],
+                "source_commit_sha": None if skill["license"]["aipm_apache_applies"] else catalog["source"]["commit_sha"],
                 "source_license": skill["license"]["source_license"],
-                "source_license_sha256": catalog["source"]["source_license_sha256"],
+                "source_license_path": skill["license"]["source_license_path"],
+                "source_license_sha256": skill["license"]["source_license_sha256"],
                 "retained_skill_notices": skill["license"]["retained_skill_notices"],
                 "local_version": skill["version"],
                 "local_sha256": skill["sha256"],
@@ -505,12 +558,39 @@ def _plugin_json(version: str) -> dict[str, Any]:
     }
 
 
-def _distribution_manifest(catalog: dict[str, Any], version: str) -> dict[str, Any]:
+def _portable_plugin_json(version: str) -> dict[str, Any]:
+    return {
+        "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+        "name": "aipm-general-skills",
+        "version": version,
+        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+    }
+
+
+def _claude_plugin_json(version: str) -> dict[str, Any]:
+    return {
+        "name": "aipm-general-skills",
+        "version": version,
+        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+    }
+
+
+def _gemini_extension_json(version: str) -> dict[str, Any]:
+    return {
+        "name": "aipm-general-skills",
+        "version": version,
+        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+    }
+
+
+def _distribution_manifest(catalog: dict[str, Any], version: str, *, previous_version: str | None, changelog_sha256: str) -> dict[str, Any]:
     return {
         "schema_version": "1.0",
         "generated_by": "AIPM Capability Library",
         "plugin_name": "aipm-general-skills",
         "plugin_version": version,
+        "previous_plugin_version": previous_version,
+        "changelog_sha256": changelog_sha256,
         "status": "LOCAL_SAMPLE_NOT_PUBLISHED",
         "source_commit_sha": catalog["source"]["commit_sha"],
         "source_project_version": catalog["platform_version"],
@@ -523,6 +603,7 @@ def _distribution_manifest(catalog: dict[str, Any], version: str) -> dict[str, A
                 "version": item["version"],
                 "source_sha256": item["sha256"],
                 "files": item["files"],
+                "license": item["license"],
             }
             for item in catalog["skills"]
         ],
@@ -534,28 +615,60 @@ def _plugin_readme(count: int) -> str:
         "# AIPM General Skills\n\n"
         f"This generated local sample contains {count} approved General Skills copied from `01-Skills-General`.\n\n"
         "It excludes Personal Skills and standalone Prompts. Skill-owned Prompts remain in their owning Skill folders.\n\n"
+        "This package is not published or installed. Imported Skills retain the Universal AI ToolKit Personal Use License and notices. The AIPM first-party TUI Intelligence Skill is licensed under Apache-2.0; neither license is applied to the other Skills. See the per-Skill distribution manifest and `licenses/`.\n"
+    )
+
+
+def _legacy_plugin_readme(count: int) -> str:
+    return (
+        "# AIPM General Skills\n\n"
+        f"This generated local sample contains {count} approved General Skills copied from `01-Skills-General`.\n\n"
+        "It excludes Personal Skills and standalone Prompts. Skill-owned Prompts remain in their owning Skill folders.\n\n"
         "This package is not published or installed. Imported Skill files retain the Universal AI ToolKit Personal Use License and any per-Skill notices; the AIPM Apache-2.0 license does not relicense them.\n"
     )
 
 
-def _plugin_changelog(version: str) -> str:
+def _legacy_plugin_changelog(version: str) -> str:
     return f"# AIPM General Skills Change Log\n\n## [{version}] — Initial Local Sample\n\n- Generated from the approved AIPM General Skill masters.\n- Preserved Skill file bytes and included source license notices.\n- Not published or installed.\n"
 
 
-def _plugin_expected_files(catalog: dict[str, Any], version: str) -> dict[str, bytes]:
-    manifest = _distribution_manifest(catalog, version)
+def _plugin_changelog(version: str, *, previous_version: str | None, previous_changelog: str | None) -> str:
+    if previous_version is None:
+        return _legacy_plugin_changelog(version)
+    prior_entries = ""
+    if previous_changelog:
+        prior_entries = previous_changelog.split("\n", 1)[1].strip() + "\n"
+    return (
+        "# AIPM General Skills Change Log\n\n"
+        f"## [{version}] — Host Adapter And TUI Intelligence Update\n\n"
+        "- Added the AIPM first-party TUI Intelligence Skill with explicit Apache-2.0 scope.\n"
+        "- Added official OpenAI, Claude Code, and Gemini CLI package-format manifests.\n"
+        "- Preserved imported Skill bytes and their original license notices.\n"
+        "- Local sample only; not installed or published.\n\n"
+        f"{prior_entries}"
+    )
+
+
+def _plugin_expected_files(root: Path, catalog: dict[str, Any], version: str, *, previous_version: str | None, previous_changelog: str | None) -> dict[str, bytes]:
+    changelog = _plugin_changelog(version, previous_version=previous_version, previous_changelog=previous_changelog).encode("utf-8")
+    manifest = _distribution_manifest(catalog, version, previous_version=previous_version, changelog_sha256=_sha256_bytes(changelog))
     files = {
+        "plugin.json": (json.dumps(_portable_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         ".codex-plugin/plugin.json": (json.dumps(_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        ".claude-plugin/plugin.json": (json.dumps(_claude_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        "gemini-extension.json": (json.dumps(_gemini_extension_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "AIPM-Distribution-Manifest.json": (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "README.md": _plugin_readme(len(catalog["skills"])).encode("utf-8"),
         "VERSION": (version + "\n").encode("utf-8"),
-        "CHANGELOG.md": _plugin_changelog(version).encode("utf-8"),
-        "licenses/Universal-AI-ToolKit-LICENSE.txt": (catalog["source"]["source_license_sha256"],),
+        "CHANGELOG.md": changelog,
+        "licenses/Universal-AI-ToolKit-LICENSE.txt": (root / SOURCE_LICENSE_PATH).read_bytes(),
     }
-    return files  # The license entry is replaced with bytes by _materialize_plugin.
+    if any(item["license"]["aipm_apache_applies"] for item in catalog["skills"]):
+        files["licenses/Apache-2.0.txt"] = (root / "LICENSE").read_bytes()
+    return files
 
 
-def _materialize_plugin(root: Path, stage: Path, catalog: dict[str, Any], version: str) -> None:
+def _materialize_plugin(root: Path, stage: Path, catalog: dict[str, Any], version: str, *, previous_version: str | None, previous_changelog: str | None) -> None:
     (stage / "skills").mkdir(parents=True)
     for item in catalog["skills"]:
         source = root / item["path"]
@@ -563,11 +676,9 @@ def _materialize_plugin(root: Path, stage: Path, catalog: dict[str, Any], versio
         shutil.copytree(source, destination, copy_function=shutil.copy2, symlinks=False)
         if _tree_files(destination) != item["files"]:
             raise CapabilityError(f"Generated Skill copy failed byte-parity check: {item['slug']}")
-    for relative, content in _plugin_expected_files(catalog, version).items():
+    for relative, content in _plugin_expected_files(root, catalog, version, previous_version=previous_version, previous_changelog=previous_changelog).items():
         target = stage / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        if isinstance(content, tuple):
-            content = (root / SOURCE_LICENSE_PATH).read_bytes()
         target.write_bytes(content)
 
 
@@ -586,23 +697,36 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
     version = manifest.get("plugin_version")
     _semver_tuple(version)
     manifest_skills = manifest.get("skills")
+    previous_version = manifest.get("previous_plugin_version")
+    if previous_version is not None and (not isinstance(previous_version, str) or not _at_least_version(version, bump_semver(previous_version, "patch"))):
+        raise CapabilityError("Generated Plugin release history is invalid")
+    changelog_hash = manifest.get("changelog_sha256")
+    if not isinstance(changelog_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", changelog_hash):
+        raise CapabilityError("Generated Plugin changelog integrity is missing")
     if not isinstance(manifest_skills, list) or manifest.get("personal_skills_included") is not False or manifest.get("standalone_prompts_included") is not False:
         raise CapabilityError("Generated Plugin manifest has invalid scope")
     if manifest.get("plugin_name") != "aipm-general-skills" or manifest.get("status") != "LOCAL_SAMPLE_NOT_PUBLISHED":
         raise CapabilityError("Generated Plugin identity or publication state is invalid")
     expected_paths = {
+        "plugin.json",
         ".codex-plugin/plugin.json",
+        ".claude-plugin/plugin.json",
+        "gemini-extension.json",
         "AIPM-Distribution-Manifest.json",
         "README.md",
         "VERSION",
         "CHANGELOG.md",
         "licenses/Universal-AI-ToolKit-LICENSE.txt",
     }
+    first_party_license_present = False
     for skill in manifest_skills:
         slug, files = skill.get("slug"), skill.get("files")
-        if not isinstance(slug, str) or not isinstance(files, dict) or slug in EXCLUDED_SKILLS:
+        if not isinstance(slug, str) or not isinstance(files, dict) or slug in EXCLUDED_SKILLS or not isinstance(skill.get("license"), dict):
             raise CapabilityError("Generated Plugin contains an invalid Skill record")
+        first_party_license_present = first_party_license_present or skill["license"].get("aipm_apache_applies") is True
         expected_paths.update(f"skills/{slug}/{relative}" for relative in files)
+    if first_party_license_present:
+        expected_paths.add("licenses/Apache-2.0.txt")
     actual_paths = set(_tree_files(target))
     if actual_paths != expected_paths:
         raise CapabilityError("Generated Plugin contains missing or unexpected files")
@@ -613,10 +737,15 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
             raise CapabilityError(f"Generated Plugin Skill bytes are changed: {slug}")
     if _read_version(target / "VERSION", changelog=target / "CHANGELOG.md") != version:
         raise CapabilityError("Generated Plugin version metadata is inconsistent")
+    changelog = target / "CHANGELOG.md"
+    if _sha256_file(changelog) != changelog_hash or not changelog.read_text(encoding="utf-8").startswith(f"# AIPM General Skills Change Log\n\n## [{version}]"):
+        raise CapabilityError("Generated Plugin changelog hash or release heading is invalid")
     for relative, content in {
+        "plugin.json": (json.dumps(_portable_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         ".codex-plugin/plugin.json": (json.dumps(_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        ".claude-plugin/plugin.json": (json.dumps(_claude_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        "gemini-extension.json": (json.dumps(_gemini_extension_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "README.md": _plugin_readme(len(manifest_skills)).encode("utf-8"),
-        "CHANGELOG.md": _plugin_changelog(version).encode("utf-8"),
     }.items():
         if (target / relative).read_bytes() != content:
             raise CapabilityError(f"Generated Plugin metadata drifted: {relative}")
@@ -626,19 +755,64 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
     return manifest
 
 
+def _validate_legacy_embedded_plugin(target: Path) -> dict[str, Any]:
+    """Accept only the exact P06 local sample shape so it can be upgraded safely."""
+    if not target.is_dir() or _has_reparse_point(target):
+        raise CapabilityError("Generated Plugin directory is missing or linked")
+    manifest = _manifest_from_plugin(target)
+    if "changelog_sha256" in manifest or manifest.get("plugin_name") != "aipm-general-skills" or manifest.get("status") != "LOCAL_SAMPLE_NOT_PUBLISHED":
+        raise CapabilityError("Legacy Plugin identity is invalid")
+    version = manifest.get("plugin_version")
+    _semver_tuple(version)
+    skills = manifest.get("skills")
+    if not isinstance(skills, list) or manifest.get("personal_skills_included") is not False or manifest.get("standalone_prompts_included") is not False:
+        raise CapabilityError("Legacy Plugin scope is invalid")
+    expected_paths = {".codex-plugin/plugin.json", "AIPM-Distribution-Manifest.json", "README.md", "VERSION", "CHANGELOG.md", "licenses/Universal-AI-ToolKit-LICENSE.txt"}
+    for item in skills:
+        slug, files = item.get("slug"), item.get("files")
+        if not isinstance(slug, str) or not isinstance(files, dict) or slug in EXCLUDED_SKILLS or "license" in item:
+            raise CapabilityError("Legacy Plugin Skill record is invalid")
+        expected_paths.update(f"skills/{slug}/{relative}" for relative in files)
+        if _tree_files(target / "skills" / slug) != files or _tree_hash(files) != item.get("source_sha256"):
+            raise CapabilityError(f"Legacy Plugin Skill bytes are changed: {slug}")
+    if set(_tree_files(target)) != expected_paths:
+        raise CapabilityError("Legacy Plugin contains missing or unexpected files")
+    if _read_version(target / "VERSION", changelog=target / "CHANGELOG.md") != version:
+        raise CapabilityError("Legacy Plugin version metadata is inconsistent")
+    checks = {
+        ".codex-plugin/plugin.json": (json.dumps(_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
+        "README.md": _legacy_plugin_readme(len(skills)).encode("utf-8"),
+        "CHANGELOG.md": _legacy_plugin_changelog(version).encode("utf-8"),
+    }
+    for relative, content in checks.items():
+        if (target / relative).read_bytes() != content:
+            raise CapabilityError(f"Legacy Plugin metadata drifted: {relative}")
+    if _sha256_file(target / "licenses" / "Universal-AI-ToolKit-LICENSE.txt") != manifest.get("source_license_sha256"):
+        raise CapabilityError("Legacy Plugin source license is invalid")
+    return manifest
+
+
 def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
     root = _root(root)
     target_path = _within(root, Path(target) if Path(target).is_absolute() else root / target)
     catalog = _catalog(root)
     _check_sensitive_files(target_path)
     manifest = _validate_embedded_plugin(target_path)
-    if manifest != _distribution_manifest(catalog, manifest["plugin_version"]):
+    if manifest != _distribution_manifest(
+        catalog,
+        manifest["plugin_version"],
+        previous_version=manifest["previous_plugin_version"],
+        changelog_sha256=manifest["changelog_sha256"],
+    ):
         raise CapabilityError("Generated Plugin is not in parity with the current capability registry")
     for item in catalog["skills"]:
         if _tree_files(target_path / "skills" / item["slug"]) != item["files"]:
             raise CapabilityError(f"Plugin source parity failure: {item['slug']}")
     if (target_path / "licenses" / "Universal-AI-ToolKit-LICENSE.txt").read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes():
         raise CapabilityError("Generated Plugin did not preserve the source license bytes")
+    if any(item["license"]["aipm_apache_applies"] for item in catalog["skills"]):
+        if (target_path / "licenses" / "Apache-2.0.txt").read_bytes() != (root / "LICENSE").read_bytes():
+            raise CapabilityError("Generated Plugin did not preserve the AIPM first-party license bytes")
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": 0, "published": False, "installed": False}
 
 
@@ -650,6 +824,8 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
     if registry != catalog or _json(root / PROVENANCE_PATH) != _provenance_ledger(catalog):
         raise CapabilityError("Registry and provenance must validate before Plugin generation")
     _check_sensitive_files(root / "01-Skills-General")
+    previous_version: str | None = None
+    previous_changelog: str | None = None
     if target_path.exists():
         try:
             validate_plugin(root, target_path)
@@ -657,16 +833,16 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
         except CapabilityError:
             if replace_generated is not True:
                 raise CapabilityError("Existing Plugin is stale; explicit --replace-generated is required")
-            old_manifest = _validate_embedded_plugin(target_path)
+            try:
+                old_manifest = _validate_embedded_plugin(target_path)
+            except CapabilityError:
+                old_manifest = _validate_legacy_embedded_plugin(target_path)
             old_hashes = {item["slug"]: item["source_sha256"] for item in old_manifest["skills"]}
             new_hashes = {item["slug"]: item["sha256"] for item in catalog["skills"]}
             change = classify_version_change(old_hashes, new_hashes)
-            if change != "none":
-                required = bump_semver(old_manifest["plugin_version"], change)
-                target_version = _read_version(target_path / "VERSION", changelog=target_path / "CHANGELOG.md")
-                if not _at_least_version(target_version, required):
-                    raise CapabilityError(f"Plugin VERSION must advance to at least {required} before replacement")
-            version = _read_version(target_path / "VERSION", changelog=target_path / "CHANGELOG.md")
+            previous_version = old_manifest["plugin_version"]
+            version = bump_semver(previous_version, change if change != "none" else "patch")
+            previous_changelog = (target_path / "CHANGELOG.md").read_text(encoding="utf-8")
         backup: Path | None = None
     else:
         version, backup = PLUGIN_VERSION_INITIAL, None
@@ -676,7 +852,7 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
     preserve_backup = False
     backup_directory: Path | None = None
     try:
-        _materialize_plugin(root, stage, catalog, version)
+        _materialize_plugin(root, stage, catalog, version, previous_version=previous_version, previous_changelog=previous_changelog)
         # Validate the staged package's own checksums before it can replace a target.
         _validate_embedded_plugin(stage)
         if target_path.exists():

@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "policy": "Capability-Declared, Permission-Gated, Fail-Closed",
+  "hosts": [
+    {
+      "id": "local-cli",
+      "display_name": "Generic CLI",
+      "runtime_status": "IMPLEMENTED_TESTED",
+      "local_project_access": "DIRECT_CORE_API",
+      "transport": "In-Process Core Engine",
+      "core_commands": ["state.read", "task.read", "task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "state.set-next-action", "state.record-git-observation"],
+      "mutating_commands": ["task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "state.set-next-action", "state.record-git-observation"],
+      "package_format_status": "NOT_APPLICABLE",
+      "notes": "All mutations require an explicit allow_mutations grant and Core revision/idempotency checks."
+    },
+    {
+      "id": "file-capable-agent",
+      "display_name": "File-Capable Coding Agent",
+      "runtime_status": "CONDITIONAL_UNVERIFIED",
+      "local_project_access": "HOST_TOOL_PERMISSION_REQUIRED",
+      "transport": "Host-Provided Tool Only",
+      "core_commands": [],
+      "mutating_commands": [],
+      "package_format_status": "NOT_APPLICABLE",
+      "notes": "No provider-specific invocation is implemented; the host must explicitly expose and authorize an AIPM Core bridge."
+    },
+    {
+      "id": "codex-plugin",
+      "display_name": "Codex Plugin",
+      "runtime_status": "UNVERIFIED",
+      "local_project_access": "HOST_TOOL_PERMISSION_REQUIRED",
+      "transport": "Official Plugin Skill Package",
+      "core_commands": [],
+      "mutating_commands": [],
+      "package_format_status": "FORMAT_VERIFIED",
+      "manifest": "plugin.json plus .codex-plugin/plugin.json compatibility manifest",
+      "notes": "The sample provides Skill guidance only; no Core MCP server, local file bridge, installation, or runtime invocation is included."
+    },
+    {
+      "id": "claude-code-plugin",
+      "display_name": "Claude Code Plugin",
+      "runtime_status": "UNVERIFIED",
+      "local_project_access": "HOST_TOOL_PERMISSION_REQUIRED",
+      "transport": "Official Plugin Skill Package",
+      "core_commands": [],
+      "mutating_commands": [],
+      "package_format_status": "FORMAT_VERIFIED",
+      "manifest": ".claude-plugin/plugin.json",
+      "notes": "The sample provides Skill guidance only; host tools and permissions remain host-controlled."
+    },
+    {
+      "id": "gemini-cli-extension",
+      "display_name": "Gemini CLI Extension",
+      "runtime_status": "UNVERIFIED",
+      "local_project_access": "HOST_TOOL_PERMISSION_REQUIRED",
+      "transport": "Official Extension Skill Package",
+      "core_commands": [],
+      "mutating_commands": [],
+      "package_format_status": "FORMAT_VERIFIED",
+      "manifest": "gemini-extension.json",
+      "notes": "The extension format supports bundled skills; the Gemini CLI executable was not available for runtime validation."
+    },
+    {
+      "id": "chatgpt-text",
+      "display_name": "ChatGPT Text Conversation",
+      "runtime_status": "CONVERSATION_ONLY",
+      "local_project_access": "UNAVAILABLE",
+      "transport": "Manual Structured Handoff",
+      "core_commands": [],
+      "mutating_commands": [],
+      "package_format_status": "NOT_APPLICABLE",
+      "notes": "Conversation text alone cannot read or mutate Windows files, start local tasks, or spawn local agents. Pasted state is always unverified."
+    }
+  ]
+}

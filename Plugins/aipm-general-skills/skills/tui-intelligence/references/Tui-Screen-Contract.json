@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "screen_name": "Task Dashboard",
+  "status": "DESIGN_CONTRACT_ONLY",
+  "default_mode": "Task Dashboard",
+  "modes": ["Task Dashboard", "Command Palette", "Assistant Console"],
+  "source_mockup": "Visual-References/Task-Dashboard-Mockup.png",
+  "theme": {
+    "background": "#101923",
+    "panel": "#172635",
+    "selected": "#203447",
+    "text": "#F0F5FA",
+    "muted": "#AAB9C9",
+    "accent": "#8ED3FF",
+    "success": "#46C89A",
+    "warning": "#F2B45C",
+    "error": "#F16F7B"
+  },
+  "keyboard": {
+    "UP": "Move Focus To Previous Choice",
+    "DOWN": "Move Focus To Next Choice",
+    "LEFT_RIGHT": "Change Panel Or Context Where Available",
+    "1-9": "Open Stable Choice In Active Panel",
+    "ENTER": "Open Focused Choice",
+    "ESC": "Go Back",
+    "TAB": "Move Focus Between Panels Where Available",
+    "/": "Open Command Palette Search",
+    "F1_OR_QUESTION": "Show Help",
+    "Q": "Request Safe Exit"
+  },
+  "actions": [
+    {"label": "Manage Projects", "description": "Register Projects, Inspect Progress, And Open Task Details", "shortcut": "1"},
+    {"label": "View Tasks", "description": "Review Phases, Blockers, Test Evidence, And Handoffs", "shortcut": "2"},
+    {"label": "Manage Agents", "description": "View Declared Sessions And Transfer Verified Project State", "shortcut": "3"},
+    {"label": "View Reports", "description": "Inspect Phase Reports, Checkpoints, And Test Results", "shortcut": "4"},
+    {"label": "Browse Skills", "description": "Review Skill Provenance, Version, And License Scope", "shortcut": "5"},
+    {"label": "Host Adapters", "description": "Inspect Supported, Conditional, And Unavailable Host Capabilities", "shortcut": "6"}
+  ],
+  "progress": {"formula": "verified_completed_weight / known_positive_total_weight", "status_labels": ["Passed", "Failed", "Blocked", "Unverified"], "unknown_progress": "Unknown", "hide_percentage_when_unknown": true},
+  "rendering": {"ansi_in_place": true, "style_aware_differential_rows": true, "unchanged_frame_writes": 0, "full_screen_clear_per_key": false, "no_color_fallback": "Plain Text With Explicit Selection And Status", "redirected_output": "Readable Plain Text Without ANSI"},
+  "responsive_widths": {"wide_min_columns": 120, "medium_min_columns": 80, "narrow_layout": "Single Column, Wrap And Page Descriptions"},
+  "physical_no_flicker_status": "UNVERIFIED"
+}

@@ -1,8 +1,10 @@
 {
+  "changelog_sha256": "bad2e974d63fa89fcfd35cbae8e756989bf84f2979567e6550839aed6bb9f18e",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-general-skills",
-  "plugin_version": "0.1.0",
+  "plugin_version": "0.2.0",
+  "previous_plugin_version": "0.1.0",
   "schema_version": "1.0",
   "skills": [
     {
@@ -19,6 +21,13 @@
         "schemas/audio-sync.schema.json": "46a65f592630c285086c5b48adc2759ade67a4a296c7c5eacaaf5b56359f8f3e",
         "scripts/srt_to_sync_skeleton.py": "514d58d27e99bd3b9b6d5d32b991892fb6c425a3cfa1fca7089ef9d1bcc35157",
         "scripts/validate_sync.py": "14ea3455ac7634cc2bb71bde699bbd7decaeecea8586420045e03d72cf55e85a"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "audio-timing-author",
       "source_sha256": "c7257900e569cdd845e893aaf3fb12e1cf71b88e7ad7d3e34dfad16c47b25a67",
@@ -40,6 +49,13 @@
         "tests/Test-Windows.ps1": "b8ab316d09678ef62791f490f45ad98fb6cfe6dde8d92b0049c6330d2fe2ccb8",
         "troubleshooting/Common-Issues.md": "29b620bc7b577449b9af1d97331db31b3f369e4f6cc8f5de013565fad521149a"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "browser-environment-manager",
       "source_sha256": "13de7f47180e3a37418297e1c5316a68b9ca52a46f88a70af8e5152ff889a06e",
       "version": "1.0.1"
@@ -51,6 +67,13 @@
         "VERSION": "78b591400c56b7b67b8cb3b2b8a8e65e9093897f02ce0878e6b5405c68620fa7",
         "prompts/Strict-Impl-Handoff-Execute.md": "9b6230869ea2b0d9a5d69dd80cc087c0c9adb3cb35712c18683e3b58b780a87f",
         "prompts/Strict-Impl-Handoff-Request.md": "b4ebf591f64ecabeec8969433867320b16505df589bfb1d3aa5c2e3ef393fdd5"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "create-strict-implementation-handoff",
       "source_sha256": "994bb512ff25adf6b03437070d90c29903f8d64d3bd04358b47ed4ca41cfaa7d",
@@ -72,6 +95,15 @@
         "scripts/stop-server.sh": "0b5ccbbd57f62d3ed88993f7940b5ee0e5c0fc9b21c550c623da4f6292e47daf",
         "visual-companion.md": "6ffcb038b53254bd31debaa15e12dcd4ff24bd63d690e0b644ac6396701cf2e2"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE-THIRD-PARTY"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "deep-brainstorming",
       "source_sha256": "55f1d0446971effe29cd63b8c2ec1a778b5d3da0941f63d500363ee65c873fc5",
       "version": "1.0.0"
@@ -86,6 +118,13 @@
         "scripts/doc_to_md.py": "92461d9cc7a97005bae126c23a8ba6b54139fba86f7a1235bb14ea8db70028fa",
         "tests/test_doc_to_md.py": "0f17dd3a1c0192843548753453742d5945b03e658586d4be267a875e04cb3a7c"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "doc-to-md",
       "source_sha256": "dcaf41d1ec5b274ab7d79117b41c8a0b526abd84d868fabcc2786527e0cef03b",
       "version": "1.0.0"
@@ -97,6 +136,15 @@
         "SKILL.md": "c00eeea0e13e74fe4a9d84ba0a8542205a1b736d65f13134fe1a6647eb14976f",
         "VERSION": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE-THIRD-PARTY"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "find-skills",
       "source_sha256": "32e3ddea078c5e1e3f6f14f524cca61373806fc5ffb37d2447b2a026af31e501",
       "version": "1.0.1"
@@ -107,6 +155,15 @@
         "LICENSE.txt": "eb3d7b5485466acbd81f2b496f595ab637d2792e268206b27d99e793bdb67549",
         "SKILL.md": "b8009ae690dfa69edc7f08bb8715f32db8817112cfa4388741dbaf876c237df8",
         "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE.txt"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "frontend-design",
       "source_sha256": "376de31e199662b95eea50ec3b729d50b2c5d1f20f10f010a68fc6865b7f033f",
@@ -121,6 +178,15 @@
         "agents/openai.yaml": "9d4409fa52b1527ee4a9b69b2484499825ca6bf65ea96bb1d5c1b4d8a31e3757",
         "references/plugin-json-spec.md": "5d7223255decc44fcb93f3aa80bb17afc1469b2d3c339d65d9473c5c0c54fcdd",
         "scripts/create_basic_plugin.py": "63ce72d2854c07a42382115c471cfcd42a743be3b84f398fa2d4cdb2fca13362"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE.txt"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "plugin-creator",
       "source_sha256": "fb6920f442a404ae5256b36a484b2a33a74519c65a7ccc779510271a2537486a",
@@ -191,6 +257,13 @@
         "templates/App/tests/Unit/Tui.Tests.ps1": "b9e571b556850877811fe12788eed52d92ecaa5742945a5c8ea36385b226e802",
         "templates/App/{{AppId}}.bat": "879a6e0d94ff79ccf6d2cf032ad10d58fc3ea8081bac1e77e7c81bbf75b9e606",
         "templates/App/{{AppId}}.sh": "7d0254067d93bc74b92eea1cba1e68fdc37c286030121c075740d5bf5dcb3233"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "powershell-tui-app-designer",
       "source_sha256": "4402973321a3eaf8135befb97bb3a341a4ef945b1064ef34ba0e9a45db403d03",
@@ -361,6 +434,13 @@
         "tests/test_v5_research.py": "55057b0693013b91079de65d9d7f58bf7c09aab88bb32a328c5bcd0514a32fdc",
         "tests_check.py": "fc5f426521f85bafe52b58d0cbbd3fd7700a0ee166d3192f49c0fd8823819698"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "professional-word-designer",
       "source_sha256": "8b73de8b6f124da58743b7a865a5f4c3e99000827bc9a0a287878d780da05068",
       "version": "5.0.0"
@@ -377,6 +457,13 @@
         "references/universal-governance-rules.md": "dd18c6a4a0e525b8abfd3ce290ad0b4cd8f721c2f44b9f514fae71738a643252",
         "templates/AGENTS-Template.md": "38a8c4a267af892203b64b42e35613da8c303b135819d72a89608d7223a37490"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "project-governance-manager",
       "source_sha256": "15dc7acbbda6aaee7dbb0ca6f2b7bc2da855dd20e7631a275fb1a9192931ab2b",
       "version": "1.0.0"
@@ -390,6 +477,13 @@
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "134af3d46f63bad66dc3f8e94e1616d8e4fe5a88b52364e479a7e76192ed7370",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "project-orchestrator",
       "source_sha256": "752b803d2961f808f155fbd00334b3a9b95ee0adab3094359d4982afff6b3969",
@@ -408,6 +502,13 @@
         "references/Recovery-Playbook.md": "86c41d18882141b7ca9bdfd8c2766b4f6c2cfb7fe424d811b7d4472b3f2b32f9",
         "scripts/validate_checkpoint.py": "ae37fa1a77c19640211aa8d10cd99e689610a2403dc4f3de45785c1bb1149cbe",
         "tests/test_checkpoint.py": "ca390371a9c6b0b51c8aa4a7cdfac483e330e20c620569e649703ac65786c27a"
+      },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
       },
       "slug": "resume-task",
       "source_sha256": "480444ffa8358c9b0b29153a64f80b8b3cd8ee104bfb11652ff5252165c53f36",
@@ -472,6 +573,13 @@
         "tests/test_safe_file_ops.py": "83810a19e91a6198b9cb6a2ee23147ee2642e8e2cd1c4785b12e518a9604ab07",
         "tests/test_validate_state.py": "09eb96ef54aa036bdbf5c29b4f262d4fdd4938fef34af93ea8d0e021f0934cd1"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "shared-project-state-manager",
       "source_sha256": "fe23f78911bec0647d4152d9763f45ce65af67792c8f7f2aa24f19250b44edcb",
       "version": "2.1.0"
@@ -503,6 +611,15 @@
         "scripts/run_loop.py": "7bd6f674203168520517eec94c55f493c0d154339b061b4d7c0f0dad187d0f21",
         "scripts/utils.py": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE.txt"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "skill-creator",
       "source_sha256": "2f45a272d3be570cacf91d00904f1eee67e292c269197f4cc0b589af16dbba59",
       "version": "1.0.0"
@@ -519,6 +636,15 @@
         "VERSION": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066",
         "agents/openai.yaml": "5856f3ae8aec742f1499c640aecdd5f1d6af5fa210a7c6ec794de8263a6f733f"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [
+          "LICENSE-THIRD-PARTY"
+        ],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "teach",
       "source_sha256": "2271b7667bab3350519d0d77be36c39937c67db04fef22f841d62be9e14e1111",
       "version": "1.0.1"
@@ -530,14 +656,51 @@
         "SKILL.md": "16b9ce206219a7aa47ed686c5aed958bce429c60b38d43e9f7e93faa6de3aa61",
         "VERSION": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066"
       },
+      "license": {
+        "aipm_apache_applies": false,
+        "retained_skill_notices": [],
+        "source_license": "Universal AI ToolKit Personal Use License",
+        "source_license_path": "Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6"
+      },
       "slug": "token-optimization",
       "source_sha256": "487be6ca8c6285fa86efd79c3caadaf7b32437f4a82a83e09b1790243f078dc5",
       "version": "1.0.1"
+    },
+    {
+      "files": {
+        "CHANGELOG.md": "0a6a5b2b2d5b040418a47a76274596e154b67e5f74358635cf9da10397e66f7a",
+        "PROMPT.md": "3d0589f5560021c7dd2d13ff585c44b5b7b0a3bbf1f4ba4cfedafacd561fda9a",
+        "SKILL.md": "0476f15760416932a61c1b5e745d4ac4663e139320bd75a4de6e790b9da26f8b",
+        "VERSION": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
+        "evals/evals.json": "761363ba647a405af1f8808685e0c18b51755005238c68a90f69d2812abaf3da",
+        "references/Intelligent-TUI-Design-Contract.md": "6fd9a544406a0460277b8a3580e93cdbe8f940be6767d238eb2b1175aab0aaa0",
+        "references/Keyboard-And-Test-Matrix.md": "aac75216be43d5b6be02d093be08370c068ea779827026c0f830b17e49205743",
+        "references/Screenshot-Manifest.json": "aff7b2695efa40b29c503b3d5cfb515973ad246756fa4514cccb1765dcfecff1",
+        "references/Tui-Design-Handoff.md": "7632ddec3c9026a09ab9345b0b0c1f4ce22f5c506cbf846e2b46996bba699e5a",
+        "references/Tui-QA-Report.md": "98483e56f5a9db4a1f96c56dfd00ffd7c71e2615058629d6f5250517ddedcea2",
+        "references/Tui-Screen-Contract.json": "2d54a9a949b1fdddb43b054cb96a39bd95f4c3d100c4d7b78e79e87a14ec6cc3",
+        "references/Visual-References/Assistant-Console-Mockup.png": "046a5fd9fc8cb284119aa9566f36fb7f9e83f941ab2c8246267e675f3283fb0c",
+        "references/Visual-References/Command-Palette-Mockup.png": "61d09e2263ee002a728c02828cbb85a2f47994e0236cc579374347f447f3c8b7",
+        "references/Visual-References/Icons-Terminal-Reference.svg": "49ecc753ed4485bd50e4d10e7935b81b71f24bd6092057fed7cbd13f8ec0c083",
+        "references/Visual-References/README.md": "63e45b674aae6e61d09d87bb2aedf161115abff26569cc8b1d83a1bd676636e1",
+        "references/Visual-References/Task-Dashboard-Mockup.png": "4f55bb142b949a1ed4f19a3009f29afb0001eb9fb7bbfc930f902c94c875b5d4"
+      },
+      "license": {
+        "aipm_apache_applies": true,
+        "retained_skill_notices": [],
+        "source_license": "Apache-2.0",
+        "source_license_path": "LICENSE",
+        "source_license_sha256": "fd5ef209aa59dc6989530762eb4a74d6c2f91189040b9f76bd042d2532101540"
+      },
+      "slug": "tui-intelligence",
+      "source_sha256": "8a6d1ab2f550132cd5c5198450befb2cc607bf49df1e9e1176ad9255c67c1519",
+      "version": "0.1.0"
     }
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "62fc2d462557d70d1698f1f363b134bafa8812d970c1989f494bfbc9d94887d6",
-  "source_project_version": "0.1.0",
+  "source_project_version": "0.2.0",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

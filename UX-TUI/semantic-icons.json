@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "policy": "Documentation And Runtime Semantic Map; Glyph Tier Must Be Capability-Probed",
+  "selection_order": ["Emoji", "Symbol", "ASCII"],
+  "icons": {
+    "project": {"emoji": "U+1F4C1", "symbol": "U+25A3", "ascii": "[P]"},
+    "task": {"emoji": "U+1F4CB", "symbol": "U+25A6", "ascii": "[T]"},
+    "agent": {"emoji": "U+1F916", "symbol": "U+25C9", "ascii": "[A]"},
+    "test-pass": {"emoji": "U+2705", "symbol": "U+2713", "ascii": "[OK]"},
+    "test-fail": {"emoji": "U+274C", "symbol": "U+2717", "ascii": "[X]"},
+    "warning": {"emoji": "U+26A0", "symbol": "U+25B3", "ascii": "[!]"},
+    "handoff": {"emoji": "U+1F4E4", "symbol": "U+21C4", "ascii": "[H]"},
+    "settings": {"emoji": "U+2699", "symbol": "U+2699", "ascii": "[S]"},
+    "arrow": {"emoji": "U+27A1", "symbol": "U+2192", "ascii": "->"},
+    "progress": {"emoji": "U+1F7E2", "symbol": "U+25CF", "ascii": "[#]"}
+  },
+  "constraints": ["Color Never Carries Status Alone", "Use Text Glyphs, Never Raster Icons In Terminal", "PowerShell Sources Stay ASCII-Only"]
+}

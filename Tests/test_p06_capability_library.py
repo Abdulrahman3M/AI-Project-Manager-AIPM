@@ -44,6 +44,7 @@ EXPECTED_SKILLS = {
     "skill-creator",
     "teach",
     "token-optimization",
+    "tui-intelligence",
 }
 
 EXPECTED_OWNED_PROMPTS = {
@@ -55,6 +56,7 @@ EXPECTED_OWNED_PROMPTS = {
     "powershell-tui-app-designer": ["Prompts/Flicker-Free-PowerShell-TUI-Architecture.md"],
     "resume-task": ["PROMPT.md", "prompts/Short-Prompt.md"],
     "shared-project-state-manager": ["PROMPT.md", "prompts/RichViz.md"],
+    "tui-intelligence": ["PROMPT.md"],
 }
 
 
@@ -72,8 +74,13 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
     )
     shutil.copy2(ROOT / "VERSION", destination / "VERSION")
     shutil.copy2(ROOT / "CHANGELOG.md", destination / "CHANGELOG.md")
+    shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
     if include_registry:
         shutil.copytree(ROOT / "Capability-Library", destination / "Capability-Library")
+    else:
+        capability_root = destination / "Capability-Library"
+        capability_root.mkdir()
+        shutil.copy2(ROOT / "Capability-Library" / "First-Party-Skills.json", capability_root / "First-Party-Skills.json")
     return destination
 
 
@@ -90,7 +97,7 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_inventory_registers_only_approved_skills_and_exact_prompt_relationships(self) -> None:
         catalog = scan_library(ROOT)
         self.assertEqual({item["slug"] for item in catalog["skills"]}, EXPECTED_SKILLS)
-        self.assertEqual(len(catalog["skills"]), 17)
+        self.assertEqual(len(catalog["skills"]), 18)
         self.assertEqual(catalog["skill_owned_prompts"], EXPECTED_OWNED_PROMPTS)
         self.assertEqual([item["name"] for item in catalog["standalone_prompts"]], ["Autonomous Task Execution"])
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
@@ -99,10 +106,10 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")
-        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (17, 1))
+        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (18, 1))
         plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-general-skills")
         self.assertEqual(plugin["status"], "PASS")
-        self.assertEqual(plugin["skill_count"], 17)
+        self.assertEqual(plugin["skill_count"], 18)
 
     def test_source_revision_records_verified_read_only_main_commit(self) -> None:
         source = scan_library(ROOT)["source"]
@@ -203,9 +210,9 @@ class CapabilityLibraryTests(unittest.TestCase):
         changelog = skill / "CHANGELOG.md"
         changelog.write_text("## 1.3.11 — Approved Test Edit\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
         version = fixture / "VERSION"
-        version.write_text("0.1.1\n", encoding="utf-8")
+        version.write_text("0.2.1\n", encoding="utf-8")
         root_log = fixture / "CHANGELOG.md"
-        root_log.write_text("## [0.1.1] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
+        root_log.write_text("## [0.2.1] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
         refreshed = refresh_registry(fixture, confirmed=True, reason="Test-only confirmed edit with required versions")
         self.assertEqual(refreshed["status"], "PASS")
         self.assertEqual(validate_registry(fixture)["status"], "PASS")
@@ -216,13 +223,13 @@ class CapabilityLibraryTests(unittest.TestCase):
         second = build_plugin(ROOT, target)
         self.assertEqual(first["status"], "PASS")
         self.assertEqual(second["status"], "UNCHANGED")
-        self.assertEqual(len(list((target / "skills").iterdir())), 17)
+        self.assertEqual(len(list((target / "skills").iterdir())), 18)
         self.assertFalse((target / "02-Prompt-General").exists())
         self.assertFalse((target / "02-Skills-Personal").exists())
         self.assertFalse((target / "skills" / "import-memory").exists())
         self.assertFalse((target / "skills" / "morning").exists())
         manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(manifest["skills"]), 17)
+        self.assertEqual(len(manifest["skills"]), 18)
         self.assertNotIn("license", json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")))
         self.assertTrue((target / "licenses" / "Universal-AI-ToolKit-LICENSE.txt").is_file())
 

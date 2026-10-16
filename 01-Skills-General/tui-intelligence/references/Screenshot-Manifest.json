@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "status": "REFERENCE_MOCKUP_ONLY",
+  "real_terminal_screenshots": [],
+  "assets": [
+    {"path": "Visual-References/Task-Dashboard-Mockup.png", "role": "Primary Dashboard Reference", "capture_claim": false},
+    {"path": "Visual-References/Command-Palette-Mockup.png", "role": "Search And Action Reference", "capture_claim": false},
+    {"path": "Visual-References/Assistant-Console-Mockup.png", "role": "Assistant Mode Reference", "capture_claim": false},
+    {"path": "Visual-References/Icons-Terminal-Reference.svg", "role": "Documentation-Only Icon Reference", "capture_claim": false}
+  ],
+  "source_package": "AI-Project-Manager-AIPM-V2/Visual-References",
+  "runtime_visual_acceptance": "UNVERIFIED"
+}

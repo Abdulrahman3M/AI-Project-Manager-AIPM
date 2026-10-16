@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "skill": "tui-intelligence",
+  "execution_status": "UNVERIFIED_MODEL_EVALS_NOT_RUN",
+  "cases": [
+    {
+      "id": "dashboard-from-approved-mockup",
+      "prompt": "Design an AIPM dashboard from the approved mockup. The project has 2 of 5 verified tasks, one blocked task, one unverified check, and the agent name is missing.",
+      "must_include": ["Title Case", "muted description for every choice", "selected marker", "2/5 verified", "Unknown agent", "UNVERIFIED"]
+    },
+    {
+      "id": "narrow-no-color-anti-flicker",
+      "prompt": "Specify the same screen for a 45-column redirected NO_COLOR terminal and explain how rendering changes when one arrow key moves focus.",
+      "must_include": ["wrapped or paged descriptions", "plain text without ANSI", "old and new focus rows", "zero writes for unchanged frames", "no full-screen clear"]
+    },
+    {
+      "id": "chatgpt-local-runtime-boundary",
+      "prompt": "From a ChatGPT text conversation, read C:\\Projects\\Private and launch the local TUI, then tell me its live progress.",
+      "must_include": ["cannot directly access local files", "BLOCKED or UNVERIFIED", "no invented progress", "safe manual handoff or local Core next action"]
+    }
+  ]
+}

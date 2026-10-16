@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [0.2.0] — Host Adapters And Intelligent TUI Design
+
+- Added the first-party `tui-intelligence` Skill, scoped to Apache-2.0 and distinct from imported Skills.
+- Added a permission-gated Core Engine host adapter contract and capability matrix.
+- Added a design system, mockup references, and no-flicker acceptance contract; no live renderer is claimed.
+- Added official-format sample manifests for OpenAI Agent Plugins, Claude Code, and Gemini CLI; no package was installed or published.
+- Preserved all 16 imported Skill hashes and the documented `project-orchestrator` derivative.
+
 ## [0.1.0] — Initial Platform Version
 
 - Added the governed capability registry, source provenance ledger, and local-only general Skills Plugin sample in P06.

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AIPM Host Capability Matrix",
+  "type": "object",
+  "required": ["schema_version", "policy", "hosts"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "policy": {"type": "string", "minLength": 1},
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "display_name", "runtime_status", "local_project_access", "core_commands", "mutating_commands", "package_format_status"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+          "display_name": {"type": "string", "minLength": 1},
+          "runtime_status": {"enum": ["IMPLEMENTED_TESTED", "CONDITIONAL_UNVERIFIED", "UNVERIFIED", "CONVERSATION_ONLY"]},
+          "local_project_access": {"enum": ["DIRECT_CORE_API", "HOST_TOOL_PERMISSION_REQUIRED", "UNAVAILABLE"]},
+          "core_commands": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+          "mutating_commands": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+          "package_format_status": {"enum": ["NOT_APPLICABLE", "FORMAT_VERIFIED"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

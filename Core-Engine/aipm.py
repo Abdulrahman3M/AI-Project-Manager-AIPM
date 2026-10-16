@@ -7,12 +7,13 @@ from pathlib import Path
 from typing import Sequence
 
 from aipm_core.domain import CommandEnvelope, CoreEngine
+from aipm_core.host_adapters import load_capability_matrix
 from aipm_core.storage import ManagedProject, STATE_ROOT_NAME, _canonical
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     return parser
@@ -20,7 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.command == "health":
+    if args.command == "host-capabilities":
+        try:
+            result = {"schema_version": "1.0", "status": "PASS", "matrix": load_capability_matrix(Path(__file__).resolve().parents[1])}
+        except ValueError:
+            result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_CAPABILITY_MATRIX"}
+    elif args.command == "health":
         result = {"schema_version": "1.0", "status": "PASS", "service": "aipm-core", "command": "health"}
     else:
         try:
