@@ -1,0 +1,18 @@
+{
+  "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
+  "interface": {
+    "capabilities": [
+      "AIPM Project Context",
+      "AIPM Core Guidance",
+      "General Skills"
+    ],
+    "category": "Productivity",
+    "developerName": "AI Project Manager",
+    "displayName": "AIPM Project Agent Bridge",
+    "longDescription": "Generated local bridge for an AI agent working with an AIPM project. It includes approved Skills and a project-agent handoff; it is not published, installed, or granted automatic file access.",
+    "shortDescription": "AIPM project context, Core guidance, and approved Skills"
+  },
+  "name": "aipm-project-agent-bridge",
+  "skills": "./skills/",
+  "version": "1.0.1"
+}

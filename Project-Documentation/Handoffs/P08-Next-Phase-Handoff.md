@@ -2,7 +2,7 @@
 
 ## Current State
 
-The P08 PowerShell app and local portable package are implemented on `main`; automated Python/PowerShell suites and package smoke checks pass. A follow-up interactive PTY review fixed short-terminal clipping and verified scrolling under PowerShell 7.6.5 and Windows PowerShell 5.1.26100.9444. The phase is **not fully accepted** because no actual Windows Terminal/native-console screenshot or human visual review was available. The package has not been installed, published, or pushed.
+P08 is **COMPLETE by owner-confirmed visual acceptance**. After reviewing the final visual step, the owner explicitly confirmed that it looked good. The screenshot was supplied/viewed in conversation but was not saved as a local repository artifact, so this records the owner's acceptance rather than claiming a retained host capture. The P08 app/package test evidence below remains the historical technical evidence. The package has not been installed, published, or pushed.
 
 ## Verified Gate
 
@@ -11,7 +11,8 @@ The P08 PowerShell app and local portable package are implemented on `main`; aut
 - TUI project quality rules: 22/22 pass on both editions.
 - Capability inventory and local generated-plugin validation passed without baseline refresh.
 - Current portable ZIP: `.test-workspace/P08-Package-20261017/AIPM-v0.2.1.zip`, SHA-256 `BDBCC255E951C08921823E5DD9C6B7CABAED6FFCCEB711FEC75C0AC3BD0D18A8`; extracted source hashes match the project, and `-Version`/scripted Exit pass on both PowerShell editions.
-- Actual Windows Terminal/native-console visual appearance, supplied-reference comparison, and human-observed flicker: `UNVERIFIED`. The PTY control stream showed no full-screen clear during arrow navigation, which does not establish visual rendering on those hosts. Current Windows Computer-Use policy prohibits automating terminal applications, so the required native-host review cannot be performed in this session.
+- Owner visual acceptance: `PASS`, explicitly confirmed in the conversation after reviewing the final visual step.
+- Screenshot provenance: owner-provided conversation image/visual review; no local capture artifact, host/version, or capture command retained. This limitation is distinct from the owner's acceptance.
 
 ## Boundaries To Preserve
 
@@ -22,4 +23,4 @@ The P08 PowerShell app and local portable package are implemented on `main`; aut
 
 ## Resume Procedure
 
-Launch `TUI/AI-Project-Manager/AIPM.bat` in actual Windows Terminal and native Windows PowerShell 5.1 console sessions. Inspect the dashboard, command palette, and assistant console; test resizing, icons/colors, the colored selection arrow, unshaded explanations, keyboard behavior, and visible flicker. Save genuine screenshots under the project and update `UX-TUI` screenshot status and the P08 report/checkpoint. If issues are found, fix and retest them before closing P08. P09's prerequisite is P08 COMPLETE, so it remains unstarted until this gate passes.
+P08 is accepted; P09 is the next phase. Preserve the distinction between owner-confirmed design acceptance and non-retained screenshot provenance. Do not install or publish the package.

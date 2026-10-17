@@ -1,3 +1,7 @@
+## [1.0.0] — AIPM Release Baseline
+
+- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
+
 # Changelog
 
 ## 2.1.0 — 2026-10-08

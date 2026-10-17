@@ -1,3 +1,7 @@
+## [1.0.0] — AIPM Release Baseline
+
+- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
+
 ## 1.3.10 — 2026-10-13
 - Synchronized the Skill catalog with Strict Implementation Handoff v1.4.0 and Token Optimization v1.0.1.
 - Clarified browser-manager handoff integration and explicit owner approval for multi-agent fan-out.

@@ -2,7 +2,7 @@
 
 ## Acceptance Status
 
-IMPLEMENTED — automated and package gates pass; an interactive PTY test found and fixed short-terminal clipping, but the required actual Windows Terminal/native-console visual gate remains `UNVERIFIED`. See [P08 Phase Report](../Phase-Reports/P08-Report.md). Do not start P09 until a real terminal review and screenshot evidence are recorded.
+**COMPLETE — owner-confirmed visual acceptance recorded on 2026-10-17.** The owner explicitly confirmed that the final visual step was inspected and looked good. This confirmation closes the owner visual-acceptance gate and permits P09. The screenshot itself was supplied/viewed in the conversation and is not preserved as a local repository artifact; this checkpoint does not claim an independently captured or retained host screenshot. See the acceptance addendum in [P08 Phase Report](../Phase-Reports/P08-Report.md).
 
 ## Durable Invariants
 
@@ -26,13 +26,16 @@ IMPLEMENTED — automated and package gates pass; an interactive PTY test found 
 - Capability `validate` and `validate-plugin`: PASS without refreshing the integrity baseline.
 - Portable package extraction and launcher smoke tests: PASS; SHA-256 is recorded in the P08 report.
 
+## Acceptance Evidence And Boundaries
+
+- Owner visual acceptance: explicit confirmation in the conversation after reviewing the final layout.
+- Local screenshot artifact: not retained; host/version and exact capture command were not independently recorded.
+- Automated and PTY test evidence remains as documented in the historical P08 report; it is not represented as native-host visual proof.
+- No package installation, publication, push, or source-repository modification is authorized by this acceptance.
+
 ## Recovery And Resume
 
-1. Read `Project-Documentation/Phase-Reports/P08-Report.md` and `TUI/AI-Project-Manager/docs/Screenshot-Status.md`.
-2. From the actual repository, run `TUI/AI-Project-Manager/AIPM.bat` in Windows Terminal and the Windows PowerShell 5.1 console.
-3. Inspect ordinary/narrow terminal sizes, semantic colors/icons and fallback, the colored selection arrow, unshaded descriptions, keyboard navigation, resize, and visible flicker. Capture actual screenshots only; keep `UNVERIFIED` until observed.
-4. Update the screenshot status and P08 report/checkpoint with host/version, commands, captures, and any resolved defects. Rerun the affected tests and full relevant gates.
-5. Only after P08's manual acceptance passes may P09 be considered. Do not use this checkpoint as authorization to publish or install.
+P08 is accepted and P09 may proceed. Re-read `Project-Documentation/Phase-Reports/P08-Report.md` and `TUI/AI-Project-Manager/docs/Screenshot-Status.md` for the distinction between owner-confirmed visual acceptance and non-retained screenshot provenance. Do not use this checkpoint as authorization to publish or install.
 
 ## Exact Next Action
 

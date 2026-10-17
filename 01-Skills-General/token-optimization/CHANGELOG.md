@@ -1,3 +1,7 @@
+## [1.0.0] — AIPM Release Baseline
+
+- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
+
 ## 1.0.1 — 2026-10-13
 - Explicit owner consent now required before multi-agent/subagent fan-out; single-agent tool batching remains permitted and verification remains mandatory.
 

@@ -2,9 +2,28 @@
 
 ## [Unreleased]
 
+- Made the General Skill inventory owner-managed: Skills may be removed or added when provenance and license metadata are maintained; retained imported Skills remain hash-checked.
 - Implemented AIPM's Core-Backed PowerShell TUI and Read-Only Project, Task, Evidence, Capability, And Host Views.
 - Added Search-First And Assistant Console View Modes, Shared Theme Roles, A11Y Markers, And Differential Rendering.
 - Actual Interactive Windows Terminal And Legacy Console Visual Verification Remains Unverified.
+
+## [1.0.2] — Documentation And GitHub Release
+
+- Added deterministic source-release packaging with SHA-256 verification, an allowlisted file set, and credential/local-path checks.
+- Added step-by-step English and Arabic beginner guides and published the v1.0.2 source archive to the owner-maintained GitHub repository.
+- Kept the repository's existing private visibility; no Actions workflows, marketplace publication, Plugin installation, or host activation were performed.
+- Recorded the P09 external-host and durable-capture exceptions as unverified owner-controlled gates.
+
+## [1.0.1] — Skill Release Baseline And Agent Bridge
+
+- Rebased all active Skills to independent `1.0.0` AIPM release baselines.
+- Replaced the Skills-only sample with the local AIPM Project Agent Bridge package.
+
+## [1.0.0] — Personal License And Refined Terminal Frames
+
+- Reset the AIPM product release line to `1.0.0` and adopted the AI Project Manager Personal Use License.
+- Removed the six third-party Skills requested by the owner and regenerated the local Capability Library sample.
+- Replaced dashed terminal frames with connected, bounded Unicode borders.
 
 ## [0.2.1] — Product Shell, Capability Library, And Session Efficiency
 

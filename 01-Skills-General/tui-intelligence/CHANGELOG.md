@@ -1,5 +1,9 @@
 # TUI Intelligence Change Log
 
+## [1.0.0] — AIPM Personal License Release
+
+- Reset the Skill release line for the AIPM 1.0.0 product release.
+
 ## [0.1.0] — Initial AIPM Design Skill
 
 - Added host-aware Intelligent TUI design guidance and QA templates.

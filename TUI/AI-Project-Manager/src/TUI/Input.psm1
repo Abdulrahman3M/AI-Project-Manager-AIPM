@@ -17,6 +17,7 @@ function Set-ScriptedInput {
             if ($close -gt $i) {
                 $tok = $Keys.Substring($i + 1, $close - $i - 1)
                 if ($tok -in @('Enter', 'Esc', 'Up', 'Down', 'Backspace', 'F1', 'CtrlC')) { $script:Queue.Enqueue((New-Key $tok)); $i = $close + 1; continue }
+                if ($tok -eq 'Idle') { $script:Queue.Enqueue((New-Key 'None')); $i = $close + 1; continue }
             }
         }
         $script:Queue.Enqueue((New-Key 'Char' ([string]$Keys[$i]))); $i++
@@ -27,9 +28,19 @@ function Clear-ScriptedInput { $script:Queue = New-Object System.Collections.Gen
 function Test-ScriptedInput { return $script:Scripted }
 
 function Read-AppKey {
+    param([int]$TimeoutMilliseconds = -1)
     if ($script:Scripted) {
         if ($script:Queue.Count -eq 0) { throw 'Scripted input exhausted.' }   # a test that runs out of keys must fail loudly
         return $script:Queue.Dequeue()
+    }
+    if ($TimeoutMilliseconds -ge 0) {
+        $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
+        while ($true) {
+            try { if ([Console]::KeyAvailable) { break } } catch { return (New-Key 'None') }
+            $remaining = [int][Math]::Ceiling(($deadline - [DateTime]::UtcNow).TotalMilliseconds)
+            if ($remaining -le 0) { return (New-Key 'None') }
+            Start-Sleep -Milliseconds ([Math]::Min(25, $remaining))
+        }
     }
     $k = [Console]::ReadKey($true)
     if (($k.Modifiers -band [ConsoleModifiers]::Control) -and $k.Key -eq [ConsoleKey]::C) { return (New-Key 'CtrlC') }

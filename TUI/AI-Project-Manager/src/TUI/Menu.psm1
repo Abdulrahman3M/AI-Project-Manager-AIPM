@@ -3,6 +3,7 @@ Set-StrictMode -Version 2.0
 $script:MenuDesign = @{ Navigation = 'Hybrid'; Preset = 'classic-numbered'; Descriptions = 'Muted' }
 $script:ProductShell = @{ Version = ''; Status = '' }
 $script:MenuGeometryCache = @{ Key = ''; Metrics = $null; Hits = 0; Misses = 0 }
+$script:TuiBorder = @{ TopLeft = [char]0x250C; TopRight = [char]0x2510; BottomLeft = [char]0x2514; BottomRight = [char]0x2518; Left = [char]0x251C; Right = [char]0x2524; Horizontal = [char]0x2500; Vertical = [char]0x2502; TopJoin = [char]0x252C; MiddleJoin = [char]0x253C; BottomJoin = [char]0x2534 }
 
 function Set-TuiProductShell {
     param([string]$Version = '', [string]$Status = '')
@@ -10,9 +11,18 @@ function Set-TuiProductShell {
 }
 function Get-TuiProductShell { return $script:ProductShell.Clone() }
 function Write-TuiRule {
-    param([int]$Width)
+    param([int]$Width, [ValidateSet('Top','Middle','Bottom')][string]$Position = 'Middle', [switch]$OpenRight)
     $width = [Math]::Min(240, [Math]::Max(20, $Width))
-    Write-UiLine ('+' + ('-' * ($width - 2)) + '+') 'Frame'
+    $edge = switch ($Position) {
+        'Top' { @($script:TuiBorder.TopLeft,$script:TuiBorder.TopRight) }
+        'Bottom' { @($script:TuiBorder.BottomLeft,$script:TuiBorder.BottomRight) }
+        default { @($script:TuiBorder.Left,$script:TuiBorder.Right) }
+    }
+    if ($OpenRight) {
+        Write-UiLine ($edge[0] + ([string]$script:TuiBorder.Horizontal * ($width - 1))) 'Frame'
+    } else {
+        Write-UiLine ($edge[0] + ([string]$script:TuiBorder.Horizontal * ($width - 2)) + $edge[1]) 'Frame'
+    }
 }
 function Write-TuiTable {
     param([string[]]$Headers, [string[]]$Fields, [object[]]$Rows, [int[]]$ColumnWidths, [int]$Width)
@@ -25,9 +35,16 @@ function Write-TuiTable {
         $tableWidth += $columnWidth + 3
     }
     if ($tableWidth -gt $Width) { throw ('TUI table width {0} exceeds the terminal width {1}.' -f $tableWidth,$Width) }
-    $border = '+'
-    foreach ($columnWidth in $ColumnWidths) { $border += ('-' * ($columnWidth + 2)) + '+' }
-    Write-UiLine $border 'Frame'
+    $topBorder = [string]$script:TuiBorder.TopLeft
+    $middleBorder = [string]$script:TuiBorder.Left
+    $bottomBorder = [string]$script:TuiBorder.BottomLeft
+    for ($index = 0; $index -lt $ColumnWidths.Count; $index++) {
+        $segment = [string]$script:TuiBorder.Horizontal * ($ColumnWidths[$index] + 2)
+        $topBorder += $segment + $(if ($index -eq ($ColumnWidths.Count - 1)) { $script:TuiBorder.TopRight } else { $script:TuiBorder.TopJoin })
+        $middleBorder += $segment + $(if ($index -eq ($ColumnWidths.Count - 1)) { $script:TuiBorder.Right } else { $script:TuiBorder.MiddleJoin })
+        $bottomBorder += $segment + $(if ($index -eq ($ColumnWidths.Count - 1)) { $script:TuiBorder.BottomRight } else { $script:TuiBorder.BottomJoin })
+    }
+    Write-UiLine $topBorder 'Frame'
     $allRows = @([pscustomobject]@{ Values = $Headers; Role = 'Heading' })
     foreach ($row in $Rows) {
         $cells = @()
@@ -40,14 +57,15 @@ function Write-TuiTable {
         $allRows += [pscustomobject]@{ Values = $cells; Role = 'Normal' }
     }
     foreach ($row in $allRows) {
-        $line = '|'
+        $line = [string]$script:TuiBorder.Vertical
         for ($index = 0; $index -lt $ColumnWidths.Count; $index++) {
             $cell = Limit-MenuText -Text ([string]$row.Values[$index]) -Width $ColumnWidths[$index]
-            $line += ' ' + $cell.PadRight($ColumnWidths[$index]) + ' |'
+            $line += ' ' + $cell.PadRight($ColumnWidths[$index]) + ' ' + $script:TuiBorder.Vertical
         }
         Write-UiLine $line $row.Role
+        if ($row.Role -eq 'Heading') { Write-UiLine $middleBorder 'Frame' }
     }
-    Write-UiLine $border 'Frame'
+    Write-UiLine $bottomBorder 'Frame'
 }
 function Write-AipmProductHeader {
     param([string]$Version, [string]$Status, [int]$Width)
@@ -66,7 +84,7 @@ function Write-AipmProductHeader {
     }
     $titlePadding = [Math]::Max(0, $innerWidth - $titleLength)
     $leftTitlePadding = [int][Math]::Floor($titlePadding / 2.0)
-    Write-TuiRule -Width $width
+    Write-TuiRule -Width $width -Position Top
     Write-Ui '| ' 'Frame'
     Write-Ui (' ' * $leftTitlePadding) 'Frame'
     Write-Ui $product 'Title'
@@ -74,7 +92,7 @@ function Write-AipmProductHeader {
     Write-Ui (' ' * ($titlePadding - $leftTitlePadding)) 'Frame'
     Write-UiLine ' |' 'Frame'
     if ($width -lt 34) {
-        Write-TuiRule -Width $width
+        Write-TuiRule -Width $width -Position Bottom
         return
     }
     $statusText = [string]$Status
@@ -88,7 +106,7 @@ function Write-AipmProductHeader {
     Write-Ui $statusText 'Dim'
     Write-Ui (' ' * ($statusPadding - $leftStatusPadding)) 'Frame'
     Write-UiLine ' |' 'Frame'
-    Write-TuiRule -Width $width
+    Write-TuiRule -Width $width -Position Bottom
 }
 
 function Format-MenuNumber { param([int]$Number) return ([string]$Number).PadLeft(2, '0') }
@@ -391,7 +409,7 @@ function Show-Menu {
         Write-UiLine ''
         Write-MenuFooter -Navigation $Navigation -SearchActive $searchActive -SearchHasQuery ([bool]$query) -Width $size.Width
         Complete-UiFrame
-        $k = Read-AppKey
+        $k = Read-AppKey -TimeoutMilliseconds 125
         switch ($k.Name) {
             'CtrlC' { throw (New-Object System.OperationCanceledException('Quit')) }
             'Esc' { if ($searchActive -and $query) { $query = ''; $searchActive = $false; $sel = 0 } else { return $null } }

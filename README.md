@@ -1,34 +1,143 @@
-# AI Project Manager (AIPM)
+<div align="center">
+  <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-AI Project Manager is a local-first platform for governed project orchestration, shared project state, compatible Skills, and a PowerShell Intelligent TUI.
+  <h1>AI Project Manager</h1>
+  <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
+
+  <p>
+    <a href="#overview">Overview</a> ·
+    <a href="#capabilities">Capabilities</a> ·
+    <a href="#quick-start">Quick Start</a> ·
+    <a href="#security-and-privacy">Security</a> ·
+    <a href="#project-status">Project Status</a>
+  </p>
+</div>
+
+---
+
+## Overview
+
+AI Project Manager (AIPM) is a local-first project orchestration platform built to help AI agents and people work from clear project state, controlled capabilities, and verifiable evidence. Its Core Engine manages project and task state; host adapters define permission boundaries; and the PowerShell Intelligent TUI gives you a read-only view of projects, work, evidence, capabilities, and handoffs.
+
+AIPM is designed to make project context explicit and portable while keeping authority with the project owner. A compatible package does not grant an agent access to local files or start an AI session on its own.
+
+## Capabilities
+
+| Area | What It Provides |
+| --- | --- |
+| **Core Engine** | Project registration, validated state, task lifecycle, evidence records, and continuity operations. |
+| **Capability Library** | A governed catalog of Skills and Prompts with version, provenance, and integrity metadata. |
+| **Agent Bridge** | A local package that explains how an AI agent should use AIPM Core and the approved Skills. |
+| **Host Adapters** | Declared host capabilities, explicit permission gates, and fail-closed behavior for unsupported operations. |
+| **Intelligent TUI** | Read-only project dashboards, task and evidence views, capability catalog, keyboard navigation, and accessible terminal styling. |
+
+## Quick Start
+
+New To AIPM? Follow The [English Beginner Guide](docs/User-Guides/Beginner-Guide.en.md) Or [دليل المبتدئين بالعربية](docs/User-Guides/دليل-المبتدئين.ar.md) For A Step-By-Step Walkthrough.
+
+### Requirements
+
+- Windows PowerShell 5.1 or PowerShell 7.x
+- Python 3.10 or later available on `PATH`
+- A real interactive terminal for keyboard navigation
+
+### Launch the terminal interface
+
+On Windows, run:
+
+```powershell
+TUI\AI-Project-Manager\AIPM.bat
+```
+
+Or launch PowerShell directly:
+
+```powershell
+pwsh -NoProfile -File TUI\AI-Project-Manager\Start-AIPM.ps1
+```
+
+For command-line options and view-mode guidance, see the [TUI User Guide](TUI/AI-Project-Manager/README.md).
+
+## How AIPM Works
+
+```text
+Project Owner
+     │ defines scope and permissions
+     ▼
+AI Agent ───────► Host Adapter ───────► AIPM Core Engine
+     ▲                                      │
+     │ approved Skills and handoff          │ project state and evidence
+     └──────────────────────────────────────┘
+                                            ▼
+                                   Read-Only Terminal UI
+```
+
+The Core Engine is the authority for registered project and task state. Host adapters expose only declared operations and require explicit permission for writes. The terminal UI reads Core-backed data and does not mutate project state. Values without supporting evidence remain unknown or unverified.
+
+## Security and Privacy
+
+- Project state remains within the project and AIPM Core storage boundaries.
+- Host operations are capability-declared, permission-gated, and fail-closed.
+- Manual handoff text is treated as unverified input until a receiving session re-reads authoritative state.
+- The local Agent Bridge does not install itself, start a background agent, or grant automatic file access.
+- Capability metadata records Skill versions, provenance, and integrity information.
+
+Read the [Host Adapter Contract](Plugin-Adapters/Host-Adapter-Contract.md) and [Project Rules](Project-Documentation/Project-Rules.md) for operational details.
 
 ## Project Status
 
-P01–P07 are complete. P08 adds a Core-backed, read-only PowerShell TUI implementation with Task Dashboard, Command Palette, and Assistant Console modes. Automated tests exercise its rendering and state integration; actual Windows Terminal and legacy-console visual checks remain UNVERIFIED in this non-interactive run. No plugin is installed or published.
+AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-## Capability Library
+The P09 report documents remaining external-environment checks as `UNVERIFIED`, including a live independent-host handoff and retained terminal-capture provenance. Download the verified source package from [GitHub Releases](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases). The owner repository remains private, so GitHub access is required; a release does not imply host installation or close those external gates.
 
-- [Capability Library Guide](Capability-Library/README.md)
-- [Standalone General Prompts](02-Prompt-General/README.md)
-- [Project Rules](Project-Documentation/Project-Rules.md)
-- [Capability Registry](Capability-Library/Registry.json)
+See the [Support Matrix](Project-Documentation/Support-Matrix.md), [P09 Security and Cross-Agent QA Report](Project-Documentation/Phase-Reports/P09-Report.md), and [P10 Packaging and Release Report](Project-Documentation/Phase-Reports/P10-Report.md) for evidence and limits.
 
-The library registers 18 General Skills (16 byte-preserved imports, the documented `project-orchestrator` derivative, and the AIPM-owned `tui-intelligence` Skill), their Skill-owned Prompts, and the owner-added standalone Prompt. Personal Skills, `import-memory`, and `morning` are excluded. The first-party Skill uses Apache-2.0; imported terms and notices are preserved.
+## Repository Map
 
-## Local Plugin Sample
+| Path | Purpose |
+| --- | --- |
+| `Core-Engine/` | Core runtime, state, orchestration, adapters, and capability logic. |
+| `01-Skills-General/` | Owner-managed General Skills. |
+| `02-Prompt-General/` | Standalone reusable Prompts. |
+| `Capability-Library/` | Machine-readable registry and first-party capability declarations. |
+| `Plugin-Adapters/` | Host capability matrix and adapter contract. |
+| `Plugins/` | Locally generated Agent Bridge package. |
+| `TUI/AI-Project-Manager/` | PowerShell terminal application, launchers, documentation, and tests. |
+| `UX-TUI/` | Interface design system, visual references, and project brand assets. |
+| `Tests/` | Python integration and regression suites. |
+| `Project-Documentation/` | Architecture, support matrix, provenance, phase evidence, and release notes. |
 
-`Plugins/aipm-general-skills` is generated from the approved General Skill masters, with OpenAI portable/Codex compatibility, Claude Code, and Gemini CLI manifests. It is a local sample only; it is not published or installed. It contains no Personal Skills or standalone Prompts and records license scope per Skill.
+## Validation
 
-## Host Adapters And Intelligent TUI
+Run the PowerShell terminal application tests:
 
-- [Host Capability Matrix](Plugin-Adapters/Host-Capability-Matrix.json) and [Adapter Contract](Plugin-Adapters/Host-Adapter-Contract.md) define tested, conditional, and unavailable capabilities. The Generic CLI routes through Core Engine; manual handoffs remain unverified and read-only.
-- [Intelligent TUI Design System](UX-TUI/README.md) and the [TUI Intelligence Skill](01-Skills-General/tui-intelligence/SKILL.md) preserve the approved mockups, palette, layout, accessibility, and differential-rendering requirements. The [PowerShell TUI App](TUI/AI-Project-Manager/README.md) implements the required read-only views. Design mockups are not runtime screenshots; physical terminal appearance and flicker remain unverified until tested in their actual hosts.
+```powershell
+pwsh -NoProfile -File TUI\AI-Project-Manager\tests\Run-Tests.ps1
+```
 
-## P08 Verification
+Run the Core and integration tests:
 
-- [P08 Implementation Plan](Project-Documentation/P08-Implementation-Plan.md)
-- [P08 Verification Record](Project-Documentation/Phase-Reports/P08-Report.md)
+```powershell
+python -m unittest discover -s Tests -v
+```
 
-## License Scope
+Validate the capability catalog and local Agent Bridge:
 
-Apache-2.0 covers AIPM-authored files and the declared first-party Skill only. Imported Skills retain the Universal AI ToolKit Personal Use License and their original third-party notices. The generated sample includes both license texts and per-Skill licensing; see `Project-Documentation/Provenance/`.
+```powershell
+python Maintenance-Tools\Invoke-Capability-Library.py validate
+python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output Plugins\aipm-project-agent-bridge
+```
+
+## Documentation
+
+- [Project Index](Index.md)
+- [Beginner Guides — English And Arabic](docs/User-Guides/README.md)
+- [Capability Library](Capability-Library/README.md)
+- [Host Capability Matrix](Plugin-Adapters/Host-Capability-Matrix.json)
+- [Intelligent TUI Design System](UX-TUI/README.md)
+- [TUI User Guide](TUI/AI-Project-Manager/README.md)
+- [Support Matrix](Project-Documentation/Support-Matrix.md)
+- [Release Notes](Project-Documentation/Release-Notes-v1.0.2.md)
+
+## License
+
+The project is distributed under the [AI Project Manager Personal Use License](LICENSE). Review its terms before copying, modifying, redistributing, or using project material.

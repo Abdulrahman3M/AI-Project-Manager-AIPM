@@ -17,8 +17,11 @@ PROVENANCE_PATH = Path("Project-Documentation/Provenance/Capability-Library-Ledg
 MIGRATION_PATH = Path("Project-Documentation/Provenance/Skill-Migration-Record.json")
 FIRST_PARTY_SKILLS_PATH = Path("Capability-Library/First-Party-Skills.json")
 SOURCE_REVISION_PATH = Path("Project-Documentation/Provenance/Source-Revision.json")
-SOURCE_LICENSE_PATH = Path("Project-Documentation/Provenance/Source-Licenses/Universal-AI-ToolKit-LICENSE.txt")
-PLUGIN_VERSION_INITIAL = "0.1.0"
+SOURCE_LICENSE_PATH = Path("LICENSE")
+PERSONAL_LICENSE_NAME = "AI Project Manager Personal Use License"
+PLUGIN_VERSION_INITIAL = "1.0.0"
+PLUGIN_SLUG = "aipm-project-agent-bridge"
+PLUGIN_DISPLAY_NAME = "AIPM Project Agent Bridge"
 EXCLUDED_SKILLS = {"import-memory", "morning"}
 DERIVATIVE_FILES = {
     "CHANGELOG.md",
@@ -28,6 +31,7 @@ DERIVATIVE_FILES = {
     "references/Skill-Selection-Protocol.md",
     "templates/Orchestration-Brief.md",
 }
+RELEASE_METADATA_FILES = {"VERSION", "CHANGELOG.md"}
 SEMVER_RE = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
 PRIVATE_KEY_RE = re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")
 AWS_KEY_RE = re.compile(rb"\bAKIA[0-9A-Z]{16}\b")
@@ -228,7 +232,7 @@ def _first_party_skills(root: Path) -> dict[str, dict[str, Any]]:
         required = {"slug", "owner", "origin", "license", "license_path", "version", "source_reference"}
         if not required.issubset(item) or not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) or slug in records:
             raise CapabilityError("First-party Skill record has invalid identity or fields")
-        if item.get("origin") != "AIPM_FIRST_PARTY" or item.get("license") != "Apache-2.0" or item.get("license_path") != "LICENSE":
+        if item.get("origin") != "AIPM_FIRST_PARTY" or item.get("license") != PERSONAL_LICENSE_NAME or item.get("license_path") != "LICENSE":
             raise CapabilityError(f"First-party Skill license/provenance is invalid: {slug}")
         if not isinstance(item.get("owner"), str) or not item["owner"].strip() or not isinstance(item.get("source_reference"), str) or not item["source_reference"].strip():
             raise CapabilityError(f"First-party Skill provenance is incomplete: {slug}")
@@ -243,24 +247,31 @@ def _initial_migration_check(root: Path, skill_slugs: set[str], migration: dict[
     preserved = set(migration.get("byte_preserved_skills", []))
     derivative = migration.get("derivative_skill")
     first_party = _first_party_skills(root)
+    if derivative is not None and not isinstance(derivative, str):
+        raise CapabilityError("Documented derivative Skill identity is invalid")
     baseline = preserved | ({derivative} if isinstance(derivative, str) else set())
-    if not isinstance(derivative, str) or skill_slugs != baseline | set(first_party):
-        raise CapabilityError("Skill inventory differs from the immutable migration baseline and declared first-party Skills")
-    if len(preserved) != 16 or len(skill_slugs) != 17 + len(first_party) or skill_slugs & EXCLUDED_SKILLS or set(first_party) & baseline:
-        raise CapabilityError("Skill inventory violates the approved 16+1 migration or first-party boundary")
+    imported_active = skill_slugs & preserved
+    non_first_party = skill_slugs - set(first_party)
+    if not non_first_party.issubset(baseline) or not set(first_party).issubset(skill_slugs):
+        raise CapabilityError("Skill inventory contains an undeclared Skill or omits a declared first-party Skill")
+    if skill_slugs & EXCLUDED_SKILLS or set(first_party) & baseline:
+        raise CapabilityError("Skill inventory violates the Personal-Skill exclusion or provenance boundary")
     if (root / "02-Skills-Personal").exists():
         raise CapabilityError("Personal Skills root is forbidden in AIPM")
     source_hashes = migration.get("source_hashes", {})
     changed_files = set(migration.get("derivative_changed_markdown_files", []))
-    if set(source_hashes) != preserved or changed_files != DERIVATIVE_FILES:
-        raise CapabilityError("P01 provenance does not describe the approved 16+1 migration boundary")
+    if not imported_active.issubset(source_hashes) or changed_files != DERIVATIVE_FILES:
+        raise CapabilityError("Migration provenance does not describe the active imported Skill set")
     actual_map = {slug: _tree_files(root / "01-Skills-General" / slug) for slug in skill_slugs}
-    for slug in preserved:
-        if actual_map[slug] != source_hashes.get(slug):
+    for slug in imported_active:
+        expected_files = {path: digest for path, digest in source_hashes[slug].items() if path not in RELEASE_METADATA_FILES}
+        current_files = {path: digest for path, digest in actual_map[slug].items() if path not in RELEASE_METADATA_FILES}
+        if current_files != expected_files:
             raise CapabilityError(f"Byte-preserved Skill differs from the P01 source hashes: {slug}")
-    derivative_files = actual_map[derivative]
-    if not derivative_files or not changed_files.issubset(derivative_files):
-        raise CapabilityError(f"Documented derivative is missing approved files: {derivative}")
+    if isinstance(derivative, str) and derivative in skill_slugs:
+        derivative_files = actual_map[derivative]
+        if not derivative_files or not changed_files.issubset(derivative_files):
+            raise CapabilityError(f"Documented derivative is missing approved files: {derivative}")
     for slug, record in first_party.items():
         skill_root = root / "01-Skills-General" / slug
         if not skill_root.is_dir() or not _tree_files(skill_root):
@@ -347,28 +358,18 @@ def _catalog(root: Path) -> dict[str, Any]:
             "files": files,
             "skill_owned_prompts": prompts,
             "license": {
-                "source_license": "Apache-2.0",
-                "source_license_path": first_party[slug]["license_path"],
-                "source_license_sha256": _sha256_file(root / first_party[slug]["license_path"]),
-                "retained_skill_notices": notices,
-                "aipm_apache_applies": True,
-            } if slug in first_party else {
-                "source_license": "Universal AI ToolKit Personal Use License",
+                "source_license": PERSONAL_LICENSE_NAME,
                 "source_license_path": SOURCE_LICENSE_PATH.as_posix(),
-                "source_license_sha256": source["source_license_sha256"],
+                "source_license_sha256": _sha256_file(root / SOURCE_LICENSE_PATH),
                 "retained_skill_notices": notices,
-                "aipm_apache_applies": False,
+                "aipm_personal_license_applies": True,
             },
             "provenance": {
-                "origin": first_party[slug]["origin"],
-                "owner": first_party[slug]["owner"],
-                "source_reference": first_party[slug]["source_reference"],
-            } if slug in first_party else {
-                "origin": "UNIVERSAL_AI_TOOLKIT_IMPORT",
+                "origin": "AIPM_OWNED",
                 "owner": "Abdulrahman Elbatrah",
-                "source_reference": source["repository"],
+                "source_reference": "AI Project Manager",
             },
-            "customization": "AIPM first-party Skill" if slug in first_party else ("P01 owner-approved derivative" if slug == migration.get("derivative_skill") else "None"),
+            "customization": "AIPM-owned Skill",
         })
     prompt_root = root / "02-Prompt-General"
     if not prompt_root.is_dir():
@@ -386,7 +387,7 @@ def _catalog(root: Path) -> dict[str, Any]:
             "version": version,
             "path": path.relative_to(root).as_posix(),
             "sha256": file_hash,
-            "license_scope": "AIPM-authored material; root Apache-2.0 applies",
+            "license_scope": "AI Project Manager Personal Use License applies",
         })
     if not standalone:
         raise CapabilityError("No approved standalone Prompt is registered")
@@ -422,12 +423,12 @@ def _provenance_ledger(catalog: dict[str, Any]) -> dict[str, Any]:
         "skills": [
             {
                 "slug": skill["slug"],
-                "original_author": skill["provenance"]["owner"] if skill["license"]["aipm_apache_applies"] else "Abdulrahman Elbatrah; see retained third-party notices where present",
+                "original_author": skill["provenance"]["owner"],
                 "origin": skill["provenance"]["origin"],
                 "source_reference": skill["provenance"]["source_reference"],
-                "source_repository": "AIPM First-Party" if skill["license"]["aipm_apache_applies"] else catalog["source"]["repository"],
+                "source_repository": "AI Project Manager",
                 "source_path": skill["path"],
-                "source_commit_sha": None if skill["license"]["aipm_apache_applies"] else catalog["source"]["commit_sha"],
+                "source_commit_sha": None,
                 "source_license": skill["license"]["source_license"],
                 "source_license_path": skill["license"]["source_license_path"],
                 "source_license_sha256": skill["license"]["source_license_sha256"],
@@ -439,7 +440,7 @@ def _provenance_ledger(catalog: dict[str, Any]) -> dict[str, Any]:
             for skill in catalog["skills"]
         ],
         "standalone_prompts": catalog["standalone_prompts"],
-        "license_scope": "Root Apache-2.0 applies only to AIPM-authored files; imported Skill terms and notices remain controlling.",
+        "license_scope": "AI Project Manager Personal Use License applies to all registered project material.",
         "distribution": "Local sample only; not published or installed.",
     }
 
@@ -488,9 +489,13 @@ def initialize_registry(root: str | Path) -> dict[str, Any]:
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": len(catalog["standalone_prompts"])}
 
 
-def _assert_version_policy(previous: dict[str, Any], current: dict[str, Any]) -> None:
+def _assert_version_policy(previous: dict[str, Any], current: dict[str, Any], *, release_baseline_reset: bool = False) -> None:
     before = {item["slug"]: item["sha256"] for item in previous["skills"]}
     after = {item["slug"]: item["sha256"] for item in current["skills"]}
+    if release_baseline_reset:
+        if any(item["version"] != "1.0.0" for item in current["skills"]):
+            raise CapabilityError("Release baseline reset requires every active Skill VERSION to be 1.0.0")
+        return
     change = classify_version_change(before, after)
     if change != "none":
         required = bump_semver(previous["platform_version"], change, project=True)
@@ -517,13 +522,13 @@ def validate_registry(root: str | Path) -> dict[str, Any]:
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": len(catalog["standalone_prompts"])}
 
 
-def refresh_registry(root: str | Path, *, confirmed: bool, reason: str) -> dict[str, Any]:
+def refresh_registry(root: str | Path, *, confirmed: bool, reason: str, release_baseline_reset: bool = False) -> dict[str, Any]:
     root = _root(root)
     if confirmed is not True or not isinstance(reason, str) or not reason.strip():
         raise CapabilityError("Baseline refresh requires explicit confirmation and a nonempty reason")
     previous = _json(root / REGISTRY_PATH)
     current = _catalog(root)
-    _assert_version_policy(previous, current)
+    _assert_version_policy(previous, current, release_baseline_reset=release_baseline_reset)
     _write_records(root, current)
     return {"status": "PASS", "reason": reason.strip(), "skill_count": len(current["skills"]), "standalone_prompt_count": len(current["standalone_prompts"])}
 
@@ -543,17 +548,17 @@ def _within(root: Path, target: Path) -> Path:
 
 def _plugin_json(version: str) -> dict[str, Any]:
     return {
-        "name": "aipm-general-skills",
+        "name": PLUGIN_SLUG,
         "version": version,
-        "description": "A local sample package of the approved AIPM General Skills.",
+        "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
         "skills": "./skills/",
         "interface": {
-            "displayName": "AIPM General Skills",
-            "shortDescription": "Owner-approved general Skill masters",
-            "longDescription": "Generated copies of the AIPM General Skill masters. This local sample is not published or automatically installed.",
+            "displayName": PLUGIN_DISPLAY_NAME,
+            "shortDescription": "AIPM project context, Core guidance, and approved Skills",
+            "longDescription": "Generated local bridge for an AI agent working with an AIPM project. It includes approved Skills and a project-agent handoff; it is not published, installed, or granted automatic file access.",
             "developerName": "AI Project Manager",
             "category": "Productivity",
-            "capabilities": ["General Skills"],
+            "capabilities": ["AIPM Project Context", "AIPM Core Guidance", "General Skills"],
         },
     }
 
@@ -561,25 +566,25 @@ def _plugin_json(version: str) -> dict[str, Any]:
 def _portable_plugin_json(version: str) -> dict[str, Any]:
     return {
         "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-        "name": "aipm-general-skills",
+        "name": PLUGIN_SLUG,
         "version": version,
-        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+        "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
     }
 
 
 def _claude_plugin_json(version: str) -> dict[str, Any]:
     return {
-        "name": "aipm-general-skills",
+        "name": PLUGIN_SLUG,
         "version": version,
-        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+        "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
     }
 
 
 def _gemini_extension_json(version: str) -> dict[str, Any]:
     return {
-        "name": "aipm-general-skills",
+        "name": PLUGIN_SLUG,
         "version": version,
-        "description": "A local sample of AIPM General Skills and Intelligent TUI design guidance.",
+        "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
     }
 
 
@@ -587,7 +592,7 @@ def _distribution_manifest(catalog: dict[str, Any], version: str, *, previous_ve
     return {
         "schema_version": "1.0",
         "generated_by": "AIPM Capability Library",
-        "plugin_name": "aipm-general-skills",
+        "plugin_name": PLUGIN_SLUG,
         "plugin_version": version,
         "previous_plugin_version": previous_version,
         "changelog_sha256": changelog_sha256,
@@ -612,10 +617,11 @@ def _distribution_manifest(catalog: dict[str, Any], version: str, *, previous_ve
 
 def _plugin_readme(count: int) -> str:
     return (
-        "# AIPM General Skills\n\n"
-        f"This generated local sample contains {count} approved General Skills copied from `01-Skills-General`.\n\n"
-        "It excludes Personal Skills and standalone Prompts. Skill-owned Prompts remain in their owning Skill folders.\n\n"
-        "This package is not published or installed. Imported Skills retain the Universal AI ToolKit Personal Use License and notices. The AIPM first-party TUI Intelligence Skill is licensed under Apache-2.0; neither license is applied to the other Skills. See the per-Skill distribution manifest and `licenses/`.\n"
+        "# AIPM Project Agent Bridge\n\n"
+        "This generated local bridge prepares an AI agent to work with an AI Project Manager project. It supplies the project-agent handoff, AIPM Core guidance, and "
+        f"{count} approved General Skills copied from `01-Skills-General`.\n\n"
+        "Read `AIPM-Agent-Bridge.md` before using a Skill. It defines the project boundary, Core authority, and capability limits.\n\n"
+        "This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the AI Project Manager Personal Use License. See `licenses/`.\n"
     )
 
 
@@ -624,12 +630,12 @@ def _legacy_plugin_readme(count: int) -> str:
         "# AIPM General Skills\n\n"
         f"This generated local sample contains {count} approved General Skills copied from `01-Skills-General`.\n\n"
         "It excludes Personal Skills and standalone Prompts. Skill-owned Prompts remain in their owning Skill folders.\n\n"
-        "This package is not published or installed. Imported Skill files retain the Universal AI ToolKit Personal Use License and any per-Skill notices; the AIPM Apache-2.0 license does not relicense them.\n"
+        "This package is not published or installed. Every included Skill is covered by the AI Project Manager Personal Use License.\n"
     )
 
 
 def _legacy_plugin_changelog(version: str) -> str:
-    return f"# AIPM General Skills Change Log\n\n## [{version}] — Initial Local Sample\n\n- Generated from the approved AIPM General Skill masters.\n- Preserved Skill file bytes and included source license notices.\n- Not published or installed.\n"
+    return f"# AIPM Project Agent Bridge Change Log\n\n## [{version}] — Initial Local Bridge\n\n- Generated from the AIPM project-agent bridge and approved Skill masters.\n- Included Core guidance without granting automatic project access.\n- Not published or installed.\n"
 
 
 def _plugin_changelog(version: str, *, previous_version: str | None, previous_changelog: str | None) -> str:
@@ -639,12 +645,10 @@ def _plugin_changelog(version: str, *, previous_version: str | None, previous_ch
     if previous_changelog:
         prior_entries = previous_changelog.split("\n", 1)[1].strip() + "\n"
     return (
-        "# AIPM General Skills Change Log\n\n"
-        f"## [{version}] — Host Adapter And TUI Intelligence Update\n\n"
-        "- Added the AIPM first-party TUI Intelligence Skill with explicit Apache-2.0 scope.\n"
-        "- Added official OpenAI, Claude Code, and Gemini CLI package-format manifests.\n"
-        "- Preserved imported Skill bytes and their original license notices.\n"
-        "- Local sample only; not installed or published.\n\n"
+        "# AIPM Project Agent Bridge Change Log\n\n"
+        f"## [{version}] — Project-Agent Bridge Update\n\n"
+        "- Generated the AIPM project-agent handoff, Core guidance, and approved Skills.\n"
+        "- Kept the package local, uninstalled, and unpublished.\n\n"
         f"{prior_entries}"
     )
 
@@ -659,13 +663,27 @@ def _plugin_expected_files(root: Path, catalog: dict[str, Any], version: str, *,
         "gemini-extension.json": (json.dumps(_gemini_extension_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "AIPM-Distribution-Manifest.json": (json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "README.md": _plugin_readme(len(catalog["skills"])).encode("utf-8"),
+        "AIPM-Agent-Bridge.md": _agent_bridge_document().encode("utf-8"),
         "VERSION": (version + "\n").encode("utf-8"),
         "CHANGELOG.md": changelog,
-        "licenses/Universal-AI-ToolKit-LICENSE.txt": (root / SOURCE_LICENSE_PATH).read_bytes(),
+        "licenses/AI-Project-Manager-Personal-Use-License.txt": (root / SOURCE_LICENSE_PATH).read_bytes(),
     }
-    if any(item["license"]["aipm_apache_applies"] for item in catalog["skills"]):
-        files["licenses/Apache-2.0.txt"] = (root / "LICENSE").read_bytes()
     return files
+
+
+def _agent_bridge_document() -> str:
+    return (
+        "# AIPM Project Agent Bridge\n\n"
+        "## Purpose\n\n"
+        "Use this local package to orient an AI agent to an AI Project Manager (AIPM) project. Start with the project rules, use AIPM Core as the authority for project state, and select an included Skill only when it matches the requested work.\n\n"
+        "## Operating Boundary\n\n"
+        "This package does not install itself, publish itself, start a background session, or grant access to local project files. The host must explicitly provide the project workspace and any required permissions.\n\n"
+        "## Agent Workflow\n\n"
+        "1. Read the project rules and current phase/checkpoint.\n"
+        "2. Query AIPM Core for authoritative project state where the host adapter supports it.\n"
+        "3. Select the smallest relevant included Skill and preserve project evidence.\n"
+        "4. Keep unsupported host operations permission-gated and fail-closed.\n"
+    )
 
 
 def _materialize_plugin(root: Path, stage: Path, catalog: dict[str, Any], version: str, *, previous_version: str | None, previous_changelog: str | None) -> None:
@@ -705,7 +723,7 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
         raise CapabilityError("Generated Plugin changelog integrity is missing")
     if not isinstance(manifest_skills, list) or manifest.get("personal_skills_included") is not False or manifest.get("standalone_prompts_included") is not False:
         raise CapabilityError("Generated Plugin manifest has invalid scope")
-    if manifest.get("plugin_name") != "aipm-general-skills" or manifest.get("status") != "LOCAL_SAMPLE_NOT_PUBLISHED":
+    if manifest.get("plugin_name") != PLUGIN_SLUG or manifest.get("status") != "LOCAL_SAMPLE_NOT_PUBLISHED":
         raise CapabilityError("Generated Plugin identity or publication state is invalid")
     expected_paths = {
         "plugin.json",
@@ -714,19 +732,16 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
         "gemini-extension.json",
         "AIPM-Distribution-Manifest.json",
         "README.md",
+        "AIPM-Agent-Bridge.md",
         "VERSION",
         "CHANGELOG.md",
-        "licenses/Universal-AI-ToolKit-LICENSE.txt",
+        "licenses/AI-Project-Manager-Personal-Use-License.txt",
     }
-    first_party_license_present = False
     for skill in manifest_skills:
         slug, files = skill.get("slug"), skill.get("files")
         if not isinstance(slug, str) or not isinstance(files, dict) or slug in EXCLUDED_SKILLS or not isinstance(skill.get("license"), dict):
             raise CapabilityError("Generated Plugin contains an invalid Skill record")
-        first_party_license_present = first_party_license_present or skill["license"].get("aipm_apache_applies") is True
         expected_paths.update(f"skills/{slug}/{relative}" for relative in files)
-    if first_party_license_present:
-        expected_paths.add("licenses/Apache-2.0.txt")
     actual_paths = set(_tree_files(target))
     if actual_paths != expected_paths:
         raise CapabilityError("Generated Plugin contains missing or unexpected files")
@@ -738,7 +753,7 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
     if _read_version(target / "VERSION", changelog=target / "CHANGELOG.md") != version:
         raise CapabilityError("Generated Plugin version metadata is inconsistent")
     changelog = target / "CHANGELOG.md"
-    if _sha256_file(changelog) != changelog_hash or not changelog.read_text(encoding="utf-8").startswith(f"# AIPM General Skills Change Log\n\n## [{version}]"):
+    if _sha256_file(changelog) != changelog_hash or not changelog.read_text(encoding="utf-8").startswith(f"# AIPM Project Agent Bridge Change Log\n\n## [{version}]"):
         raise CapabilityError("Generated Plugin changelog hash or release heading is invalid")
     for relative, content in {
         "plugin.json": (json.dumps(_portable_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
@@ -746,6 +761,7 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
         ".claude-plugin/plugin.json": (json.dumps(_claude_plugin_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "gemini-extension.json": (json.dumps(_gemini_extension_json(version), ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"),
         "README.md": _plugin_readme(len(manifest_skills)).encode("utf-8"),
+        "AIPM-Agent-Bridge.md": _agent_bridge_document().encode("utf-8"),
     }.items():
         if (target / relative).read_bytes() != content:
             raise CapabilityError(f"Generated Plugin metadata drifted: {relative}")
@@ -767,7 +783,7 @@ def _validate_legacy_embedded_plugin(target: Path) -> dict[str, Any]:
     skills = manifest.get("skills")
     if not isinstance(skills, list) or manifest.get("personal_skills_included") is not False or manifest.get("standalone_prompts_included") is not False:
         raise CapabilityError("Legacy Plugin scope is invalid")
-    expected_paths = {".codex-plugin/plugin.json", "AIPM-Distribution-Manifest.json", "README.md", "VERSION", "CHANGELOG.md", "licenses/Universal-AI-ToolKit-LICENSE.txt"}
+    expected_paths = {".codex-plugin/plugin.json", "AIPM-Distribution-Manifest.json", "README.md", "VERSION", "CHANGELOG.md", "licenses/AI-Project-Manager-Personal-Use-License.txt"}
     for item in skills:
         slug, files = item.get("slug"), item.get("files")
         if not isinstance(slug, str) or not isinstance(files, dict) or slug in EXCLUDED_SKILLS or "license" in item:
@@ -787,7 +803,7 @@ def _validate_legacy_embedded_plugin(target: Path) -> dict[str, Any]:
     for relative, content in checks.items():
         if (target / relative).read_bytes() != content:
             raise CapabilityError(f"Legacy Plugin metadata drifted: {relative}")
-    if _sha256_file(target / "licenses" / "Universal-AI-ToolKit-LICENSE.txt") != manifest.get("source_license_sha256"):
+    if _sha256_file(target / "licenses" / "AI-Project-Manager-Personal-Use-License.txt") != manifest.get("source_license_sha256"):
         raise CapabilityError("Legacy Plugin source license is invalid")
     return manifest
 
@@ -808,11 +824,8 @@ def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
     for item in catalog["skills"]:
         if _tree_files(target_path / "skills" / item["slug"]) != item["files"]:
             raise CapabilityError(f"Plugin source parity failure: {item['slug']}")
-    if (target_path / "licenses" / "Universal-AI-ToolKit-LICENSE.txt").read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes():
-        raise CapabilityError("Generated Plugin did not preserve the source license bytes")
-    if any(item["license"]["aipm_apache_applies"] for item in catalog["skills"]):
-        if (target_path / "licenses" / "Apache-2.0.txt").read_bytes() != (root / "LICENSE").read_bytes():
-            raise CapabilityError("Generated Plugin did not preserve the AIPM first-party license bytes")
+    if (target_path / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes():
+        raise CapabilityError("Generated Plugin did not preserve the project license bytes")
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": 0, "published": False, "installed": False}
 
 

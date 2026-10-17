@@ -24,9 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="Invoke-Capability-Library")
     parser.add_argument("command", choices=("validate", "initialize-baseline", "refresh-baseline", "build-plugin", "validate-plugin"))
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("--output", type=Path, default=Path("Plugins/aipm-general-skills"))
+    parser.add_argument("--output", type=Path, default=Path("Plugins/aipm-project-agent-bridge"))
     parser.add_argument("--confirm-initial-baseline", action="store_true")
     parser.add_argument("--confirm-integrity-baseline-update", action="store_true")
+    parser.add_argument("--confirm-release-baseline-reset", action="store_true")
     parser.add_argument("--reason")
     parser.add_argument("--replace-generated", action="store_true")
     return parser
@@ -44,7 +45,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise CapabilityError("Pass --confirm-initial-baseline to create the initial protected records")
             result = initialize_registry(root)
         elif args.command == "refresh-baseline":
-            result = refresh_registry(root, confirmed=args.confirm_integrity_baseline_update, reason=args.reason or "")
+            result = refresh_registry(root, confirmed=args.confirm_integrity_baseline_update, reason=args.reason or "", release_baseline_reset=args.confirm_release_baseline_reset)
         elif args.command == "build-plugin":
             result = build_plugin(root, output, replace_generated=args.replace_generated)
         else:

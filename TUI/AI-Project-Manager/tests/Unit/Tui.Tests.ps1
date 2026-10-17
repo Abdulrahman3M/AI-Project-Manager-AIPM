@@ -6,15 +6,16 @@ Assert-Equal 'Shorter frame erases stale trailing row' '1' (@(Get-UiChangedRows 
 Assert-Equal 'Larger frame draws newly added row' '1' (@(Get-UiChangedRows -Before @('A') -After @('A','B')) -join ',')
 
 Set-TestGroup 'Product shell header and legacy roles'
-$headerUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready' -Width 50 } ''
+$headerUi = Invoke-Ui { Write-AipmProductHeader -Version '1.0.0' -Status 'Core Ready' -Width 50 } ''
 Assert-Contains 'product header shows the full product name' $headerUi.Output 'AI Project Manager'
-Assert-Contains 'product header keeps the version next to the product name' $headerUi.Output 'AI Project Manager v0.2.1'
-Assert-Contains 'product header is framed and reports current status' $headerUi.Output '+'
+Assert-Contains 'product header keeps the version next to the product name' $headerUi.Output 'AI Project Manager v1.0.0'
+Assert-Contains 'product header uses a connected top border' $headerUi.Output '┌'
+Assert-Contains 'product header uses a connected bottom border' $headerUi.Output '└'
 Assert-Contains 'product header reports the supplied status' $headerUi.Output 'Core Ready'
-$refreshHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready | Refresh Failed: TEST_REFRESH_BLOCKED | Last Snapshot Preserved' -Width 80 } ''
+$refreshHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '1.0.0' -Status 'Core Ready | Refresh Failed: TEST_REFRESH_BLOCKED | Last Snapshot Preserved' -Width 80 } ''
 Assert-Contains '80-column product header keeps the refresh failure and snapshot-preservation status visible' $refreshHeaderUi.Output 'Last Snapshot Preserved'
-$compactHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '0.2.1' -Status 'Core Ready' -Width 20 } ''
-Assert-Contains 'narrow product header keeps the compact product name and version adjacent' $compactHeaderUi.Output 'AIPM v0.2.1'
+$compactHeaderUi = Invoke-Ui { Write-AipmProductHeader -Version '1.0.0' -Status 'Core Ready' -Width 20 } ''
+Assert-Contains 'narrow product header keeps the compact product name and version adjacent' $compactHeaderUi.Output 'AIPM v1.0.0'
 Assert-True 'narrow product header omits lower-priority status to preserve vertical space' (-not $compactHeaderUi.Output.Contains('Core Ready'))
 $compactHeaderLines = @($compactHeaderUi.Output -split "`n" | Where-Object { $_ })
 Assert-Equal 'narrow product header stays within the terminal width' 0 @($compactHeaderLines | Where-Object { $_.Length -gt 20 }).Count
@@ -143,20 +144,21 @@ Set-TestGroup 'Capability Library tables'
 $tableUi = $null
 if (Get-Command Write-TuiTable -ErrorAction SilentlyContinue) {
     $tableUi = Invoke-Ui {
-        Write-TuiTable -Headers @('Type','Capability','Version','Source License') -Fields @('Type','Capability','Version','License') `
-            -Rows @([pscustomobject]@{Type='Imported';Capability='Audio Timing Author';Version='1.0.0';License='Universal AI ToolKit Personal Use License'}) `
-            -ColumnWidths @(12,22,8,34) -Width 90
+        Write-TuiTable -Headers @('Type','Capability','Version') -Fields @('Type','Capability','Version') `
+            -Rows @([pscustomobject]@{Type='AIPM-Owned';Capability='Create Strict Implementation Handoff';Version='1.0.0'}) `
+            -ColumnWidths @(12,52,8) -Width 90
     } ''
 }
-Assert-True 'Capability Library table renders columns and imported source-license detail' ($null -ne $tableUi -and $tableUi.Error -eq '' -and $tableUi.Output.Contains('Capability') -and $tableUi.Output.Contains('Source License') -and $tableUi.Output.Contains('Audio Timing Author'))
+Assert-True 'Capability Library table renders compact columns and the full capability name' ($null -ne $tableUi -and $tableUi.Error -eq '' -and $tableUi.Output.Contains('Capability') -and -not $tableUi.Output.Contains('Source License') -and $tableUi.Output.Contains('Create Strict Implementation Handoff'))
 Assert-Equal 'Capability Library table honors the requested terminal width' 0 $(if ($tableUi) { @($tableUi.Output -split "`n" | Where-Object { $_.Length -gt 90 }).Count } else { -1 })
+Assert-True 'Capability Library table uses connected bounded borders' ($null -ne $tableUi -and $tableUi.Output.Contains('┌') -and $tableUi.Output.Contains('┬') -and $tableUi.Output.Contains('└') -and $tableUi.Output.Contains('┴') -and $tableUi.Output.Contains('│'))
 $pageCatalog = [pscustomobject]@{
     status='PASS'
     catalog=[pscustomobject]@{
-        integrity_status='UNVERIFIED'; skill_count=2; first_party_skills=@('tui-intelligence')
+        integrity_status='UNVERIFIED'; skill_count=2
         skills=@(
-            [pscustomobject]@{slug='tui-intelligence';version='0.1.0';source_license='Apache-2.0';aipm_apache_applies=$true}
-            [pscustomobject]@{slug='audio-timing-author';version='1.0.0';source_license='Universal AI ToolKit Personal Use License';aipm_apache_applies=$false}
+            [pscustomobject]@{slug='tui-intelligence';version='1.0.0';source_license='AI Project Manager Personal Use License';aipm_personal_license_applies=$true}
+            [pscustomobject]@{slug='audio-timing-author';version='1.0.0';source_license='AI Project Manager Personal Use License';aipm_personal_license_applies=$true}
         )
         plugin_sample=[pscustomobject]@{version='0.1.0';status='PACKAGE_SAMPLE_ONLY';installation='UNVERIFIED';publication='UNVERIFIED';manifests=@('plugin.json')}
     }
@@ -165,24 +167,36 @@ $wideCapabilityText = ''; $mediumCapabilityText = ''; $compactCapabilityText = '
 if (Get-Command Show-AipmCapabilityLibrary -ErrorAction SilentlyContinue) {
     Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 120 -CaptureHeight 32
     Set-ScriptedInput '{Enter}'
-    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '1.0.0' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
     $wideCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
     Clear-ScriptedInput
     Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 100 -CaptureHeight 32
     Set-ScriptedInput '{Enter}'
-    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '1.0.0' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
     $mediumCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
     Clear-ScriptedInput
     Initialize-Renderer -Ansi $true -Sink Capture -CaptureWidth 76 -CaptureHeight 32
     Set-ScriptedInput '{Enter}'
-    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '0.2.1' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
+    try { [void](Show-AipmCapabilityLibrary -Catalog $pageCatalog -Version '1.0.0' -Status 'Core Ready') } catch { $capabilityPageError = $_.Exception.Message }
     $compactCapabilityText = [regex]::Replace((Get-CapturedOutput), '\x1B\[[0-?]*[ -/]*[@-~]', '')
     Clear-ScriptedInput
     Initialize-Renderer -Ansi $false -Sink Buffer
 }
-Assert-True 'wide Capability Library uses framed tables and keeps Plugin installation unverified' ($capabilityPageError -eq '' -and $wideCapabilityText.Contains('Source License') -and $wideCapabilityText.Contains('Plugin Package') -and $wideCapabilityText.Contains('Unverified')) $capabilityPageError
-Assert-True 'medium Capability Library avoids tables wider than the terminal' ($capabilityPageError -eq '' -and $mediumCapabilityText.Contains('AIPM General Skills Plugin') -and $mediumCapabilityText.Contains('Installation: Unverified')) $capabilityPageError
-Assert-True 'narrow Capability Library switches to compact rows without losing license text' ($capabilityPageError -eq '' -and $compactCapabilityText.Contains('TUI Intelligence') -and $compactCapabilityText.Contains('Universal AI ToolKit Personal Use License')) $capabilityPageError
+Assert-True 'wide Capability Library uses compact framed Skill tables and keeps Plugin installation unverified' ($capabilityPageError -eq '' -and -not $wideCapabilityText.Contains('Source License') -and $wideCapabilityText.Contains('AIPM Project Agent Bridge') -and $wideCapabilityText.Contains('Unverified')) $capabilityPageError
+Assert-True 'medium Capability Library keeps the agent bridge visible without truncating the license into rows' ($capabilityPageError -eq '' -and $mediumCapabilityText.Contains('AIPM Project Agent Bridge') -and $mediumCapabilityText.Contains('Installation: Unverified')) $capabilityPageError
+Assert-True 'narrow Capability Library keeps the AIPM license statement below the Skills table' ($capabilityPageError -eq '' -and $compactCapabilityText.Contains('TUI Intelligence') -and $compactCapabilityText.Contains('All Listed Skills Are Covered') -and -not $compactCapabilityText.Contains('License: AIPM Personal Use License.')) $capabilityPageError
+$pluginHeadingIndex = $wideCapabilityText.IndexOf('Plugin Packages')
+$pluginRuleIndex = if ($pluginHeadingIndex -ge 0) { $wideCapabilityText.LastIndexOf([string][char]0x251C, $pluginHeadingIndex) } else { -1 }
+$pluginTableIndex = if ($pluginHeadingIndex -ge 0) { $wideCapabilityText.IndexOf([string][char]0x250C, $pluginHeadingIndex) } else { -1 }
+Assert-True 'Capability Library places the Plugin rule before its heading and table' ($capabilityPageError -eq '' -and $pluginRuleIndex -ge 0 -and $pluginRuleIndex -lt $pluginHeadingIndex -and $pluginHeadingIndex -lt $pluginTableIndex) $capabilityPageError
+$skillsHeadingIndex = $wideCapabilityText.IndexOf('AIPM-Owned Skills')
+$skillsRuleIndex = if ($skillsHeadingIndex -ge 0) { $wideCapabilityText.LastIndexOf([string][char]0x251C, $skillsHeadingIndex) } else { -1 }
+$skillsTableIndex = if ($skillsHeadingIndex -ge 0) { $wideCapabilityText.IndexOf([string][char]0x250C, $skillsHeadingIndex) } else { -1 }
+Assert-True 'Capability Library places the Skills rule before its heading and table' ($capabilityPageError -eq '' -and $skillsRuleIndex -ge 0 -and $skillsRuleIndex -lt $skillsHeadingIndex -and $skillsHeadingIndex -lt $skillsTableIndex) $capabilityPageError
+$scriptedIdleKey = $null
+Set-ScriptedInput '{Idle}'
+try { $scriptedIdleKey = Read-AppKey -TimeoutMilliseconds 1 } finally { Clear-ScriptedInput }
+Assert-Equal 'scripted idle polling returns a non-key event instead of typed token characters' 'None' $scriptedIdleKey.Name
 $items = @((New-MenuItem -Label 'First' -Desc 'd1' -Value 'a'), (New-MenuItem -Label 'Second' -Desc 'd2' -Value 'b'), (New-MenuItem -Label 'Third' -Desc 'd3' -Value 'c'))
 $ui = Invoke-Ui { Show-Menu -Title 'T' -Items $items } '02'
 Assert-Equal 'typing 02 chooses the second item' 'b' $ui.Value
@@ -206,7 +220,7 @@ Assert-Contains 'short terminal indicates the visible option range' $viewportOut
 Assert-Contains 'short terminal keeps the navigation footer reachable' $viewportOutput 'Esc Back'
 Initialize-Renderer -Ansi $false -Sink Buffer
 $narrowItems = @((New-MenuItem -Label 'A Narrow Option' -Desc 'A concise explanation.' -Value 'narrow'))
-Set-TuiProductShell -Version '0.2.1' -Status 'Core Ready | Registry Registered | 13 Options'
+Set-TuiProductShell -Version '1.0.0' -Status 'Core Ready | Registry Registered | 13 Options'
 Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 20 -CaptureHeight 10
 Set-ScriptedInput '{Enter}'
 $narrowChoice = Show-Menu -Title 'Narrow' -Items $narrowItems -Navigation Arrows
@@ -261,13 +275,13 @@ Set-TestGroup 'Whole application (scripted)'
 $registry = Join-Path (Get-TestWork) 'registry.json'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '12{Enter}13'
 Assert-True 'the Core-backed dashboard, About page and safe Exit run without errors' ($ui.Error -eq '' -and $ui.Output.Contains('Task Dashboard') -and $ui.Output.Contains('About')) $ui.Error
-Assert-True 'the product name and 0.2.1 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v0.2.1')).Count -ge 2)
+Assert-True 'the product name and 1.0.2 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v1.0.2')).Count -ge 2)
 $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 [System.IO.File]::WriteAllText($malformedRegistry, '{"schema_version":"invalid"}', (New-Object System.Text.UTF8Encoding($false)))
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '13'
 Assert-True 'a blocked Core registry stays visibly Unverified without crashing the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Core Blocked') -and $ui.Output.Contains('UNVERIFIED')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '07{Enter}13'
-Assert-True 'Skills and Plugins page reports source licenses and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('Universal AI ToolKit Personal Use License') -and $ui.Output.Contains('Unverified')) $ui.Error
+Assert-True 'Skills and Plugins page reports the project license and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('AI Project Manager Personal Use License') -and $ui.Output.Contains('Unverified')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '?{Enter}13'
 Assert-True 'question mark opens keyboard and evidence Help' ($ui.Error -eq '' -and $ui.Output.Contains('Up/Down: Move Selection')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '/help{Enter}{Enter}13'

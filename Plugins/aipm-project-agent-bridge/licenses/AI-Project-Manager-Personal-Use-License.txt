@@ -1,0 +1,27 @@
+AI Project Manager — Personal Use License
+
+Copyright (c) 2026 Abdulrahman Elbatrah. All rights reserved.
+
+AI Project Manager (the "Project") and all material included in it,
+including its source code, documentation, structure, Prompts, and Skills,
+are the property of Abdulrahman Elbatrah (the "Owner").
+
+1. Permitted Use. You may download the Project and use it free of charge for
+your own personal, non-commercial use.
+
+2. Restrictions. Without the Owner's prior written permission you may NOT:
+   a. modify, adapt, translate, or create derivative works of the Project;
+   b. copy, publish, redistribute, sublicense, sell, or re-use any part of the
+      Project in other projects, products, or services;
+   c. remove or alter this license or any copyright or ownership notice;
+   d. use the Project for commercial purposes.
+
+3. Support. If you encounter a problem, please open a formal issue in this
+repository's Issues section so the Owner can investigate and fix it.
+
+4. No Warranty. The Project is provided "as is", without warranty of any
+kind, and the Owner is not liable for any damages arising from its use.
+
+5. Termination. Any breach of this license ends your right to use the Project.
+
+Contact: Abdoo_0_3@hotmail.com

@@ -30,19 +30,13 @@ EXPECTED_SKILLS = {
     "audio-timing-author",
     "browser-environment-manager",
     "create-strict-implementation-handoff",
-    "deep-brainstorming",
     "doc-to-md",
-    "find-skills",
-    "frontend-design",
-    "plugin-creator",
     "powershell-tui-app-designer",
     "professional-word-designer",
     "project-governance-manager",
     "project-orchestrator",
     "resume-task",
     "shared-project-state-manager",
-    "skill-creator",
-    "teach",
     "token-optimization",
     "tui-intelligence",
 }
@@ -68,10 +62,6 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
     (provenance / "Source-Licenses").mkdir(parents=True)
     for name in ("Skill-Migration-Record.json", "Source-Revision.json"):
         shutil.copy2(ROOT / "Project-Documentation" / "Provenance" / name, provenance / name)
-    shutil.copy2(
-        ROOT / "Project-Documentation" / "Provenance" / "Source-Licenses" / "Universal-AI-ToolKit-LICENSE.txt",
-        provenance / "Source-Licenses" / "Universal-AI-ToolKit-LICENSE.txt",
-    )
     shutil.copy2(ROOT / "VERSION", destination / "VERSION")
     shutil.copy2(ROOT / "CHANGELOG.md", destination / "CHANGELOG.md")
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
@@ -97,7 +87,7 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_inventory_registers_only_approved_skills_and_exact_prompt_relationships(self) -> None:
         catalog = scan_library(ROOT)
         self.assertEqual({item["slug"] for item in catalog["skills"]}, EXPECTED_SKILLS)
-        self.assertEqual(len(catalog["skills"]), 18)
+        self.assertEqual(len(catalog["skills"]), 12)
         self.assertEqual(catalog["skill_owned_prompts"], EXPECTED_OWNED_PROMPTS)
         self.assertEqual([item["name"] for item in catalog["standalone_prompts"]], ["Autonomous Task Execution"])
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
@@ -106,10 +96,47 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")
-        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (18, 1))
-        plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-general-skills")
+        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (12, 1))
+        plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")
         self.assertEqual(plugin["status"], "PASS")
-        self.assertEqual(plugin["skill_count"], 18)
+        self.assertEqual(plugin["skill_count"], 12)
+
+    def test_owner_can_remove_a_general_skill_without_a_hardcoded_denylist(self) -> None:
+        fixture = copy_library_fixture(self.workspace / "owner-removal", include_registry=False)
+        shutil.rmtree(fixture / "01-Skills-General" / "audio-timing-author")
+        shutil.rmtree(fixture / "01-Skills-General" / "project-orchestrator")
+        shutil.rmtree(fixture / "01-Skills-General" / "tui-intelligence")
+        manifest_path = fixture / "Capability-Library" / "First-Party-Skills.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["skills"] = [item for item in manifest["skills"] if item["slug"] != "tui-intelligence"]
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        catalog = scan_library(fixture)
+        active = {item["slug"] for item in catalog["skills"]}
+        self.assertFalse({"audio-timing-author", "project-orchestrator", "tui-intelligence"} & active)
+
+    def test_owner_can_add_a_declared_first_party_skill(self) -> None:
+        fixture = copy_library_fixture(self.workspace / "owner-addition", include_registry=False)
+        source = fixture / "01-Skills-General" / "tui-intelligence"
+        added = fixture / "01-Skills-General" / "owner-added-test"
+        shutil.copytree(source, added)
+        skill_doc = added / "SKILL.md"
+        skill_doc.write_text(skill_doc.read_text(encoding="utf-8").replace("name: tui-intelligence", "name: owner-added-test", 1), encoding="utf-8")
+        manifest_path = fixture / "Capability-Library" / "First-Party-Skills.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        record = dict(manifest["skills"][0])
+        record.update({"slug": "owner-added-test", "version": "1.0.0", "source_reference": "Owner-approved test fixture"})
+        manifest["skills"].append(record)
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        catalog = scan_library(fixture)
+        self.assertIn("owner-added-test", {item["slug"] for item in catalog["skills"]})
+
+    def test_generated_package_is_a_project_agent_bridge_not_a_skill_only_bundle(self) -> None:
+        package = ROOT / "Plugins" / "aipm-project-agent-bridge"
+        manifest = json.loads((package / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
+        bridge = (package / "AIPM-Agent-Bridge.md").read_text(encoding="utf-8")
+        self.assertEqual(manifest["plugin_name"], "aipm-project-agent-bridge")
+        self.assertIn("AIPM Core", bridge)
+        self.assertIn("does not install", bridge)
 
     def test_source_revision_records_verified_read_only_main_commit(self) -> None:
         source = scan_library(ROOT)["source"]
@@ -210,12 +237,24 @@ class CapabilityLibraryTests(unittest.TestCase):
         changelog = skill / "CHANGELOG.md"
         changelog.write_text("## 1.3.11 — Approved Test Edit\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
         version = fixture / "VERSION"
-        version.write_text("0.2.1\n", encoding="utf-8")
+        version.write_text("1.0.3\n", encoding="utf-8")
         root_log = fixture / "CHANGELOG.md"
-        root_log.write_text("## [0.2.1] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
+        root_log.write_text("## [1.0.3] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
         refreshed = refresh_registry(fixture, confirmed=True, reason="Test-only confirmed edit with required versions")
         self.assertEqual(refreshed["status"], "PASS")
         self.assertEqual(validate_registry(fixture)["status"], "PASS")
+
+    def test_release_baseline_reset_requires_its_own_explicit_confirmation(self) -> None:
+        fixture = copy_library_fixture(self.workspace / "release-baseline", include_registry=True)
+        registry_path = fixture / "Capability-Library" / "Registry.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        registry["skills"][0]["version"] = "1.0.1"
+        registry["skills"][0]["sha256"] = "0" * 64
+        registry_path.write_text(json.dumps(registry, indent=2) + "\n", encoding="utf-8")
+        with self.assertRaises(CapabilityError):
+            refresh_registry(fixture, confirmed=True, reason="Reset release baseline")
+        refreshed = refresh_registry(fixture, confirmed=True, reason="Reset release baseline", release_baseline_reset=True)
+        self.assertEqual(refreshed["status"], "PASS")
 
     def test_plugin_generation_is_idempotent_and_contains_only_skill_masters(self) -> None:
         target = self.workspace / "Plugin-Sample"
@@ -223,15 +262,15 @@ class CapabilityLibraryTests(unittest.TestCase):
         second = build_plugin(ROOT, target)
         self.assertEqual(first["status"], "PASS")
         self.assertEqual(second["status"], "UNCHANGED")
-        self.assertEqual(len(list((target / "skills").iterdir())), 18)
+        self.assertEqual(len(list((target / "skills").iterdir())), 12)
         self.assertFalse((target / "02-Prompt-General").exists())
         self.assertFalse((target / "02-Skills-Personal").exists())
         self.assertFalse((target / "skills" / "import-memory").exists())
         self.assertFalse((target / "skills" / "morning").exists())
         manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(manifest["skills"]), 18)
+        self.assertEqual(len(manifest["skills"]), 12)
         self.assertNotIn("license", json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")))
-        self.assertTrue((target / "licenses" / "Universal-AI-ToolKit-LICENSE.txt").is_file())
+        self.assertTrue((target / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").is_file())
 
         original_validate = capabilities.validate_plugin
         validation_calls = 0

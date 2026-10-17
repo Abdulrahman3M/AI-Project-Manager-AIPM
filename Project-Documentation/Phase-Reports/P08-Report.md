@@ -1,5 +1,9 @@
 # P08 Phase Report — PowerShell TUI Dashboard
 
+## Owner Acceptance Addendum — 2026-10-17
+
+The owner explicitly confirmed visual inspection of the final revised interface and accepted it as looking good. This closes the owner visual-acceptance prerequisite and sets P08 to **COMPLETE**, allowing P09 to begin. The visual image was supplied/viewed in the conversation; it is not retained as a local screenshot file, and the host/version and capture command were not independently recorded. Therefore this addendum records owner acceptance, not a new independently captured Windows Terminal/native-console run. The detailed entries below remain the historical P08 implementation/test record; their earlier `UNVERIFIED` status predates this owner acceptance and is superseded only for the acceptance decision.
+
 ## Exit Status
 
 `Phase: P08 | Status: IMPLEMENTED_WITH_VISUAL_GATE_UNVERIFIED | Automated Tests: PASS | Branch: main | SOURCE_REPO_WRITES: 0 | Exact Next Action: Run the app in actual Windows Terminal and the Windows PowerShell 5.1 console, inspect the screens and capture evidence before closing P08 or starting P09.`

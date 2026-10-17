@@ -24,3 +24,7 @@ The Renderer Tests Do Not Substitute For A Terminal Visual Session. Windows Term
 ## Security And Persistence
 
 Only `health`, `dashboard`, `catalog`, And `host-capabilities` Are Available Through The PowerShell Client. The Client Does Not Accept Arbitrary Commands Or Invoke A Shell String. Project State Is Not Persisted In The UI. Only View Mode And Appearance Choices Use The Per-User Settings Store.
+
+## Release Packaging
+
+`Maintenance-Tools/New-Release-Package.py` Creates The Local AIPM Source Archive. It Selects Only Public Runtime, Capability, Documentation, And Provenance Inputs; excludes Internal Test And Phase-Evidence Data; uses Fixed ZIP Metadata And Sorted Entries; writes A SHA-256 Sidecar; and embeds A Manifest With A Hash For Every Payload File. The Builder Fails Closed On Reparse Points, Sensitive-Looking Files, Credential-Like Content, Or The Actual Local Checkout Path. The Archive Is Local Only And Does Not Install The TUI Or Grant Any Host Access.

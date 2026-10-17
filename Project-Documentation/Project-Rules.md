@@ -2,14 +2,14 @@
 
 ## Authoritative Sources
 
-- `01-Skills-General/` is the authoritative General Skill master library. Do not edit migrated masters casually; the 16 preserved Skills must stay byte-identical to the P01 migration record. `project-orchestrator` is the one documented owner-approved derivative.
+- `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-orchestrator` is the documented derivative.
 - `02-Prompt-General/` holds standalone Prompts only. A Prompt belonging to a Skill remains under that Skill and is versioned with it.
 - `Capability-Library/Registry.json` and `Project-Documentation/Provenance/Capability-Library-Ledger.json` record the inventory and file hashes. Validate before consuming or generating derived artifacts.
-- `Capability-Library/First-Party-Skills.json` declares AIPM-authored Skills separately from the imported migration baseline. The P07 `tui-intelligence` Skill is Apache-2.0 scoped; it does not alter imported Skill licensing.
+- `Capability-Library/First-Party-Skills.json` declares AIPM-authored Skills separately from imported migration provenance. `tui-intelligence` is the declared first-party Skill.
 
 ## Scope And Naming
 
-Do not add `02-Skills-Personal`, `import-memory`, or `morning`. Use English Title Case for new human-facing names; retain technical filenames and Skill slugs.
+Do not add `02-Skills-Personal`, `import-memory`, or `morning`. The owner may otherwise add or remove Skills, subject to accurate provenance, license review, and the capability-registry refresh gate. Use English Title Case for new human-facing names; retain technical filenames and Skill slugs.
 
 ## Versioning
 
@@ -19,14 +19,14 @@ The capability registry is a protected integrity baseline. Its initial creation 
 
 ## Licensing And Provenance
 
-The root Apache-2.0 license applies to AIPM-authored material and declared first-party Skills only. Imported Skills retain the Universal AI ToolKit Personal Use License and all per-Skill copyright, license, and notice files. Do not imply that the root license supersedes those terms. The source repository is read-only; do not write to it.
+Apply the repository's AI Project Manager Personal Use License to project-owned material and generated distributions. Keep any applicable upstream notices and obligations for imported material accurate; a repository license file alone does not establish ownership or override third-party rights. The source repository is read-only unless the owner explicitly authorizes otherwise.
 
 ## Generated Plugin Boundary
 
-Generate `Plugins/aipm-general-skills` from validated General Skill masters through the capability-library CLI. The bundle may contain no Personal Skill, excluded Skill, standalone Prompt, secret, or undeclared file. Preserve source licenses and per-Skill notices. Validate byte parity before use. Host format manifests establish layout compatibility only; the sample remains local, unpublished, and uninstalled.
+Generate `Plugins/aipm-project-agent-bridge` from the owner-selected, validated General Skill set through the capability-library CLI. The bridge may contain no Personal Skill, excluded Skill, standalone Prompt, secret, or undeclared file. It includes a project-agent handoff and Core guidance, but does not grant a host automatic project-file access. Preserve applicable source notices. Validate byte parity before use. Host format manifests establish layout compatibility only; the sample remains local, unpublished, and uninstalled.
 
 ## Host And TUI Boundaries
 
 Host adapters consult `Plugin-Adapters/Host-Capability-Matrix.json`, delegate only through Core Engine, require an explicit write grant, and fail closed for unsupported hosts/commands. Manual pasted handoffs are `UNVERIFIED` and cannot be imported as authoritative state. Never infer provider installation or local file access from a package manifest.
 
-`UX-TUI/` and the `tui-intelligence` Skill define design and acceptance contracts only until a later phase implements a renderer. Supplied PNG/SVG files are documentation references, not screenshots or terminal icon resources. Do not claim zero flicker without interactive Windows Terminal evidence.
+`UX-TUI/` and the `tui-intelligence` Skill define design and acceptance contracts. Supplied PNG/SVG files are documentation references, not screenshots or terminal icon resources. Do not claim zero flicker without interactive Windows Terminal evidence.

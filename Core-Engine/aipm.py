@@ -88,7 +88,7 @@ def _catalog(root: Path) -> dict:
             item["slug"] for item in first_party["skills"]
             if isinstance(item, dict) and isinstance(item.get("slug"), str)
         )
-        sample_root = root / "Plugins" / "aipm-general-skills"
+        sample_root = root / "Plugins" / "aipm-project-agent-bridge"
         version_path = sample_root / "VERSION"
         sample_version = version_path.read_text(encoding="utf-8").strip() if version_path.is_file() else None
         manifests = [name for name in ("plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "gemini-extension.json") if (sample_root / name).is_file()]

@@ -62,15 +62,15 @@ class TuiIntelligenceContractTests(unittest.TestCase):
         self.assertGreaterEqual(len(evaluations["cases"]), 3)
         self.assertEqual(evaluations["execution_status"], "UNVERIFIED_MODEL_EVALS_NOT_RUN")
 
-    def test_catalog_preserves_16_import_hashes_and_records_apache_for_only_first_party_skill(self) -> None:
+    def test_catalog_registers_the_owner_approved_skill_inventory_under_the_project_license(self) -> None:
         catalog = scan_library(ROOT)
         skills = {item["slug"]: item for item in catalog["skills"]}
-        self.assertEqual(len(skills), 18)
-        self.assertEqual(skills["tui-intelligence"]["license"]["source_license"], "Apache-2.0")
-        self.assertTrue(skills["tui-intelligence"]["license"]["aipm_apache_applies"])
-        self.assertEqual(skills["audio-timing-author"]["license"]["aipm_apache_applies"], False)
-        self.assertEqual(validate_registry(ROOT)["skill_count"], 18)
-        self.assertEqual(validate_plugin(ROOT, ROOT / "Plugins" / "aipm-general-skills")["skill_count"], 18)
+        self.assertEqual(len(skills), 12)
+        self.assertEqual(skills["tui-intelligence"]["license"]["source_license"], "AI Project Manager Personal Use License")
+        self.assertTrue(skills["tui-intelligence"]["license"]["aipm_personal_license_applies"])
+        self.assertTrue(skills["audio-timing-author"]["license"]["aipm_personal_license_applies"])
+        self.assertEqual(validate_registry(ROOT)["skill_count"], 12)
+        self.assertEqual(validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")["skill_count"], 12)
         self.assertFalse((ROOT / "01-Skills-General" / "import-memory").exists())
         self.assertFalse((ROOT / "01-Skills-General" / "morning").exists())
 
@@ -80,16 +80,15 @@ class TuiIntelligenceContractTests(unittest.TestCase):
         self.assertTrue(all(not heading.isupper() for heading in headings))
 
     def test_generated_sample_has_official_host_package_manifests_and_scoped_licenses(self) -> None:
-        package = ROOT / "Plugins" / "aipm-general-skills"
+        package = ROOT / "Plugins" / "aipm-project-agent-bridge"
         portable = json.loads((package / "plugin.json").read_text(encoding="utf-8"))
         claude = json.loads((package / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
         gemini = json.loads((package / "gemini-extension.json").read_text(encoding="utf-8"))
-        self.assertEqual(portable["version"], "0.2.0")
-        self.assertEqual(claude["version"], "0.2.0")
-        self.assertEqual(gemini["version"], "0.2.0")
+        self.assertEqual(portable["version"], "1.0.0")
+        self.assertEqual(claude["version"], "1.0.0")
+        self.assertEqual(gemini["version"], "1.0.0")
         self.assertFalse(any("license" in manifest for manifest in (portable, claude, gemini)))
-        self.assertEqual((package / "licenses" / "Apache-2.0.txt").read_bytes(), (ROOT / "LICENSE").read_bytes())
-        self.assertTrue((package / "licenses" / "Universal-AI-ToolKit-LICENSE.txt").is_file())
+        self.assertEqual((package / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").read_bytes(), (ROOT / "LICENSE").read_bytes())
 
 
 if __name__ == "__main__":

@@ -1,3 +1,7 @@
+## [1.0.0] — AIPM Release Baseline
+
+- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
+
 # 1.4.0 — 2026-10-13
 - Require dedicated AI browser preflight, safe Browser Environment Manager recovery and consent-based fallback chain in generated handoffs.
 - Require token-optimization support and prohibit multi-agent execution without explicit owner approval.

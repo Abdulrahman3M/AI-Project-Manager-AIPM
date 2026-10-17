@@ -1,5 +1,19 @@
 # AI Project Manager TUI Change Log
 
+## [1.0.2] — Documented Local Release Package
+
+- Synchronized the TUI package with the platform's local release-ready source archive.
+- Kept runtime behavior read-only; no host installation or publication occurred.
+
+## [1.0.1] — Capability Library Refinement
+
+- Removed repeated Skill license text from Capability Library rows, widened the Capability field, and renamed the package to AIPM Project Agent Bridge.
+
+## [1.0.0] — Personal License And Connected Frames
+
+- Reset the package release line to 1.0.0.
+- Added connected, bounded terminal frames for the product shell and tables.
+
 ## [Unreleased]
 
 ### Added

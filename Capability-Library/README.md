@@ -6,7 +6,7 @@ This library records the approved General Skills and Prompt relationships in a d
 
 ## Registered Inventory
 
-- 18 General Skills: 16 byte-preserved imports, the documented `project-orchestrator` derivative, and the AIPM first-party `tui-intelligence` Skill.
+- 12 AIPM-owned General Skills, including `project-orchestrator` and `tui-intelligence`.
 - Skill-owned Prompts remain in their owning Skill folders and are listed in the registry.
 - One owner-added standalone Prompt is registered from `02-Prompt-General`.
 - Personal Skills, `import-memory`, and `morning` are excluded.
@@ -23,9 +23,11 @@ python Maintenance-Tools/Invoke-Capability-Library.py build-plugin
 python Maintenance-Tools/Invoke-Capability-Library.py validate-plugin
 ```
 
-Plugin output is generated beneath `Plugins/aipm-general-skills`, staged and checked before replacement, and limited to General Skill masters. The sample carries OpenAI portable/Codex compatibility, Claude Code, and Gemini CLI package manifests. The manifests establish layout only; this workflow does not publish or install any provider package.
+Plugin output is generated beneath `Plugins/aipm-project-agent-bridge`, staged and checked before replacement. The local **AIPM Project Agent Bridge** includes an agent handoff, AIPM Core guidance, and approved General Skills. It carries OpenAI portable/Codex compatibility, Claude Code, and Gemini CLI package manifests. The package does not publish, install, or grant automatic local-file access to an agent.
 
 The protected initial registry is created once with `initialize-baseline --confirm-initial-baseline`. Refreshing existing records requires `refresh-baseline --confirm-integrity-baseline-update --reason "..."`, a valid reason, and the version/changelog changes required by the policy. Do not edit the registry or provenance ledger by hand.
+
+An owner-authorized release-baseline reset also requires `--confirm-release-baseline-reset`; it is accepted only when every active Skill is exactly `1.0.0`.
 
 ## Version Policy
 
@@ -33,4 +35,4 @@ Skills use independent SemVer streams. Edits require PATCH, additions/removals r
 
 ## License Boundaries
 
-Apache-2.0 applies only to AIPM-authored files and the declared `tui-intelligence` Skill. Imported Skill terms and retained third-party notices remain in force. The exact Universal AI ToolKit Personal Use License is retained in the provenance directory and copied into the local sample; the sample carries both licenses with per-Skill scope and no blanket Plugin license.
+The AI Project Manager Personal Use License applies to every registered Skill and the generated local sample.
