@@ -7,6 +7,12 @@
 - Added Search-First And Assistant Console View Modes, Shared Theme Roles, A11Y Markers, And Differential Rendering.
 - Actual Interactive Windows Terminal And Legacy Console Visual Verification Remains Unverified.
 
+## [1.0.3] — Homepage Presentation And Release Synchronization
+
+- Added a versioned, linked README status strip and an explicit release-synchronization rule in `AGENTS.md`.
+- Published matching source metadata, release notes, ZIP, and SHA-256 checksum for the current product version.
+- Kept P09 external-host gates explicitly unverified and did not run GitHub Actions.
+
 ## [1.0.2] — Documentation And GitHub Release
 
 - Added deterministic source-release packaging with SHA-256 verification, an allowlisted file set, and credential/local-path checks.

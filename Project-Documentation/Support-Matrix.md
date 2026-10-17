@@ -8,7 +8,7 @@
 | Terminal TUI Tests | PowerShell 7.6.5 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`. |
 | Terminal TUI Tests | Windows PowerShell 5.1.26100.9444 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`. |
 | Local Source Release | Python 3.14 standard library | PASS when built and verified locally | `Maintenance-Tools/New-Release-Package.py`. |
-| GitHub Source Release | Owner repository, private visibility | PASS | Tag `v1.0.2`, release asset, and SHA-256 recorded in release notes. |
+| GitHub Source Release | Owner repository, private visibility | PASS | Tag `v1.0.3`, release asset, and SHA-256 recorded in release notes. |
 | AIPM Project Agent Bridge | Local package validation | PASS | Capability-library CLI validates structure and byte parity. |
 
 ## Deliberately Not Claimed

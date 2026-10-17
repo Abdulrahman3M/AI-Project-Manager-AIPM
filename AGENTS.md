@@ -11,3 +11,7 @@
 - Generate Plugin output only with `Maintenance-Tools/Invoke-Capability-Library.py`; keep it inside this repository and unpublished/uninstalled unless separately authorized.
 - Keep host adapters capability-declared, permission-gated, and fail-closed. A package-format manifest does not mean installed or runtime-tested; never infer local file access for ChatGPT text conversations.
 - Treat `UX-TUI/Visual-References/` images as design references only. Do not claim a working or no-flicker terminal UI until real host/version tests are run.
+- For every product release, increment the platform and TUI versions together using SemVer; update both changelogs and add versioned release notes.
+- Keep the root README product title, adjacent version, release/status badges, and latest-release link synchronized with the current release. Update the Support Matrix and release index as needed, then build and verify the source ZIP and SHA-256 sidecar before publishing.
+- Publish the same verified source ZIP and checksum sidecar attached to the matching `vX.Y.Z` GitHub Release; verify the remote tag, assets, and checksum against the local build. Do not claim CI, host, or cross-agent checks that were not run; avoid paid Actions when not authorized or available.
+- Preserve independently versioned Skills and Plugins unless their own content or metadata changes require a version update.

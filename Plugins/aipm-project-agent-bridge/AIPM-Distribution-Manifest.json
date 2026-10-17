@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "646ce3bdaec9da13102babf885b06a59f5a8a3eb047b0ce5da108fb35d75a94b",
+  "changelog_sha256": "f5c098a2283161e9ace6ff27206aaeab2e56b19900cea28ecde950ab3d539c53",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.0.1",
-  "previous_plugin_version": "1.0.0",
+  "plugin_version": "1.0.2",
+  "previous_plugin_version": "1.0.1",
   "schema_version": "1.0",
   "skills": [
     {
@@ -543,7 +543,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
-  "source_project_version": "1.0.2",
+  "source_project_version": "1.0.3",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

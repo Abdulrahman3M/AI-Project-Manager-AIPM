@@ -275,7 +275,7 @@ Set-TestGroup 'Whole application (scripted)'
 $registry = Join-Path (Get-TestWork) 'registry.json'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '12{Enter}13'
 Assert-True 'the Core-backed dashboard, About page and safe Exit run without errors' ($ui.Error -eq '' -and $ui.Output.Contains('Task Dashboard') -and $ui.Output.Contains('About')) $ui.Error
-Assert-True 'the product name and 1.0.2 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v1.0.2')).Count -ge 2)
+Assert-True 'the product name and 1.0.3 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v1.0.3')).Count -ge 2)
 $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 [System.IO.File]::WriteAllText($malformedRegistry, '{"schema_version":"invalid"}', (New-Object System.Text.UTF8Encoding($false)))
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '13'

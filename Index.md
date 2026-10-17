@@ -8,6 +8,7 @@
 - [Change Log](CHANGELOG.md)
 - [Release Notes v0.1.0](Project-Documentation/Release-Notes-v0.1.0.md)
 - [Release Notes v0.2.0](Project-Documentation/Release-Notes-v0.2.0.md)
+- [Release Notes v1.0.3](Project-Documentation/Release-Notes-v1.0.3.md)
 - [Release Notes v1.0.2](Project-Documentation/Release-Notes-v1.0.2.md)
 - [Support Matrix](Project-Documentation/Support-Matrix.md)
 

@@ -45,7 +45,7 @@ Only UI Preferences Are Stored Under The Per-User `AIPM` Settings Directory (`%A
 
 Automated Renderer Tests Cover Stable Frames, Changed-Row Styling, Removed Rows, Resize Invalidation, Cursor Restoration, Input Modes, Read-Only Core Integration, And The ASCII Fallback. This Does Not Prove Visual Appearance Or Flicker Behavior In A Specific Terminal. The P08 Verification Record Names The PowerShell Versions Run And Any Manual Terminal Checks That Remain Unverified. Files In `UX-TUI/Visual-References/` Are Illustrations, Not Application Screenshots.
 
-For The Local Source Release, See The Repository [Support Matrix](../../Project-Documentation/Support-Matrix.md) And [Release Notes](../../Project-Documentation/Release-Notes-v1.0.2.md). The Archive Is Prepared Locally Only; It Does Not Install This TUI Into A Host Or Publish It.
+For The Local Source Release, See The Repository [Support Matrix](../../Project-Documentation/Support-Matrix.md) And [Latest Release Notes](../../Project-Documentation/Release-Notes-v1.0.3.md). The Archive Is Prepared Locally Only; It Does Not Install This TUI Into A Host Or Publish It.
 
 ## License And Notices
 

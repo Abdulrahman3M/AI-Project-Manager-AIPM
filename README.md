@@ -1,8 +1,17 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager</h1>
+  <h1>AI Project Manager <sub>v1.0.3</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
+
+  <p>
+    <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.3"><img alt="Release v1.0.3" src="https://img.shields.io/badge/RELEASE-v1.0.3-0EA5E9?style=for-the-badge" /></a>
+    <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
+    <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
+    <img alt="Windows PowerShell 5.1 and PowerShell 7.x" src="https://img.shields.io/badge/RUNTIME-WINDOWS%20PS%205.1%20%7C%20PS%207.x-2563EB?style=for-the-badge" />
+    <img alt="Python 3.10 or later" src="https://img.shields.io/badge/PYTHON-3.10%2B-3776AB?style=for-the-badge" />
+    <a href="Project-Documentation/Phase-Reports/P09-Report.md"><img alt="P09 external gates unverified" src="https://img.shields.io/badge/P09%20EXTERNAL%20GATES-UNVERIFIED-D97706?style=for-the-badge" /></a>
+  </p>
 
   <p>
     <a href="#overview">Overview</a> ·
@@ -87,7 +96,7 @@ Read the [Host Adapter Contract](Plugin-Adapters/Host-Adapter-Contract.md) and [
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The P09 report documents remaining external-environment checks as `UNVERIFIED`, including a live independent-host handoff and retained terminal-capture provenance. Download the verified source package from [GitHub Releases](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases). The owner repository remains private, so GitHub access is required; a release does not imply host installation or close those external gates.
+The P09 report documents remaining external-environment checks as `UNVERIFIED`, including a live independent-host handoff and retained terminal-capture provenance. Download the verified [v1.0.3 source release](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.3). The owner repository remains private, so GitHub access is required; a release does not imply host installation or close those external gates. The README release badge and version are updated with every product release.
 
 See the [Support Matrix](Project-Documentation/Support-Matrix.md), [P09 Security and Cross-Agent QA Report](Project-Documentation/Phase-Reports/P09-Report.md), and [P10 Packaging and Release Report](Project-Documentation/Phase-Reports/P10-Report.md) for evidence and limits.
 
@@ -136,7 +145,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](Project-Documentation/Support-Matrix.md)
-- [Release Notes](Project-Documentation/Release-Notes-v1.0.2.md)
+- [Release Notes](Project-Documentation/Release-Notes-v1.0.3.md)
 
 ## License
 

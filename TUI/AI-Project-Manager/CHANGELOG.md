@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.0.3] — Release Metadata Synchronization
+
+- Synchronized the TUI package version with the platform's v1.0.3 source release; no runtime behavior changed.
+
 ## [1.0.2] — Documented Local Release Package
 
 - Synchronized the TUI package with the platform's local release-ready source archive.
