@@ -1,11 +1,11 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.0.7</sub></h1>
+  <h1>AI Project Manager <sub>v1.1.7</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
-    <img alt="Working version v1.0.7" src="https://img.shields.io/badge/VERSION-v1.0.7-0EA5E9?style=for-the-badge" />
+    <img alt="Development version v1.1.7 — not published" src="https://img.shields.io/badge/DEVELOPMENT-v1.1.7%20%7C%20UNPUBLISHED-0EA5E9?style=for-the-badge" />
     <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2"><img alt="Latest published release v1.0.2" src="https://img.shields.io/badge/LATEST%20PUBLISHED-v1.0.2-334155?style=for-the-badge" /></a>
     <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
     <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
@@ -27,7 +27,9 @@
 
 ## Overview
 
-AI Project Manager (AIPM) is a local-first project orchestration platform built to help AI agents and people work from clear project state, controlled capabilities, and verifiable evidence. Its Core Engine manages project and task state; host adapters define permission boundaries; and the PowerShell Intelligent TUI provides evidence-based project views plus explicit, guarded registry administration.
+AI Project Manager (AIPM) is a local-first project-management platform built to help people and AI agents work from clear task context and verifiable evidence. Its Core Engine manages registration, task records, supporting artifacts, progress, and handoffs; the PowerShell Intelligent TUI provides evidence-based views and guarded registry administration.
+
+**Core principle:** AIPM manages task context, artifacts, progress, and handoffs—not the target project's implementation files or execution permissions. Agents edit the original project files and run project tests through their own host tools. AIPM keeps supporting task material under that project's `Shared-Project-State-Manager/`; it does not duplicate working source files, run target-project tests, or impose an AIPM approval gate on source edits. The task views in the TUI are read-only; task lifecycle commands are documented in the beginner guides.
 
 AIPM is designed to make project context explicit and portable while keeping authority with the project owner. A compatible package does not grant an agent access to local files or start an AI session on its own.
 
@@ -101,7 +103,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository version is `1.0.7`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
+The current repository version is `1.1.7`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -153,7 +155,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Release Notes](docs/project/Release-Notes/Release-Notes-v1.0.7.md)
+- [Release Notes](docs/project/Release-Notes/Release-Notes-v1.1.7.md)
 
 ## License
 

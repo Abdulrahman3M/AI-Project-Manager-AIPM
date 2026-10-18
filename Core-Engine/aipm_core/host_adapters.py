@@ -1,6 +1,8 @@
 """Capability-declared host routing into the AIPM Core Engine."""
 from __future__ import annotations
 
+import base64
+import binascii
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -8,13 +10,17 @@ from typing import Any
 from uuid import uuid4
 
 from .domain import CommandEnvelope, CoreEngine
+from .storage import StateError
+from .task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 
 MATRIX_PATH = Path("Plugins/Adapters/Host-Capability-Matrix.json")
 MUTATING_COMMANDS = {
     "task.create", "task.plan", "task.blocker.add", "task.blocker.clear",
-    "task.verify", "task.report", "state.set-next-action", "state.record-git-observation",
+    "task.verify", "task.report", "task.checkpoint", "task.artifact.write",
+    "state.set-next-action", "state.record-git-observation",
 }
+TASK_ARTIFACT_COMMANDS = {"task.artifact.list", "task.artifact.read", "task.artifact.write"}
 
 
 def load_capability_matrix(root: str | Path) -> dict[str, Any]:
@@ -88,6 +94,8 @@ class HostAdapter:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "WRITE_NOT_AUTHORIZED"}
         if type(expected_revision) is not int or expected_revision < 0 or (mutation and (not isinstance(idempotency_key, str) or not idempotency_key.strip())):
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
+        if command in TASK_ARTIFACT_COMMANDS:
+            return self._execute_task_artifact(command, payload, expected_revision=expected_revision)
         request_id = uuid4().hex
         envelope = CommandEnvelope(
             request_id=request_id,
@@ -99,6 +107,41 @@ class HostAdapter:
             input=payload,
         )
         return self.engine.execute(envelope)
+
+    def _execute_task_artifact(self, command: str, payload: dict[str, Any], *, expected_revision: int) -> dict[str, Any]:
+        task_id = payload.get('task_id')
+        required = {'task_id', 'path', 'content_base64'} if command == 'task.artifact.write' else {'task_id', 'path'} if command == 'task.artifact.read' else {'task_id'}
+        allowed = required | ({'expected_sha256'} if command == 'task.artifact.write' else set())
+        if not required.issubset(payload) or set(payload) - allowed or not isinstance(task_id, str):
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
+        project = self.engine.projects.get(self.project_id)
+        if project is None:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "PROJECT_NOT_REGISTERED"}
+        state = self.engine.execute(CommandEnvelope(uuid4().hex, 'state.read', f'aipm-host:{self.host_id}', self.project_id, 0, None, {}))
+        if state.get('status') != 'PASS':
+            return state
+        revision = state['revision']
+        if command == 'task.artifact.write' and expected_revision != revision:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "STATE_CONFLICT", "revision": revision}
+        operations = TaskOperations(self.engine, project)
+        task = project.state_root / 'Tasks' / task_id
+        try:
+            if command == 'task.artifact.list':
+                return {"schema_version": "1.0", "status": "PASS", "revision": revision, "artifacts": operations.list_artifacts(task)}
+            if command == 'task.artifact.read':
+                content = operations.read_artifact(task, payload['path'])
+                return {"schema_version": "1.0", "status": "PASS", "revision": revision, "content_base64": base64.b64encode(content).decode('ascii')}
+            encoded = payload.get('content_base64')
+            if not isinstance(encoded, str) or len(encoded) > ((MAX_TASK_ARTIFACT_BYTES + 2) // 3) * 4:
+                return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
+            try:
+                content = base64.b64decode(encoded, validate=True)
+            except (ValueError, binascii.Error):
+                return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
+            metadata = operations.write_artifact(task, payload['path'], content, expected_sha256=payload.get('expected_sha256'))
+            return {"schema_version": "1.0", "status": "PASS", "revision": revision, "artifact": metadata, "replayed": metadata['replayed']}
+        except (StateError, OSError, TypeError):
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "TASK_ARTIFACT_OPERATION_BLOCKED", "revision": revision}
 
 
 def create_manual_handoff(state_response: dict[str, Any], *, project_alias: str) -> dict[str, Any]:

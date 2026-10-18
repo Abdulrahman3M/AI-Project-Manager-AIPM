@@ -88,12 +88,13 @@ class TaskLifecycleTests(unittest.TestCase):
     def test_failed_artifact_projection_can_be_repaired(self):
         ops = self.ops()
         task = ops.create('Demo', 'Scope')
-        original = Path.write_text
-        def fail_projection(path, *args, **kwargs):
-            if path.name == 'Task-Plan.md':
+        import aipm_core.task_ops as task_ops_module
+        original = task_ops_module.os.replace
+        def fail_projection(source, target):
+            if Path(target).name == 'Task-Plan.md':
                 raise OSError('Injected Projection Failure')
-            return original(path, *args, **kwargs)
-        with patch.object(Path, 'write_text', fail_projection):
+            return original(source, target)
+        with patch.object(task_ops_module.os, 'replace', fail_projection):
             with self.assertRaises(OSError):
                 ops.plan(task, 'Accepted Plan')
         revision = self.state()['revision']

@@ -47,6 +47,7 @@ Project Owner
 | `<project-root>/Shared-Project-State-Manager/` | Operational state, task records, evidence, and continuity data for one managed project. | Runtime project data; stays inside that managed project |
 | `%APPDATA%\AIPM\settings.json` | Per-user TUI preferences, including the selected registry path. | Runtime user settings; never repository content |
 | `TUI/AI-Project-Manager/` | PowerShell terminal application, tests, user documentation, and UI assets. | Product source |
+| `Templates/Shared-Project-State-Manager-Example/` | Sanitized, copyable examples for task continuity and handoff files; the TUI/Core still creates each project's real state. | Maintained user template |
 | `Maintenance-Tools/` | Explicit repository maintenance, registry, Plugin, and release commands. | Product tooling |
 | `Plugins/Build-System/` | PowerShell entry point, Python packager/validator, and host profiles. | Product tooling |
 | `Plugins/Adapters/` | Host adapter contract, capability matrix, and schema. | Product documentation/schema |
@@ -76,6 +77,37 @@ On the first interactive launch, the TUI asks the owner to accept `%LOCALAPPDATA
 The runtime registry contains pointers only; project operational data is stored under each project's `Shared-Project-State-Manager/`. The **Registry Management** screen can list, register, and unregister projects, create a JSON/SHA-256 backup, restore a verified backup, and switch the selected registry. Registering creates only AIPM-owned state after a confirmation. Unregistering removes a pointer only. Restore saves an automatic pre-restore backup. Switching paths does not migrate, copy, or delete either registry.
 
 The Core detects its installation root from the executing package and rejects managed project roots, registry destinations, and registry backups that equal, contain, or are contained by that installation. The guard protects operations performed through AIPM Core. It cannot prevent an external agent with independent direct filesystem-write permission from editing AIPM files; host workspace restrictions or Windows ACLs are required for that stronger boundary. The agent instruction lives in the root `AGENTS.md` and permits AIPM source changes only after a direct, explicit owner request to work on AIPM itself.
+
+## Core Architectural Principle: Task Context, Not Project Implementation
+
+**AIPM manages task context, artifacts, progress, evidence, and handoffs—not the target project's implementation files or execution permissions.** The Core stores task metadata in the registered project's own state manifest and keeps task-supporting artifacts in a separate folder for each task:
+
+```text
+<project-root>/
+├── src/                         # The AI Agent edits the original project files here
+└── Shared-Project-State-Manager/
+    ├── State-Manifest.json      # Core-authoritative task status and checkpoints
+    └── Tasks/
+        └── <Task-ID>/           # One isolated context folder per task
+            ├── Instructions/
+            ├── Handoff/
+            ├── Reports/
+            ├── Scripts/
+            ├── Examples/
+            ├── References/
+            ├── Task-Plan.md
+            ├── Task-State.md
+            ├── Test-Status.md
+            └── Final-Report.md
+```
+
+The category directories may contain task instructions, handoff notes, progress/final reports, helper scripts, small examples, reference images, and supporting documents. They are not a second source tree: an agent edits the original files under `<project-root>` and records their paths in the task checkpoint. AIPM Core exposes no project-source write/delete/execute API, does not run target-project tests, and does not add an approval gate over a host-authorized agent's source changes. Core metadata/artifact safeguards apply only to AIPM-owned state. Normal project rules, user authorization, and AI-host/OS permissions still govern the agent.
+
+Core's manifest is authoritative for task status and checkpoint data. The Markdown task-state, plan, test-status, and next-agent handoff documents are readable projections synchronized from that record. A task checkpoint captures the last verified action, exact next action, completed work, changed source paths, and agent-reported test results. `PASS` is recorded evidence from the agent, not proof that AIPM executed a test. A new agent reads this record and the task's supporting files, then reconciles them with current source files, Git state, and real test output before continuing.
+
+Tasks are created with unique IDs beneath a project's state, so Task One, Task Two, and Task Three have separate records and artifact folders. The CLI supports task create/list/read/plan/checkpoint/blocker/verification/report and bounded artifact list/read/write operations. Artifact paths are relative and confined to the task's declared categories; writes are size-limited and atomic. Existing task artifacts cannot be silently overwritten: an update must provide the current SHA-256. These rules protect task data and do not gate changes to project source.
+
+The current TUI task views remain read-only. Task lifecycle and artifact authoring are available through the Core CLI/API; the TUI may display verified state but is not represented as a task editor. Hosts that use an adapter must have the declared local bridge and permissions. A package manifest or pasted handoff does not grant local-project access.
 
 ## Plugin Build And Validation
 

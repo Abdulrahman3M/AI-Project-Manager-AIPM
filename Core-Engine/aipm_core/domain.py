@@ -29,7 +29,7 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
-    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report'}
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint'}
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
@@ -71,6 +71,18 @@ class CoreEngine:
                 if result not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(evidence, str) or not evidence.strip():
                     raise StateError('Invalid Task Evidence')
                 task['verification'] = {'result': result, 'evidence': evidence}
+            elif command == 'task.checkpoint':
+                last_verified = payload.get('last_verified_action')
+                next_action = payload.get('next_action')
+                if any(not isinstance(value, str) or not value.strip() for value in (last_verified, next_action)):
+                    raise StateError('Invalid Task Checkpoint')
+                task['last_verified_action'] = last_verified
+                task['next_action'] = next_action
+                for field in ('completed_work', 'changed_files', 'test_results'):
+                    values = payload.get(field, [])
+                    if not isinstance(values, list) or len(values) > 100 or any(not isinstance(value, str) or not value.strip() for value in values):
+                        raise StateError('Invalid Task Checkpoint')
+                    task[field] = values
             else:
                 raise StateError('Unsupported Task Command')
         manifest['task_id'] = task_id
@@ -98,6 +110,12 @@ class CoreEngine:
             verification = task.get('verification')
             if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
                 raise StateError('Invalid Task Evidence')
+            for field in ('last_verified_action', 'next_action'):
+                if field in task and (not isinstance(task[field], str) or not task[field].strip()):
+                    raise StateError('Invalid Task Checkpoint')
+            for field in ('completed_work', 'changed_files', 'test_results'):
+                if field in task and (not isinstance(task[field], list) or len(task[field]) > 100 or any(not isinstance(value, str) or not value.strip() for value in task[field])):
+                    raise StateError('Invalid Task Checkpoint')
 
     @staticmethod
     def _validate_event(event: Any, project: ManagedProject) -> None:
@@ -238,7 +256,13 @@ class CoreEngine:
             task = manifest['tasks'].get(task_id) if isinstance(task_id, str) else None
             if task is None:
                 return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': 'TASK_NOT_FOUND'}
-            return {'schema_version': '1.0', 'status': 'PASS', 'task': task, 'task_status': self.task_status(task), 'revision': manifest['revision']}
+            resumable = dict(task)
+            resumable.setdefault('last_verified_action', 'Task progress has not yet been recorded.')
+            resumable.setdefault('next_action', 'Unknown; reconcile the task with current project evidence.')
+            resumable.setdefault('completed_work', [])
+            resumable.setdefault('changed_files', [])
+            resumable.setdefault('test_results', [])
+            return {'schema_version': '1.0', 'status': 'PASS', 'task': resumable, 'task_status': self.task_status(task), 'revision': manifest['revision']}
         if command.command not in {"state.set-next-action", "state.record-git-observation"} | self.TASK_COMMANDS:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:

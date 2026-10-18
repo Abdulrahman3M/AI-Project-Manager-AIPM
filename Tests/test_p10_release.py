@@ -48,6 +48,7 @@ class ReleasePackagingTests(unittest.TestCase):
             "docs/project/Architecture/Plugin-Distribution-Architecture.md": "# Current Architecture\n",
             "docs/project/Build-History-Archive.zip": "internal history archive\n",
             "docs/project/Provenance/Source-Revision.json": "{}\n",
+            "Templates/Shared-Project-State-Manager-Example/README.md": "# Example template\n",
             ".test-workspace/trace.txt": "excluded\n",
             "Core-Engine/__pycache__/generated.pyc": "temporary cache containing fixture path\n",
         }.items():
@@ -66,6 +67,7 @@ class ReleasePackagingTests(unittest.TestCase):
             names = archive.namelist()
             self.assertIn("AI-Project-Manager-v1.0.2/Release-Manifest.json", names)
             self.assertIn("AI-Project-Manager-v1.0.2/docs/project/Architecture/Plugin-Distribution-Architecture.md", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Templates/Shared-Project-State-Manager-Example/README.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Plugins/README.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Plugins/Build-System/build_plugins.py", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Plugins/Adapters/Host-Adapter-Contract.md", names)

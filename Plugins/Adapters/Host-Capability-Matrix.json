@@ -8,10 +8,10 @@
       "runtime_status": "IMPLEMENTED_TESTED",
       "local_project_access": "DIRECT_CORE_API",
       "transport": "In-Process Core Engine",
-      "core_commands": ["state.read", "task.read", "task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "state.set-next-action", "state.record-git-observation"],
-      "mutating_commands": ["task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "state.set-next-action", "state.record-git-observation"],
+      "core_commands": ["state.read", "task.read", "task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "task.checkpoint", "task.artifact.list", "task.artifact.read", "task.artifact.write", "state.set-next-action", "state.record-git-observation"],
+      "mutating_commands": ["task.create", "task.plan", "task.blocker.add", "task.blocker.clear", "task.verify", "task.report", "task.checkpoint", "task.artifact.write", "state.set-next-action", "state.record-git-observation"],
       "package_format_status": "NOT_APPLICABLE",
-      "notes": "All mutations require an explicit allow_mutations grant and Core revision/idempotency checks."
+      "notes": "Task context writes require an explicit local adapter grant and revision checks. AIPM exposes no target-project source-file write command; AI agents modify original project files through their own host workspace tools and permissions."
     },
     {
       "id": "file-capable-agent",

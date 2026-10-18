@@ -15,6 +15,8 @@ Portfolio And Task State Comes From `Core-Engine/aipm.py dashboard`, Which Reads
 
 The first launch asks the owner to approve the default `%LOCALAPPDATA%\AI-Project-Manager\registry.json` or choose another path outside the AIPM installation; the selected path is remembered in per-user `settings.json`. Registry Management offers project listing, registration, pointer-only unregistration, checksummed backup, validated restore with a pre-restore copy, and switching to another registry location. Registering creates `Shared-Project-State-Manager/` in the selected project only after confirmation; no project source file is changed. Switching locations leaves the old registry untouched and does not copy its data.
 
+The TUI's project/task views are read-only. Task creation, checkpointing, and task-artifact operations are exposed by the Core CLI/API, not by the TUI. Core owns only task metadata and task-supporting files inside the project's state directory. It exposes no target-project implementation write/delete/execute API and does not run target-project tests or add an AIPM approval gate to source edits. Agents make implementation changes in the original project files using the permissions supplied by the project owner and their AI host. See the [beginner guide's task handoff workflow](../../../docs/guides/Beginner-Guide.en.md#10-manage-a-task-and-hand-it-to-another-agent).
+
 Core rejects managed project roots, registry paths, and backup paths that overlap its detected AIPM installation. The root `AGENTS.md` repeats the owner-authorization rule. Neither safeguard is an OS sandbox: direct filesystem writes by an external agent must be restricted by its host workspace permissions or Windows ACLs.
 
 Progress Remains `Unknown` Without Verified Weights. Test Run Counts Remain `Unverified` Without A Test Artifact. An Agent Session Remains `Unknown` Without Host Process Evidence. Phase History And Event-Level Timeline Are Not Invented From A Single Current-State Manifest.
@@ -27,7 +29,7 @@ The Renderer Tests Do Not Substitute For A Terminal Visual Session. Windows Term
 
 ## Security And Persistence
 
-Only A Fixed, Whitelisted Set Of Health, Dashboard, Catalog, And Registry Commands Is Available Through The PowerShell Client. The Client Does Not Accept Arbitrary Commands Or Invoke A Shell String. Registry And Project State Operations Are Validated By Core; Only View Mode, Appearance Choices, And The Selected Registry Path Use The Per-User Settings Store.
+Only A Fixed, Whitelisted Set Of Health, Dashboard, Catalog, And Registry Commands Is Available Through The PowerShell TUI Client. The Client Does Not Accept Arbitrary Commands Or Invoke A Shell String. Separate Core CLI task commands manage only AIPM-owned task records and supporting artifacts. Registry, task, and project-state operations are validated by Core; only view mode, appearance choices, and the selected registry path use the per-user settings store.
 
 ## Release Packaging
 

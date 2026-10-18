@@ -2,7 +2,16 @@
 
 ## [Unreleased]
 
-- No Unreleased Changes.
+- No unreleased changes.
+
+## [1.1.7] — Task Context And Agent Handoff Architecture (Development; Not Published)
+
+- Established the Core principle that AIPM manages task context, supporting artifacts, progress, evidence, and handoffs—not target-project implementation files, tests, or execution permissions.
+- Added isolated per-task artifact directories, bounded atomic writes, checkpoint fields, task read/list and artifact CLI commands, and local adapter access for declared task artifacts only.
+- Added bilingual beginner instructions for creating, checkpointing, and resuming tasks across separate Core CLI processes; documented that source paths are references to original project files.
+- Added a regression test that demonstrates atomic replacement of generated task projections, avoiding write-through to a hard-linked project source. The direct hard-link test is skipped when the Windows host denies link creation.
+- Included the sanitized, documented project-state example template for task plans, checkpoints, and handoffs.
+- Synchronized platform and TUI development versions at `1.1.7` under the project's SemVer policy. Refreshed the protected capability registry and provenance through the confirmed CLI workflow; rebuilt the metadata-dependent local Bridge at `1.0.7` and multi-host archives at `1.1.7`. No Skill or Prompt content changed, and no GitHub push, tag, source release, or GitHub Release was performed.
 
 ## [1.0.7] — Protected External Project Operations And Registry Control
 

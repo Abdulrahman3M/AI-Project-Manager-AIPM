@@ -2,7 +2,7 @@
 
 Welcome to **AI Project Manager (AIPM)**. This guide assumes you are new to the project and explains how to get it, open it, understand what you see, and work with its approved capabilities safely.
 
-> **Important:** AIPM does not edit your project's source files. The TUI has explicit registry controls: when you confirm registration, Core creates only AIPM-owned state under `Shared-Project-State-Manager/`; unregistering removes only a registry pointer. Task editing remains outside the TUI workflows described here. The Agent Bridge is a package sample, not an installed agent or an automatic file-access grant.
+> **Important:** AIPM manages task context and supporting files under `Shared-Project-State-Manager/`; it does not edit, test, or approve changes to your project's source files. AI Agents work on the originals in your project folder under the permissions of your project and AI host. The TUI is a read-only task view; task authoring is available through the Core CLI. The Agent Bridge is a package sample, not an installed agent or an automatic file-access grant.
 
 ## 1. What AIPM Does
 
@@ -10,7 +10,7 @@ AIPM keeps project information understandable and evidence-based for people and 
 
 | Part | In Simple Terms |
 | --- | --- |
-| Core Engine | Reads and validates registered project and task state. |
+| Core Engine | Reads and validates project state; it also provides task and handoff commands. |
 | Capability Library | Keeps an approved catalog of Skills and Prompts with version and provenance records. |
 | PowerShell TUI | Shows a keyboard-driven dashboard and guarded project-registry controls. |
 | Project Agent Bridge | Describes how a compatible agent could work with AIPM; the included package is not installed or active. |
@@ -49,7 +49,7 @@ You do not need to open every folder before starting. These are the useful place
 | Folder Or File | What It Is For |
 | --- | --- |
 | `README.md` | Short project overview and quick links. |
-| `Core-Engine/` | Core state handling and read-only CLI. |
+| `Core-Engine/` | Project state, task lifecycle, handoffs, and CLI commands. |
 | `TUI/AI-Project-Manager/` | PowerShell terminal app and its usage notes. |
 | `01-Skills-General/` | Owner-managed General Skills. |
 | `02-Prompt-General/` | Reusable standalone Prompts. |
@@ -77,7 +77,7 @@ To request Windows PowerShell 5.1 explicitly:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File TUI\AI-Project-Manager\Start-AIPM.ps1
 ```
 
-On the first launch, the TUI asks you to approve the default registry location or choose another one. The dashboard can show registered projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. The **Registry Management** screen can add/remove project pointers, change the selected registry, and back it up or restore it. It cannot edit your source code or create project tasks.
+On the first launch, the TUI asks you to approve the default registry location or choose another one. The dashboard can show registered projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. The **Registry Management** screen can add/remove project pointers, change the selected registry, and back it up or restore it. The TUI does not edit source code or author tasks; use the Core CLI task commands below. Those commands update AIPM-owned task state only.
 
 ## 6. Choose Where AIPM Stores Its Project List
 
@@ -104,6 +104,8 @@ C:\Users\YourWindowsName\AppData\Local\AI-Project-Manager\registry.json
 This is per-user application data, not a second AIPM installation and not a folder inside any project. Accept it in the first-run prompt or choose another path ending with `registry.json` outside the AIPM installation. The choice is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` when starting AIPM is also treated as choosing the path.
 
 Project operational state is separate: for each registered project, AIPM stores it in that project's own `Shared-Project-State-Manager/` folder. The central registry stays small while each project's working state stays with that project.
+
+For sample task plans, handoffs, and file-operation notes, see [`Templates/Shared-Project-State-Manager-Example/`](../../Templates/Shared-Project-State-Manager-Example/README.md). It is fictional learning material, not a live project or a folder to register/copy wholesale. Register your project first so Core creates fresh project-specific state; then consult or adapt individual example documents. Never copy the example manifest over the generated runtime manifest.
 
 ## 7. Navigate The Screens
 
@@ -170,9 +172,50 @@ python Core-Engine\aipm.py registry-unregister --registry "$env:LOCALAPPDATA\AI-
 python Core-Engine\aipm.py registry-restore --registry "$env:LOCALAPPDATA\AI-Project-Manager\registry.json" --source "$env:USERPROFILE\Documents\registry-backup.json"
 ```
 
-For regular use, prefer the TUI confirmations. Do not commit a personal registry or its backups to GitHub or a source archive; they can reveal private project folder paths.
+For regular registry use, prefer the TUI confirmations. Do not commit a personal registry or its backups to GitHub or a source archive; they can reveal private project folder paths.
 
-## 10. Understand Skills, Prompts, And The Agent Bridge
+## 10. Manage A Task And Hand It To Another Agent
+
+Each registered project stores independent task records and supporting files under its own `Shared-Project-State-Manager/Tasks/<Task-ID>/` folder. Set the AIPM installation folder, your registry path, and the project ID that appears in the registry. Run these commands from PowerShell:
+
+```powershell
+$aipmRoot = 'C:\Path\To\AI-Project-Manager-AIPM'
+$registry = Join-Path $env:LOCALAPPDATA 'AI-Project-Manager\registry.json'
+$projectId = 'YOUR_PROJECT_ID'
+$cli = Join-Path $aipmRoot 'Core-Engine\aipm.py'
+
+$createdJson = python $cli task-create --registry $registry --project-id $projectId --title 'Add Search' --scope 'Add and verify search in the existing application.'
+if ($LASTEXITCODE -ne 0) { throw 'Could not create the task.' }
+$created = $createdJson | ConvertFrom-Json
+$taskId = $created.task.task_id
+$taskId
+```
+
+Keep the returned task ID. Add a plan and, when useful, import a task-supporting instruction or reference file. Import only material that helps an agent understand or resume the task—do not import copies of source files that the agent should edit in place.
+
+```powershell
+python $cli task-plan --registry $registry --project-id $projectId --task-id $taskId --text 'Inspect existing search behavior; implement in the original project files; run the project tests.'
+python $cli task-artifact-write --registry $registry --project-id $projectId --task-id $taskId --relative-path 'Instructions/Task-Instructions.md' --from-file 'D:\Work\My-Project\Task-Instructions.md'
+```
+
+While working, the agent edits the original project files itself. At a pause or handoff, record what was actually verified and exactly what remains. File paths in `--changed-file` refer to files in the original project; AIPM does not copy or modify them.
+
+```powershell
+python $cli task-checkpoint --registry $registry --project-id $projectId --task-id $taskId `
+  --last-verified-action 'Search form is implemented in the original src files.' `
+  --next-action 'Run the focused UI tests, inspect the diff, and fix any failures.' `
+  --completed-work 'Added the search form and connected the existing query handler.' `
+  --changed-file 'src/SearchForm.tsx' `
+  --test-result 'UNVERIFIED: focused tests have not been run.'
+python $cli task-read --registry $registry --project-id $projectId --task-id $taskId
+python $cli task-artifact-list --registry $registry --project-id $projectId --task-id $taskId
+```
+
+The next agent should open the same project folder, read `Task-State.md` and `Handoff/Next-Agent-Handoff.md` plus any instructions/references, then check the current original source, Git diff, and test evidence before continuing. Do not trust an old note as proof that the source still matches. AIPM records agent-reported evidence; it does not run project tests or place an AIPM approval gate on source edits.
+
+Other commands include `task-list`, `task-blocker-add`, `task-blocker-clear`, `task-verify`, `task-report`, and `task-artifact-read`. Artifact writes are confined to task categories and limited to 16 MiB per file. Existing artifacts cannot be silently overwritten; pass the current `--expected-sha256` when updating one.
+
+## 11. Understand Skills, Prompts, And The Agent Bridge
 
 The owner may add or remove Skills under `01-Skills-General/` and standalone Prompts under `02-Prompt-General/`. Before editing:
 
@@ -192,7 +235,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 
 Only run `refresh-baseline` when the approved Skill or Prompt inventory has changed and its version/changelog updates are ready. Do not edit `Capability-Library/Registry.json` or its provenance ledger by hand. Keep the bridge local and unpublished unless the owner separately approves a supported host installation or publication.
 
-## 11. Work With An AI Agent Safely
+## 12. Work With An AI Agent Safely
 
 Opening AIPM in an AI editor does not by itself install the bridge, start an agent, or authorize file operations. A compatible agent only has the access that its host and the owner have explicitly granted. Read the [Host Adapter Contract](../../Plugins/Adapters/Host-Adapter-Contract.md) before enabling an integration.
 
@@ -200,7 +243,7 @@ When using AIPM to manage another project, do not open the AIPM installation as 
 
 When you hand work to another session, treat pasted summaries as context, not proof. The receiving session should re-read the project’s current state and evidence. Anything without supporting evidence should remain **Unknown** or **Unverified**.
 
-## 12. Build And Verify A Source Archive
+## 13. Build And Verify A Source Archive
 
 To create a reproducible source archive inside `Releases/`:
 
@@ -211,7 +254,7 @@ python Maintenance-Tools\New-Release-Package.py verify --archive Releases\AI-Pro
 
 The package includes public project material and both beginner guides, and excludes the Git database, caches, test workspaces, and internal implementation plans. The verifier checks the checksum and payload manifest. A successful local build is not the same as a GitHub release, installation, or host activation.
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
 | Symptom | What To Do |
 | --- | --- |
@@ -224,7 +267,7 @@ The package includes public project material and both beginner guides, and exclu
 | A Skill is marked unverified | Treat that as missing evidence, not as a successful host installation. Review the provenance and local catalog. |
 | An icon looks wrong | Set `AIPM_ICONS=ascii` or follow the theme instructions in the TUI User Guide. |
 
-## 14. A Safe First-Session Checklist
+## 15. A Safe First-Session Checklist
 
 1. Read the license and repository README.
 2. Check Python and PowerShell versions.

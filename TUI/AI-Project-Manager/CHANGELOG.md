@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.1.7] — Task Context Architecture (Development; Not Published)
+
+- Synchronized the TUI package version with the AIPM platform's `1.1.7` development version. Task authoring remains in the Core CLI; the TUI task views remain read-only.
+
 ## [1.0.7] — Protected Registry Administration
 
 - Added first-run registry location approval and a guarded Registry Management screen for project pointers, backups, restores, and location changes.

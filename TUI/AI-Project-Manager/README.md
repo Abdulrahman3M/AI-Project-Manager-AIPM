@@ -29,6 +29,8 @@ All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **A
 
 The registry contains project IDs, display names, and root paths only. Task and continuity state remains in each managed project's `Shared-Project-State-Manager/`. A registry backup includes a SHA-256 sidecar; restore validates it when present and saves a pre-restore safety copy. Switching locations does not copy or delete existing registries.
 
+Task views in the TUI are read-only. Use the [Core CLI task workflow](../../docs/guides/Beginner-Guide.en.md#10-manage-a-task-and-hand-it-to-another-agent) to create tasks, record checkpoints, and manage task-only attachments. These commands do not edit target-project source files; AI Agents perform implementation work in the originals using their own host permissions.
+
 ## Keyboard
 
 - **Up/Down** Moves The Highlight; **Enter** Opens Or Selects; **Esc** Goes Back.
@@ -51,7 +53,7 @@ AIPM Core refuses to manage a project, registry, or registry backup whose path o
 
 Automated Renderer Tests Cover Stable Frames, Changed-Row Styling, Removed Rows, Resize Invalidation, Cursor Restoration, Input Modes, Read-Only Core Integration, And The ASCII Fallback. This Does Not Prove Visual Appearance Or Flicker Behavior In A Specific Terminal. Historical P08 implementation evidence is preserved in the repository [Build History Archive](../../docs/project/Build-History-Archive.zip); current verification limits are in the repository Support Matrix. Files In `UX-TUI/Visual-References/` Are Illustrations, Not Application Screenshots.
 
-For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Versioned Update Notes](../../docs/project/Release-Notes/Release-Notes-v1.0.7.md). Repository Versioning Does Not Install The TUI Into An AI Host.
+For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Versioned Update Notes](../../docs/project/Release-Notes/Release-Notes-v1.1.7.md). Repository Versioning Does Not Install The TUI Into An AI Host.
 
 ## License And Notices
 

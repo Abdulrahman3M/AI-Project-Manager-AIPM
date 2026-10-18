@@ -653,9 +653,9 @@ def _plugin_changelog(version: str, *, previous_version: str | None, previous_ch
         prior_entries = previous_changelog.split("\n", 1)[1].strip() + "\n"
     return (
         "# AIPM Project Agent Bridge Change Log\n\n"
-        f"## [{version}] — Project Website Metadata\n\n"
-        "- Added the canonical AIPM project website to the portable homepage and Codex listing metadata.\n"
-        "- Generated the AIPM project-agent handoff, Core guidance, and approved Skills.\n"
+        f"## [{version}] — Capability And Project Metadata Synchronization\n\n"
+        "- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.\n"
+        "- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.\n"
         "- Kept the package local, uninstalled, and unpublished.\n\n"
         f"{prior_entries}"
     )

@@ -4,27 +4,37 @@
 
 | Component | Environment | Status | Evidence |
 | --- | --- | --- | --- |
-| Core And Capability Validation | Python 3.14 | PASS | Focused P02–P10 `unittest` suite and capability-library validation. |
-| Terminal TUI Tests | PowerShell 7.6.5 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`. |
-| Terminal TUI Tests | Windows PowerShell 5.1.26100.9444 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`. |
-| Latest Published GitHub Source Release | Owner repository, private visibility | PASS | `v1.0.2` remains the latest published release. Repository version `1.0.7` is a development update and is not being published as a GitHub Release. |
-| Local Source Package | Python standard library | NOT BUILT FOR THIS DEVELOPMENT UPDATE | No `1.0.7` source ZIP was created because the owner requested a repository update without a Release. |
-| Multi-Host Plugin Archives | Local Python build and archive verification | PASS (local package checks) | Rebuilt ChatGPT/Codex, Claude Code, and Google Antigravity archives at `1.0.7`; inventories, manifests, exclusions, and SHA-256 sidecars validate locally. This does not verify host installation. |
-| AIPM Project Agent Bridge | Local package validation | PASS | Capability-library CLI validates structure and byte parity; current independently versioned Bridge is `1.0.6` and records source project version `1.0.7`. |
+| Core, State, Task Context, Adapters, Plugins, And Release Tests | Python 3.14 | PASS | Full `python -m unittest discover -s Tests -v`: 140 tests, 0 failures, 4 skipped due host-denied Windows link creation. |
+| Terminal TUI Tests | PowerShell 7.6.5 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`: 190 pass, 0 fail, 0 unverified. |
+| Terminal TUI Tests | Windows PowerShell 5.1.26100.9444 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1`: 190 pass, 0 fail, 0 unverified. |
+| Task Continuity Across Core Processes | Python CLI / separate Core Engine instances | PASS (local simulation) | Three independent tasks were created. A fresh Core Engine and later CLI processes read persisted checkpoint/handoff/artifact data; the project-source fixture stayed unchanged. This does not prove a live external AI-host session. |
+| Capability Library And Provenance | Python 3.14 | PASS | Protected registry metadata refreshed via the confirmed maintenance CLI; current registry and provenance validate. No Skill or Prompt content changed. |
+| Legacy AIPM Project Agent Bridge | Local package validation | PASS | Rebuilt/validated at independent Bridge version `1.0.7`, with source project metadata `1.1.7`; not installed or published. |
+| ChatGPT/Codex Plugin Archive | Local package validation | PASS (format verified) | `Plugins/Dist/AIPM-ChatGPT-Plugin-v1.1.7.zip` and `.sha256`; archive manifest and inventory validated locally. Not uploaded or installed. |
+| Claude Code Plugin Archive | Local package validation | PASS (format verified) | `Plugins/Dist/AIPM-Claude-Plugin-v1.1.7.zip` and `.sha256`; archive manifest and inventory validated locally. Not installed. |
+| Google Antigravity Plugin Archive | Local package validation | PASS (host format unverified) | `Plugins/Dist/AIPM-Antigavity-Plugin-v1.1.7.zip` and `.sha256`; local inventory/manifest checks pass, but authoritative host format/runtime remains unverified. |
+| Latest Published GitHub Source Release | Owner repository, private visibility | PASS | `v1.0.2` remains the latest published release. Repository version `1.1.7` is development-only and not published as a GitHub Release. |
+| Local Source Package | Python standard library | NOT BUILT | No `1.1.7` source ZIP or checksum was produced because this is an unpublished development update. |
 
 ## Deliberately Not Claimed
 
 | Capability | Status | Reason And Owner-Controlled Next Action |
 | --- | --- | --- |
-| Plugin installation in an AI host | UNVERIFIED | Keep the bridge local until the owner authorizes an explicit supported-host installation. |
-| ChatGPT Plugin uploader acceptance | UNVERIFIED | The ZIP structure and listing metadata are checked locally; upload it in the authenticated ChatGPT environment to confirm server-side acceptance. |
-| Public repository visibility or marketplace listing | NOT PERFORMED | The owner repository remains private; public visibility and marketplace listing are separate owner-controlled decisions. |
-| Live cross-agent handoff | UNVERIFIED | Requires a supported independent host session and explicit access grant. |
-| Physically external project fixture | UNVERIFIED | The owner restricted all test writes to this repository. |
-| Reproducible native-terminal capture provenance | UNVERIFIED | Owner visually accepted the UI, but no durable host/version/capture artifact is retained locally. |
+| Live cross-agent handoff through separate AI providers | UNVERIFIED | The automated test uses separate local Core/CLI processes. Confirm only with a real supported host session and explicit access grant. |
+| Physically external project fixture | UNVERIFIED | All test writes were kept inside the AIPM repository as required by the task boundary. |
+| Direct Windows hard-link write-through test | UNVERIFIED | `Path.hardlink_to` returned Windows `Access is denied`; a platform-independent atomic-replacement test passed instead. |
+| Windows junction/reparse-point live creation tests | UNVERIFIED | Windows denied junction creation for three tests. Other path-boundary, reparse checks, and refusal cases passed. |
+| Plugin installation in an AI host | UNVERIFIED | Local ZIP validation is not host installation or runtime evidence. |
+| ChatGPT Plugin uploader acceptance | UNVERIFIED | Archives were not uploaded to an authenticated ChatGPT host in this task. |
+| Antigravity host format/runtime acceptance | UNVERIFIED | The official host-format/runtime path was not exercised. |
+| Public repository visibility or marketplace listing | NOT PERFORMED | Repository visibility and marketplace publication remain separate owner-controlled actions. |
+| Reproducible native-terminal capture provenance | UNVERIFIED | Automated TUI tests passed, but this task did not capture new durable screenshots from the actual terminal hosts. |
 
 ## Operating Boundaries
 
-- The TUI is read-only and requires Python 3.10 or later plus Windows PowerShell 5.1 or PowerShell 7.x.
-- Host adapters remain capability-declared, permission-gated, and fail-closed.
-- The GitHub source release does not grant automatic project-file access to an AI host.
+- Platform and PowerShell TUI development versions are synchronized at `1.1.7`; latest published GitHub release remains `v1.0.2`.
+- TUI task views are read-only. Core CLI/API task operations update only AIPM-owned task state and supporting artifacts.
+- AIPM does not edit target-project implementation files, execute target-project tests, or impose AIPM approval gates on agent source edits. Agents work directly in original files under target-project and AI-host permissions.
+- Host adapters remain capability-declared, permission-gated for AIPM state mutations, and fail-closed. This state permission does not gate source edits performed through an AI host.
+- A Plugin archive or manifest does not prove installation, account acceptance, agent connectivity, or local project access.
+- Windows ACL, junction, and hard-link creation can be host-restricted independently of AIPM behavior; skipped tests are not reported as passing.

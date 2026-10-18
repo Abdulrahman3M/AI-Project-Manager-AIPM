@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.1",
+  "tasks": {
+    "Task-Example-Initial-Review": {
+      "title": "Example Project Initial Review",
+      "scope": "Inspect the project instructions and verify the documented test workflow.",
+      "plan": "# Example Project Initial Review\n\n1. Read project instructions.\n2. Inspect repository status.\n3. Run approved tests.\n4. Record evidence and next action.\n",
+      "blockers": [],
+      "verification": null,
+      "report": ""
+    }
+  },
+  "diff_fingerprint": null,
+  "revision": 0,
+  "project_id": "example-project",
+  "task_id": "Task-Example-Initial-Review",
+  "task_status": "IN-PROGRESS",
+  "active_phase": "P01",
+  "state_health": "CONSISTENT",
+  "last_verified_action": "Example only; replace with a real verified action.",
+  "next_action": "Inspect current project state before resuming.",
+  "branch": null,
+  "head_sha": null,
+  "updated_at": "2026-01-01T00:00:00Z",
+  "updated_by": "example-agent"
+}

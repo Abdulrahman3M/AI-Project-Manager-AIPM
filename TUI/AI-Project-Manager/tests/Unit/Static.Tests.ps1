@@ -26,5 +26,5 @@ Assert-True 'VERSION is a Semantic Version' ((Get-Content -LiteralPath (Join-Pat
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $root '..\..'))
 $packageVersion = Get-AppVersion -Root $root
 $platformVersion = (Get-Content -LiteralPath (Join-Path $repositoryRoot 'VERSION') -TotalCount 1).Trim()
-Assert-Equal 'AIPM package and platform versions stay synchronized as 1.0.7' '1.0.7,1.0.7' ($packageVersion + ',' + $platformVersion)
+Assert-Equal 'AIPM package and platform versions stay synchronized' ($platformVersion + ',' + $platformVersion) ($packageVersion + ',' + $platformVersion)
 Assert-True 'the coupled release versions are valid Semantic Version values' ($packageVersion -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$' -and $platformVersion -match '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$')

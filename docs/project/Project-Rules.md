@@ -10,6 +10,14 @@ The project registry stores project IDs, display names, and root paths only. Its
 
 Each registered project's operational state remains in that project's `Shared-Project-State-Manager/` folder. Registering a project creates that AIPM-owned state folder after confirmation; it does not edit project source files. Unregistering removes only the pointer from the selected registry and never deletes the project's files or state. Registry backups are JSON plus SHA-256 sidecars; restore verifies the sidecar when present and saves a pre-restore copy before replacing the active registry. Changing the selected location does not copy or delete the previous registry.
 
+## Core Architectural Principle: Task Context And Handoffs
+
+AIPM organizes project/task context, task-scoped supporting artifacts, progress, evidence, and handoffs. It does not implement the target project. AI Agents make approved implementation and documentation changes directly in the target project's original paths and run that project's tests under the permissions and rules of the target project and AI host. AIPM Core must not expose project-source write/delete/execute operations, duplicate project implementation files into task folders as working copies, run target-project tests, or require an AIPM-specific approval for an agent's source change. Task write controls protect only AIPM-owned task state; they are not gates for source changes.
+
+Each task is isolated beneath the managed project's `Shared-Project-State-Manager/Tasks/<Task-ID>/`. Core's task record is authoritative for task status and checkpoint fields; `Task-State.md`, plan, test-status, and handoff files are generated readable projections. Instructions, handoffs, reports, helper scripts, examples, and references belong in their declared categories. Import only supporting files needed to understand or resume the task. Record implementation paths as references to the originals; do not use task folders as a second working tree. A new agent reads the handoff, then checks current project files, Git state, and actual test evidence before continuing.
+
+For multiple tasks, use one independent ID and artifact folder per task. Updating one task must not overwrite another task's artifacts or source files. AIPM records agent-reported test results; a label such as `PASS` is only as trustworthy as the cited evidence and does not mean Core ran the target-project test suite.
+
 ## Authoritative Sources
 
 - `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-orchestrator` is the documented derivative.
