@@ -22,12 +22,16 @@ PUBLIC_DIRECTORIES = (
     "Capability-Library",
     "Core-Engine",
     "Maintenance-Tools",
-    "Plugin-Adapters",
-    "Plugins",
+    "Plugins/README.md",
+    "Plugins/Adapters",
+    "Plugins/Build-System",
+    "Plugins/aipm-project-agent-bridge",
     "TUI",
     "UX-TUI",
-    "Project-Documentation/Provenance",
-    "docs/User-Guides",
+    "docs/README.md",
+    "docs/project/Architecture/Plugin-Distribution-Architecture.md",
+    "docs/project/Provenance",
+    "docs/guides",
 )
 EXCLUDED_DIRECTORY_NAMES = {".git", ".agents", ".codex", ".migration-staging", ".superpowers", ".test-workspace", "__pycache__", ".pytest_cache"}
 
@@ -95,7 +99,7 @@ def _walk_public(root: Path, relative: Path) -> list[Path]:
 def _public_files(root: Path, version: str) -> list[Path]:
     selected = [root / name for name in ROOT_FILES if (root / name).is_file()]
     selected.extend(path for name in PUBLIC_DIRECTORIES for path in _walk_public(root, Path(name)))
-    for name in (f"Project-Documentation/Release-Notes-v{version}.md", "Project-Documentation/Support-Matrix.md", "Project-Documentation/Project-Rules.md"):
+    for name in (f"docs/project/Release-Notes-v{version}.md", "docs/project/Support-Matrix.md", "docs/project/Project-Rules.md"):
         candidate = root / name
         if candidate.is_file():
             selected.append(candidate)

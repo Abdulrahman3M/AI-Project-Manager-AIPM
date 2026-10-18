@@ -105,7 +105,7 @@ def main() -> int:
         "source_written": False,
         "personal_skills_imported": False,
     }
-    record_path = target / "Project-Documentation" / "Provenance" / "Skill-Migration-Record.json"
+    record_path = target / "docs/project" / "Provenance" / "Skill-Migration-Record.json"
     record_path.parent.mkdir(parents=True, exist_ok=True)
     record_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": "COPIED_AND_VERIFIED", "migrated_skill_count": len(selected), "derivative_files": changed}, indent=2))

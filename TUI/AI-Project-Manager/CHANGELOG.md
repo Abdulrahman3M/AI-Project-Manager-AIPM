@@ -1,5 +1,17 @@
 # AI Project Manager TUI Change Log
 
+## [1.0.6] — Platform Version Synchronization
+
+- Synchronized the TUI package version with the platform's v1.0.6 versioned update; no TUI runtime behavior changed.
+
+## [1.0.5] — Platform Version Synchronization
+
+- Synchronized the TUI package version with the v1.0.5 Plugin distribution compatibility update; no TUI runtime behavior changed.
+
+## [1.0.4] — Platform Version Synchronization
+
+- Synchronized the TUI package version with the platform's v1.0.4 version update; no TUI runtime behavior changed.
+
 ## [1.0.3] — Release Metadata Synchronization
 
 - Synchronized the TUI package version with the platform's v1.0.3 source release; no runtime behavior changed.

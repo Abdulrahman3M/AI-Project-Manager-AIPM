@@ -1,6 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
+  "homepage": "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/",
   "name": "aipm-project-agent-bridge",
-  "version": "1.0.2"
+  "repository": "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/",
+  "version": "1.0.5"
 }

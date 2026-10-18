@@ -39,8 +39,14 @@ class ReleasePackagingTests(unittest.TestCase):
             "TUI/AI-Project-Manager/Start-AIPM.ps1": "Write-Output 'AIPM'\n",
             "Plugins/aipm-project-agent-bridge/VERSION": "1.0.0\n",
             "Plugins/aipm-project-agent-bridge/CHANGELOG.md": "# Bridge\n\n## [1.0.0] — Initial\n",
-            "Project-Documentation/Project-Rules.md": "# Rules\n",
-            "Project-Documentation/Provenance/Source-Revision.json": "{}\n",
+            "Plugins/README.md": "# Plugins\n",
+            "Plugins/Build-System/build_plugins.py": "# Builder source\n",
+            "Plugins/Adapters/Host-Adapter-Contract.md": "# Adapter Contract\n",
+            "Plugins/Dist/example-plugin.zip": "generated distribution output\n",
+            "docs/project/Project-Rules.md": "# Rules\n",
+            "docs/project/Architecture/Plugin-Distribution-Architecture.md": "# Current Architecture\n",
+            "docs/project/Build-History-Archive.zip": "internal history archive\n",
+            "docs/project/Provenance/Source-Revision.json": "{}\n",
             ".test-workspace/trace.txt": "excluded\n",
             "Core-Engine/__pycache__/generated.pyc": "temporary cache containing fixture path\n",
         }.items():
@@ -58,6 +64,12 @@ class ReleasePackagingTests(unittest.TestCase):
         with zipfile.ZipFile(first["archive"]) as archive:
             names = archive.namelist()
             self.assertIn("AI-Project-Manager-v1.0.2/Release-Manifest.json", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/docs/project/Architecture/Plugin-Distribution-Architecture.md", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Plugins/README.md", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Plugins/Build-System/build_plugins.py", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Plugins/Adapters/Host-Adapter-Contract.md", names)
+            self.assertNotIn("AI-Project-Manager-v1.0.2/Plugins/Dist/example-plugin.zip", names)
+            self.assertNotIn("AI-Project-Manager-v1.0.2/docs/project/Build-History-Archive.zip", names)
             self.assertNotIn("AI-Project-Manager-v1.0.2/.test-workspace/trace.txt", names)
             self.assertNotIn("AI-Project-Manager-v1.0.2/Core-Engine/__pycache__/generated.pyc", names)
             manifest = json.loads(archive.read("AI-Project-Manager-v1.0.2/Release-Manifest.json"))

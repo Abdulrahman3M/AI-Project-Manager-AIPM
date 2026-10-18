@@ -2,10 +2,28 @@
 
 ## [Unreleased]
 
-- Made the General Skill inventory owner-managed: Skills may be removed or added when provenance and license metadata are maintained; retained imported Skills remain hash-checked.
-- Implemented AIPM's Core-Backed PowerShell TUI and Read-Only Project, Task, Evidence, Capability, And Host Views.
-- Added Search-First And Assistant Console View Modes, Shared Theme Roles, A11Y Markers, And Differential Rendering.
-- Actual Interactive Windows Terminal And Legacy Console Visual Verification Remains Unverified.
+- No Unreleased Changes.
+
+## [1.0.6] — Project Architecture, Plugin Website, And Release Hygiene
+
+- Added and locally validated the multi-host Plugin build system for ChatGPT/Codex, Claude Code, and Google Antigravity, with capability inventory, SHA-256, exclusion, tamper, and profile validation.
+- Added the official AIPM project URL to the ChatGPT/Codex Plugin listing metadata and to every host archive's README; added homepage/repository metadata to the portable and legacy Bridge manifests.
+- Reorganized the current project architecture and moved 46 internal implementation plans, phase reports, checkpoints, handoffs, and design records into `docs/project/Build-History-Archive.zip`.
+- Updated the source-release allowlist to include the current architecture and Plugin build sources while excluding generated Plugin ZIPs and the internal build-history archive.
+- Included the previously accumulated platform work: the Core-backed PowerShell TUI, owner-managed capability inventory, and governed cross-host Skill/Prompt packaging. P09 external-host gates remain explicitly unverified.
+- Advanced the platform and TUI together to `1.0.6`; advanced the independently versioned legacy Project Agent Bridge to `1.0.5` for its metadata update.
+
+## [1.0.5] — Plugin Upload Compatibility And Automatic Synchronization
+
+- Made the ChatGPT/Codex distribution produce portable Agent Plugins metadata, complete listing metadata, a bundled icon, and valid YAML Skill front matter without changing canonical Skill source files.
+- Added the permanent Automatic Plugin Synchronization rule for all Skill and Prompt changes, including multi-host rebuild, validation, versioning, and reporting requirements.
+- Rebuilt the ChatGPT/Codex, Claude Code, and Google Antigravity distribution archives from the current protected capability registry.
+
+## [1.0.4] — Documentation Layout Consolidation
+
+- Grouped user guides and project records under `docs/`, and grouped host adapter specifications under `Plugins/`.
+- Updated Core Engine, migration tooling, release allowlists, and documentation links to the organized paths.
+- Kept the generated bridge and independently versioned Skills unchanged.
 
 ## [1.0.3] — Homepage Presentation And Release Synchronization
 

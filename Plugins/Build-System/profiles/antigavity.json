@@ -1,0 +1,9 @@
+{
+  "id": "antigavity",
+  "display_name": "Antigavity Host Profile",
+  "archive_prefix": "AIPM-Antigavity-Plugin",
+  "format_status": "FORMAT_UNVERIFIED",
+  "runtime_status": "UNVERIFIED",
+  "manifest_paths": ["antigavity-plugin.json"],
+  "host_notes": "A complete AIPM transport profile. It is not a verified native Antigavity format until an authoritative platform specification and host test are available."
+}

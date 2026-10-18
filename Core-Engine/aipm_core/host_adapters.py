@@ -10,7 +10,7 @@ from uuid import uuid4
 from .domain import CommandEnvelope, CoreEngine
 
 
-MATRIX_PATH = Path("Plugin-Adapters/Host-Capability-Matrix.json")
+MATRIX_PATH = Path("Plugins/Adapters/Host-Capability-Matrix.json")
 MUTATING_COMMANDS = {
     "task.create", "task.plan", "task.blocker.add", "task.blocker.clear",
     "task.verify", "task.report", "state.set-next-action", "state.record-git-observation",

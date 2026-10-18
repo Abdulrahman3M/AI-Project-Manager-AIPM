@@ -58,10 +58,10 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
     destination.mkdir(parents=True)
     shutil.copytree(ROOT / "01-Skills-General", destination / "01-Skills-General")
     shutil.copytree(ROOT / "02-Prompt-General", destination / "02-Prompt-General")
-    provenance = destination / "Project-Documentation" / "Provenance"
+    provenance = destination / "docs/project" / "Provenance"
     (provenance / "Source-Licenses").mkdir(parents=True)
     for name in ("Skill-Migration-Record.json", "Source-Revision.json"):
-        shutil.copy2(ROOT / "Project-Documentation" / "Provenance" / name, provenance / name)
+        shutil.copy2(ROOT / "docs/project" / "Provenance" / name, provenance / name)
     shutil.copy2(ROOT / "VERSION", destination / "VERSION")
     shutil.copy2(ROOT / "CHANGELOG.md", destination / "CHANGELOG.md")
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
@@ -137,6 +137,15 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertEqual(manifest["plugin_name"], "aipm-project-agent-bridge")
         self.assertIn("AIPM Core", bridge)
         self.assertIn("does not install", bridge)
+
+    def test_generated_plugin_manifests_publish_the_project_website(self) -> None:
+        package = ROOT / "Plugins" / "aipm-project-agent-bridge"
+        project_url = "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/"
+        codex = json.loads((package / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        portable = json.loads((package / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(codex["interface"].get("websiteURL"), project_url)
+        self.assertEqual(portable.get("homepage"), project_url)
+        self.assertEqual(portable.get("repository"), project_url)
 
     def test_source_revision_records_verified_read_only_main_commit(self) -> None:
         source = scan_library(ROOT)["source"]
@@ -216,7 +225,7 @@ class CapabilityLibraryTests(unittest.TestCase):
             with self.assertRaises(CapabilityError):
                 initialize_registry(fixture)
         self.assertFalse((fixture / "Capability-Library" / "Registry.json").exists())
-        self.assertFalse((fixture / "Project-Documentation" / "Provenance" / "Capability-Library-Ledger.json").exists())
+        self.assertFalse((fixture / "docs/project" / "Provenance" / "Capability-Library-Ledger.json").exists())
 
     def test_baseline_refresh_requires_confirmation_reason_and_version_policy(self) -> None:
         fixture = copy_library_fixture(self.workspace / "refresh", include_registry=False)
@@ -237,9 +246,10 @@ class CapabilityLibraryTests(unittest.TestCase):
         changelog = skill / "CHANGELOG.md"
         changelog.write_text("## 1.3.11 — Approved Test Edit\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
         version = fixture / "VERSION"
-        version.write_text("1.0.3\n", encoding="utf-8")
+        next_project_version = bump_semver(version.read_text(encoding="utf-8").strip(), "patch", project=True)
+        version.write_text(next_project_version + "\n", encoding="utf-8")
         root_log = fixture / "CHANGELOG.md"
-        root_log.write_text("## [1.0.3] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
+        root_log.write_text(f"## [{next_project_version}] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
         refreshed = refresh_registry(fixture, confirmed=True, reason="Test-only confirmed edit with required versions")
         self.assertEqual(refreshed["status"], "PASS")
         self.assertEqual(validate_registry(fixture)["status"], "PASS")
@@ -309,6 +319,48 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertEqual(rebuilt["status"], "PASS")
         self.assertEqual(list((ROOT / ".test-workspace").glob("p06-plugin-backup-*")), [])
         self.assertEqual(list((ROOT / ".test-workspace").glob("p06-plugin-stage-*")), [])
+
+    def test_explicit_rebuild_upgrades_only_known_website_metadata_drift(self) -> None:
+        target = self.workspace / "Website-Metadata-Upgrade"
+        first = build_plugin(ROOT, target)
+        self.assertEqual(first["status"], "PASS")
+
+        portable_path = target / "plugin.json"
+        portable = json.loads(portable_path.read_text(encoding="utf-8"))
+        portable.pop("homepage")
+        portable.pop("repository")
+        portable_path.write_text(json.dumps(portable, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        codex_path = target / ".codex-plugin" / "plugin.json"
+        codex = json.loads(codex_path.read_text(encoding="utf-8"))
+        codex.pop("homepage")
+        codex.pop("repository")
+        codex["interface"].pop("websiteURL")
+        codex_path.write_text(json.dumps(codex, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+        readme_path = target / "README.md"
+        readme = readme_path.read_text(encoding="utf-8")
+        readme_path.write_text(readme.replace("\n\nProject Website: [https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/)\n", "\n"), encoding="utf-8")
+
+        with self.assertRaisesRegex(CapabilityError, "explicit --replace-generated"):
+            build_plugin(ROOT, target)
+
+        (target / "unexpected-user-file.txt").write_text("preserve me\n", encoding="utf-8")
+        with self.assertRaisesRegex(CapabilityError, "unexpected files"):
+            build_plugin(ROOT, target, replace_generated=True)
+        self.assertEqual((target / "unexpected-user-file.txt").read_text(encoding="utf-8"), "preserve me\n")
+        (target / "unexpected-user-file.txt").unlink()
+
+        rebuilt = build_plugin(ROOT, target, replace_generated=True)
+        self.assertEqual(rebuilt["status"], "PASS")
+        manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["plugin_version"], "1.0.1")
+        self.assertEqual(manifest["previous_plugin_version"], "1.0.0")
+        self.assertEqual(validate_plugin(ROOT, target)["status"], "PASS")
+        portable = json.loads((target / "plugin.json").read_text(encoding="utf-8"))
+        codex = json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        self.assertEqual(portable["homepage"], "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/")
+        self.assertEqual(codex["interface"]["websiteURL"], "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/")
 
     def test_plugin_tampering_or_sensitive_source_file_blocks_distribution(self) -> None:
         target = self.workspace / "Tamper-Sample"

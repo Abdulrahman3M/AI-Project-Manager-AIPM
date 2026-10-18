@@ -3,3 +3,5 @@ __pycache__/
 *.py[cod]
 .test-workspace/
 Releases/
+Plugins/Dist/*
+!Plugins/Dist/README.md

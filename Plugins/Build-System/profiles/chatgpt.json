@@ -1,0 +1,9 @@
+{
+  "id": "chatgpt",
+  "display_name": "ChatGPT And Codex Plugin",
+  "archive_prefix": "AIPM-ChatGPT-Plugin",
+  "format_status": "FORMAT_VERIFIED",
+  "runtime_status": "UNVERIFIED",
+  "manifest_paths": ["plugin.json", ".codex-plugin/plugin.json"],
+  "host_notes": "Package format is prepared for ChatGPT and Codex plugin workflows. Installation, account availability, and permissions remain host-controlled."
+}

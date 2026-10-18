@@ -1,0 +1,9 @@
+{
+  "id": "claude",
+  "display_name": "Claude Plugin",
+  "archive_prefix": "AIPM-Claude-Plugin",
+  "format_status": "FORMAT_VERIFIED",
+  "runtime_status": "UNVERIFIED",
+  "manifest_paths": [".claude-plugin/plugin.json"],
+  "host_notes": "Package format is prepared for Claude plugin workflows. Installation and project permissions remain host-controlled."
+}

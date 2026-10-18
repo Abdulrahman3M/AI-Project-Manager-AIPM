@@ -21,6 +21,6 @@ There is currently **1 standalone Prompt** in this library: [Autonomous Task Exe
 
 ## Versioning
 
-Standalone Prompts keep their own embedded version metadata according to [Project Rules](../Project-Documentation/Project-Rules.md). Skill-owned Prompts are released under the owning Skill's version and changelog.
+Standalone Prompts keep their own embedded version metadata according to [Project Rules](../docs/project/Project-Rules.md). Skill-owned Prompts are released under the owning Skill's version and changelog.
 
 The authoritative inventory and hashes are recorded in the [Capability Registry](../Capability-Library/Registry.json); this folder contains no Skill-owned Prompt duplicates.

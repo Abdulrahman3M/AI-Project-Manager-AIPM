@@ -11,7 +11,7 @@ This library records the approved General Skills and Prompt relationships in a d
 - One owner-added standalone Prompt is registered from `02-Prompt-General`.
 - Personal Skills, `import-memory`, and `morning` are excluded.
 
-See [Registry](Registry.json), the [First-Party Skill Manifest](First-Party-Skills.json), and the [Provenance Ledger](../Project-Documentation/Provenance/Capability-Library-Ledger.json) for file-level SHA-256 and source/licensing records.
+See [Registry](Registry.json), the [First-Party Skill Manifest](First-Party-Skills.json), and the [Provenance Ledger](../docs/project/Provenance/Capability-Library-Ledger.json) for file-level SHA-256 and source/licensing records.
 
 ## Validation And Generation
 

@@ -13,15 +13,16 @@ from typing import Any
 
 
 REGISTRY_PATH = Path("Capability-Library/Registry.json")
-PROVENANCE_PATH = Path("Project-Documentation/Provenance/Capability-Library-Ledger.json")
-MIGRATION_PATH = Path("Project-Documentation/Provenance/Skill-Migration-Record.json")
+PROVENANCE_PATH = Path("docs/project/Provenance/Capability-Library-Ledger.json")
+MIGRATION_PATH = Path("docs/project/Provenance/Skill-Migration-Record.json")
 FIRST_PARTY_SKILLS_PATH = Path("Capability-Library/First-Party-Skills.json")
-SOURCE_REVISION_PATH = Path("Project-Documentation/Provenance/Source-Revision.json")
+SOURCE_REVISION_PATH = Path("docs/project/Provenance/Source-Revision.json")
 SOURCE_LICENSE_PATH = Path("LICENSE")
 PERSONAL_LICENSE_NAME = "AI Project Manager Personal Use License"
 PLUGIN_VERSION_INITIAL = "1.0.0"
 PLUGIN_SLUG = "aipm-project-agent-bridge"
 PLUGIN_DISPLAY_NAME = "AIPM Project Agent Bridge"
+PROJECT_URL = "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/"
 EXCLUDED_SKILLS = {"import-memory", "morning"}
 DERIVATIVE_FILES = {
     "CHANGELOG.md",
@@ -551,6 +552,8 @@ def _plugin_json(version: str) -> dict[str, Any]:
         "name": PLUGIN_SLUG,
         "version": version,
         "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
+        "homepage": PROJECT_URL,
+        "repository": PROJECT_URL,
         "skills": "./skills/",
         "interface": {
             "displayName": PLUGIN_DISPLAY_NAME,
@@ -559,6 +562,7 @@ def _plugin_json(version: str) -> dict[str, Any]:
             "developerName": "AI Project Manager",
             "category": "Productivity",
             "capabilities": ["AIPM Project Context", "AIPM Core Guidance", "General Skills"],
+            "websiteURL": PROJECT_URL,
         },
     }
 
@@ -569,6 +573,8 @@ def _portable_plugin_json(version: str) -> dict[str, Any]:
         "name": PLUGIN_SLUG,
         "version": version,
         "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
+        "homepage": PROJECT_URL,
+        "repository": PROJECT_URL,
     }
 
 
@@ -622,6 +628,7 @@ def _plugin_readme(count: int) -> str:
         f"{count} approved General Skills copied from `01-Skills-General`.\n\n"
         "Read `AIPM-Agent-Bridge.md` before using a Skill. It defines the project boundary, Core authority, and capability limits.\n\n"
         "This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the AI Project Manager Personal Use License. See `licenses/`.\n"
+        f"\nProject Website: [{PROJECT_URL}]({PROJECT_URL})\n"
     )
 
 
@@ -646,7 +653,8 @@ def _plugin_changelog(version: str, *, previous_version: str | None, previous_ch
         prior_entries = previous_changelog.split("\n", 1)[1].strip() + "\n"
     return (
         "# AIPM Project Agent Bridge Change Log\n\n"
-        f"## [{version}] — Project-Agent Bridge Update\n\n"
+        f"## [{version}] — Project Website Metadata\n\n"
+        "- Added the canonical AIPM project website to the portable homepage and Codex listing metadata.\n"
         "- Generated the AIPM project-agent handoff, Core guidance, and approved Skills.\n"
         "- Kept the package local, uninstalled, and unpublished.\n\n"
         f"{prior_entries}"
@@ -771,6 +779,142 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
     return manifest
 
 
+def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str, Any]:
+    """Accept an intact generated bridge whose only stale metadata is the known website addition."""
+    if not target.is_dir() or _has_reparse_point(target):
+        raise CapabilityError("Generated Plugin directory is missing or linked")
+    manifest = _manifest_from_plugin(target)
+    if manifest.get("plugin_name") != PLUGIN_SLUG or manifest.get("status") != "LOCAL_SAMPLE_NOT_PUBLISHED":
+        raise CapabilityError("Generated Plugin identity or publication state is invalid")
+    required_manifest_keys = {
+        "schema_version", "generated_by", "plugin_name", "plugin_version", "previous_plugin_version",
+        "changelog_sha256", "status", "source_commit_sha", "source_project_version",
+        "source_license_sha256", "personal_skills_included", "standalone_prompts_included", "skills",
+    }
+    if set(manifest) != required_manifest_keys or manifest.get("schema_version") != "1.0" or manifest.get("generated_by") != "AIPM Capability Library":
+        raise CapabilityError("Generated Plugin manifest schema is invalid")
+    version = manifest.get("plugin_version")
+    _semver_tuple(version)
+    previous_version = manifest.get("previous_plugin_version")
+    if previous_version is not None and (not isinstance(previous_version, str) or not _at_least_version(version, bump_semver(previous_version, "patch"))):
+        raise CapabilityError("Generated Plugin release history is invalid")
+    source_project_version = manifest.get("source_project_version")
+    _semver_tuple(source_project_version)
+    current_project_version = _read_version(root / "VERSION", changelog=root / "CHANGELOG.md")
+    if source_project_version != current_project_version:
+        # Historical package metadata may trail the current product version, but cannot claim a future version.
+        if _semver_tuple(source_project_version) > _semver_tuple(current_project_version):
+            raise CapabilityError("Generated Plugin claims a future project version")
+    source_commit = manifest.get("source_commit_sha")
+    changelog_hash = manifest.get("changelog_sha256")
+    source_license_hash = manifest.get("source_license_sha256")
+    if not isinstance(source_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", source_commit):
+        raise CapabilityError("Generated Plugin source revision is invalid")
+    if not isinstance(changelog_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", changelog_hash):
+        raise CapabilityError("Generated Plugin changelog integrity is missing")
+    if not isinstance(source_license_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", source_license_hash):
+        raise CapabilityError("Generated Plugin license integrity is missing")
+    if manifest.get("personal_skills_included") is not False or manifest.get("standalone_prompts_included") is not False:
+        raise CapabilityError("Generated Plugin manifest has invalid scope")
+    skills = manifest.get("skills")
+    if not isinstance(skills, list) or not skills:
+        raise CapabilityError("Generated Plugin manifest has no valid Skill inventory")
+
+    expected_paths = {
+        "plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "gemini-extension.json",
+        "AIPM-Distribution-Manifest.json", "README.md", "AIPM-Agent-Bridge.md", "VERSION", "CHANGELOG.md",
+        "licenses/AI-Project-Manager-Personal-Use-License.txt",
+    }
+    seen_slugs: set[str] = set()
+    for skill in skills:
+        if not isinstance(skill, dict) or set(skill) != {"slug", "version", "source_sha256", "files", "license"}:
+            raise CapabilityError("Generated Plugin contains an invalid Skill record")
+        slug, files, license_record = skill["slug"], skill["files"], skill["license"]
+        if not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) or slug in EXCLUDED_SKILLS or slug in seen_slugs:
+            raise CapabilityError("Generated Plugin contains an invalid Skill identity")
+        seen_slugs.add(slug)
+        _semver_tuple(skill["version"])
+        if not isinstance(files, dict) or not files or not isinstance(license_record, dict):
+            raise CapabilityError(f"Generated Plugin Skill record is incomplete: {slug}")
+        for relative, digest in files.items():
+            parts = relative.split("/") if isinstance(relative, str) else []
+            if not parts or any(part in {"", ".", ".."} for part in parts) or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+                raise CapabilityError(f"Generated Plugin Skill file record is unsafe: {slug}")
+        source_sha256 = skill["source_sha256"]
+        if not isinstance(source_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", source_sha256):
+            raise CapabilityError(f"Generated Plugin Skill hash is invalid: {slug}")
+        license_keys = {"source_license", "source_license_path", "source_license_sha256", "retained_skill_notices", "aipm_personal_license_applies"}
+        if (
+            set(license_record) != license_keys
+            or license_record.get("source_license") != PERSONAL_LICENSE_NAME
+            or license_record.get("source_license_path") != SOURCE_LICENSE_PATH.as_posix()
+            or license_record.get("source_license_sha256") != source_license_hash
+            or not isinstance(license_record.get("retained_skill_notices"), list)
+            or license_record.get("aipm_personal_license_applies") is not True
+        ):
+            raise CapabilityError(f"Generated Plugin Skill license metadata is invalid: {slug}")
+        skill_root = target / "skills" / slug
+        copied = _tree_files(skill_root)
+        if copied != files or _tree_hash(copied) != source_sha256:
+            raise CapabilityError(f"Generated Plugin Skill bytes are changed: {slug}")
+        expected_paths.update(f"skills/{slug}/{relative}" for relative in files)
+
+    actual_files = set(_tree_files(target))
+    if actual_files != expected_paths:
+        raise CapabilityError("Generated Plugin contains missing or unexpected files")
+    expected_directories = {
+        "/".join(parts[:index])
+        for path in expected_paths
+        for parts in [path.split("/")]
+        for index in range(1, len(parts))
+    }
+    actual_directories = {
+        (Path(current) / name).relative_to(target).as_posix()
+        for current, directories, _ in os.walk(target, followlinks=False)
+        for name in directories
+    }
+    if actual_directories != expected_directories:
+        raise CapabilityError("Generated Plugin contains missing or unexpected directories")
+
+    version_file = target / "VERSION"
+    changelog = target / "CHANGELOG.md"
+    if _read_version(version_file, changelog=changelog) != version or _sha256_file(changelog) != changelog_hash:
+        raise CapabilityError("Generated Plugin version or changelog integrity is invalid")
+    license_path = target / "licenses" / "AI-Project-Manager-Personal-Use-License.txt"
+    if license_path.read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes() or _sha256_file(license_path) != source_license_hash:
+        raise CapabilityError("Generated Plugin project license has changed")
+    if (target / "AIPM-Agent-Bridge.md").read_bytes() != _agent_bridge_document().encode("utf-8"):
+        raise CapabilityError("Generated Plugin bridge guidance has changed")
+
+    portable = _portable_plugin_json(version)
+    stale_portable = dict(portable)
+    stale_portable.pop("homepage")
+    stale_portable.pop("repository")
+    if _json(target / "plugin.json") not in (portable, stale_portable):
+        raise CapabilityError("Generated Plugin portable metadata has unexpected changes")
+    codex = _plugin_json(version)
+    stale_codex = json.loads(json.dumps(codex))
+    stale_codex.pop("homepage")
+    stale_codex.pop("repository")
+    stale_codex["interface"].pop("websiteURL")
+    if _json(target / ".codex-plugin" / "plugin.json") not in (codex, stale_codex):
+        raise CapabilityError("Generated Plugin Codex metadata has unexpected changes")
+    for relative, expected in {
+        ".claude-plugin/plugin.json": _claude_plugin_json(version),
+        "gemini-extension.json": _gemini_extension_json(version),
+    }.items():
+        if _json(target / relative) != expected:
+            raise CapabilityError(f"Generated Plugin metadata drifted: {relative}")
+    expected_readme = _plugin_readme(len(skills))
+    stale_readme = expected_readme.replace(f"\n\nProject Website: [{PROJECT_URL}]({PROJECT_URL})\n", "\n")
+    if (target / "README.md").read_text(encoding="utf-8") not in (expected_readme, stale_readme):
+        raise CapabilityError("Generated Plugin README has unexpected changes")
+    codex_data = _json(target / ".codex-plugin" / "plugin.json")
+    if codex_data.get("license") is not None or codex_data.get("skills") != "./skills/":
+        raise CapabilityError("Plugin must not claim a blanket license and must declare its Skill root")
+    return manifest
+
+
 def _validate_legacy_embedded_plugin(target: Path) -> dict[str, Any]:
     """Accept only the exact P06 local sample shape so it can be upgraded safely."""
     if not target.is_dir() or _has_reparse_point(target):
@@ -846,9 +990,10 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
         except CapabilityError:
             if replace_generated is not True:
                 raise CapabilityError("Existing Plugin is stale; explicit --replace-generated is required")
-            try:
-                old_manifest = _validate_embedded_plugin(target_path)
-            except CapabilityError:
+            existing_manifest = _manifest_from_plugin(target_path)
+            if existing_manifest.get("plugin_name") == PLUGIN_SLUG:
+                old_manifest = _validate_upgradeable_embedded_plugin(root, target_path)
+            else:
                 old_manifest = _validate_legacy_embedded_plugin(target_path)
             old_hashes = {item["slug"]: item["source_sha256"] for item in old_manifest["skills"]}
             new_hashes = {item["slug"]: item["sha256"] for item in catalog["skills"]}
