@@ -3,15 +3,19 @@
 ## Ownership
 
 - `Start-AIPM.ps1` Parses Launch Options And Restores Terminal State In `finally`.
-- `Core/AipmClient.psm1` Finds AIPM Core, Checks Python, Invokes Whitelisted Read-Only CLI Commands With Argument Arrays And Timeouts, And Parses JSON Fail-Closed.
-- `Core/App.psm1` Converts Core Responses Into Evidence-Based Display Summaries And Composes The Three View Modes. It Has No Project-State Writer.
+- `Core/AipmClient.psm1` Finds AIPM Core, Checks Python, Invokes A Whitelisted CLI With Argument Arrays And Timeouts, And Parses JSON Fail-Closed.
+- `Core/App.psm1` Converts Core Responses Into Evidence-Based Display Summaries, Composes The Three View Modes, And Orchestrates Explicit Registry Operations Through The Core CLI. It Does Not Write Registry Or Project-State Files Directly.
 - `Core/Platform.psm1` Owns Operating-System Detection; `Core/Settings.psm1` Owns UI-Only User Preferences; `Core/Process.psm1` Owns Child Process Invocation.
 - `TUI/Input.psm1` Is The Only Keyboard Reader. `TUI/Theme.psm1` Owns Semantic Glyphs And Color Roles. `TUI/Renderer.psm1` Is The Only Screen Writer.
 - `TUI/Menu.psm1`, `Dialog.psm1`, And `Prompt.psm1` Compose Shared Input And Rendering Primitives.
 
 ## State And Evidence
 
-All Portfolio And Task State Comes From `Core-Engine/aipm.py dashboard`, Which Reads Registered Projects Through Core Engine `state.read`. The UI Never Writes Project State. Capability Metadata Comes From `aipm.py catalog`; It Is Read As-Is And Is Never Refreshed By The UI. `host-capabilities` Supplies Host Declarations, Not Proof That A Host Is Installed Or Has An Active Agent Session.
+Portfolio And Task State Comes From `Core-Engine/aipm.py dashboard`, Which Reads Registered Projects Through Core Engine `state.read`. Capability Metadata Comes From `aipm.py catalog`; It Is Read As-Is And Is Never Refreshed By The UI. `host-capabilities` Supplies Host Declarations, Not Proof That A Host Is Installed Or Has An Active Agent Session.
+
+The first launch asks the owner to approve the default `%LOCALAPPDATA%\AI-Project-Manager\registry.json` or choose another path outside the AIPM installation; the selected path is remembered in per-user `settings.json`. Registry Management offers project listing, registration, pointer-only unregistration, checksummed backup, validated restore with a pre-restore copy, and switching to another registry location. Registering creates `Shared-Project-State-Manager/` in the selected project only after confirmation; no project source file is changed. Switching locations leaves the old registry untouched and does not copy its data.
+
+Core rejects managed project roots, registry paths, and backup paths that overlap its detected AIPM installation. The root `AGENTS.md` repeats the owner-authorization rule. Neither safeguard is an OS sandbox: direct filesystem writes by an external agent must be restricted by its host workspace permissions or Windows ACLs.
 
 Progress Remains `Unknown` Without Verified Weights. Test Run Counts Remain `Unverified` Without A Test Artifact. An Agent Session Remains `Unknown` Without Host Process Evidence. Phase History And Event-Level Timeline Are Not Invented From A Single Current-State Manifest.
 
@@ -23,7 +27,7 @@ The Renderer Tests Do Not Substitute For A Terminal Visual Session. Windows Term
 
 ## Security And Persistence
 
-Only `health`, `dashboard`, `catalog`, And `host-capabilities` Are Available Through The PowerShell Client. The Client Does Not Accept Arbitrary Commands Or Invoke A Shell String. Project State Is Not Persisted In The UI. Only View Mode And Appearance Choices Use The Per-User Settings Store.
+Only A Fixed, Whitelisted Set Of Health, Dashboard, Catalog, And Registry Commands Is Available Through The PowerShell Client. The Client Does Not Accept Arbitrary Commands Or Invoke A Shell String. Registry And Project State Operations Are Validated By Core; Only View Mode, Appearance Choices, And The Selected Registry Path Use The Per-User Settings Store.
 
 ## Release Packaging
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 from typing import Any
 
-from .storage import ManagedProject, StateError, _atomic_json
+from .storage import ManagedProject, StateError, _atomic_json, validate_managed_project
 
 
 @dataclass(frozen=True)
@@ -205,6 +205,11 @@ class CoreEngine:
         project = self.projects.get(command.project_id)
         if project is None:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "PROJECT_NOT_REGISTERED"}
+        try:
+            validate_managed_project(project)
+        except StateError as error:
+            reason = "AIPM_PLATFORM_PROTECTED" if str(error).startswith("AIPM_PLATFORM_PROTECTED") else "INVALID_STATE"
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
         event = {"schema_version": "1.0", "request_id": command.request_id, "command": command.command, "actor": command.actor, "project_id": command.project_id, "revision": 1, "idempotency_key": command.idempotency_key, "input": command.input}
         try:
             # Reject invalid caller metadata before recovery or any publication.

@@ -1,6 +1,6 @@
 # AIPM Documentation
 
-This folder contains maintained user and product documentation. Historical construction artifacts are collected in [`project/Build-History-Archive.zip`](project/Build-History-Archive.zip) and are not part of normal use or release packaging.
+This folder contains maintained user and product documentation. Historical construction artifacts are not runtime inputs and are not included in the working-tree documentation set or release packaging.
 
 | Location | Purpose |
 | --- | --- |

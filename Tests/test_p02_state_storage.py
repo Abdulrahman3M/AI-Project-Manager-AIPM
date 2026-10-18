@@ -10,7 +10,8 @@ import tempfile
 import unittest
 
 TEST_WORKSPACE = Path(__file__).resolve().parents[1] / ".test-workspace"
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Core-Engine"))
+from test_support import CORE_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 from aipm_core.storage import ProjectRegistry, StateError, default_registry_path, initialize_project_state
 
 

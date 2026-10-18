@@ -3,7 +3,7 @@ from pathlib import Path
 import json, subprocess, sys, tempfile, unittest, threading
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import patch
-ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT/'Core-Engine'))
+ROOT=Path(__file__).resolve().parents[1]; from test_support import CORE_ROOT; sys.path.insert(0,str(CORE_ROOT))
 from aipm_core.continuity import ContinuityManager, LockError
 from aipm_core.storage import initialize_project_state, StateError
 from aipm_core.domain import CoreEngine, CommandEnvelope
@@ -72,7 +72,7 @@ class HardeningTests(unittest.TestCase):
   self.manager.checkpoint('actor','Next','Evidence',None); first=self.manager.snapshot(); before=(first/'Current-State.md').read_bytes(); self.manager.checkpoint('actor','Next','Different',None); second=self.manager.snapshot(); self.assertNotEqual(first,second); self.assertEqual((first/'Current-State.md').read_bytes(),before)
  def spawn_owner(self):
   code="import sys,time; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from aipm_core.storage import ManagedProject; from aipm_core.continuity import ContinuityManager; root=Path(sys.argv[2]); p=ManagedProject('managed','Managed',root,root/'Shared-Project-State-Manager'); print(ContinuityManager(p).acquire_lock('task','child'),flush=True); time.sleep(60)"
-  process=subprocess.Popen([sys.executable,'-c',code,str(ROOT/'Core-Engine'),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertTrue(process.stdout.readline().strip()); self.expire_lock(); return process
+  process=subprocess.Popen([sys.executable,'-c',code,str(CORE_ROOT),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertTrue(process.stdout.readline().strip()); self.expire_lock(); return process
  def expire_lock(self):
   path=self.project.state_root/'Locks'/'task.json'; data=json.loads(path.read_text()); data['expires_at']='2000-01-01T00:00:00+00:00'; path.write_text(json.dumps(data))
  @staticmethod
@@ -155,7 +155,7 @@ class HardeningTests(unittest.TestCase):
  def test_resource_guard_serializes_a_real_child_process(self):
   code="import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from aipm_core.storage import ManagedProject; from aipm_core.continuity import ContinuityManager; root=Path(sys.argv[2]); manager=ContinuityManager(ManagedProject('managed','Managed',root,root/'Shared-Project-State-Manager')); print('Ready',flush=True); print(manager.acquire_lock('task','child'),flush=True)"
   with self.manager._lock_guard('task'):
-   process=subprocess.Popen([sys.executable,'-c',code,str(ROOT/'Core-Engine'),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertEqual(process.stdout.readline().strip(),'Ready')
+   process=subprocess.Popen([sys.executable,'-c',code,str(CORE_ROOT),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertEqual(process.stdout.readline().strip(),'Ready')
    with self.assertRaises(subprocess.TimeoutExpired): process.wait(timeout=.3)
    self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
   output,error=process.communicate(timeout=10); self.assertEqual(process.returncode,0,error); nonce=output.strip(); self.assertTrue(nonce); self.manager.release_lock('task',nonce)

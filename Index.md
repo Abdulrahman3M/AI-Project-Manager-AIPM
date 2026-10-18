@@ -8,7 +8,6 @@
 - [Project Rules](docs/project/Project-Rules.md)
 - [Change Log](CHANGELOG.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Historical Build Records Archive](docs/project/Build-History-Archive.zip)
 
 ## Capability Library
 
@@ -20,12 +19,13 @@
 
 ## Release History
 
-- [Release Notes v1.0.6](docs/project/Release-Notes-v1.0.6.md)
-- [Release Notes v1.0.5](docs/project/Release-Notes-v1.0.5.md)
-- [Release Notes v1.0.4](docs/project/Release-Notes-v1.0.4.md)
-- [Release Notes v1.0.3](docs/project/Release-Notes-v1.0.3.md)
-- [Release Notes v1.0.2](docs/project/Release-Notes-v1.0.2.md)
-- [Release Notes v0.1.0](docs/project/Release-Notes-v0.1.0.md)
+- [Release Notes v1.0.7](docs/project/Release-Notes/Release-Notes-v1.0.7.md)
+- [Release Notes v1.0.6](docs/project/Release-Notes/Release-Notes-v1.0.6.md)
+- [Release Notes v1.0.5](docs/project/Release-Notes/Release-Notes-v1.0.5.md)
+- [Release Notes v1.0.4](docs/project/Release-Notes/Release-Notes-v1.0.4.md)
+- [Release Notes v1.0.3](docs/project/Release-Notes/Release-Notes-v1.0.3.md)
+- [Release Notes v1.0.2](docs/project/Release-Notes/Release-Notes-v1.0.2.md)
+- [Release Notes v0.1.0](docs/project/Release-Notes/Release-Notes-v0.1.0.md)
 
 ## Platform Components
 

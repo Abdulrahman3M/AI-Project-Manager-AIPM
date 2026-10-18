@@ -29,8 +29,13 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'dashboard', 'catalog', 'host-capabilities')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore')][string]$Command,
         [string]$RegistryPath = '',
+        [string]$ProjectRoot = '',
+        [string]$ProjectId = '',
+        [string]$Alias = '',
+        [string]$Destination = '',
+        [string]$Source = '',
         [string]$PythonPath = '',
         [int]$TimeoutSec = 10
     )
@@ -40,9 +45,14 @@ function Invoke-AipmCore {
 
     $entry = Join-Path (Join-Path $root 'Core-Engine') 'aipm.py'
     $arguments = @($entry, $Command)
-    if ($RegistryPath -and $Command -eq 'dashboard') {
+    if ($RegistryPath -and $Command -in @('list', 'dashboard', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore')) {
         $arguments += @('--registry', [System.IO.Path]::GetFullPath($RegistryPath))
     }
+    if ($ProjectRoot) { $arguments += @('--project-root', [System.IO.Path]::GetFullPath($ProjectRoot)) }
+    if ($ProjectId) { $arguments += @('--project-id', $ProjectId) }
+    if ($Alias) { $arguments += @('--alias', $Alias) }
+    if ($Destination) { $arguments += @('--destination', [System.IO.Path]::GetFullPath($Destination)) }
+    if ($Source) { $arguments += @('--source', [System.IO.Path]::GetFullPath($Source)) }
     $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec
     if (-not $process.Started) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_NOT_STARTED'; Data = $null } }
     if ($process.TimedOut) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_TIMED_OUT'; Data = $null } }

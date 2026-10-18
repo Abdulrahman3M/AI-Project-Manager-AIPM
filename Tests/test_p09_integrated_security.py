@@ -9,7 +9,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT / ".test-workspace"
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT, CORE_SCRIPT, RUNTIME_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 
 from aipm_core.domain import CoreEngine  # noqa: E402
 from aipm_core.host_adapters import (  # noqa: E402
@@ -37,18 +38,18 @@ class IntegratedSecurityAndCrossSessionTests(unittest.TestCase):
         self.temp.cleanup()
 
     def _adapter(self, project_id: str, *, allow_mutations: bool = False) -> HostAdapter:
-        return HostAdapter(self.engine, project_id, "local-cli", root=ROOT, allow_mutations=allow_mutations)
+        return HostAdapter(self.engine, project_id, "local-cli", root=RUNTIME_ROOT, allow_mutations=allow_mutations)
 
     def _cli_dashboard(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "Core-Engine" / "aipm.py"),
+                str(CORE_SCRIPT),
                 "dashboard",
                 "--registry",
                 str(self.registry_path),
             ],
-            cwd=ROOT,
+            cwd=RUNTIME_ROOT,
             capture_output=True,
             text=True,
             check=False,
@@ -58,14 +59,14 @@ class IntegratedSecurityAndCrossSessionTests(unittest.TestCase):
         return subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "Core-Engine" / "aipm.py"),
+                str(CORE_SCRIPT),
                 "state-read",
                 "--registry",
                 str(self.registry_path),
                 "--project-id",
                 project_id,
             ],
-            cwd=ROOT,
+            cwd=RUNTIME_ROOT,
             capture_output=True,
             text=True,
             check=False,

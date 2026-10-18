@@ -92,7 +92,7 @@ if ($snapshotApiAvailable -and $appModule) {
         $script:SessionCoreReader = $CoreReader
         $script:SessionDependencyReader = $DependencyReader
     } $sessionCoreReader $sessionDependencyReader
-    $navigationUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '12{Enter}13'
+    $navigationUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '13{Enter}14'
     $snapshotLifecycleResults.NavigationUi = $navigationUi
     $snapshotLifecycleResults.NavigationReadCount = $sessionCoreLog.Count
     $sessionCoreLog.Clear()
@@ -111,7 +111,7 @@ if ($snapshotApiAvailable -and $appModule) {
     $sessionCoreFailure.Enabled = $false
     $sessionCoreFailure.FailAt = 4
     $sessionCoreLog.Clear()
-    $failedRefreshUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '1113'
+    $failedRefreshUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath (Join-Path (Get-TestWork) 'snapshot-test-registry.json') } '1214'
     $snapshotLifecycleResults.FailedRefreshUi = $failedRefreshUi
     $snapshotLifecycleResults.FailedRefreshUiReadCount = $sessionCoreLog.Count
     $sessionCoreFailure.FailAt = 0

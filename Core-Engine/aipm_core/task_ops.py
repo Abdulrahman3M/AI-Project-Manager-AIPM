@@ -8,11 +8,12 @@ from typing import Any
 from uuid import uuid4
 
 from .domain import CommandEnvelope, CoreEngine
-from .storage import ManagedProject, StateError, _canonical
+from .storage import ManagedProject, StateError, _canonical, validate_managed_project
 
 
 class TaskOperations:
     def __init__(self, engine: CoreEngine, project: ManagedProject):
+        validate_managed_project(project)
         self.engine = engine
         self.project = project
         self.root = project.state_root
@@ -25,6 +26,7 @@ class TaskOperations:
         return result
 
     def _task_id(self, task: Path) -> str:
+        validate_managed_project(self.project)
         tasks_root = _canonical(self.root / 'Tasks')
         canonical = _canonical(task)
         if canonical.parent != tasks_root:

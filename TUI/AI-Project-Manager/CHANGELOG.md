@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.0.7] — Protected Registry Administration
+
+- Added first-run registry location approval and a guarded Registry Management screen for project pointers, backups, restores, and location changes.
+- Routed all registry actions through the Core allowlist and surfaced the AIPM installation-protection boundary in the interface and documentation.
+- Synchronized the TUI package version with the platform's v1.0.7 development update.
+
 ## [1.0.6] — Platform Version Synchronization
 
 - Synchronized the TUI package version with the platform's v1.0.6 versioned update; no TUI runtime behavior changed.

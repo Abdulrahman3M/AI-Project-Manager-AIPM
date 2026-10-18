@@ -4,6 +4,13 @@
 
 - No Unreleased Changes.
 
+## [1.0.7] — Protected External Project Operations And Registry Control
+
+- Added Core-enforced protection that blocks managed project roots, registry paths, and registry backup or restore paths which overlap the AIPM installation.
+- Added guarded project registry administration through the Core CLI and Intelligent TUI: first-run location selection, project registration, pointer-only removal, checksummed backup, verified restore with a safety copy, and registry-location switching.
+- Documented the owner authorization boundary: normal AIPM use cannot mutate the AIPM installation through supported Core operations; host or OS permissions remain required to constrain direct external filesystem writes.
+- Advanced the platform and PowerShell TUI together to `1.0.7`. No Skill or Prompt source changed; the legacy Bridge retained its independent `1.0.6` version, while the three multi-host archives were rebuilt with synchronized `1.0.7` catalog metadata.
+
 ## [1.0.6] — Project Architecture, Plugin Website, And Release Hygiene
 
 - Added and locally validated the multi-host Plugin build system for ChatGPT/Codex, Claude Code, and Google Antigravity, with capability inventory, SHA-256, exclusion, tamper, and profile validation.

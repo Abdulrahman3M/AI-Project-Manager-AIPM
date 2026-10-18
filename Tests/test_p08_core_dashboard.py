@@ -9,7 +9,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT / ".test-workspace"
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT, CORE_SCRIPT, RUNTIME_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 
 from aipm_core.domain import CommandEnvelope, CoreEngine  # noqa: E402
 from aipm_core.storage import ProjectRegistry, initialize_project_state  # noqa: E402
@@ -32,8 +33,8 @@ class CoreDashboardCliTests(unittest.TestCase):
 
     def _cli(self, command: str, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            [sys.executable, str(ROOT / "Core-Engine" / "aipm.py"), command, *arguments],
-            cwd=ROOT,
+            [sys.executable, str(CORE_SCRIPT), command, *arguments],
+            cwd=RUNTIME_ROOT,
             capture_output=True,
             text=True,
             check=False,

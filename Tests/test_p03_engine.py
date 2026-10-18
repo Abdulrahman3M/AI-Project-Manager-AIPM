@@ -9,7 +9,8 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT, CORE_SCRIPT, RUNTIME_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 from aipm_core.domain import CommandEnvelope, CoreEngine
 from aipm_core.storage import initialize_project_state, _atomic_json
 
@@ -151,7 +152,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(list(project.state_root.rglob('*.tmp')), [])
             self.assertFalse((project.state_root / 'History/Pending-Commit.json').exists())
     def cli(self, *args):
-        return subprocess.run([sys.executable, str(ROOT / 'Core-Engine/aipm.py'), *args], capture_output=True, text=True)
+        return subprocess.run([sys.executable, str(CORE_SCRIPT), *args], capture_output=True, text=True)
 
     def registry(self, directory, project):
         path = Path(directory) / 'registry.json'
@@ -159,7 +160,7 @@ class CoreEngineTests(unittest.TestCase):
         return path
 
     def test_importing_cli_does_not_parse_process_arguments(self):
-        result = subprocess.run([sys.executable, '-c', "import sys; sys.path.insert(0, 'Core-Engine'); sys.argv=['aipm','unexpected']; import aipm; assert callable(aipm.main); assert callable(aipm.build_parser)"], cwd=ROOT, capture_output=True, text=True)
+        result = subprocess.run([sys.executable, '-c', "import sys; sys.path.insert(0, 'Core-Engine'); sys.argv=['aipm','unexpected']; import aipm; assert callable(aipm.main); assert callable(aipm.build_parser)"], cwd=RUNTIME_ROOT, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, '')
 
@@ -231,7 +232,7 @@ class CoreEngineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
             registry = Path(temporary) / "registry.json"
             registry.write_text(json.dumps({"schema_version":"1.0","projects":[{"project_id":"one","root_path":"C:/One","alias":"One"}],"preferences":{}}))
-            result = subprocess.run([sys.executable, str(ROOT / "Core-Engine" / "aipm.py"), "list", "--registry", str(registry)], capture_output=True, text=True, check=True)
+            result = subprocess.run([sys.executable, str(CORE_SCRIPT), "list", "--registry", str(registry)], capture_output=True, text=True, check=True)
             self.assertEqual(json.loads(result.stdout)["projects"][0]["project_id"], "one")
     def test_state_read_and_revisioned_event_write_are_idempotent(self) -> None:
         with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:

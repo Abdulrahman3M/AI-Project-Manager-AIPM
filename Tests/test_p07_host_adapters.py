@@ -9,7 +9,8 @@ import unittest
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT, CORE_SCRIPT
+sys.path.insert(0, str(CORE_ROOT))
 
 from aipm_core.domain import CoreEngine  # noqa: E402
 from aipm_core.host_adapters import (  # noqa: E402
@@ -44,7 +45,7 @@ class HostAdapterContractTests(unittest.TestCase):
         self.assertEqual(hosts["gemini-cli-extension"]["runtime_status"], "UNVERIFIED")
 
     def test_cli_exposes_matrix_as_read_only_json(self) -> None:
-        result = subprocess.run([sys.executable, str(ROOT / "Core-Engine" / "aipm.py"), "host-capabilities"], cwd=ROOT, capture_output=True, text=True, check=False)
+        result = subprocess.run([sys.executable, str(CORE_SCRIPT), "host-capabilities"], cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         response = json.loads(result.stdout)
         self.assertEqual(response["status"], "PASS")

@@ -4,7 +4,7 @@
 
 AI Project Manager (AIPM) is a local-first project-management platform with two complementary roles:
 
-1. The local product manages project registration, task state, evidence, continuity, capability governance, and read-only operator views.
+1. The local product manages project registration, task state, evidence, continuity, capability governance, and explicit registry administration through the TUI.
 2. The Capability Library is the governed source of reusable Skills and Prompts that can be assembled into host-specific Plugin packages.
 
 The Plugin path complements the platform; it does not replace the Core Engine or automatically connect a remote AI host to local project files.
@@ -16,6 +16,8 @@ Project Owner
     │
     ├── Operates AIPM locally ──> PowerShell TUI ──> Python Core Engine
     │                                                ├── Project/task state
+    │                                                ├── Pointer-only registry administration
+    │                                                ├── Protected AIPM installation boundary
     │                                                ├── Evidence and continuity
     │                                                ├── Capability validation
     │                                                └── Permission-gated host adapters
@@ -41,6 +43,9 @@ Project Owner
 | `Capability-Library/Registry.json` | Approved capability inventory, versions, content hashes, and provenance references. | Protected generated baseline; update through its confirmed CLI workflow |
 | `docs/project/Provenance/` | Source revision, migration, license, and capability integrity records. | Governance evidence |
 | `Core-Engine/aipm_core/` | Python domain, storage, task operations, orchestration, continuity, capability validation, release packaging, and host adapters. | Product source |
+| `%LOCALAPPDATA%\AI-Project-Manager\registry.json` | Per-user pointer-only list of managed project IDs, aliases, and root paths; created only after TUI first-run location approval. | Runtime user data; never repository content |
+| `<project-root>/Shared-Project-State-Manager/` | Operational state, task records, evidence, and continuity data for one managed project. | Runtime project data; stays inside that managed project |
+| `%APPDATA%\AIPM\settings.json` | Per-user TUI preferences, including the selected registry path. | Runtime user settings; never repository content |
 | `TUI/AI-Project-Manager/` | PowerShell terminal application, tests, user documentation, and UI assets. | Product source |
 | `Maintenance-Tools/` | Explicit repository maintenance, registry, Plugin, and release commands. | Product tooling |
 | `Plugins/Build-System/` | PowerShell entry point, Python packager/validator, and host profiles. | Product tooling |
@@ -54,7 +59,6 @@ Project Owner
 | `docs/project/Support-Matrix.md` | Verified environments and explicitly unverified owner/host gates. | Maintained verification summary |
 | `docs/project/Release-Notes-v*.md` | Human-readable notes for product releases. | Maintained release documentation |
 | `docs/project/Provenance/` | Retained source and integrity evidence. | Maintained governance records |
-| `docs/project/Build-History-Archive.zip` | Historical implementation plans, phase reports, checkpoints, handoffs, and design records. | Reference archive only; never runtime input |
 | `Releases/` | Deterministic source archives and checksum sidecars prepared for a release. | Generated, local release output |
 
 ## Capability And Plugin Source Of Truth
@@ -64,6 +68,14 @@ Project Owner
 Canonical Skill and Prompt files remain the source. Host-specific projections—such as ChatGPT-compatible YAML front matter—are produced in the staging/package layer and do not rewrite those source files. Each host archive receives a capability index, host metadata, the project license, and its own validation/checksum evidence.
 
 The legacy Project Agent Bridge remains for backward compatibility. It is not the source of truth and is not the only Plugin distribution route.
+
+## Runtime Project Registry And Self-Protection
+
+On the first interactive launch, the TUI asks the owner to accept `%LOCALAPPDATA%\AI-Project-Manager\registry.json` or select another file named `registry.json` outside the AIPM installation. The selected path is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` explicitly is treated as the owner's path selection.
+
+The runtime registry contains pointers only; project operational data is stored under each project's `Shared-Project-State-Manager/`. The **Registry Management** screen can list, register, and unregister projects, create a JSON/SHA-256 backup, restore a verified backup, and switch the selected registry. Registering creates only AIPM-owned state after a confirmation. Unregistering removes a pointer only. Restore saves an automatic pre-restore backup. Switching paths does not migrate, copy, or delete either registry.
+
+The Core detects its installation root from the executing package and rejects managed project roots, registry destinations, and registry backups that equal, contain, or are contained by that installation. The guard protects operations performed through AIPM Core. It cannot prevent an external agent with independent direct filesystem-write permission from editing AIPM files; host workspace restrictions or Windows ACLs are required for that stronger boundary. The agent instruction lives in the root `AGENTS.md` and permits AIPM source changes only after a direct, explicit owner request to work on AIPM itself.
 
 ## Plugin Build And Validation
 
@@ -114,6 +126,7 @@ Platform and TUI versions move together under SemVer. Skill versions remain inde
 
 - Apply the AI Project Manager Personal Use License to project material and generated distributions.
 - Host adapters are capability-declared, permission-gated, and fail-closed.
+- The AIPM installation is protected during work on other projects; Core-managed state and registry paths cannot overlap the installation.
 - A Plugin package manifest is descriptive metadata, not proof of authorization or installation.
 - No ChatGPT text conversation is assumed to have local file access.
 - P09 external-project, live cross-agent, and durable host-capture gates remain as recorded in the [Support Matrix](../Support-Matrix.md); never convert an unavailable host check into a passing result.

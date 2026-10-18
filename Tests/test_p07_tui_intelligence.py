@@ -7,7 +7,8 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 
 from aipm_core.capabilities import scan_library, validate_plugin, validate_registry  # noqa: E402
 

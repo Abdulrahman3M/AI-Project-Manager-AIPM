@@ -1,11 +1,11 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.0.6</sub></h1>
+  <h1>AI Project Manager <sub>v1.0.7</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
-    <img alt="Working version v1.0.6" src="https://img.shields.io/badge/VERSION-v1.0.6-0EA5E9?style=for-the-badge" />
+    <img alt="Working version v1.0.7" src="https://img.shields.io/badge/VERSION-v1.0.7-0EA5E9?style=for-the-badge" />
     <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2"><img alt="Latest published release v1.0.2" src="https://img.shields.io/badge/LATEST%20PUBLISHED-v1.0.2-334155?style=for-the-badge" /></a>
     <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
     <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
@@ -27,7 +27,7 @@
 
 ## Overview
 
-AI Project Manager (AIPM) is a local-first project orchestration platform built to help AI agents and people work from clear project state, controlled capabilities, and verifiable evidence. Its Core Engine manages project and task state; host adapters define permission boundaries; and the PowerShell Intelligent TUI gives you a read-only view of projects, work, evidence, capabilities, and handoffs.
+AI Project Manager (AIPM) is a local-first project orchestration platform built to help AI agents and people work from clear project state, controlled capabilities, and verifiable evidence. Its Core Engine manages project and task state; host adapters define permission boundaries; and the PowerShell Intelligent TUI provides evidence-based project views plus explicit, guarded registry administration.
 
 AIPM is designed to make project context explicit and portable while keeping authority with the project owner. A compatible package does not grant an agent access to local files or start an AI session on its own.
 
@@ -40,7 +40,7 @@ AIPM is designed to make project context explicit and portable while keeping aut
 | **Multi-Host Plugin Distribution** | Build verified ChatGPT/Codex, Claude Code, and Google Antigravity capability packages from governed Skills and Prompts. |
 | **Legacy Agent Bridge** | A separately versioned compatibility package that explains how an AI agent should use AIPM Core and approved Skills. |
 | **Host Adapters** | Declared host capabilities, explicit permission gates, and fail-closed behavior for unsupported operations. |
-| **Intelligent TUI** | Read-only project dashboards, task and evidence views, capability catalog, keyboard navigation, and accessible terminal styling. |
+| **Intelligent TUI** | Project dashboards, task and evidence views, capability catalog, guarded registry setup and backup/restore, keyboard navigation, and accessible terminal styling. |
 
 ## Quick Start
 
@@ -79,14 +79,17 @@ AI Agent ───────► Host Adapter ───────► AIPM Cor
      │ approved Skills and handoff          │ project state and evidence
      └──────────────────────────────────────┘
                                             ▼
-                                   Read-Only Terminal UI
+                             Project Views + Registry Management
 ```
 
-The Core Engine is the authority for registered project and task state. Host adapters expose only declared operations and require explicit permission for writes. The terminal UI reads Core-backed data and does not mutate project state. Values without supporting evidence remain unknown or unverified.
+The Core Engine is the authority for registered project and task state. Host adapters expose only declared operations and require explicit permission for writes. The TUI reads Core-backed evidence and performs only explicit, validated registry actions; it can initialize AIPM-owned state in a project after owner confirmation, but does not edit project source files. Values without supporting evidence remain unknown or unverified.
 
 ## Security and Privacy
 
 - Project state remains within the project and AIPM Core storage boundaries.
+- The registry stores project IDs, aliases, and root paths only. It defaults to `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, outside the repository; first launch asks the owner to approve this path or choose another `registry.json` location outside AIPM.
+- A project's operational state stays inside that project's `Shared-Project-State-Manager/` folder. Unregistering removes only its registry pointer; restoring a registry makes a pre-restore safety copy.
+- Core-managed project roots, registry files, and backups cannot overlap the AIPM installation. This Core guard and `AGENTS.md` do not replace host/OS permissions: an external agent with direct filesystem writes must be separately sandboxed from AIPM.
 - Host operations are capability-declared, permission-gated, and fail-closed.
 - Manual handoff text is treated as unverified input until a receiving session re-reads authoritative state.
 - The local Agent Bridge does not install itself, start a background agent, or grant automatic file access.
@@ -98,7 +101,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository version is `1.0.6`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
+The current repository version is `1.0.7`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -118,7 +121,7 @@ See the [Support Matrix](docs/project/Support-Matrix.md) for verified environmen
 | `UX-TUI/` | Interface design system, visual references, and project brand assets. |
 | `Tests/` | Python integration and regression suites. |
 | `docs/guides/` | Beginner guides in English and Arabic. |
-| `docs/project/` | Current architecture, rules, support, provenance, and release notes; historical construction records are in one archive ZIP. |
+| `docs/project/` | Current architecture, rules, support, provenance, and versioned release notes. |
 
 ## Validation
 
@@ -150,7 +153,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Release Notes](docs/project/Release-Notes-v1.0.6.md)
+- [Release Notes](docs/project/Release-Notes/Release-Notes-v1.0.7.md)
 
 ## License
 

@@ -6,7 +6,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Core-Engine"))
+from test_support import CORE_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 from aipm_core.orchestrator import Acceptance, Phase, TaskPlan, VerificationError
 from aipm_core.task_ops import TaskOperations
 from aipm_core.domain import CommandEnvelope, CoreEngine

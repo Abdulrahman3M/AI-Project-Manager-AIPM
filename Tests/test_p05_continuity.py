@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 import sys, tempfile, unittest
-ROOT=Path(__file__).resolve().parents[1]; sys.path.insert(0,str(ROOT/"Core-Engine"))
+ROOT=Path(__file__).resolve().parents[1]; from test_support import CORE_ROOT; sys.path.insert(0,str(CORE_ROOT))
 from aipm_core.continuity import ContinuityManager, LockError
 from aipm_core.storage import initialize_project_state
 

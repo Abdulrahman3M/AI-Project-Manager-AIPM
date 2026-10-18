@@ -10,7 +10,8 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "Core-Engine"))
+from test_support import CORE_ROOT
+sys.path.insert(0, str(CORE_ROOT))
 
 from aipm_core.release import ReleaseError, build_release, verify_release  # noqa: E402
 

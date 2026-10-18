@@ -8,14 +8,18 @@ from typing import Sequence
 
 from aipm_core.domain import CommandEnvelope, CoreEngine
 from aipm_core.host_adapters import load_capability_matrix
-from aipm_core.storage import ManagedProject, STATE_ROOT_NAME, _canonical, default_registry_path
+from aipm_core.storage import ManagedProject, ProjectRegistry, STATE_ROOT_NAME, StateError, _canonical, _protect_platform_path, default_registry_path, initialize_project_state
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
+    parser.add_argument("--project-root")
+    parser.add_argument("--alias")
+    parser.add_argument("--destination")
+    parser.add_argument("--source")
     return parser
 
 
@@ -34,11 +38,21 @@ def _read_registered_projects(registry_path: Path) -> list[dict[str, str]]:
 
 
 def _dashboard(registry_path: Path) -> dict:
-    if not registry_path.exists():
-        return {"schema_version": "1.0", "status": "PASS", "registry_status": "NOT_REGISTERED", "projects": []}
     try:
-        entries = _read_registered_projects(registry_path)
+        registry = ProjectRegistry(registry_path)
+        if not registry.path.exists():
+            return {"schema_version": "1.0", "status": "PASS", "registry_status": "NOT_REGISTERED", "projects": []}
+        data = registry.read()
+        entries = data["projects"]
+    except StateError as error:
+        if str(error).startswith("AIPM_PLATFORM_PROTECTED"):
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "AIPM_PLATFORM_PROTECTED"}
+        if not registry_path.exists():
+            return {"schema_version": "1.0", "status": "PASS", "registry_status": "NOT_REGISTERED", "projects": []}
+        return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_REGISTRY"}
     except (OSError, ValueError, TypeError):
+        if not registry_path.exists():
+            return {"schema_version": "1.0", "status": "PASS", "registry_status": "NOT_REGISTERED", "projects": []}
         return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_REGISTRY"}
 
     projects = []
@@ -116,8 +130,54 @@ def _catalog(root: Path) -> dict:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    registry_path = Path(args.registry) if args.registry else default_registry_path()
+    if args.command.startswith("registry-"):
+        try:
+            registry = ProjectRegistry(registry_path)
+            if args.command == "registry-init":
+                data = registry.initialize()
+                result = {"schema_version": "1.0", "status": "PASS", "registry_status": "READY", "registry_path": str(registry.path), "project_count": len(data["projects"])}
+            elif args.command == "registry-register":
+                if not args.project_root or not args.project_id or not args.alias:
+                    raise StateError("REGISTRY_REGISTER_ARGUMENTS_REQUIRED")
+                root = _protect_platform_path(Path(args.project_root), operation="project registration")
+                registry.initialize()
+                state_root = _canonical(root / STATE_ROOT_NAME)
+                if state_root.exists():
+                    manifest = json.loads((state_root / "Project-Manifest.json").read_text(encoding="utf-8"))
+                    if not isinstance(manifest, dict):
+                        raise StateError("INVALID_PROJECT_STATE")
+                    if manifest.get("project_id") != args.project_id or manifest.get("state_root_name") != STATE_ROOT_NAME:
+                        raise StateError("PROJECT_STATE_IDENTITY_CONFLICT")
+                    project = ManagedProject(args.project_id, args.alias.strip(), _canonical(root), state_root)
+                else:
+                    project = initialize_project_state(root, args.project_id, args.alias)
+                entry = registry.register(project)
+                result = {"schema_version": "1.0", "status": "PASS", "registered": entry}
+            elif args.command == "registry-unregister":
+                if not args.project_id:
+                    raise StateError("PROJECT_ID_REQUIRED")
+                entry = registry.unregister(args.project_id)
+                result = {"schema_version": "1.0", "status": "PASS", "unregistered": entry, "project_state_deleted": False}
+            elif args.command == "registry-backup":
+                if not args.destination:
+                    raise StateError("BACKUP_DESTINATION_REQUIRED")
+                backup = registry.backup(Path(args.destination))
+                result = {"schema_version": "1.0", "status": "PASS", "backup": str(backup), "sha256": str(backup.with_suffix(backup.suffix + ".sha256"))}
+            else:
+                if not args.source:
+                    raise StateError("RESTORE_SOURCE_REQUIRED")
+                safety_copy = registry.restore(Path(args.source))
+                result = {"schema_version": "1.0", "status": "PASS", "restored": str(Path(args.source).resolve()), "pre_restore_backup": str(safety_copy) if safety_copy else None}
+        except (OSError, ValueError, TypeError, AttributeError, json.JSONDecodeError) as error:
+            reason = str(error) if isinstance(error, StateError) else "REGISTRY_OPERATION_FAILED"
+            if reason.startswith("AIPM_PLATFORM_PROTECTED"):
+                reason = "AIPM_PLATFORM_PROTECTED"
+            result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
+        print(json.dumps(result))
+        return 0 if result["status"] == "PASS" else 1
     if args.command == "dashboard":
-        result = _dashboard(Path(args.registry) if args.registry else default_registry_path())
+        result = _dashboard(registry_path)
     elif args.command == "catalog":
         result = _catalog(Path(__file__).resolve().parents[1])
     elif args.command == "host-capabilities":
@@ -129,7 +189,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = {"schema_version": "1.0", "status": "PASS", "service": "aipm-core", "command": "health"}
     else:
         try:
-            data = json.loads(Path(args.registry).read_text(encoding="utf-8"))
+            data = ProjectRegistry(registry_path).read()
             if not isinstance(data, dict) or data.get("schema_version") != "1.0" or not isinstance(data.get("projects"), list):
                 raise ValueError("Invalid Registry")
             ids = set()
@@ -137,6 +197,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if not isinstance(entry, dict) or any(not isinstance(entry.get(key), str) or not entry[key].strip() for key in ("project_id", "root_path", "alias")) or entry["project_id"] in ids:
                     raise ValueError("Invalid Registry Entry")
                 ids.add(entry["project_id"])
+        except StateError as error:
+            reason = "AIPM_PLATFORM_PROTECTED" if str(error).startswith("AIPM_PLATFORM_PROTECTED") else str(error)
+            result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
         except (OSError, ValueError, TypeError):
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_REGISTRY"}
         else:

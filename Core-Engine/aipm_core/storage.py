@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
+import hashlib
 from pathlib import Path
 import re
 import shutil
@@ -19,6 +20,11 @@ PROJECT_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$")
 
 class StateError(ValueError):
     """Raised when a state operation would violate AIPM isolation rules."""
+
+
+def platform_root() -> Path:
+    """Resolve the installed AIPM source root from this Core package."""
+    return Path(__file__).resolve().parents[2]
 
 
 def default_registry_path() -> Path:
@@ -58,6 +64,30 @@ def _inside(child: Path, parent: Path) -> bool:
         return False
 
 
+def _overlaps(left: Path, right: Path) -> bool:
+    """Return true when either path is equal to, inside, or contains the other."""
+    return _inside(left, right) or _inside(right, left)
+
+
+def _protect_platform_path(path: Path, *, operation: str, additional_root: Path | None = None) -> Path:
+    canonical = _canonical(path)
+    roots = [platform_root()]
+    if additional_root is not None:
+        roots.append(_canonical(additional_root))
+    if any(_overlaps(canonical, _canonical(root)) for root in roots):
+        raise StateError(f"AIPM_PLATFORM_PROTECTED: {operation}")
+    return canonical
+
+
+def validate_managed_project(project: ManagedProject) -> None:
+    """Validate both the external project root and its exact owned state location."""
+    root = _protect_platform_path(project.root, operation="managed project writes")
+    expected_state = _canonical(root / STATE_ROOT_NAME)
+    supplied_state = _canonical(project.state_root)
+    if supplied_state != expected_state or supplied_state == root or not _inside(supplied_state, root):
+        raise StateError("INVALID_MANAGED_STATE_ROOT")
+
+
 def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -95,10 +125,7 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
         raise StateError("project_id must use 3-64 ASCII letters, digits, underscores, or hyphens")
     if not alias.strip():
         raise StateError("project alias is required")
-    root = _canonical(project_root)
-    platform = _canonical(platform_root) if platform_root is not None else None
-    if platform is not None and _inside(root, platform):
-        raise StateError("managed project root cannot be inside the AIPM platform repository")
+    root = _protect_platform_path(project_root, operation="project registration", additional_root=platform_root)
     legacy = _canonical(root / LEGACY_ROOT_NAME)
     state_root = _canonical(root / STATE_ROOT_NAME)
     if legacy.exists():
@@ -140,22 +167,164 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
                 shutil.rmtree(staging)
             except PermissionError as error:
                 raise StateError(f"access denied during initialization cleanup: {staging}") from error
-    return ManagedProject(project_id, alias, root, state_root)
+    project = ManagedProject(project_id, alias, root, state_root)
+    validate_managed_project(project)
+    return project
 
 
 class ProjectRegistry:
     """Pointer-only registry stored outside the platform source tree."""
 
     def __init__(self, path: Path) -> None:
-        self.path = _canonical(path)
+        self.path = _protect_platform_path(path, operation="registry storage")
         if self.path.name != "registry.json":
             raise StateError("registry must be named registry.json")
 
-    def register(self, project: ManagedProject) -> None:
-        data = {"schema_version": "1.0", "projects": [], "preferences": {}}
-        if self.path.exists():
+    @staticmethod
+    def _validate_data(data: object) -> dict:
+        if not isinstance(data, dict) or data.get("schema_version") != "1.0" or not isinstance(data.get("projects"), list):
+            raise StateError("INVALID_REGISTRY")
+        preferences = data.get("preferences", {})
+        if not isinstance(preferences, dict):
+            raise StateError("INVALID_REGISTRY")
+        projects: list[dict[str, str]] = []
+        ids: set[str] = set()
+        roots: set[str] = set()
+        for entry in data["projects"]:
+            if not isinstance(entry, dict) or any(not isinstance(entry.get(key), str) or not entry[key].strip() for key in ("project_id", "root_path", "alias")):
+                raise StateError("INVALID_REGISTRY_ENTRY")
+            project_id, root_text = entry["project_id"], entry["root_path"]
+            if not PROJECT_ID.fullmatch(project_id) or project_id in ids or not Path(root_text).is_absolute():
+                raise StateError("INVALID_REGISTRY_ENTRY")
+            root = _protect_platform_path(Path(root_text), operation="registered project pointer")
+            normalized_root = os.path.normcase(str(root))
+            if normalized_root in roots:
+                raise StateError("INVALID_REGISTRY_ENTRY")
+            ids.add(project_id)
+            roots.add(normalized_root)
+            projects.append({"project_id": project_id, "root_path": str(root), "alias": entry["alias"].strip()})
+        return {"schema_version": "1.0", "projects": projects, "preferences": preferences}
+
+    def read(self) -> dict:
+        if not self.path.exists():
+            return {"schema_version": "1.0", "projects": [], "preferences": {}}
+        try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
-        projects = [entry for entry in data["projects"] if entry["project_id"] != project.project_id]
-        projects.append({"project_id": project.project_id, "root_path": str(project.root), "alias": project.alias})
-        data["projects"] = projects
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise StateError("INVALID_REGISTRY") from error
+        return self._validate_data(data)
+
+    def initialize(self) -> dict:
+        if self.path.exists():
+            return self.read()
+        data = {"schema_version": "1.0", "projects": [], "preferences": {}}
         _atomic_json(self.path, data)
+        return data
+
+    def update_preferences(self, preferences: dict) -> dict:
+        if not isinstance(preferences, dict):
+            raise StateError("INVALID_REGISTRY_PREFERENCES")
+        data = self.read()
+        updated = {**data, "preferences": preferences}
+        _atomic_json(self.path, updated)
+        return updated
+
+    def register(self, project: ManagedProject) -> dict[str, str]:
+        validate_managed_project(project)
+        if not project.root.is_dir():
+            raise StateError("PROJECT_ROOT_NOT_FOUND")
+        manifest_path = project.state_root / "Project-Manifest.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise StateError("INVALID_PROJECT_STATE") from error
+        if manifest.get("project_id") != project.project_id or manifest.get("state_root_name") != STATE_ROOT_NAME:
+            raise StateError("INVALID_PROJECT_STATE")
+        data = self.read()
+        new_entry = {"project_id": project.project_id, "root_path": str(project.root), "alias": project.alias.strip()}
+        for entry in data["projects"]:
+            if entry["project_id"] == project.project_id and entry["root_path"] != new_entry["root_path"]:
+                raise StateError("PROJECT_ID_CONFLICT")
+            if entry["root_path"] == new_entry["root_path"] and entry["project_id"] != project.project_id:
+                raise StateError("PROJECT_ALREADY_REGISTERED")
+        projects = [entry for entry in data["projects"] if entry["project_id"] != project.project_id]
+        projects.append(new_entry)
+        updated = {**data, "projects": projects}
+        _atomic_json(self.path, updated)
+        return new_entry
+
+    def unregister(self, project_id: str) -> dict[str, str]:
+        data = self.read()
+        matches = [entry for entry in data["projects"] if entry["project_id"] == project_id]
+        if not matches:
+            raise StateError("PROJECT_NOT_REGISTERED")
+        updated = {**data, "projects": [entry for entry in data["projects"] if entry["project_id"] != project_id]}
+        _atomic_json(self.path, updated)
+        return matches[0]
+
+    def backup(self, destination: Path) -> Path:
+        target = _protect_platform_path(destination, operation="registry backup")
+        if target == self.path or target.exists():
+            raise StateError("BACKUP_DESTINATION_EXISTS")
+        if target.suffix.casefold() != ".json":
+            raise StateError("BACKUP_FILE_MUST_BE_JSON")
+        payload = self.path.read_bytes()
+        # Reject a malformed source before preserving it as a recovery artifact.
+        self._validate_data(json.loads(payload.decode("utf-8")))
+        checksum_path = target.with_suffix(target.suffix + ".sha256")
+        if checksum_path.exists():
+            raise StateError("BACKUP_DESTINATION_EXISTS")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        _write_exclusive(target, payload)
+        checksum = hashlib.sha256(payload).hexdigest()
+        try:
+            _write_exclusive(checksum_path, f"{checksum}  {target.name}\n".encode("ascii"))
+        except StateError:
+            target.unlink(missing_ok=True)
+            raise
+        return target
+
+    def restore(self, source: Path) -> Path | None:
+        backup = _protect_platform_path(source, operation="registry restore source")
+        if not backup.is_file() or backup == self.path:
+            raise StateError("RESTORE_SOURCE_NOT_FOUND")
+        try:
+            payload = backup.read_bytes()
+            sidecar = backup.with_suffix(backup.suffix + ".sha256")
+            if sidecar.exists():
+                expected = sidecar.read_text(encoding="ascii").split()[0]
+                if hashlib.sha256(payload).hexdigest() != expected:
+                    raise StateError("BACKUP_CHECKSUM_MISMATCH")
+            restored = self._validate_data(json.loads(payload.decode("utf-8")))
+        except (OSError, UnicodeError, json.JSONDecodeError, IndexError) as error:
+            raise StateError("INVALID_RESTORE_SOURCE") from error
+        safety_copy = None
+        if self.path.exists():
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            safety_copy = self.path.with_name(f"registry.pre-restore-{stamp}-{uuid4().hex[:8]}.json")
+            self.backup(safety_copy)
+        _atomic_json(self.path, restored)
+        return safety_copy
+
+
+def _write_exclusive(path: Path, payload: bytes) -> None:
+    descriptor = None
+    created = False
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        created = True
+        with os.fdopen(descriptor, "wb") as stream:
+            descriptor = None
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except FileExistsError as error:
+        raise StateError("BACKUP_DESTINATION_EXISTS") from error
+    except OSError as error:
+        if created:
+            path.unlink(missing_ok=True)
+        raise StateError("BACKUP_WRITE_FAILED") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)

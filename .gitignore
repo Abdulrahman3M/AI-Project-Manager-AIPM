@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .test-workspace/
+Shared-Project-State/
 Releases/
 Plugins/Dist/*
 !Plugins/Dist/README.md

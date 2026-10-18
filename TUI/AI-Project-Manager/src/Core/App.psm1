@@ -531,7 +531,9 @@ function Get-AipmPageLines {
         'Help' {
             $lines.Add('Up/Down: Move Selection | Enter: Open Or Select | Esc: Back')
             $lines.Add('Type A Number: Select Directly | /: Search Actions | ?: Help | F1: Help | Q: Request Exit')
-            $lines.Add('All Portfolio, Task, Phase, Evidence, Skill And Plugin Screens Are Read-Only.')
+            $lines.Add('Portfolio, Task, Phase, Evidence, Skill And Plugin Screens Are Read-Only.')
+            $lines.Add('Registry Management Can Register Projects And Back Up Or Restore Registry Pointers.')
+            $lines.Add('AIPM Core Blocks Managed Project Roots And Registry Files Inside The AIPM Installation.')
             $lines.Add('Unverified Means The Required Source Evidence Is Missing Or Could Not Be Checked.')
         }
         'About' {
@@ -543,6 +545,181 @@ function Get-AipmPageLines {
         default { $lines.Add('No Data Is Available For This View.') }
     }
     return @($lines)
+}
+
+function Get-AipmDefaultRegistryPath {
+    $base = $env:LOCALAPPDATA
+    if (-not $base) {
+        $profilePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+        if (Test-IsWindows) { $base = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData) }
+        elseif ($profilePath) { $base = Join-Path $profilePath '.local' }
+    }
+    if (-not $base) { throw 'A Per-User Registry Location Could Not Be Resolved.' }
+    return [System.IO.Path]::GetFullPath((Join-Path (Join-Path $base 'AI-Project-Manager') 'registry.json'))
+}
+
+function Resolve-AipmRegistryPath {
+    param([Parameter(Mandatory)][string]$Root, [string]$RequestedPath = '', [switch]$ForceChoose)
+    if ($RequestedPath) { return [System.IO.Path]::GetFullPath($RequestedPath) }
+    if (-not $ForceChoose) {
+        $configured = Get-UserSetting -Name 'registry_path' -Default ''
+        if ($configured) { return [System.IO.Path]::GetFullPath($configured) }
+    }
+    $defaultPath = Get-AipmDefaultRegistryPath
+    while ($true) {
+        $items = @(
+            (New-MenuItem -Label 'Use Default Registry Location' -Desc $defaultPath -Value 'default' -Icon 'Yes'),
+            (New-MenuItem -Label 'Choose A Different Location' -Desc 'Enter A Custom Full Path Ending In registry.json.' -Value 'custom' -Icon 'Settings'),
+            (New-MenuItem -Label 'Exit Without Setup' -Desc 'Do Not Create Or Select A Registry.' -Value 'cancel' -Icon 'Exit')
+        )
+        $choice = Show-Menu -Title 'Project Registry Setup' -Description 'Choose Where AIPM Will Store Project Pointers. Project State Remains In Each Project.' -Items $items
+        if ($choice -in @($null, 'cancel', 'Exit', '__QUIT__')) { return $null }
+        $path = $defaultPath
+        if ($choice -eq 'custom') {
+            $entered = Read-ValidatedInput -Prompt 'Registry File Path' -Help 'Choose A Private Location Outside The AIPM Installation. The Parent Folder Can Be Created.' -Example $defaultPath -Default '' -Validate {
+                param($text)
+                if (-not $text.Trim()) { return 'Enter A Registry File Path.' }
+                try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Path.' }
+                if ([System.IO.Path]::GetExtension($candidate) -ne '.json') { return 'The Registry File Must End In .json.' }
+                if ([System.IO.Path]::GetFileName($candidate) -ine 'registry.json') { return 'Name The Registry File registry.json.' }
+                return $null
+            }
+            if (-not $entered) { continue }
+            $path = [System.IO.Path]::GetFullPath($entered.Trim())
+        }
+        $initialized = Invoke-AipmCore -AppRoot $Root -Command 'registry-init' -RegistryPath $path
+        if ($initialized.Status -eq 'PASS') {
+            if (-not (Set-UserSetting -Name 'registry_path' -Value $path)) {
+                Show-Notice -Title 'Registry Path Was Not Saved' -Lines @('This Session Can Continue, But AIPM Will Ask Again Next Time.') -Kind Warning
+            }
+            return $path
+        }
+        Show-Notice -Title 'Registry Setup Was Blocked' -Lines @([string]$initialized.Reason, 'Choose A Location Outside The AIPM Installation And Try Again.') -Kind Error
+    }
+}
+
+function Get-AipmRegistryEntries {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
+    $result = Invoke-AipmCore -AppRoot $Root -Command 'list' -RegistryPath $RegistryPath
+    if ($result.Status -ne 'PASS') { return [pscustomobject]@{ Status='BLOCKED'; Reason=$result.Reason; Projects=@() } }
+    return [pscustomobject]@{ Status='PASS'; Reason=''; Projects=@((Get-AipmField $result.Data 'projects' @())) }
+}
+
+function Invoke-AipmRegistryManagement {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
+    $currentPath = [System.IO.Path]::GetFullPath($RegistryPath)
+    while ($true) {
+        $inventory = Get-AipmRegistryEntries -Root $Root -RegistryPath $currentPath
+        $inventoryDescription = if ($inventory.Status -eq 'PASS') { ('{0} Project(s) | {1}' -f $inventory.Projects.Count, $currentPath) } else { ('Registry Read Blocked: ' + $inventory.Reason) }
+        $actions = @(
+            (New-MenuItem -Label 'View Registered Projects' -Desc 'Read Project IDs, Names, And Their Root Paths.' -Value 'view' -Icon 'Project'),
+            (New-MenuItem -Label 'Register A Project' -Desc 'Create Its Shared State Folder, Then Add A Registry Pointer.' -Value 'register' -Icon 'Yes'),
+            (New-MenuItem -Label 'Unregister A Project' -Desc 'Remove Only The Registry Pointer; Project Files And State Stay In Place.' -Value 'unregister' -Icon 'No'),
+            (New-MenuItem -Label 'Back Up Registry' -Desc 'Create A JSON Copy And SHA-256 Sidecar; Existing Files Are Never Overwritten.' -Value 'backup' -Icon 'Handoff'),
+            (New-MenuItem -Label 'Restore Registry Backup' -Desc 'Validate Its Checksum And Save A Pre-Restore Safety Copy.' -Value 'restore' -Icon 'Run'),
+            (New-MenuItem -Label 'Change Registry Location' -Desc 'Select Or Create Another Registry; The Current Registry Is Kept Untouched.' -Value 'location' -Icon 'Settings'),
+            (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
+        )
+        $choice = Show-Menu -Title 'Registry Management' -Description $inventoryDescription -Items $actions
+        if ($choice -in @($null, 'back', 'Back')) { return $currentPath }
+        if ($choice -eq '__HELP__') {
+            [void](Show-AipmPage -Title 'Registry Management Help' -Lines @(
+                'The Registry Stores Project IDs, Aliases, And Root Paths Only.',
+                'Project Task State Is Stored In Shared-Project-State-Manager Inside Each Managed Project.',
+                'Unregister Removes A Pointer Only; It Never Deletes Project Files Or State.',
+                'Registry Files And Backups Must Remain Outside The AIPM Installation.'
+            ))
+            continue
+        }
+        if ($choice -eq '__QUIT__') { return $currentPath }
+        if ($inventory.Status -ne 'PASS' -and $choice -ne 'location') {
+            Show-Notice -Title 'Registry Is Unavailable' -Lines @([string]$inventory.Reason) -Kind Error
+            continue
+        }
+        if ($choice -eq 'view') {
+            $lines = @('Registry Path: ' + $currentPath, 'Registered Projects: ' + $inventory.Projects.Count, '')
+            foreach ($project in $inventory.Projects) {
+                $lines += ([string]$project.alias + ' | ' + [string]$project.project_id)
+                $lines += ('  Root: ' + [string]$project.root_path)
+            }
+            if ($inventory.Projects.Count -eq 0) { $lines += 'No Projects Are Registered Yet.' }
+            [void](Show-AipmPage -Title 'Registered Projects' -Lines $lines)
+            continue
+        }
+        if ($choice -eq 'register') {
+            $projectPath = Read-ValidatedInput -Prompt 'Project Folder Path' -Help 'Enter The Existing Project Folder. AIPM Will Add Only Its Managed State Folder.' -Example 'D:\Work\My-Project' -Default '' -Validate {
+                param($text)
+                try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Folder Path.' }
+                if (-not (Test-Path -LiteralPath $candidate -PathType Container)) { return 'The Project Folder Must Already Exist.' }
+                return $null
+            }
+            if (-not $projectPath) { continue }
+            $defaultAlias = Split-Path -Leaf ([System.IO.Path]::GetFullPath($projectPath))
+            $alias = Read-ValidatedInput -Prompt 'Project Display Name' -Help 'This Name Appears In The AIPM Dashboard.' -Example $defaultAlias -Default $defaultAlias -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Project Name.' }; return $null }
+            if (-not $alias) { continue }
+            $confirm = Show-Confirm -Title 'Register This Project?' -Message ('AIPM Will Create Shared-Project-State-Manager Under ' + $projectPath + '. It Will Not Edit Project Source Files.') -YesLabel 'Create State And Register' -YesDesc 'Write AIPM-Owned State Metadata, Then Add The Registry Entry.' -NoLabel 'Cancel' -NoDesc 'Make No Project Or Registry Changes.' -Default $false
+            if (-not $confirm) { continue }
+            $projectId = 'Project-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
+            $registered = Invoke-AipmCore -AppRoot $Root -Command 'registry-register' -RegistryPath $currentPath -ProjectRoot $projectPath -ProjectId $projectId -Alias $alias.Trim()
+            if ($registered.Status -eq 'PASS') { Show-Notice -Title 'Project Registered' -Lines @('The project is now listed. Its source files were not changed.') -Kind Success }
+            else { Show-Notice -Title 'Project Registration Failed' -Lines @([string]$registered.Reason) -Kind Error }
+            continue
+        }
+        if ($choice -eq 'unregister') {
+            if ($inventory.Projects.Count -eq 0) { Show-Notice -Title 'No Projects To Unregister' -Lines @('The Registry Is Empty.') -Kind Info; continue }
+            $projectItems = @($inventory.Projects | ForEach-Object { New-MenuItem -Label ([string]$_.alias) -Desc ([string]$_.root_path) -Value ([string]$_.project_id) -Icon 'Project' })
+            $projectItems += New-MenuItem -Label 'Cancel' -Desc 'Return Without Removing A Registry Entry.' -Value 'cancel' -Icon 'Exit'
+            $selected = Show-Menu -Title 'Select Project To Unregister' -Items $projectItems
+            if (-not $selected -or $selected -eq 'cancel') { continue }
+            $entry = @($inventory.Projects | Where-Object { $_.project_id -eq $selected }) | Select-Object -First 1
+            $confirm = Show-Confirm -Title 'Remove Registry Pointer?' -Message ('This removes ' + [string]$entry.alias + ' from this registry only. Its project files and Shared-Project-State-Manager remain untouched.') -YesLabel 'Remove Pointer' -YesDesc 'Keep All Project Files And State.' -NoLabel 'Cancel' -NoDesc 'Keep The Registry Entry.' -Default $false
+            if ($confirm) {
+                $removed = Invoke-AipmCore -AppRoot $Root -Command 'registry-unregister' -RegistryPath $currentPath -ProjectId ([string]$selected)
+                if ($removed.Status -eq 'PASS') { Show-Notice -Title 'Project Unregistered' -Lines @('The Registry Pointer Was Removed. Project Files And State Were Kept.') -Kind Success }
+                else { Show-Notice -Title 'Unregister Failed' -Lines @([string]$removed.Reason) -Kind Error }
+            }
+            continue
+        }
+        if ($choice -eq 'backup') {
+            $suggested = Join-Path ([Environment]::GetFolderPath([Environment+SpecialFolder]::MyDocuments)) ('AIPM-Registry-Backup-' + [DateTime]::Now.ToString('yyyyMMdd-HHmmss') + '.json')
+            $destination = Read-ValidatedInput -Prompt 'Backup File Path' -Help 'Use A New .json File Path Outside The AIPM Installation.' -Example $suggested -Default $suggested -Validate {
+                param($text)
+                try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full File Path.' }
+                if ([System.IO.Path]::GetExtension($candidate) -ne '.json') { return 'The Backup File Must End In .json.' }
+                if (Test-Path -LiteralPath $candidate) { return 'That File Already Exists; Choose A New File Name.' }
+                return $null
+            }
+            if (-not $destination) { continue }
+            $backup = Invoke-AipmCore -AppRoot $Root -Command 'registry-backup' -RegistryPath $currentPath -Destination $destination
+            if ($backup.Status -eq 'PASS') { Show-Notice -Title 'Registry Backup Created' -Lines @(('Backup: ' + [string]$backup.Data.backup), ('SHA-256: ' + [string]$backup.Data.sha256)) -Kind Success }
+            else { Show-Notice -Title 'Backup Failed' -Lines @([string]$backup.Reason) -Kind Error }
+            continue
+        }
+        if ($choice -eq 'restore') {
+            $source = Read-ValidatedInput -Prompt 'Backup File Path' -Help 'Enter The Registry Backup JSON. A SHA-256 Sidecar Is Checked When Present.' -Example 'C:\Users\YourName\Documents\AIPM-Registry-Backup.json' -Default '' -Validate {
+                param($text)
+                try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full File Path.' }
+                if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { return 'The Backup File Was Not Found.' }
+                return $null
+            }
+            if (-not $source) { continue }
+            $confirm = Show-Confirm -Title 'Restore Registry Backup?' -Message 'AIPM Validates The Backup And Saves A Pre-Restore Copy Of The Current Registry Before Replacing It.' -YesLabel 'Validate And Restore' -YesDesc 'Replace Registry Contents After All Checks Pass.' -NoLabel 'Cancel' -NoDesc 'Keep The Current Registry Unchanged.' -Default $false
+            if ($confirm) {
+                $restored = Invoke-AipmCore -AppRoot $Root -Command 'registry-restore' -RegistryPath $currentPath -Source $source
+                if ($restored.Status -eq 'PASS') { Show-Notice -Title 'Registry Restored' -Lines @(('Safety Copy: ' + [string]$restored.Data.pre_restore_backup)) -Kind Success }
+                else { Show-Notice -Title 'Restore Failed' -Lines @([string]$restored.Reason) -Kind Error }
+            }
+            continue
+        }
+        if ($choice -eq 'location') {
+            $newPath = Resolve-AipmRegistryPath -Root $Root -ForceChoose
+            if ($newPath -and $newPath -ne $currentPath) {
+                $currentPath = $newPath
+                Show-Notice -Title 'Registry Location Changed' -Lines @('The New Registry Is Selected. The Previous Registry Was Kept Untouched; Its Projects Were Not Copied.') -Kind Success
+            }
+            continue
+        }
+    }
 }
 
 function Show-AipmPage {
@@ -574,6 +751,8 @@ function Show-AipmPage {
 function Start-TuiApp {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Root, [string]$RegistryPath = '')
+    $RegistryPath = Resolve-AipmRegistryPath -Root $Root -RequestedPath $RegistryPath
+    if (-not $RegistryPath) { return }
     $script:AppRoot = $Root
     Apply-AppDesign -Root $Root
     $version = Get-AppVersion $Root
@@ -608,6 +787,7 @@ function Start-TuiApp {
             (New-MenuItem -Label 'Timeline' -Desc 'Review Verified Update Metadata, Not Invented Events.' -Value 'Timeline' -Icon 'Handoff'),
             (New-MenuItem -Label 'Skills & Plugins' -Desc 'Review Approved Skills And The Unverified Project-Agent Bridge Package.' -Value 'Skills & Plugins' -Icon 'Item'),
             (New-MenuItem -Label 'Assistant Console' -Desc 'Offline Evidence View; No AI Session Is Implied.' -Value 'Assistant Console' -Icon 'Agent'),
+            (New-MenuItem -Label 'Registry Management' -Desc 'Choose Registry Location, Register Projects, And Back Up Or Restore The Registry.' -Value 'Registry Management' -Icon 'Settings'),
             (New-MenuItem -Label 'Settings' -Desc 'Change UI Preferences Only.' -Value 'Settings' -Icon 'Settings'),
             (New-MenuItem -Label 'Help' -Desc 'Keyboard, Evidence And Read-Only Behavior.' -Value 'Help' -Icon 'About'),
             (New-MenuItem -Label 'Refresh' -Desc 'Read The Latest Core State Again.' -Value 'Refresh' -Icon 'Run'),
@@ -638,6 +818,15 @@ function Start-TuiApp {
             if ($refresh.Status -eq 'PASS') { $refreshNotice = '' }
             elseif ($refresh.Preserved) { $refreshNotice = 'Refresh Failed: ' + $refresh.Reason + ' | Last Snapshot Preserved' }
             else { $refreshNotice = 'Refresh Failed: ' + $refresh.Reason + ' | No Snapshot Available' }
+            continue
+        }
+        elseif ($choice -eq 'Registry Management') {
+            $previousRegistryPath = $RegistryPath
+            $RegistryPath = Invoke-AipmRegistryManagement -Root $Root -RegistryPath $RegistryPath
+            if ($RegistryPath -ne $previousRegistryPath) {
+                $session = Get-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath
+                $refreshNotice = ''
+            }
             continue
         }
         elseif ($choice -like 'project:*') {

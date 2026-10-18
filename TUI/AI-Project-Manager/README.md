@@ -1,6 +1,6 @@
 # AI Project Manager
 
-An Evidence-First, Read-Only PowerShell Terminal Dashboard For AIPM Core.
+An Evidence-First PowerShell Terminal Workspace For AIPM Core, With Guarded Project-Registry Administration.
 
 ## Requirements
 
@@ -19,13 +19,15 @@ On Windows, Run `AIPM.bat`. It Prefers Windows Terminal When Available, Starts P
 ./tests/Run-Tests.ps1
 ```
 
-`-RegistryPath` Reads A Registry Through The Core Dashboard Command; It Does Not Write To It. `-ScriptedInput` Is Reserved For Tests. Exit Codes: `0` Normal Exit, `1` Unexpected Runtime Error, `2` Non-Interactive Launch Refused, `3` Required PowerShell Launcher Missing.
+On First Launch Without `-RegistryPath`, The TUI Asks Whether To Use `%LOCALAPPDATA%\AI-Project-Manager\registry.json` Or Choose Another `registry.json` Path Outside The AIPM Installation. It Stores That Choice In `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` Explicitly Counts As Choosing The Path. `-ScriptedInput` Is Reserved For Tests. Exit Codes: `0` Normal Exit, `1` Unexpected Runtime Error, `2` Non-Interactive Launch Refused, `3` Required PowerShell Launcher Missing.
 
 ## View Modes
 
 The Default Is **Task Dashboard**. Open **Settings** And **Change View Mode** To Select **Command Palette** Or **Assistant Console**. The Choice Is Stored As A Per-User UI Preference Only. Assistant Console Is An Offline, Read-Only Evidence View; It Does Not Claim An AI Or Agent Session.
 
-All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **Agents & Handoffs**, **Timeline**, **Skills & Plugins**, **Settings**, **Help**, And **About**. Project Data Comes From AIPM Core. Missing Weights, Run Counts, Histories, Or Live Process Evidence Stay **Unknown** Or **Unverified**. No Project Mutations Are Available In This Phase.
+All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **Agents & Handoffs**, **Timeline**, **Skills & Plugins**, **Registry Management**, **Settings**, **Help**, And **About**. The dashboard and project/task views are read-only. Registry Management can register a project (creating only `Shared-Project-State-Manager/` after confirmation), unregister its pointer without deleting any project files, back up or restore registry JSON, and switch registry locations. Missing weights, run counts, histories, or live process evidence stay **Unknown** or **Unverified**.
+
+The registry contains project IDs, display names, and root paths only. Task and continuity state remains in each managed project's `Shared-Project-State-Manager/`. A registry backup includes a SHA-256 sidecar; restore validates it when present and saves a pre-restore safety copy. Switching locations does not copy or delete existing registries.
 
 ## Keyboard
 
@@ -39,13 +41,17 @@ All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **A
 
 The TUI Loads Semantic Color Roles And Icon Tiers From The Repository's `UX-TUI/theme.json` And `UX-TUI/semantic-icons.json`. Automatic Icons Prefer Emoji In A Detected Modern Terminal, Then Symbols, Then ASCII. Use `AIPM_ICONS=emoji|symbol|ascii|none` Or `NO_COLOR=1` To Override. Symbol Font And Width Differences Are Terminal-Dependent; Set `AIPM_ICONS=ascii` If A Glyph Is Unavailable.
 
-Only UI Preferences Are Stored Under The Per-User `AIPM` Settings Directory (`%APPDATA%\AIPM` On Windows, `~/.config/AIPM` On Linux/macOS). `AIPM_DATA_DIR` Overrides That Location For Tests Or Portable Use. Core Project State Is Never Copied Into UI Settings.
+UI Preferences And The Selected Registry Path Are Stored Under The Per-User `AIPM` Settings Directory (`%APPDATA%\AIPM` On Windows, `~/.config/AIPM` On Linux/macOS). The registry itself defaults to `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows. `AIPM_DATA_DIR` Overrides The UI Settings Location For Tests Or Portable Use. Project State Is Never Copied Into UI Settings Or The AIPM Repository.
+
+## Safety Boundary
+
+AIPM Core refuses to manage a project, registry, or registry backup whose path overlaps the AIPM installation. This prevents AIPM's own project-management functions from writing into its source tree. It is not a Windows security boundary: another AI process with direct write permission can bypass Core. Keep AIPM outside the agent's writable workspace or restrict it through the host sandbox/Windows ACL. Only a direct, explicit request to develop or repair AIPM authorizes changes to its files.
 
 ## Verification And Limits
 
 Automated Renderer Tests Cover Stable Frames, Changed-Row Styling, Removed Rows, Resize Invalidation, Cursor Restoration, Input Modes, Read-Only Core Integration, And The ASCII Fallback. This Does Not Prove Visual Appearance Or Flicker Behavior In A Specific Terminal. Historical P08 implementation evidence is preserved in the repository [Build History Archive](../../docs/project/Build-History-Archive.zip); current verification limits are in the repository Support Matrix. Files In `UX-TUI/Visual-References/` Are Illustrations, Not Application Screenshots.
 
-For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Versioned Update Notes](../../docs/project/Release-Notes-v1.0.6.md). This TUI Version Is `1.0.6`; repository versioning does not install it into an AI host.
+For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Versioned Update Notes](../../docs/project/Release-Notes/Release-Notes-v1.0.7.md). Repository Versioning Does Not Install The TUI Into An AI Host.
 
 ## License And Notices
 

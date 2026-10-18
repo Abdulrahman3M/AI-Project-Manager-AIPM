@@ -273,27 +273,45 @@ Assert-True 'Esc cancels a prompt' ($null -eq (Invoke-Ui { Read-ValidatedInput -
 
 Set-TestGroup 'Whole application (scripted)'
 $registry = Join-Path (Get-TestWork) 'registry.json'
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '12{Enter}13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '13{Enter}14'
 Assert-True 'the Core-backed dashboard, About page and safe Exit run without errors' ($ui.Error -eq '' -and $ui.Output.Contains('Task Dashboard') -and $ui.Output.Contains('About')) $ui.Error
-Assert-True 'the product name and 1.0.6 version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, 'AI Project Manager v1.0.6')).Count -ge 2)
+$runtimeVersion = (Get-Content -LiteralPath (Join-Path (Get-TestRoot) 'VERSION') -Raw).Trim()
+Assert-True 'the product name and version stay adjacent on the dashboard and primary pages' (([regex]::Matches($ui.Output, ('AI Project Manager v' + $runtimeVersion))).Count -ge 2)
 $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 [System.IO.File]::WriteAllText($malformedRegistry, '{"schema_version":"invalid"}', (New-Object System.Text.UTF8Encoding($false)))
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '14'
 Assert-True 'a blocked Core registry stays visibly Unverified without crashing the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Core Blocked') -and $ui.Output.Contains('UNVERIFIED')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '07{Enter}13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '07{Enter}14'
 Assert-True 'Skills and Plugins page reports the project license and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('AI Project Manager Personal Use License') -and $ui.Output.Contains('Unverified')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '?{Enter}13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '?{Enter}14'
 Assert-True 'question mark opens keyboard and evidence Help' ($ui.Error -eq '' -and $ui.Output.Contains('Up/Down: Move Selection')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '/help{Enter}{Enter}13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '/help{Enter}{Enter}14'
 Assert-True 'slash search opens matching Help action' ($ui.Error -eq '' -and $ui.Output.Contains('Search: help')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } 'q0213'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } 'q0214'
 Assert-True 'Q requires explicit confirmation before leaving the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Exit AI Project Manager?')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '090102Exit{Enter}'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '100102Exit{Enter}'
 Assert-True 'Command Palette mode persists as a UI preference' ($ui.Error -eq '' -and $ui.Output.Contains('Command Palette') -and (Get-AipmViewMode) -eq 'Command Palette') $ui.Error
 [void](Set-UserSetting -Name 'view_mode' -Value 'Assistant Console')
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '08{Enter}13'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '08{Enter}14'
 Assert-True 'Assistant Console states that no live AI session is connected' ($ui.Error -eq '' -and $ui.Output.Contains('Assistant Console') -and $ui.Output.Contains('No AI Session Is Connected')) $ui.Error
 [void](Set-UserSetting -Name 'view_mode' -Value 'Task Dashboard')
+$previousLocalAppData = $env:LOCALAPPDATA
+$env:LOCALAPPDATA = Join-Path (Get-TestWork) 'Local App Data'
+[void](Set-UserSetting -Name 'registry_path' -Value '')
+$defaultRegistry = Join-Path (Join-Path $env:LOCALAPPDATA 'AI-Project-Manager') 'registry.json'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } '0114'
+Assert-True 'first launch asks before creating the default per-user registry' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and $ui.Output.Contains('Use Default Registry Location') -and (Test-Path -LiteralPath $defaultRegistry -PathType Leaf)) $ui.Error
+Assert-Equal 'first-run registry choice is remembered in per-user settings' ([System.IO.Path]::GetFullPath($defaultRegistry)) (Get-UserSetting -Name 'registry_path')
+[void](Set-UserSetting -Name 'registry_path' -Value '')
+$customRegistry = Join-Path (Join-Path (Get-TestWork) 'Custom Registry Location') 'registry.json'
+$customKeys = '02' + $customRegistry + '{Enter}14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } $customKeys
+Assert-True 'first-run setup accepts a custom full path and creates registry.json there' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and (Test-Path -LiteralPath $customRegistry -PathType Leaf)) $ui.Error
+Assert-Equal 'custom registry choice is saved without changing the selected path' ([System.IO.Path]::GetFullPath($customRegistry)) (Get-UserSetting -Name 'registry_path')
+$env:LOCALAPPDATA = $previousLocalAppData
+[void](Set-UserSetting -Name 'registry_path' -Value '')
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '090714'
+Assert-True 'the main TUI exposes a dedicated Registry Management section' ($ui.Error -eq '' -and $ui.Output.Contains('Registry Management') -and $ui.Output.Contains('View Registered Projects') -and $ui.Output.Contains('Back Up Registry')) $ui.Error
 
 Set-TestGroup 'Core State Integration'
 $fixtureRoot = Join-Path (Get-TestWork) 'Registered Project Fixture'
@@ -303,12 +321,12 @@ $task = @{ title='Verify AIPM TUI'; scope='Read-Only Core Integration'; plan='Re
 $state = @{ schema_version='1.1'; revision=0; project_id='P08-Fixture'; task_id='Task-P08'; task_status='COMPLETE'; active_phase='P08'; state_health='CONSISTENT'; last_verified_action='P08 test fixture'; next_action='Continue read-only review.'; branch='main'; head_sha=('a' * 40); updated_at='2026-10-16T10:00:00Z'; updated_by='TUI Test'; tasks=@{ 'Task-P08'=$task }; diff_fingerprint=$null }
 $statePath = Join-Path $stateRoot 'State-Manifest.json'
 [System.IO.File]::WriteAllText($statePath, ($state | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false)))
-$registeredPath = Join-Path (Get-TestWork) 'registered fixture registry.json'
+$registeredPath = Join-Path (Get-TestWork) 'registry.json'
 $registered = @{ schema_version='1.0'; projects=@(@{ project_id='P08-Fixture'; root_path=$fixtureRoot; alias='Registered Fixture' }); preferences=@{} }
 [System.IO.File]::WriteAllText($registeredPath, ($registered | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}14'
-Assert-True 'project detail is derived from the registered Core state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '03{Enter}14'
-Assert-True 'task view lists verified tasks from Core without local state copies' ($ui.Error -eq '' -and $ui.Output.Contains('Verify AIPM TUI') -and $ui.Output.Contains('Passed')) $ui.Error
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '05{Enter}14'
-Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) $ui.Error
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}15'
+Assert-True 'project detail is derived from the registered Core state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) ($ui.Error + $ui.Output)
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '03{Enter}15'
+Assert-True 'task view lists verified tasks from Core without local state copies' ($ui.Error -eq '' -and $ui.Output.Contains('Verify AIPM TUI') -and $ui.Output.Contains('Passed')) ($ui.Error + $ui.Output)
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '05{Enter}15'
+Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)

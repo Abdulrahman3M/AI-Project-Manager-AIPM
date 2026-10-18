@@ -16,7 +16,7 @@ import subprocess
 from typing import Any, TYPE_CHECKING
 from uuid import uuid4
 
-from .storage import ManagedProject, StateError, _atomic_json, _canonical, _inside
+from .storage import ManagedProject, StateError, _atomic_json, _canonical, _inside, validate_managed_project
 if TYPE_CHECKING:
     from .domain import CoreEngine
 
@@ -101,9 +101,11 @@ def _process_identity(pid: int) -> dict[str, Any]:
 
 class ContinuityManager:
     def __init__(self, project: ManagedProject, engine: CoreEngine | None = None):
+        validate_managed_project(project)
         self.project, self.engine = project, engine
 
     def _bounded(self, path: Path) -> Path:
+        validate_managed_project(self.project)
         root, path = _canonical(self.project.state_root), _canonical(path)
         if path == root or not _inside(path, root):
             raise StateError('Path Must Remain Within Managed State Root')

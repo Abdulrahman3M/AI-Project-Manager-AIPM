@@ -16,7 +16,7 @@ function Get-UserSetting {
 }
 
 function Set-UserSetting {
-    param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string]$Value)
+    param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][AllowEmptyString()][string]$Value)
     $p = Get-SettingsPath
     $h = @{}
     try { if (Test-Path -LiteralPath $p -PathType Leaf) { foreach ($pr in ([System.IO.File]::ReadAllText($p) | ConvertFrom-Json).PSObject.Properties) { $h[$pr.Name] = $pr.Value } } } catch { }

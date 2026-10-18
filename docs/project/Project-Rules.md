@@ -1,5 +1,15 @@
 # AIPM Project Rules
 
+## AIPM Self-Protection
+
+When using AIPM on another project, the AIPM repository itself is protected from changes. Only a direct, explicit owner request to develop or repair AIPM permits edits to its source. The Core Engine rejects project roots, registry files, and registry backups whose paths overlap the detected AIPM installation. This is an application boundary, not an operating-system sandbox: external AI agents with direct filesystem permissions must also be constrained by their host workspace permissions or Windows ACLs.
+
+## Project Registry And State
+
+The project registry stores project IDs, display names, and root paths only. Its default location is `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, selected only after the first-run TUI prompt is accepted. The user may choose a different `registry.json` path outside the AIPM installation. Registry selection is saved in per-user AIPM UI settings; the registry itself is not stored in the AIPM repository.
+
+Each registered project's operational state remains in that project's `Shared-Project-State-Manager/` folder. Registering a project creates that AIPM-owned state folder after confirmation; it does not edit project source files. Unregistering removes only the pointer from the selected registry and never deletes the project's files or state. Registry backups are JSON plus SHA-256 sidecars; restore verifies the sidecar when present and saves a pre-restore copy before replacing the active registry. Changing the selected location does not copy or delete the previous registry.
+
 ## Authoritative Sources
 
 - `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-orchestrator` is the documented derivative.
