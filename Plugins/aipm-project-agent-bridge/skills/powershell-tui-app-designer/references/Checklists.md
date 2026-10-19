@@ -25,6 +25,9 @@ Copy the relevant list into your working notes and tick it with evidence (comman
 - [ ] Paths built with Join-Path and used with -LiteralPath.
 - [ ] Launchers: `.bat` CRLF, `.sh` LF + exec bit; run from a path with spaces.
 - [ ] Tests executed on each claimed environment; UNVERIFIED items listed.
+- [ ] Idle interactive resize returns an internal event without a key press; unchanged polls do not repaint.
+- [ ] Menu selection/search/number state and prompt text/cursor/validation survive resize; frame shrink removes stale rows.
+- [ ] Windows Terminal launch parsing and child execution are separately tested where that launcher path is used; native terminal checks are labeled separately.
 
 ## E. Release gate (phase 11)
 - [ ] `VERSION`, README badge, CHANGELOG, About screen agree.

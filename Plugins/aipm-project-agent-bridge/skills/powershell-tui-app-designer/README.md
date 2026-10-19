@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | **Skill name** | `powershell-tui-app-designer` (display name: PowerShell TUI App Designer) |
-| **Version** | 2.0.3 |
-| **Purpose** | Teach an AI agent to design, build, test, package and release professional terminal (TUI) applications in PowerShell |
+| **Version** | 1.1.0 |
+| **Purpose** | Teach an AI agent to design, build, update, diagnose, test, package and release professional PowerShell terminal applications, including resize-safe rendering and Windows Terminal launcher diagnostics |
 | **Compatibility** | Generated apps: Windows PowerShell 5.1 and PowerShell 7.x on Windows; PowerShell 7.x on Linux/macOS. Skill scripts: same |
-| **Last updated** | 2026-10-14 |
+| **Last updated** | 2026-10-19 |
 
 ## What this is
 
@@ -15,12 +15,12 @@ An **executable methodology**, not an essay. `SKILL.md` gives an agent 13 ordere
 ```text
 PowerShell TUI App Designer/
   SKILL.md              the strict procedure (start here)
-  README.md  VERSION    this file; version 2.0.3
-  Prompts/              reusable engineering prompts (flicker-free rendering)
-  references/           the rules, one topic per file (open the one SKILL.md names)
+  README.md  VERSION    this file; version 1.1.0
+  Prompts/              reusable engineering prompts (complete frame + resize lifecycle)
+  references/           architecture, reliability, launcher diagnosis, testing and design rules
   scripts/              generator, validators, test runner, packager, self-check
   templates/App/        a complete working scaffold (the generator copies it)
-  examples/             eight small, runnable patterns (+ Shared/TinyTui.ps1)
+  examples/             nine small, runnable patterns (+ Shared/TinyTui.ps1)
   assets/               illustrations of the style (not needed to apply the skill)
 ```
 
@@ -78,10 +78,14 @@ Not verified in the historical manual checks: the appearance of icon tiers in Wi
 
 The Skill preserves reusable terminal engineering practices, not any previous application's domain code, menu content or visual branding. Generalized lessons are in `references/General-Terminal-Engineering-Lessons.md`.
 
+For every new or existing TUI, the methodology now requires an audit of frame ownership and idle resize behavior. `references/Resize-And-Frame-Lifecycle-Reliability.md` gives the state machine, reusable code pattern, fault table, test cases, and manual terminal checks. `references/Windows-Terminal-Launcher-Diagnostics.md` covers evidence-led diagnosis of argument merging, including quoted trailing-backslash paths, parser reconstruction, minimal repairs, and child execution proof. The scaffold implements resize events at the shared renderer/input boundary; `examples/09-Windows-Launcher-ArgumentProbe.ps1` is a Windows-only parser repro (not a native terminal test).
+
 ## Change history
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.1.0 | 2026-10-19 | Added reusable resize/frame-lifecycle engineering, shared input/renderer implementation, regression coverage, and Windows Terminal launcher argument diagnostics and parser probe. |
+| 1.0.0 | 2026-10-18 | Reset the independent Skill release line to the AIPM-owned baseline. |
 | 2.0.3 | 2026-10-14 | ANSI in-place frames, differential updates, centralized rendering prompt, semantic colors, Emoji fallbacks and Title Case |
 | 2.0.1 | 2026-10-10 | Documentation consistency: selectable navigation, wizard guidance, corrected release history and non-screenshot asset provenance |
 | 2.0.0 | 2026-10-10 | Interactive designer, 20 presets, configurable keyboard input and visuals, and generated design wizard |
@@ -95,6 +99,6 @@ The previously documented 41-check environment results are historical **v1 resul
 
 Previous v1 PNG screenshots were removed; current SVGs are labeled illustrative, not verified real terminal captures. Consult assets/README.md for provenance.
 
-## v2 functional verification
+## Historical v2 functional verification
 
 GitHub Actions cross-platform matrix exercises Windows PowerShell 5.1, PowerShell 7 on Windows, and PowerShell 7 on Linux. The v2 checker includes generated Arrows and Search variants in addition to the default scaffold: **48 checks, 0 failures** in the completed successful run [38065211728](https://github.com/Abdulrahman3M/Universal-AI-ToolKit/actions/runs/38065211728). This validates scripted application flows, not the pixel-level appearance of each preset in an interactive terminal. v2.0.3 updates the host-selection, Emoji and Title Case design guidance plus static package checks; runtime modules are unchanged. Verify the v2.0.3 package checks through the current CI run before release. macOS remains unverified.

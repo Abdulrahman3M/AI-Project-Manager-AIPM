@@ -69,8 +69,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "eeb989826b177d9b9b7cb1bd6dd3e9fbeb72558f30a90050dda64e396d48c2c5",
-      "local_version": "1.0.0",
+      "local_sha256": "16ba597bcb521da868e65bab8d615fdff9e6eedcef9dfc401582a377a9ea0071",
+      "local_version": "1.1.0",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],

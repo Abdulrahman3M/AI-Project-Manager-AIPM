@@ -1,5 +1,14 @@
 # AIPM Change Log
 
+## [1.4.0] — TUI Reliability And Capability Distribution
+
+- Added resize-aware terminal frame lifecycle engineering to the PowerShell TUI App Designer Skill, including shared Input/Renderer templates, regression tests, reusable references, and a Windows Terminal trailing-separator argument parser probe; the Skill advances to `1.1.0`.
+- Rebuilt and validated the legacy Project Agent Bridge and all three multi-host Plugin archives from the updated Capability Library. ChatGPT/Codex, Claude Code, and Google Antigravity packages carry the `1.4.0` platform version; the independently versioned Bridge advances according to its generated metadata.
+- Includes the development work accumulated after the last published source release `v1.0.2`: guarded Registry Management, Core-backed task management and task artifact controls, scoped attached-file search, project/agent boundaries, multi-host capability packaging, improved TUI navigation and pagination, beginner guides, and release/documentation maintenance.
+- Synchronized platform and PowerShell TUI versions at `1.4.0`; created a verified source ZIP and SHA-256 sidecar for this release.
+- Replaced the Windows access probe's retry-prone temporary-file creation with a single exclusive probe, so denied ACLs fail promptly and cleanly instead of looping through temporary names.
+- External host installation, live cross-agent/provider handoff, native Antigravity acceptance, and other previously unverified P09 gates remain explicitly unverified. Publishing this source release does not imply those capabilities were verified.
+
 ## [1.3.4] — Development Synchronization (Development; Not Published)
 
 - Synchronized the complete accumulated local development tree with the GitHub `main` branch at version `1.3.4`.

@@ -23,7 +23,7 @@ For multiple tasks, use one independent ID and artifact folder per task. Updatin
 - `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-orchestrator` is the documented derivative.
 - `02-Prompt-General/` holds standalone Prompts only. A Prompt belonging to a Skill remains under that Skill and is versioned with it.
 - `Capability-Library/Registry.json` and `docs/project/Provenance/Capability-Library-Ledger.json` record the inventory and file hashes. Validate before consuming or generating derived artifacts.
-- `Capability-Library/First-Party-Skills.json` declares AIPM-authored Skills separately from imported migration provenance. `tui-intelligence` is the declared first-party Skill.
+- `Capability-Library/First-Party-Skills.json` declares AIPM-authored and owner-maintained Skills separately from imported migration provenance. `browser-environment-manager`, `powershell-tui-app-designer`, and `tui-intelligence` are declared first-party Skills. The PowerShell TUI App Designer's original migration hashes remain in the historical migration record after its owner-authorized maintenance classification.
 
 ## Scope And Naming
 

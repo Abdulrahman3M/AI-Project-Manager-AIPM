@@ -16,10 +16,11 @@ function Read-ValidatedInput {
         Write-UiLine ''
         Write-Ui '> ' 'Key'; Write-UiLine $text 'Normal'
         Write-Ui 'Enter ' 'Key'; Write-Ui 'Confirm   ' 'Dim'; Write-Ui 'Esc ' 'Key'; Write-UiLine 'Cancel' 'Dim'
-        Complete-UiFrame
-        $k = Read-AppKey
+        $frameViewport = Complete-UiFrame
+        $k = Read-AppKey -SinceViewport $frameViewport
         switch ($k.Name) {
             'CtrlC' { throw (New-Object System.OperationCanceledException('Quit')) }
+            'Resize' { } # Keep typed text and validation state; the next pass composes the full frame again.
             'Esc' { return $null }
             'Backspace' { if ($text.Length -gt 0) { $text = $text.Substring(0, $text.Length - 1) } }
             'Char' { $text += $k.Char; $err = '' }

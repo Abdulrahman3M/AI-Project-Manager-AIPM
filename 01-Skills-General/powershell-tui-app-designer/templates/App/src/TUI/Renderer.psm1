@@ -20,6 +20,17 @@ function Get-UiChangedRows {
     }
 }
 
+function Get-UiFramePlan {
+    # Pure frame planner. A viewport change repaints the complete logical frame in place once.
+    param([string[]]$BeforeRows = @(), [string[]]$AfterRows = @(), [string]$BeforeViewport = '', [string]$AfterViewport = '')
+    $viewportChanged = ($BeforeViewport -and $AfterViewport -and $BeforeViewport -cne $AfterViewport)
+    if ($viewportChanged) {
+        $limit = [Math]::Max($BeforeRows.Count, $AfterRows.Count)
+        $rows = @(); for ($i = 0; $i -lt $limit; $i++) { $rows += $i }
+    } else { $rows = @(Get-UiChangedRows -Before $BeforeRows -After $AfterRows) }
+    return [pscustomobject]@{ Rows = [int[]]@($rows); ViewportChanged = [bool]$viewportChanged }
+}
+
 function Test-AnsiSupport {
     # NO_COLOR wins; {{ENVPREFIX}}_FORCE_ANSI=1 forces; redirected output never gets escape codes.
     if ($env:NO_COLOR) { return $false }
@@ -77,7 +88,8 @@ function Clear-Ui {
 }
 
 function Complete-UiFrame {
-    if ($script:Sink -eq 'Buffer' -or -not $script:FrameStarted) { return }
+    $size = Get-TerminalSize
+    if ($script:Sink -eq 'Buffer' -or -not $script:FrameStarted) { return $size }
     try {
         if ($script:Ansi) {
             $frame = $script:PendingFrame.ToString()
@@ -85,14 +97,9 @@ function Complete-UiFrame {
             if ($frame.EndsWith("`n") -and $rows.Count -gt 0) {
                 $rows = @($rows | Select-Object -SkipLast 1)
             }
-            $size = Get-TerminalSize
             $viewport = [string]$size.Width + 'x' + [string]$size.Height
-            if ($script:PreviousViewport -and $script:PreviousViewport -ne $viewport) {
-                # Size changes invalidate the row cache; clear stale layout in place.
-                [Console]::Out.Write($script:Esc + '[H' + $script:Esc + '[J')
-                $script:PreviousRows = @()
-            }
-            foreach ($i in @(Get-UiChangedRows -Before $script:PreviousRows -After $rows)) {
+            $plan = Get-UiFramePlan -BeforeRows $script:PreviousRows -AfterRows $rows -BeforeViewport $script:PreviousViewport -AfterViewport $viewport
+            foreach ($i in @($plan.Rows)) {
                 if ($i -ge $size.Height - 1) { continue }
                 $command = $script:Esc + '[' + ($i + 1) + ';1H'
                 if ($i -lt $rows.Count) {
@@ -121,6 +128,7 @@ function Complete-UiFrame {
         $script:FrameStarted = $false
         [void]$script:PendingFrame.Clear()
     }
+    return $size
 }
 
 function Enter-Screen {
@@ -140,4 +148,4 @@ function Get-CapturedOutput { return $script:Buffer.ToString() }
 function Clear-CapturedOutput { $script:Buffer = New-Object System.Text.StringBuilder }
 function Get-LastFrame { return (((Get-CapturedOutput) -split '=====CLEAR=====')[-1]) }
 
-Export-ModuleMember -Function Get-UiChangedRows, Test-AnsiSupport, Initialize-Renderer, Get-TerminalSize, Write-Ui, Write-UiLine, Clear-Ui, Complete-UiFrame, Enter-Screen, Exit-Screen, Get-CapturedOutput, Clear-CapturedOutput, Get-LastFrame
+Export-ModuleMember -Function Get-UiChangedRows, Get-UiFramePlan, Test-AnsiSupport, Initialize-Renderer, Get-TerminalSize, Write-Ui, Write-UiLine, Clear-Ui, Complete-UiFrame, Enter-Screen, Exit-Screen, Get-CapturedOutput, Clear-CapturedOutput, Get-LastFrame

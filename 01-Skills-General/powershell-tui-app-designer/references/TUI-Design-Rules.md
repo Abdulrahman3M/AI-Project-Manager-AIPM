@@ -25,7 +25,7 @@ When Numbers or Hybrid navigation is selected, including with the optional Class
 4. **Feedback** (only when needed): a validation/error line directly above the input.
 5. **Footer**: show only enabled controls: arrows where supported, Enter to select, number ranges only in Numbers/Hybrid, search hint in Search, and Esc to go back.
 
-Redraw logical frames in place without clearing the physical screen on every key; never rely on scrollback for state. In ANSI mode use cursor-home (CSI H), write the new frame, and erase only stale trailing content (CSI J); preferably update only changed lines. Full clear (CSI 2J) is reserved for transitions or initial setup. In legacy mode use safe cursor positioning where possible and a clearly documented fallback. Never blank the screen between arrow presses.
+Redraw logical frames in place without clearing the physical screen on every key; never rely on scrollback for state. In ANSI mode use cursor-home (CSI H), write the new frame, and erase only stale trailing content (CSI J); preferably update only changed lines. Full clear (CSI 2J) is reserved for transitions or initial setup. In legacy mode use safe cursor positioning where possible and a clearly documented fallback. Never blank the screen between arrow presses. Resize is an input event: detect it while waiting without a key, then recompute the viewport-dependent menu window and redraw from the same state. See `Resize-And-Frame-Lifecycle-Reliability.md` for the shared lifecycle contract.
 
 ## 3. Message semantics (same words, same icons, same roles everywhere)
 
@@ -58,7 +58,7 @@ Long work shows: a bar (`[#####-----] 50%`), percent, elapsed time, current stag
 
 ## 8. Layout and responsiveness
 
-* Query the size with `Get-TerminalSize` on every redraw (users resize). Normal >= 80 columns, wide >= 120, narrow < 60.
+* Query the size with `Get-TerminalSize` on every redraw (users resize), and ensure an idle wait returns control when dimensions change; otherwise a redraw-on-key implementation will remain stale after resize. Normal >= 80 columns, wide >= 120, narrow < 60.
 * Narrow: drop description indentation and wrap, never truncate selection labels or numbers when enabled; Short window (< 20 rows): show a window of the list around the selection and a scroll indicator (`more above/below`).
 * Never print wider than the window - wrap or shorten with an ellipsis, not by clipping.
 

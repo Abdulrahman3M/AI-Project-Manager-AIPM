@@ -19,6 +19,7 @@
 
 ## Release History
 
+- [Release Notes v1.4.0](docs/project/Release-Notes-v1.4.0.md)
 - [Development Update Notes v1.1.7](docs/project/Release-Notes/Release-Notes-v1.1.7.md)
 - [Release Notes v1.0.7](docs/project/Release-Notes/Release-Notes-v1.0.7.md)
 - [Release Notes v1.0.6](docs/project/Release-Notes/Release-Notes-v1.0.6.md)

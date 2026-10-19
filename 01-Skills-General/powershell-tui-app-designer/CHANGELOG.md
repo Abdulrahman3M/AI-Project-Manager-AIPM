@@ -4,6 +4,14 @@
 
 # Changelog
 
+## 1.1.0 - 2026-10-19
+
+- Added an end-to-end resize/frame lifecycle reference covering full-frame ownership, bounded idle resize detection, state preservation, stale-row cleanup, input/renderer architecture, test seams, failure modes, and real-terminal verification.
+- Updated the generated Input, Renderer, Menu, and Prompt modules so interactive waits observe viewport changes without a key press, return an internal Resize event, and recompose without resetting workflow state or busy-spinning.
+- Added regression tests for frame planning, idle resize, menu/prompt state retention, stale-frame removal, and deterministic scripted Resize events.
+- Added evidence-first Windows Terminal launcher diagnostics for quoted paths with trailing separators, including a native `CommandLineToArgvW` parser probe and a separate child-execution acceptance requirement.
+- Updated the reusable design prompt, architecture, compatibility, testing, design, engineering lessons, and checklists. This skill release does not claim native Windows Terminal visual verification.
+
 ## 2.0.3 - 2026-10-14
 
 - Required centralized ANSI in-place frames with differential changed-row rendering; added the reusable Flicker-Free PowerShell TUI Architecture Prompt and robust fallback rules.

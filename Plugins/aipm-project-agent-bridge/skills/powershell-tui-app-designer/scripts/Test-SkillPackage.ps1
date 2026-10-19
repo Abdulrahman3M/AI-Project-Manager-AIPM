@@ -14,18 +14,29 @@ $root = Split-Path -Parent $PSScriptRoot
 $res = New-Object System.Collections.Generic.List[object]
 function Add-Check { param([string]$Name, [bool]$Ok, [string]$Detail = '') $res.Add([pscustomobject]@{ Name = $Name; Ok = $Ok; Detail = $Detail }) }
 $hostExe = (Get-Process -Id $PID).Path
+$unverified = New-Object System.Collections.Generic.List[string]
+function Add-Unverified { param([string]$Name, [string]$Reason) $unverified.Add(($Name + ' -> ' + $Reason)) }
 
 # structure
 foreach ($p in 'SKILL.md', 'README.md', 'VERSION', 'references', 'scripts', 'examples', 'assets', 'templates/App', 'Prompts/Flicker-Free-PowerShell-TUI-Architecture.md') { Add-Check "exists: $p" (Test-Path -LiteralPath (Join-Path $root $p)) }
-foreach ($r in 'Architecture', 'TUI-Design-Rules', 'Modern-Presets', 'Interactive-Design-Wizard', 'Design-Preview-Gallery', 'Cross-Platform-Compatibility', 'Unicode-and-Emoji-Handling', 'Error-Handling', 'Testing-Strategy', 'Packaging-and-Release', 'Coding-Conventions') { Add-Check "reference: $r.md" (Test-Path -LiteralPath (Join-Path $root "references/$r.md")) }
+foreach ($r in 'Architecture', 'TUI-Design-Rules', 'Modern-Presets', 'Interactive-Design-Wizard', 'Design-Preview-Gallery', 'Cross-Platform-Compatibility', 'Unicode-and-Emoji-Handling', 'Error-Handling', 'Testing-Strategy', 'Packaging-and-Release', 'Coding-Conventions', 'Resize-And-Frame-Lifecycle-Reliability', 'Windows-Terminal-Launcher-Diagnostics') { Add-Check "reference: $r.md" (Test-Path -LiteralPath (Join-Path $root "references/$r.md")) }
 
 $promptText = [System.IO.File]::ReadAllText((Join-Path $root 'Prompts/Flicker-Free-PowerShell-TUI-Architecture.md'))
 Add-Check 'Prompt defines ANSI, differential, centralized and fallback design' ($promptText.Contains('ANSI In-Place Rendering') -and $promptText.Contains('Differential Updates') -and $promptText.Contains('Centralized TUI Renderer') -and $promptText.Contains('legacy'))
 $rendererSource = [System.IO.File]::ReadAllText((Join-Path $root 'templates/App/src/TUI/Renderer.psm1'))
 Add-Check 'generated Renderer includes ANSI row diff and cache invalidation' ($rendererSource.Contains('Get-UiChangedRows') -and $rendererSource.Contains('PreviousRows') -and $rendererSource.Contains('PreviousViewport') -and $rendererSource.Contains('Get-UiChangedRows -Before'))
+$inputSource = [System.IO.File]::ReadAllText((Join-Path $root 'templates/App/src/TUI/Input.psm1'))
+$menuSource = [System.IO.File]::ReadAllText((Join-Path $root 'templates/App/src/TUI/Menu.psm1'))
+$promptSource = [System.IO.File]::ReadAllText((Join-Path $root 'templates/App/src/TUI/Prompt.psm1'))
+Add-Check 'generated Renderer plans viewport-change reconciliation' ($rendererSource.Contains('Get-UiFramePlan') -and $rendererSource.Contains('ViewportChanged'))
+Add-Check 'generated Input emits idle Resize events through bounded polling' ($inputSource.Contains('Test-ViewportChanged') -and $inputSource.Contains('PollIntervalMs') -and $inputSource.Contains("New-Key 'Resize'"))
+Add-Check 'generated menus and prompts wait from the last committed viewport' ($menuSource.Contains('Read-AppKey -SinceViewport $frameViewport') -and $promptSource.Contains('Read-AppKey -SinceViewport $frameViewport'))
+Add-Check 'generated scripted input supports deterministic Resize events' ($inputSource.Contains("'CtrlC', 'Resize'"))
 
 # front matter + version
 $skill = [System.IO.File]::ReadAllText((Join-Path $root 'SKILL.md'))
+Add-Check 'skill routes TUI work to resize/frame and Windows Terminal launcher references' ($skill.Contains('Resize-And-Frame-Lifecycle-Reliability.md') -and $skill.Contains('Windows-Terminal-Launcher-Diagnostics.md'))
+Add-Check 'Windows launcher parser example is present' (Test-Path -LiteralPath (Join-Path $root 'examples/09-Windows-Launcher-ArgumentProbe.ps1'))
 $fm = [regex]::Match($skill, '(?s)\A---\r?\nname:\s*([a-z0-9-]+)\r?\ndescription:\s*(.+?)\r?\n---')
 Add-Check 'SKILL.md front matter has name (lowercase-hyphen) and description' ($fm.Success) ''
 if ($fm.Success) { Add-Check 'description is 1-1024 characters' (($fm.Groups[2].Value.Length -ge 20) -and ($fm.Groups[2].Value.Length -le 1024)) ([string]$fm.Groups[2].Value.Length) }
@@ -114,12 +125,17 @@ if (-not $SkipGenerate) {
         Add-Check 'package script builds a zip' ((Test-Path -LiteralPath (($pkg | Select-Object -Last 1).ToString().Trim()))) ($pkg | Out-String)
     } finally { if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue } }
     foreach ($ex in Get-ChildItem -LiteralPath (Join-Path $root 'examples') -Filter '0*.ps1' -File) {
+        if ($ex.Name -eq '09-Windows-Launcher-ArgumentProbe.ps1' -and $env:OS -ne 'Windows_NT') {
+            Add-Unverified ('example requires Windows: ' + $ex.Name) 'CommandLineToArgvW is a native Windows API.'
+            continue
+        }
         $o = & $hostExe -NoProfile -ExecutionPolicy Bypass -File $ex.FullName -Demo 2>&1
         Add-Check ("example runs with -Demo and exits 0: " + $ex.Name) ($LASTEXITCODE -eq 0) (($o | Select-Object -Last 2) -join ' | ')
     }
 }
 $fail = @($res | Where-Object { -not $_.Ok })
 foreach ($r in $res) { Write-Output ('[{0}] {1}{2}' -f $(if ($r.Ok) { 'PASS' } else { 'FAIL' }), $r.Name, $(if (-not $r.Ok -and $r.Detail) { ' -> ' + $r.Detail } else { '' })) }
-Write-Output ('==== {0} checks, {1} failed ====' -f $res.Count, $fail.Count)
+foreach ($item in $unverified) { Write-Output ('[UNVERIFIED] ' + $item) }
+Write-Output ('==== {0} checks, {1} failed, {2} UNVERIFIED ====' -f $res.Count, $fail.Count, $unverified.Count)
 if ($fail.Count -gt 0) { exit 1 }
 exit 0

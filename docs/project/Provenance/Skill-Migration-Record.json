@@ -7,7 +7,6 @@
     "find-skills",
     "frontend-design",
     "plugin-creator",
-    "powershell-tui-app-designer",
     "professional-word-designer",
     "project-governance-manager",
     "resume-task",
@@ -15,6 +14,14 @@
     "skill-creator",
     "teach",
     "token-optimization"
+  ],
+  "owner_approved_maintenance": [
+    {
+      "slug": "powershell-tui-app-designer",
+      "approved_date": "2026-10-19",
+      "reason": "The project owner explicitly authorized development and maintenance of this Skill for AIPM; original imported source hashes remain preserved below.",
+      "historical_source_hashes_retained": true
+    }
   ],
   "derivative_changed_markdown_files": [
     "CHANGELOG.md",

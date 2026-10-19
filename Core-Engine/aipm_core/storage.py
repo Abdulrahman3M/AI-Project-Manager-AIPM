@@ -112,12 +112,33 @@ def _atomic_json(path: Path, data: dict) -> None:
 
 def _probe_access(directory: Path) -> None:
     """Exercise effective file access, including delete-on-close cleanup."""
+    probe = directory / f".aipm-probe-{uuid4().hex}.tmp"
+    descriptor = None
+    permission_error = None
     try:
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=directory, prefix=".aipm-probe-", suffix=".tmp") as probe:
-            probe.write("AIPM Access Probe\n")
-            probe.flush()
+        # Avoid tempfile.NamedTemporaryFile here. On Windows, the stdlib retries
+        # PermissionError when os.access() mistakenly reports a denied directory
+        # as writable, turning a fast ACL rejection into thousands of retries.
+        descriptor = os.open(
+            probe,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
+            0o600,
+        )
+        os.write(descriptor, b"AIPM Access Probe\n")
     except PermissionError as error:
-        raise StateError(f"access denied: {directory}") from error
+        permission_error = error
+    finally:
+        if descriptor is not None:
+            try:
+                os.close(descriptor)
+            except PermissionError as error:
+                permission_error = permission_error or error
+        try:
+            probe.unlink(missing_ok=True)
+        except PermissionError as error:
+            permission_error = permission_error or error
+    if permission_error is not None:
+        raise StateError(f"access denied: {directory}") from permission_error
 
 
 def initialize_project_state(project_root: Path, project_id: str, alias: str, *, platform_root: Path | None = None) -> ManagedProject:

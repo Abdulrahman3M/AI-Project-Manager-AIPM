@@ -120,10 +120,11 @@ function Show-Menu {
         if ($Navigation -in @('Numbers','Hybrid')) { Write-Ui '00-99 ' 'Key'; Write-Ui 'Type a number  ' 'Dim' }
         if ($Navigation -eq 'Search') { Write-Ui 'Type ' 'Key'; Write-Ui 'Search  ' 'Dim' }
         Write-Ui 'Esc ' 'Key'; Write-UiLine 'Back' 'Dim'
-        Complete-UiFrame
-        $k = Read-AppKey
+        $frameViewport = Complete-UiFrame
+        $k = Read-AppKey -SinceViewport $frameViewport
         switch ($k.Name) {
             'CtrlC' { throw (New-Object System.OperationCanceledException('Quit')) }
+            'Resize' { } # Recompose from the same selection, number buffer and search query.
             'Esc' { return $null }
             'Up' { if ($Navigation -ne 'Numbers' -and $visible.Count -gt 0) { $sel = ($sel - 1 + $visible.Count) % $visible.Count }; $buffer = '' }
             'Down' { if ($Navigation -ne 'Numbers' -and $visible.Count -gt 0) { $sel = ($sel + 1) % $visible.Count }; $buffer = '' }

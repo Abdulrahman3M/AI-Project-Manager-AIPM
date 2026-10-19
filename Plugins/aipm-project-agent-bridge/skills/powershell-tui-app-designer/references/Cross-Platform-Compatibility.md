@@ -32,6 +32,8 @@ Say which combinations were executed by tests and which were not. "Compiles" is 
 | JSON/Compress | 5.1 `Compress-Archive` writes backslash entry names; `ConvertFrom-Json` returns different shapes for single items | Build packages with PowerShell 7 or verify the zip on the target; always wrap results `@(...)` |
 | Time/locale | Culture changes number formats | Format numbers for external tools with `[CultureInfo]::InvariantCulture` |
 | Package/launch | Double-click = `cmd /c`; a `.cmd` started from a `.bat` without `call` never returns | Launcher tests run the real `cmd`; stubs for launcher tests must be real executables |
+| Resize observation | A blocking `Console.ReadKey($true)` cannot notice a resized viewport until a key arrives | In interactive mode, poll key availability and viewport at a bounded non-zero interval; return an internal Resize event. Keep scripted/redirected paths deterministic and dimension-free. Test PowerShell 5.1 and 7 separately. |
+| Windows Terminal argument boundary | Quoted path components ending in `\` may be merged with subsequent command-line arguments depending on the launch path and parser | Parse the exact process-boundary command with `CommandLineToArgvW`, then execute a child probe. Do not trust an echoed string or apply a generic path/Unicode fix without a reproduction; see `Windows-Terminal-Launcher-Diagnostics.md`. |
 
 ## 3. Isolation patterns
 
@@ -45,5 +47,7 @@ Say which combinations were executed by tests and which were not. "Compiles" is 
 2. PowerShell 7 on Windows - full suite.
 3. PowerShell 7 on Linux - full suite.
 4. Manual (cannot be automated): a real Windows Terminal and a classic console for icon rendering; real devices/installers if the app uses them.
+
+The included `examples/09-Windows-Launcher-ArgumentProbe.ps1` is Windows-only because it calls `CommandLineToArgvW`; on non-Windows it must be reported as UNVERIFIED, not PASS. Passing it proves parser behavior only, not a native Windows Terminal launch.
 
 Use a CI matrix (GitHub Actions `windows-latest` with `shell: powershell` and `shell: pwsh`, plus `ubuntu-latest`). Do not claim a platform that no run executed. See Testing-Strategy.md.

@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.0] — Synchronized Product Release
+
+- Synchronized the PowerShell TUI version with the AIPM platform at `1.4.0` for the source release.
+- Carries forward the guided Registry Management, task workflow, task artifact viewing/search, pagination, and evidence-backed project/task views accumulated since `v1.0.2`.
+- No native terminal visual or external AI-host gate is inferred from the version synchronization; see the Support Matrix for the tested environments and remaining UNVERIFIED items.
+
 ## [1.3.4] — Development Synchronization (Development; Not Published)
 
 - Synchronized the TUI package version with the AIPM platform at `1.3.4` for the accumulated repository update.

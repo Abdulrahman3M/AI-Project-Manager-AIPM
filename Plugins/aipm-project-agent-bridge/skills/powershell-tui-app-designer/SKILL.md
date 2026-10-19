@@ -1,9 +1,9 @@
 ---
 name: powershell-tui-app-designer
-description: Designs and builds professional terminal (TUI) applications in PowerShell that run on Windows PowerShell 5.1 and PowerShell 7 on Windows and Linux - optional numbered, arrow or search-driven menus, validated forms, icon/emoji fallbacks, safe external commands, launchers, tests, packaging and release. Use when asked to create, extend, review or release an interactive PowerShell console app, wizard or menu-driven tool.
+description: Designs, builds, updates, diagnoses, and tests professional PowerShell terminal applications across Windows PowerShell 5.1 and PowerShell 7, including resize-aware frame lifecycle, launchers, configurable navigation, packaging, and release. Use for new or existing interactive apps, not unrelated shell scripts.
 ---
 
-# PowerShell TUI App Designer (v2.0.3)
+# PowerShell TUI App Designer (v1.1.0)
 
 You are following an EXECUTABLE METHODOLOGY. Work through the phases IN ORDER. Each phase has: **Do** (steps), **Gate** (checks that must all pass), **If it fails**. You may not start phase N+1 until every Gate item of phase N is satisfied with evidence (a command you ran and its result). Do not skip, merge or reorder phases. Do not invent facts: inspect first.
 
@@ -20,15 +20,16 @@ Files you will use (relative to this skill folder):
 6. **Never overwrite, delete, install or download without asking.** Source/input files are never modified.
 7. **Honest reporting.** Results are PASS, FAIL or UNVERIFIED (could not run here, with the reason). A check that did not execute is never PASS.
 8. **Do not guess.** If two valid options exist and the choice changes the product, write the options and ask the owner; otherwise pick the documented default and say so.
-9. **Flicker-free rendering and visual consistency.** For interactive arrows, never call Clear-Host or ANSI 2J on every key. Render in place using cursor-home and erase-to-end, or changed-row rendering. Keep semantic colors, independently colored icons, Emoji/Symbol/Ascii tiers, and muted readable hints and descriptions intact; test rapid navigation without blank frames. Preserve redirected plain output.
+9. **Complete-frame and resize-aware rendering.** Every visible row (including help, validation, key hints, and editable-input context) belongs to a committed frame. While real interactive input is pending, detect width/height changes without requiring a key and return an internal Resize event; recompose from the same screen state. For interactive arrows, never call Clear-Host or ANSI 2J on every key or poll. Render in place using differential rows and clear obsolete rows centrally. Keep semantic colors, independently colored icons, Emoji/Symbol/Ascii tiers, and muted readable hints and descriptions intact; test resize and rapid navigation without blank frames. Preserve redirected plain output.
 10. **Title Case UI text.** Write every static, user-visible application string in English Title Case: titles, headings, menu choices, prompts, help, status, validation, success, warning and error messages. Preserve proper nouns and acronyms; leave user-provided or dynamic content, code identifiers and source snippets unchanged.
+11. **Reliability applies to new and existing apps.** For every create, extend, update, repair, or review task, audit the current frame lifecycle and idle resize behavior. Fix verified missing behavior at the shared renderer/input boundary, not one menu at a time, and preserve the app's selected navigation and active workflow state.
 
 ---
 
 
 ## Flicker-Free Architecture (mandatory for new interactive TUI work)
 
-Load `Prompts/Flicker-Free-PowerShell-TUI-Architecture.md` and `references/Architecture.md` before changing renderer, menu navigation or visual styles. Implement **ANSI In-Place Rendering + Differential Updates + Centralized TUI Renderer** together when the host supports interactive VT output. Compare text AND per-segment styling; a changed selection should normally touch only the previously and newly selected rows. Preserve semantic colors, separately colored Emoji/Symbol/ASCII icons, muted hints and descriptions, and existing numeric/keyboard conventions. Cache only committed screen frames; invalidate on resize, layout/host/theme/icon-tier changes or explicit screen transitions. Avoid per-arrow `Clear-Host` or ANSI CSI 2J; use a documented legacy cursor/padding fallback and readable redirected output. Restore cursor and alternate screen in `finally`. Run differential-row, stable-frame, shrink, resize, accessibility, scripted and real-terminal tests. Do not claim visually verified flicker-free output without an interactive terminal test.
+Load `Prompts/Flicker-Free-PowerShell-TUI-Architecture.md` and `references/Architecture.md` before changing renderer, menu navigation or visual styles. Implement **ANSI In-Place Rendering + Differential Updates + Centralized TUI Renderer** together when the host supports interactive VT output. A frame owns every visible row, including prompt/help/error/hints and the initial editable row. Compare text AND per-segment styling; a changed selection should normally touch only the previously and newly selected rows. Preserve semantic colors, separately colored Emoji/Symbol/ASCII icons, muted hints and descriptions, and existing numeric/keyboard conventions. Cache only committed screen frames; invalidate/reconcile on resize, layout/host/theme/icon-tier changes or explicit screen transitions. Input waits for key OR viewport change and returns a bounded internal Resize event without busy-spinning; the screen recomposes while preserving selection, typed text, and workflow state. Avoid per-arrow/poll `Clear-Host` or ANSI CSI 2J; use a documented legacy cursor/padding fallback and readable redirected output. Restore cursor and alternate screen in `finally`. Run differential-row, stable-frame, shrink, idle-resize, stale-prompt, accessibility, scripted and real-terminal tests. Do not claim visually verified flicker-free output without an interactive terminal test. See `references/Resize-And-Frame-Lifecycle-Reliability.md`.
 
 ## Phase 0 - Inspect the environment and the request
 
@@ -36,7 +37,8 @@ Load `Prompts/Flicker-Free-PowerShell-TUI-Architecture.md` and `references/Archi
 1. Run `scripts/Test-TuiEnvironment.ps1` (add `-Json` if you need to parse). Record platform, PowerShell version/edition, interactive or redirected, terminal facts, suggested icon tier.
 2. List which of `pwsh` (7.x) and `powershell` (5.1) exist. Decide which you can execute tests with; everything else will be UNVERIFIED locally and needs CI or a human.
 3. If a project folder already exists: read its README/AGENTS/rules files, folder layout, `VERSION`, tests, launchers. Reuse what exists; do not create duplicates of modules that already do the job.
-4. Write down the request in your own words: users, tasks, platforms, external tools, constraints.
+4. For new and existing apps alike, record renderer/input ownership, committed-frame boundaries, direct screen writes, blocking key waits, resize behavior, and prompt/input state preservation. Read `references/Resize-And-Frame-Lifecycle-Reliability.md` before changing those areas.
+5. Write down the request in your own words: users, tasks, platforms, external tools, constraints.
 
 **Gate**
 - [ ] Environment facts recorded. - [ ] Executable editions listed. - [ ] Existing rules/structure read (or "greenfield" stated). - [ ] Request restated in <= 10 lines.
@@ -96,7 +98,7 @@ Open `references/Cross-Platform-Compatibility.md`.
 1. Keep `Core/Platform.psm1`; add only OS facts you need (e.g., `Find-Executable` for your tools).
 2. Implement dependency detection for each external tool: find, run `--version`, parse capabilities from the tool itself, show keyboard-selectable dependency choices (`Install it for me` only after explicit authorization, `I will install it myself`, `Exit`) using the chosen navigation mode.
 3. Per-user settings/log folder via `Get-AppDataDirectory`; tests override it with `<PREFIX>_DATA_DIR`.
-4. Launchers: keep the generated `.bat` (CRLF) and `.sh` (LF, executable); change only names/arguments.
+4. Launchers: keep the generated `.bat` (CRLF) and `.sh` (LF, executable); change only names/arguments. If Windows Terminal launch behavior is designed, reported broken, or changed, read `references/Windows-Terminal-Launcher-Diagnostics.md`; prove argument parsing and child execution rather than trusting a displayed command string.
 
 **Gate**
 - [ ] No OS check outside Platform (`Test-TuiProject` C5 passes). - [ ] Each dependency has a tested "present", "missing", "broken" path. - [ ] Launchers start the app from a folder with spaces.
@@ -120,14 +122,16 @@ Open `references/TUI-Design-Rules.md` and `references/Unicode-and-Emoji-Handling
 Open `references/Coding-Conventions.md`. Build ONE task at a time, smallest first.
 
 **Do** (repeat per task)
-1. Write the pure functions (Core) and their unit tests FIRST.
-2. Write the screen code using only `Show-Menu`, `Show-Confirm`, `Show-Notice`, `Read-ValidatedInput` and Renderer roles.
-3. Run external programs only through `Invoke-External` with an argument array; apply a timeout; handle `Started=$false`.
-4. Add the task to the main menu with its description.
-5. Run the unit tests and `Test-TuiProject` after EVERY task.
+1. For both a new app and every change to an existing app, audit the shared frame/input lifecycle against `references/Resize-And-Frame-Lifecycle-Reliability.md`; record gaps before code.
+2. Write the pure functions (Core) and their unit tests FIRST.
+3. Write the screen code using only `Show-Menu`, `Show-Confirm`, `Show-Notice`, `Read-ValidatedInput` and Renderer roles. Every interactive screen passes the last committed viewport to the central resize-aware input wait.
+4. Run external programs only through `Invoke-External` with an argument array; apply a timeout; handle `Started=$false`.
+5. Add the task to the main menu with its description.
+6. Run the unit tests and `Test-TuiProject` after EVERY task.
 
 **Gate (per task)**
 - [ ] New functions have tests (PASS). - [ ] `Test-TuiProject`: 0 failed. - [ ] Screen driven through `-ScriptedInput` end to end without error. - [ ] Selection labels, help and tests match the chosen interaction mode.
+- [ ] A Resize event recomposes the same screen without changing selection, query, partial number, typed text, or workflow state.
 
 **If it fails**: fix before starting the next task. Never accumulate failing tasks.
 
@@ -151,12 +155,13 @@ Open `references/Testing-Strategy.md`.
 
 **Do**
 1. Run `scripts/Invoke-TuiTests.ps1 -Path <folder>` (runs every installed edition; reports "NOT RUN" for missing ones).
-2. Add static, flow, process-smoke and launcher tests for everything you built.
+2. Add static, flow, process-smoke and launcher tests for everything you built. Assert idle resize delivery, stable polls without redraw, frame growth/shrink, stale prompt removal, and state preservation during resize.
 3. Set up CI for the claimed matrix (copy the workflow in Testing-Strategy section 3) and read its results; a platform without a run is UNVERIFIED.
 4. When something fails in one environment only, follow Testing-Strategy section 4 (isolate, prove, fix the root cause, regression test).
 
 **Gate**
 - [ ] 0 FAIL on every environment you claim. - [ ] Every UNVERIFIED item listed with reason and the human steps to verify. - [ ] No test was skipped or loosened to pass.
+- [ ] Windows Terminal resizing is checked with no key press; prompt resize and later screen transition are checked separately. Native visual checks are not inferred from scripted tests.
 
 ## Phase 9 - Documentation
 

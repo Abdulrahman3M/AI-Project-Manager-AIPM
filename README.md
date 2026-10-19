@@ -1,12 +1,11 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.3.4</sub></h1>
+  <h1>AI Project Manager <sub>v1.4.0</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
-    <img alt="Development version v1.3.4 — not published" src="https://img.shields.io/badge/DEVELOPMENT-v1.3.4%20%7C%20UNPUBLISHED-0EA5E9?style=for-the-badge" />
-    <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2"><img alt="Latest published release v1.0.2" src="https://img.shields.io/badge/LATEST%20PUBLISHED-v1.0.2-334155?style=for-the-badge" /></a>
+    <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.4.0"><img alt="Latest published release v1.4.0" src="https://img.shields.io/badge/LATEST%20RELEASE-v1.4.0-0F766E?style=for-the-badge" /></a>
     <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
     <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
     <img alt="Windows PowerShell 5.1 and PowerShell 7.x" src="https://img.shields.io/badge/RUNTIME-WINDOWS%20PS%205.1%20%7C%20PS%207.x-2563EB?style=for-the-badge" />
@@ -103,7 +102,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository version is `1.3.4`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
+The current repository and PowerShell TUI version is `1.4.0`. This source release includes the accumulated development work since `v1.0.2`; see the [v1.4.0 release notes](docs/project/Release-Notes-v1.4.0.md). P09's physically external project, live independent-host handoff, external Plugin installation, and durable terminal-capture provenance remain `UNVERIFIED`. A repository release does not imply Plugin installation or close those external gates.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -155,7 +154,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Latest Development Notes](docs/project/Release-Notes/Release-Notes-v1.3.4.md)
+- [Latest Release Notes](docs/project/Release-Notes-v1.4.0.md)
 
 ## License
 

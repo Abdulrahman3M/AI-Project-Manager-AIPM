@@ -100,6 +100,15 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertNotIn("browser-environment-manager", migration["byte_preserved_skills"])
         self.assertIn("browser-environment-manager", {item["slug"] for item in first_party["skills"]})
 
+    def test_owner_maintained_powershell_tui_skill_preserves_historical_source_hashes(self) -> None:
+        migration = json.loads((ROOT / "docs" / "project" / "Provenance" / "Skill-Migration-Record.json").read_text(encoding="utf-8"))
+        first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
+        slug = "powershell-tui-app-designer"
+        self.assertNotIn(slug, migration["byte_preserved_skills"])
+        self.assertIn(slug, migration["source_hashes"])
+        self.assertIn(slug, {item["slug"] for item in first_party["skills"]})
+        self.assertTrue(any(item["slug"] == slug and item["historical_source_hashes_retained"] for item in migration["owner_approved_maintenance"]))
+
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")

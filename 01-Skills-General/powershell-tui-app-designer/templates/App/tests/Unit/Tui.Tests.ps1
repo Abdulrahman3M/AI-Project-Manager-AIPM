@@ -5,6 +5,45 @@ Assert-Equal 'Moving selection updates two rows' '0,1' (@(Get-UiChangedRows -Bef
 Assert-Equal 'Shorter frame erases stale trailing row' '1' (@(Get-UiChangedRows -Before @('A','B') -After @('A')) -join ',')
 Assert-Equal 'Larger frame draws newly added row' '1' (@(Get-UiChangedRows -Before @('A') -After @('A','B')) -join ',')
 
+Set-TestGroup 'Resize-aware frames and input lifecycle'
+$samePlan = $null
+try { $samePlan = Get-UiFramePlan -BeforeRows @('A','B') -AfterRows @('A','B') -BeforeViewport '80x24' -AfterViewport '80x24' } catch { }
+$sameRowCount = -1; if ($null -ne $samePlan) { $sameRowCount = @($samePlan.Rows).Count }
+Assert-Equal 'stable viewport and frame produce no renderer writes' 0 $sameRowCount
+$resizePlan = $null
+try { $resizePlan = Get-UiFramePlan -BeforeRows @('A','B') -AfterRows @('A','B') -BeforeViewport '80x24' -AfterViewport '100x30' } catch { }
+$resizePlanPassed = $false; if ($null -ne $resizePlan) { $resizePlanPassed = $resizePlan.ViewportChanged -and (@($resizePlan.Rows) -join ',') -eq '0,1' }
+Assert-True 'viewport growth invalidates once and requests a full in-place repaint' $resizePlanPassed
+$heightPlan = $null
+try { $heightPlan = Get-UiFramePlan -BeforeRows @('A','B','C') -AfterRows @('A') -BeforeViewport '80x24' -AfterViewport '80x12' } catch { }
+$heightPlanPassed = $false; if ($null -ne $heightPlan) { $heightPlanPassed = $heightPlan.ViewportChanged -and (@($heightPlan.Rows) -join ',') -eq '0,1,2' }
+Assert-True 'viewport shrink includes stale rows in the clear plan' $heightPlanPassed
+$probe = @{ Width = 80; Height = 24 }
+$viewportReader = { [pscustomobject]@{ Width = $probe.Width; Height = $probe.Height } }.GetNewClosure()
+$viewportWaiter = { param($Milliseconds) $probe.Width = 100 }.GetNewClosure()
+$resizeKey = $null
+try {
+    $resizeKey = Read-AppKey -SinceViewport ([pscustomobject]@{ Width = 80; Height = 24 }) -PollIntervalMs 25 -ViewportProvider $viewportReader -KeyAvailableProvider { $false } -Waiter $viewportWaiter
+} catch { }
+$resizeEventName = ''; $resizeEventWidth = -1
+if ($null -ne $resizeKey) { $resizeEventName = $resizeKey.Name; if ($resizeKey.PSObject.Properties['Width']) { $resizeEventWidth = $resizeKey.Width } }
+Assert-Equal 'idle input reports Resize before any key arrives' 'Resize' $resizeEventName
+Assert-Equal 'Resize event carries the updated width' 100 $resizeEventWidth
+$resizeItems = @((New-MenuItem -Label 'First' -Desc 'd1' -Value 'a'), (New-MenuItem -Label 'Second' -Desc 'd2' -Value 'b'))
+$ui = Invoke-Ui { Show-Menu -Title 'Resize Menu' -Items $resizeItems -Navigation Arrows } '{Down}{Resize}{Enter}'
+Assert-Equal 'menu resize preserves the current selection' 'b' $ui.Value
+$pathTail = [string][char]0x8CC7
+$typedPath = 'C:\Temp\New Folder\' + $pathTail + 'data.txt'
+$ui = Invoke-Ui { Read-ValidatedInput -Prompt 'Input Path' -Help 'Keep the value while the terminal changes size.' -Example 'C:\Temp\file.txt' } ($typedPath + '{Resize}{Enter}')
+Assert-Equal 'text prompt resize preserves typed spaces and Unicode data' $typedPath $ui.Value
+$ui = Invoke-Ui {
+    $null = Read-ValidatedInput -Prompt 'Old Prompt Unique' -Help 'Old Hint Unique' -Example 'old-example'
+    Show-Menu -Title 'New Screen' -Items $resizeItems -Navigation Arrows
+} 'typed{Enter}{Enter}'
+$lastFrame = Get-LastFrame
+Assert-Contains 'the next screen is the committed current frame' $lastFrame 'New Screen'
+Assert-True 'the next frame removes obsolete prompt, help and input rows' (-not $lastFrame.Contains('Old Prompt Unique') -and -not $lastFrame.Contains('Old Hint Unique') -and -not $lastFrame.Contains('typed'))
+
 Set-TestGroup 'Icon tiers'
 $wt = @{ WT_SESSION = 'x' }
 Assert-Equal 'Windows Terminal -> Emoji' 'Emoji' (Resolve-IconTier -Env $wt -IsWin $true -Redirected $false)
