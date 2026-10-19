@@ -77,7 +77,7 @@ To request Windows PowerShell 5.1 explicitly:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File TUI\AI-Project-Manager\Start-AIPM.ps1
 ```
 
-On the first launch, the TUI asks you to approve the default registry location or choose another one. The dashboard can show registered projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. The **Registry Management** screen can add/remove project pointers, change the selected registry, and back it up or restore it. The TUI does not edit source code or author tasks; use the Core CLI task commands below. Those commands update AIPM-owned task state only.
+On the first launch, the TUI asks you to approve the default registry location or choose another one. The dashboard offers sections for projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. Registered project names appear inside **Projects**, not as separate dashboard actions. The **Registry Management** screen can add/remove project pointers, change the selected registry, and back it up or restore it. The TUI does not edit source code or author tasks; use the Core CLI task commands below. Those commands update AIPM-owned task state only.
 
 ## 6. Choose Where AIPM Stores Its Project List
 
@@ -101,7 +101,7 @@ So the usual full path is:
 C:\Users\YourWindowsName\AppData\Local\AI-Project-Manager\registry.json
 ```
 
-This is per-user application data, not a second AIPM installation and not a folder inside any project. Accept it in the first-run prompt or choose another path ending with `registry.json` outside the AIPM installation. The choice is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` when starting AIPM is also treated as choosing the path.
+This is per-user application data, not a second AIPM installation and not a folder inside any project. Accept it in the first-run prompt or enter a complete file path outside the AIPM installation. You may choose any file name, but it must end in `.json`; entering only a folder is not enough. The choice is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` when starting AIPM is also treated as choosing the path.
 
 Project operational state is separate: for each registered project, AIPM stores it in that project's own `Shared-Project-State-Manager/` folder. The central registry stays small while each project's working state stays with that project.
 
@@ -129,7 +129,7 @@ In the dashboard, choose **Registry Management**. To register a project:
 4. Read the confirmation: it states that AIPM will create `Shared-Project-State-Manager/` under that project and will not edit source files.
 5. Choose **Create State And Register** only if you want that state folder and registry entry.
 
-The registry then stores an ID, name, and root path. Your code, documents, Git metadata, and other existing project files are not modified. Task and continuity records that AIPM owns remain inside its state folder.
+The registry then stores an ID, name, and root path. Your code, documents, Git metadata, and other existing project files are not modified. Task and continuity records that AIPM owns remain inside its state folder. After successful registration, the TUI displays a message asking you to return to the dashboard and choose **Refresh**. Then open **Projects**; the registered project appears there, not as a separate dashboard action.
 
 Other registry actions:
 
@@ -262,7 +262,7 @@ The package includes public project material and both beginner guides, and exclu
 | The TUI refuses to start | Run it in a real terminal instead of a pipeline or redirected session. |
 | PowerShell 7 is unavailable | Use `AIPM.bat` or the Windows PowerShell 5.1 command above. |
 | `NOT_REGISTERED` appears | Choose **Registry Management** and register the intended project. AIPM adds only its state folder after confirmation. |
-| Registry setup asks for a location | Accept the default under `%LOCALAPPDATA%\AI-Project-Manager` or choose a different `registry.json` path outside the AIPM installation. |
+| Registry setup asks for a location | Accept the default under `%LOCALAPPDATA%\AI-Project-Manager` or enter a complete file path outside the AIPM installation. Any file name is allowed if it ends in `.json`; a folder path alone is not accepted. |
 | `AIPM_PLATFORM_PROTECTED` appears | The project, registry, or backup path overlaps AIPM. Choose a separate project or storage location; Core intentionally blocks this operation. |
 | A Skill is marked unverified | Treat that as missing evidence, not as a successful host installation. Review the provenance and local catalog. |
 | An icon looks wrong | Set `AIPM_ICONS=ascii` or follow the theme instructions in the TUI User Guide. |

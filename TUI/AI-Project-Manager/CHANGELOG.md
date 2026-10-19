@@ -1,5 +1,18 @@
 # AI Project Manager TUI Change Log
 
+## [Unreleased]
+
+- No unreleased changes.
+
+## [1.1.9] — Projects Navigation And Registry Guidance (Development; Not Published)
+
+- Kept registered project names inside **Projects** instead of exposing each as a separate dashboard action; registration now gives English Refresh guidance.
+- Clarified that registry setup accepts any full file path ending in `.json`, and explains why a folder path alone is rejected.
+
+## [1.1.8] — Platform Version Synchronization (Development; Not Published)
+
+- Synchronized the TUI package version with AIPM `1.1.8`; no TUI runtime behavior changed.
+
 ## [1.1.7] — Task Context Architecture (Development; Not Published)
 
 - Synchronized the TUI package version with the AIPM platform's `1.1.7` development version. Task authoring remains in the Core CLI; the TUI task views remain read-only.

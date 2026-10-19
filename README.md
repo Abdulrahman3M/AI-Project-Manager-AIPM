@@ -1,11 +1,11 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.1.7</sub></h1>
+  <h1>AI Project Manager <sub>v1.1.9</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
-    <img alt="Development version v1.1.7 — not published" src="https://img.shields.io/badge/DEVELOPMENT-v1.1.7%20%7C%20UNPUBLISHED-0EA5E9?style=for-the-badge" />
+    <img alt="Development version v1.1.9 — not published" src="https://img.shields.io/badge/DEVELOPMENT-v1.1.9%20%7C%20UNPUBLISHED-0EA5E9?style=for-the-badge" />
     <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2"><img alt="Latest published release v1.0.2" src="https://img.shields.io/badge/LATEST%20PUBLISHED-v1.0.2-334155?style=for-the-badge" /></a>
     <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
     <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
@@ -89,7 +89,7 @@ The Core Engine is the authority for registered project and task state. Host ada
 ## Security and Privacy
 
 - Project state remains within the project and AIPM Core storage boundaries.
-- The registry stores project IDs, aliases, and root paths only. It defaults to `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, outside the repository; first launch asks the owner to approve this path or choose another `registry.json` location outside AIPM.
+- The registry stores project IDs, aliases, and root paths only. It defaults to `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, outside the repository; first launch asks the owner to approve this path or choose another full file path ending in `.json` outside AIPM. The file name may be chosen freely.
 - A project's operational state stays inside that project's `Shared-Project-State-Manager/` folder. Unregistering removes only its registry pointer; restoring a registry makes a pre-restore safety copy.
 - Core-managed project roots, registry files, and backups cannot overlap the AIPM installation. This Core guard and `AGENTS.md` do not replace host/OS permissions: an external agent with direct filesystem writes must be separately sandboxed from AIPM.
 - Host operations are capability-declared, permission-gated, and fail-closed.
@@ -103,7 +103,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository version is `1.1.7`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
+The current repository version is `1.1.9`; the latest published GitHub release remains [v1.0.2](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.0.2). This development update is not being published as a GitHub Release. P09's physically external project, live independent-host handoff, and durable terminal-capture provenance remain `UNVERIFIED`. A repository update does not imply Plugin installation or close those external gates.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 

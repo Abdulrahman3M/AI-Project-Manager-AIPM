@@ -19,13 +19,13 @@ On Windows, Run `AIPM.bat`. It Prefers Windows Terminal When Available, Starts P
 ./tests/Run-Tests.ps1
 ```
 
-On First Launch Without `-RegistryPath`, The TUI Asks Whether To Use `%LOCALAPPDATA%\AI-Project-Manager\registry.json` Or Choose Another `registry.json` Path Outside The AIPM Installation. It Stores That Choice In `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` Explicitly Counts As Choosing The Path. `-ScriptedInput` Is Reserved For Tests. Exit Codes: `0` Normal Exit, `1` Unexpected Runtime Error, `2` Non-Interactive Launch Refused, `3` Required PowerShell Launcher Missing.
+On First Launch Without `-RegistryPath`, The TUI Asks Whether To Use `%LOCALAPPDATA%\AI-Project-Manager\registry.json` Or Enter Another Full File Path Outside The AIPM Installation. Any File Name Is Accepted If It Ends In `.json`; A Folder Path Alone Is Not Accepted. It Stores That Choice In `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` Explicitly Counts As Choosing The Path. `-ScriptedInput` Is Reserved For Tests. Exit Codes: `0` Normal Exit, `1` Unexpected Runtime Error, `2` Non-Interactive Launch Refused, `3` Required PowerShell Launcher Missing.
 
 ## View Modes
 
 The Default Is **Task Dashboard**. Open **Settings** And **Change View Mode** To Select **Command Palette** Or **Assistant Console**. The Choice Is Stored As A Per-User UI Preference Only. Assistant Console Is An Offline, Read-Only Evidence View; It Does Not Claim An AI Or Agent Session.
 
-All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **Agents & Handoffs**, **Timeline**, **Skills & Plugins**, **Registry Management**, **Settings**, **Help**, And **About**. The dashboard and project/task views are read-only. Registry Management can register a project (creating only `Shared-Project-State-Manager/` after confirmation), unregister its pointer without deleting any project files, back up or restore registry JSON, and switch registry locations. Missing weights, run counts, histories, or live process evidence stay **Unknown** or **Unverified**.
+All Modes Include **Projects**, **Tasks**, **Phases**, **Tests & Evidence**, **Agents & Handoffs**, **Timeline**, **Skills & Plugins**, **Registry Management**, **Settings**, **Help**, And **About**. Registered projects appear inside **Projects**, not as separate dashboard actions. After registration, return to the dashboard, choose **Refresh**, then open **Projects** to review the project. The dashboard and project/task views are read-only. Registry Management can register a project (creating only `Shared-Project-State-Manager/` after confirmation), unregister its pointer without deleting any project files, back up or restore registry JSON, and switch registry locations. Missing weights, run counts, histories, or live process evidence stay **Unknown** or **Unverified**.
 
 The registry contains project IDs, display names, and root paths only. Task and continuity state remains in each managed project's `Shared-Project-State-Manager/`. A registry backup includes a SHA-256 sidecar; restore validates it when present and saves a pre-restore safety copy. Switching locations does not copy or delete existing registries.
 
@@ -53,7 +53,7 @@ AIPM Core refuses to manage a project, registry, or registry backup whose path o
 
 Automated Renderer Tests Cover Stable Frames, Changed-Row Styling, Removed Rows, Resize Invalidation, Cursor Restoration, Input Modes, Read-Only Core Integration, And The ASCII Fallback. This Does Not Prove Visual Appearance Or Flicker Behavior In A Specific Terminal. Historical P08 implementation evidence is preserved in the repository [Build History Archive](../../docs/project/Build-History-Archive.zip); current verification limits are in the repository Support Matrix. Files In `UX-TUI/Visual-References/` Are Illustrations, Not Application Screenshots.
 
-For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Versioned Update Notes](../../docs/project/Release-Notes/Release-Notes-v1.1.7.md). Repository Versioning Does Not Install The TUI Into An AI Host.
+For Published-Release And Local-Version Status, See The Repository [Support Matrix](../../docs/project/Support-Matrix.md) And [Development Change Log](../../CHANGELOG.md). Repository Versioning Does Not Install The TUI Into An AI Host.
 
 ## License And Notices
 

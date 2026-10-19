@@ -177,8 +177,8 @@ class ProjectRegistry:
 
     def __init__(self, path: Path) -> None:
         self.path = _protect_platform_path(path, operation="registry storage")
-        if self.path.name != "registry.json":
-            raise StateError("registry must be named registry.json")
+        if self.path.suffix.lower() != ".json":
+            raise StateError("registry file must end in .json")
 
     @staticmethod
     def _validate_data(data: object) -> dict:

@@ -4,6 +4,17 @@
 
 - No unreleased changes.
 
+## [1.1.9] — Projects Navigation And Registry Guidance (Development; Not Published)
+
+- Kept registered project names inside the **Projects** section instead of exposing each as a separate dashboard action; registration now gives English Refresh guidance.
+- Clarified that custom registry setup accepts any full file path ending in `.json`, and explains that a folder path alone is not accepted.
+
+## [1.1.8] — Dedicated Browser Reconnect (Development; Not Published)
+
+- Reclassified the AIPM-owned Browser Environment Manager from a byte-preserved migration import to declared first-party ownership, preserving its historical migration record while enabling governed maintenance.
+- Added verified dedicated Edge reconnect, strict process/listener identity gates, and safe missing-metadata registration without profile-data changes.
+- Synchronized platform and TUI development versions at `1.1.8`; plugin regeneration follows the confirmed capability baseline workflow.
+
 ## [1.1.7] — Task Context And Agent Handoff Architecture (Development; Not Published)
 
 - Established the Core principle that AIPM manages task context, supporting artifacts, progress, evidence, and handoffs—not target-project implementation files, tests, or execution permissions.

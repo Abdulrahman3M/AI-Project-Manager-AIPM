@@ -22,11 +22,13 @@ The skill owns only management and verification of dedicated browser environment
 7. If the agent's browser tool is missing, unavailable in a cloud environment, or built in with an unchangeable browser, state that clearly. Never silently fall back to the personal default browser.
 8. Avoid storing cookies, tokens, secrets, screenshots of private sites, or entire process environments in logs. Require user approval before visiting authenticated or destructive sites.
 
-## Source of truth
+## Source of truth and authorized reconnect
 
 The central, per-environment file is created under `%LOCALAPPDATA%\AI-Browser-Environments\<Name>\environment.json` and contains name, browser type, executable, data directory and CDP port. Profile data itself resides beneath `%LOCALAPPDATA%\AI-Browser-Profiles\<Name>`; this is not the personal Edge folder. The skill does not set an internal `--profile-directory` by default: whichever subprofile is actually active must be inspected when relevant.
 
 All stage scripts invoke `scripts/Browser-Environment.ps1`, the sole state-changing implementation. Use absolute paths or execute from its directory. Do not regenerate configuration by copying raw strings from a chat prompt.
+
+For the owner-authorized `AI-Agent-Browser` legacy Edge environment only, a missing manager record is registered as a reference to the existing dedicated `IB-Edge-Debug` directory. This is idempotent and never copies, moves, or resets profile contents. `Connect` starts that verified dedicated environment once after a restart if it is absent, then waits for process, listener, and CDP gates. Any other missing environment remains unknown.
 
 ## Create
 

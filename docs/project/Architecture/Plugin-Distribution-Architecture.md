@@ -72,7 +72,7 @@ The legacy Project Agent Bridge remains for backward compatibility. It is not th
 
 ## Runtime Project Registry And Self-Protection
 
-On the first interactive launch, the TUI asks the owner to accept `%LOCALAPPDATA%\AI-Project-Manager\registry.json` or select another file named `registry.json` outside the AIPM installation. The selected path is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` explicitly is treated as the owner's path selection.
+On the first interactive launch, the TUI asks the owner to accept `%LOCALAPPDATA%\AI-Project-Manager\registry.json` or enter another complete file path outside the AIPM installation. Any file name is accepted if it ends in `.json`; a folder path alone is not a valid file path. The selected path is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` explicitly is treated as the owner's path selection.
 
 The runtime registry contains pointers only; project operational data is stored under each project's `Shared-Project-State-Manager/`. The **Registry Management** screen can list, register, and unregister projects, create a JSON/SHA-256 backup, restore a verified backup, and switch the selected registry. Registering creates only AIPM-owned state after a confirmation. Unregistering removes a pointer only. Restore saves an automatic pre-restore backup. Switching paths does not migrate, copy, or delete either registry.
 

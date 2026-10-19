@@ -28,6 +28,29 @@ $managementRoot = Join-Path $env:LOCALAPPDATA 'AI-Browser-Environments'
 $profilesRoot = Join-Path $env:LOCALAPPDATA 'AI-Browser-Profiles'
 $environmentRoot = Join-Path $managementRoot $Name
 $configPath = Join-Path $environmentRoot 'environment.json'
+$authorizedLegacyEnvironment = [ordered]@{ name='AI-Agent-Browser'; browser='Edge'; executable='C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'; userDataDirectory='C:\Users\Abdoo\AppData\Local\IB-Edge-Debug'; cdpPort=9222 }
+
+function Get-NormalizedPath([string]$path) { [IO.Path]::GetFullPath([Environment]::ExpandEnvironmentVariables($path)).TrimEnd('\') }
+function Test-PathEqual([string]$left, [string]$right) { [string]::Equals((Get-NormalizedPath $left),(Get-NormalizedPath $right),[StringComparison]::OrdinalIgnoreCase) }
+function Get-CommandLineSwitchValue([string]$commandLine, [string]$switchName) {
+    $match = [regex]::Match($commandLine,'(?:^|\s)' + [regex]::Escape($switchName) + '(?:=|\s+)(?:"([^"]+)"|(\S+))')
+    if (-not $match.Success) { return $null }; if ($match.Groups[1].Success) { return $match.Groups[1].Value }; return $match.Groups[2].Value
+}
+function Test-AuthorizedLegacyConfig([object]$config) {
+    ($Name -ceq 'AI-Agent-Browser') -and ($config.browser -ceq 'Edge') -and
+    (Test-PathEqual ([string]$config.userDataDirectory) 'C:\Users\Abdoo\AppData\Local\IB-Edge-Debug') -and ([int]$config.cdpPort -eq 9222)
+}
+function Register-AuthorizedLegacyEnvironment {
+    if ($Name -cne 'AI-Agent-Browser') { throw 'UNKNOWN_ENVIRONMENT: this name has no authorized legacy environment.' }
+    $data = 'C:\Users\Abdoo\AppData\Local\IB-Edge-Debug'; $exe = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+    if (-not (Test-Path -LiteralPath $data -PathType Container)) { throw 'LEGACY_PROFILE_NOT_FOUND: authorized dedicated data directory is absent.' }
+    if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { throw 'LEGACY_EXECUTABLE_NOT_FOUND: authorized Edge executable is absent.' }
+    New-Item -ItemType Directory -Path $environmentRoot -Force | Out-Null
+    $config = [ordered]@{ schemaVersion=1; name='AI-Agent-Browser'; browser='Edge'; executable=$exe; userDataDirectory=$data; cdpPort=9222; managedReference=$true; registeredAt=[DateTimeOffset]::Now.ToString('o') }
+    $config | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $configPath -Encoding UTF8
+    Write-Host "CONFIGURED: registered authorized metadata reference at $configPath; profile data was not copied or changed."
+    return [pscustomobject]$config
+}
 
 function Get-BrowserExecutable([string]$kind, [string]$override) {
     if ($override) {
@@ -44,29 +67,28 @@ function Get-BrowserExecutable([string]$kind, [string]$override) {
     throw "$kind was not found. Provide -BrowserExecutable explicitly."
 }
 function Get-Config {
-    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) { throw "Unknown environment: $Name. Use -Action Create first." }
+    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) { return Register-AuthorizedLegacyEnvironment }
     $config = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($config.schemaVersion -ne 1 -or $config.name -cne $Name -or $config.browser -notin @('Edge','Chrome')) { throw 'Environment configuration is invalid.' }
-    $expected = [IO.Path]::GetFullPath((Join-Path $profilesRoot $Name)).TrimEnd('\')
-    $actual = [IO.Path]::GetFullPath([string]$config.userDataDirectory).TrimEnd('\')
-    if (-not [string]::Equals($expected,$actual,[StringComparison]::OrdinalIgnoreCase)) { throw 'User-data directory is outside the managed dedicated environment.' }
+    $expected = Get-NormalizedPath (Join-Path $profilesRoot $Name)
+    $actual = Get-NormalizedPath ([string]$config.userDataDirectory)
+    if (-not (Test-PathEqual $expected $actual) -and -not (Test-AuthorizedLegacyConfig $config)) { throw 'UNAUTHORIZED_USER_DATA_DIRECTORY: configuration is outside the managed dedicated environment.' }
     if (-not (Test-Path -LiteralPath $config.executable -PathType Leaf)) { throw 'Configured browser executable no longer exists. Repair requires a deliberate executable update.' }
     if ([int]$config.cdpPort -lt 1024 -or [int]$config.cdpPort -gt 65535) { throw 'Invalid CDP port.' }
     return $config
 }
 function Get-BrowserProcesses([object]$config) {
     $name = if ($config.browser -eq 'Edge') { 'msedge.exe' } else { 'chrome.exe' }
-    $expected = [IO.Path]::GetFullPath([string]$config.userDataDirectory).TrimEnd('\')
+    $expected = Get-NormalizedPath ([string]$config.userDataDirectory)
     # Require an exact quoted or unquoted --user-data-dir argument, not a substring.
-    @(Get-CimInstance Win32_Process -Filter "Name = '$name'" | Where-Object {
+    try { @(Get-CimInstance Win32_Process -Filter "Name = '$name'" -ErrorAction Stop | Where-Object {
         $cmd = [string]$_.CommandLine
-        $found = [regex]::Match($cmd,'(?:^|\s)--user-data-dir=(?:"([^"]+)"|(\S+))')
-        $folder = if ($found.Success) { if ($found.Groups[1].Success) { $found.Groups[1].Value } else { $found.Groups[2].Value } } else { '' }
-        $folder -and [string]::Equals([IO.Path]::GetFullPath($folder).TrimEnd('\'),$expected,[StringComparison]::OrdinalIgnoreCase)
-    })
+        $folder = Get-CommandLineSwitchValue $cmd '--user-data-dir'
+        $folder -and (Test-PathEqual $folder $expected)
+    }) } catch { throw "PROCESS_INSPECTION_UNAVAILABLE: $($_.Exception.Message)" }
 }
 function Get-Listener([int]$port) {
-    @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue)
+    try { @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction Stop) } catch { throw "LISTENER_INSPECTION_UNAVAILABLE: $($_.Exception.Message)" }
 }
 function Test-DedicatedCDP([object]$config, [switch]$ListPages) {
     $port = [int]$config.cdpPort
@@ -75,13 +97,12 @@ function Test-DedicatedCDP([object]$config, [switch]$ListPages) {
     $listeners = @(Get-Listener $port)
     if ($listeners.Count -eq 0) { throw "No CDP listener found on port $port." }
     if (@($listeners | Where-Object { $_.LocalAddress -notin @('127.0.0.1','::1') }).Count -gt 0) { throw 'Remote debugging is exposed on a non-loopback address. Refusing connection.' }
-    $owners = @($processes | ForEach-Object { [int]$_.ProcessId })
-    if (@($listeners | Where-Object { [int]$_.OwningProcess -notin $owners }).Count -gt 0) { throw 'The CDP listener is owned by a process outside this environment.' }
     $main = @($processes | Where-Object { $_.CommandLine -notmatch '(?:^|\s)--type=' })
-    if ($main.Count -ne 1) { throw 'Ambiguous browser parent process. Refusing connection.' }
+    if ($main.Count -ne 1) { throw 'PARENT_PROCESS_AMBIGUOUS: refusing connection.' }
     $command = [string]$main[0].CommandLine
-    if ($command -notmatch ('(?:^|\s)--remote-debugging-port=' + [regex]::Escape([string]$port) + '(?:\s|$)')) { throw 'Browser did not start with the expected CDP port.' }
-    if ($command -notmatch '(?:^|\s)--remote-debugging-address=127\.0\.0\.1(?:\s|$)') { throw 'Missing explicit loopback-only debugging address.' }
+    if ((Get-CommandLineSwitchValue $command '--remote-debugging-port') -ne [string]$port) { throw 'CDP_PORT_MISMATCH: browser did not start with the expected CDP port.' }
+    if ((Get-CommandLineSwitchValue $command '--remote-debugging-address') -cne '127.0.0.1') { throw 'CDP_ADDRESS_NOT_LOOPBACK: missing explicit loopback-only debugging address.' }
+    if (@($listeners | Where-Object { [int]$_.OwningProcess -ne [int]$main[0].ProcessId }).Count -gt 0) { throw 'LISTENER_OWNER_MISMATCH: refusing connection.' }
     $base = "http://127.0.0.1:$port"
     $version = Invoke-RestMethod -Uri "$base/json/version" -TimeoutSec 5
     $prefix = if ($config.browser -eq 'Edge') { 'Edg/' } else { 'Chrome/' }
@@ -89,7 +110,7 @@ function Test-DedicatedCDP([object]$config, [switch]$ListPages) {
     if ([string]$version.webSocketDebuggerUrl -notlike "ws://127.0.0.1:$port/*") { throw 'Unexpected CDP WebSocket endpoint.' }
     $tabs = @()
     if ($ListPages) { $tabs = @(Invoke-RestMethod -Uri "$base/json/list" -TimeoutSec 5) }
-    [pscustomobject]@{ status='CDP_VERIFIED'; name=$config.name; browser=$version.Browser; dataDirectory=$config.userDataDirectory; cdpEndpoint=$base; parentPid=$main[0].ProcessId; tabs=$tabs.Count; activeProfile='NOT_VERIFIED_REQUIRES_EDGE_VERSION_OR_AGENT' }
+    [pscustomobject]@{ status='CDP_VERIFIED'; name=$config.name; browser=$version.Browser; dataDirectory=$config.userDataDirectory; cdpEndpoint=$base; parentPid=$main[0].ProcessId; tabs=$tabs.Count; activeProfile='PROFILE_VERIFICATION_REQUIRES_AGENT_TOOL'; screenshot='SCREENSHOT_NOT_RUN' }
 }
 function Set-DesktopShortcut([object]$config) {
     $desktop = [Environment]::GetFolderPath('Desktop')
@@ -119,7 +140,12 @@ function Start-DedicatedBrowser([object]$config) {
         '--no-default-browser-check'
     ) -join ' '
     Start-Process -FilePath $config.executable -ArgumentList $arguments | Out-Null
-    Write-Host 'Browser launch requested. Wait for CDP verification; this message is not proof of successful connection.'
+    Write-Host 'BROWSER_START_REQUESTED: waiting for dedicated CDP verification.'
+}
+function Wait-DedicatedCDP([object]$config, [int]$TimeoutSeconds = 15) {
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds); $lastError = $null
+    do { try { return Test-DedicatedCDP $config -ListPages } catch { $lastError = $_.Exception.Message; Start-Sleep -Seconds 1 } } while ([DateTime]::UtcNow -lt $deadline)
+    throw "STARTUP_TIMEOUT: $lastError"
 }
 
 switch ($Action) {
@@ -136,10 +162,9 @@ switch ($Action) {
         Write-Host "Created configuration: $configPath (browser not yet launched)"
         if ($CreateShortcut) { Set-DesktopShortcut $config }
         Start-DedicatedBrowser $config
-        Start-Sleep -Seconds 2
-        try { Test-DedicatedCDP $config | Format-List } catch { Write-Warning "Startup verification pending/failed: $($_.Exception.Message)" }
+        try { Wait-DedicatedCDP $config | Format-List } catch { Write-Warning "Startup verification failed: $($_.Exception.Message)" }
     }
-    'Start' { Start-DedicatedBrowser (Get-Config) }
+    'Start' { $config = Get-Config; Start-DedicatedBrowser $config; Wait-DedicatedCDP $config | Format-List }
     'Status' {
         $config = Get-Config
         Write-Host "Environment: $($config.name) | Data directory: $($config.userDataDirectory)"
@@ -148,7 +173,8 @@ switch ($Action) {
     }
     'Connect' {
         $config = Get-Config
-        $result = Test-DedicatedCDP $config -ListPages
+        if (@(Get-BrowserProcesses $config).Count -eq 0) { Start-DedicatedBrowser $config }
+        $result = Wait-DedicatedCDP $config
         $result | Format-List
         if ($NavigateTest) {
             $target = [uri]::EscapeDataString('https://example.com')

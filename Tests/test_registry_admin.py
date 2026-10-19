@@ -36,6 +36,17 @@ class RegistryAdminTests(unittest.TestCase):
             ProjectRegistry(RUNTIME_ROOT / "registry.json")
         self.assertFalse((RUNTIME_ROOT / "registry.json").exists())
 
+    def test_registry_accepts_any_json_filename_but_rejects_other_extensions(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            custom_registry = base / "User Data" / "project-data.json"
+            registry = ProjectRegistry(custom_registry)
+            registry.initialize()
+            self.assertTrue(custom_registry.is_file())
+            self.assertEqual(registry.read(), {"schema_version": "1.0", "projects": [], "preferences": {}})
+            with self.assertRaisesRegex(StateError, "must end in .json"):
+                ProjectRegistry(base / "User Data" / "project-data.txt")
+
     def test_dashboard_and_registry_backups_reject_paths_overlapping_the_installation(self) -> None:
         protected_registry = RUNTIME_ROOT / "private" / "registry.json"
         result = self.cli("dashboard", "--registry", str(protected_registry))

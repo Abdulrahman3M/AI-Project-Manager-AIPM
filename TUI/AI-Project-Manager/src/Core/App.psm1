@@ -569,19 +569,20 @@ function Resolve-AipmRegistryPath {
     while ($true) {
         $items = @(
             (New-MenuItem -Label 'Use Default Registry Location' -Desc $defaultPath -Value 'default' -Icon 'Yes'),
-            (New-MenuItem -Label 'Choose A Different Location' -Desc 'Enter A Custom Full Path Ending In registry.json.' -Value 'custom' -Icon 'Settings'),
+            (New-MenuItem -Label 'Choose A Different Location' -Desc 'Enter A Full File Path With Any Name Ending In .json.' -Value 'custom' -Icon 'Settings'),
             (New-MenuItem -Label 'Exit Without Setup' -Desc 'Do Not Create Or Select A Registry.' -Value 'cancel' -Icon 'Exit')
         )
         $choice = Show-Menu -Title 'Project Registry Setup' -Description 'Choose Where AIPM Will Store Project Pointers. Project State Remains In Each Project.' -Items $items
         if ($choice -in @($null, 'cancel', 'Exit', '__QUIT__')) { return $null }
         $path = $defaultPath
         if ($choice -eq 'custom') {
-            $entered = Read-ValidatedInput -Prompt 'Registry File Path' -Help 'Choose A Private Location Outside The AIPM Installation. The Parent Folder Can Be Created.' -Example $defaultPath -Default '' -Validate {
+            $entered = Read-ValidatedInput -Prompt 'Registry File Path' -Help 'Enter The Full File Path, Including Any File Name Ending In .json.' -Example $defaultPath -Default '' -Validate {
                 param($text)
                 if (-not $text.Trim()) { return 'Enter A Registry File Path.' }
                 try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Path.' }
-                if ([System.IO.Path]::GetExtension($candidate) -ne '.json') { return 'The Registry File Must End In .json.' }
-                if ([System.IO.Path]::GetFileName($candidate) -ine 'registry.json') { return 'Name The Registry File registry.json.' }
+                if (-not [System.IO.Path]::IsPathRooted($text.Trim())) { return 'Enter A Full File Path Ending In .json.' }
+                if ([System.IO.Path]::GetExtension($candidate) -ine '.json') { return 'Enter A Full File Path Ending In .json; A Folder Path Alone Is Not A File.' }
+                if ([System.IO.Directory]::Exists($candidate)) { return 'Enter A File Path, Not An Existing Folder.' }
                 return $null
             }
             if (-not $entered) { continue }
@@ -603,6 +604,15 @@ function Get-AipmRegistryEntries {
     $result = Invoke-AipmCore -AppRoot $Root -Command 'list' -RegistryPath $RegistryPath
     if ($result.Status -ne 'PASS') { return [pscustomobject]@{ Status='BLOCKED'; Reason=$result.Reason; Projects=@() } }
     return [pscustomobject]@{ Status='PASS'; Reason=''; Projects=@((Get-AipmField $result.Data 'projects' @())) }
+}
+
+function ConvertFrom-AipmCodePoints {
+    param([Parameter(Mandatory)][string]$Sequence)
+    $text = ''
+    foreach ($code in ($Sequence -split '\s+')) {
+        $text += [char]::ConvertFromUtf32([Convert]::ToInt32($code, 16))
+    }
+    return $text
 }
 
 function Invoke-AipmRegistryManagement {
@@ -661,7 +671,13 @@ function Invoke-AipmRegistryManagement {
             if (-not $confirm) { continue }
             $projectId = 'Project-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
             $registered = Invoke-AipmCore -AppRoot $Root -Command 'registry-register' -RegistryPath $currentPath -ProjectRoot $projectPath -ProjectId $projectId -Alias $alias.Trim()
-            if ($registered.Status -eq 'PASS') { Show-Notice -Title 'Project Registered' -Lines @('The project is now listed. Its source files were not changed.') -Kind Success }
+            if ($registered.Status -eq 'PASS') {
+                $successLines = @(
+                    'Project Folder Added Successfully.',
+                    ('Please Select ' + (ConvertFrom-AipmCodePoints '27A1') + ' Refresh From The Home Page.')
+                )
+                Show-Notice -Title 'Project Registered' -Lines $successLines -Kind Success
+            }
             else { Show-Notice -Title 'Project Registration Failed' -Lines @([string]$registered.Reason) -Kind Error }
             continue
         }
@@ -771,14 +787,7 @@ function Start-TuiApp {
             $catalog = [pscustomobject]@{ Data=$null }; $hosts = [pscustomobject]@{ Data=$null }
             $data = $core.Data
         }
-        $items = @()
-        $projects = @(Get-AipmField $data 'projects' @())
-        foreach ($project in $projects) {
-            $summary = Get-AipmProjectSummary -Project $project
-            $iconRole = if ($summary.Status -eq 'Ready') { 'Success' } else { 'Warning' }
-            $items += New-MenuItem -Label $summary.Name -Desc ($summary.Status + ' | Phase ' + $summary.Phase + ' | Progress ' + $summary.Progress) -Value ('project:' + $summary.ProjectId) -Icon 'Project' -IconRole $iconRole
-        }
-        $items += @(
+        $items = @(
             (New-MenuItem -Label 'Projects' -Desc 'Review Registered Projects And Their Verified State.' -Value 'Projects' -Icon 'Project'),
             (New-MenuItem -Label 'Tasks' -Desc 'Read Current Task State And Evidence.' -Value 'Tasks' -Icon 'Task'),
             (New-MenuItem -Label 'Phases' -Desc 'Review Active Phase; Missing History Stays Unverified.' -Value 'Phases' -Icon 'Progress'),
@@ -829,13 +838,7 @@ function Start-TuiApp {
             }
             continue
         }
-        elseif ($choice -like 'project:*') {
-            $id = $choice.Substring(8)
-            $project = @($projects | Where-Object { $_.project_id -eq $id }) | Select-Object -First 1
-            if ($project) { $lines = @(Get-AipmPageLines -Section 'Projects' -Dashboard ([pscustomobject]@{projects=@($project)}) -Catalog $catalog.Data -HostMatrix $hosts.Data -Version $version) }
-            else { $lines = @('Project Data Changed Before It Could Be Read. Refresh The Dashboard.') }
-            $section = 'Project Details'
-        } else { $section = [string]$choice }
+        else { $section = [string]$choice }
 
         if ($section -eq 'Settings') {
             $settingsItems = @(

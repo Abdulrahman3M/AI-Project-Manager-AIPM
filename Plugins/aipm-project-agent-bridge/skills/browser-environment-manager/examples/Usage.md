@@ -2,6 +2,14 @@
 
 Run commands from the Skill's root in a PowerShell 5.1+ window. No administrative elevation is required.
 
+After Windows restart, the owner-authorized environment can reconnect without recreating its profile:
+
+```powershell
+.\scripts\Browser-Environment.ps1 -Action Connect -Name AI-Agent-Browser -NavigateTest
+```
+
+If its manager record is absent but the approved dedicated data directory exists, the command writes only `environment.json`, launches Edge once when needed, and verifies the loopback listener. It stops with a named status such as `PROCESS_INSPECTION_UNAVAILABLE`, `LISTENER_OWNER_MISMATCH`, or `STARTUP_TIMEOUT`; it never falls back to a personal browser.
+
 ```powershell
 .\scripts\Browser-Environment.ps1 -Action Create -Name AI-Agent-Browser -Browser Edge -CdpPort 9222 -CreateShortcut
 .\scripts\Browser-Environment.ps1 -Action Status -Name AI-Agent-Browser

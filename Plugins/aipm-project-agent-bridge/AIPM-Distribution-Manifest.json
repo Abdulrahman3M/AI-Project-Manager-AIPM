@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "ab4916b5c028de35f7c5d619345ea7031b2b20feaf3407d6bd2ecfa09c0ddef2",
+  "changelog_sha256": "6491f048b9fcd495ac1257f1b58b1271c5e9098fd77bb8f2ba843e3717545731",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.0.7",
-  "previous_plugin_version": "1.0.6",
+  "plugin_version": "1.0.9",
+  "previous_plugin_version": "1.0.8",
   "schema_version": "1.0",
   "skills": [
     {
@@ -35,19 +35,19 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "a10c91d05b79f45604f98b4fb04ecac2f9703b09de965bf35618a8e778186d1b",
+        "CHANGELOG.md": "44678303ca4cfd7486aad4014af4b035dfc57c6e42485be88249d255be19c63c",
         "PROMPT.md": "eb59815544d684c9ddcaf54596bc9e5143b47974d8a9a86223773165c8cd3ace",
-        "SKILL.md": "9d1e0151c11fc77917d82271d9e6015d776310a6d4ae090dea2c88856f44284c",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
-        "examples/Usage.md": "18653d8f8ac10cb1d35821ca5a34c005e86b2ed99a56afc6455d3556c3b56dfb",
+        "SKILL.md": "7eb954b705706af240ddfc379c58c8e85ff1951a299574b9f7d3f4465c471050",
+        "VERSION": "6ca2e3356014241331fb2b399428fca23c558e3f3d428edcf4f56eb0fe907069",
+        "examples/Usage.md": "e775ca15dbf17b5cf69c08a955ee84d869677a70f13b7ce91c8028dda1693de0",
         "references/Browser-Compatibility.md": "5b65afe12aefd2d7f29e4bbe351bf395cd3be1b34dcdb2aa68f70de96c31ec8e",
-        "scripts/Browser-Environment.ps1": "cf71c8dcb3b506f6330847583bc0eded644ecb41b33da83da415d54e0fb6dca3",
+        "scripts/Browser-Environment.ps1": "751573376b5011b4880636fa801258302c513696b11d5cd57cfd5a00662404f8",
         "scripts/Connect-Environment.ps1": "5a82708ac5e115bda16347a185b5eb4f8a00e743e327520e912d6b54b983adc3",
         "scripts/Create-Environment.ps1": "a73190ab7f2c0830e65f1e0c1e401035cd4d8a83a5f4556f2aada7798bdbafdb",
         "scripts/Maintain-Environment.ps1": "f5d6448a7783556a892bc389cf6368d44bcc9c59151c1b70ce5e2529580b4af3",
-        "tests/Test-Static.py": "922e2c64000badcfd39fe4e68080ac2d8933eaae4d6a40b6cf8b2ebdaa25056d",
+        "tests/Test-Static.py": "52e1f7ef2e40a8cb3eead745a5267d95efdb8a897d7624a0ac300f0ca85dba11",
         "tests/Test-Windows.ps1": "b8ab316d09678ef62791f490f45ad98fb6cfe6dde8d92b0049c6330d2fe2ccb8",
-        "troubleshooting/Common-Issues.md": "29b620bc7b577449b9af1d97331db31b3f369e4f6cc8f5de013565fad521149a"
+        "troubleshooting/Common-Issues.md": "4b2426d26811de013214b218c2dec829c48227baf0750162e2558c039bcc27ea"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -57,8 +57,8 @@
         "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
       },
       "slug": "browser-environment-manager",
-      "source_sha256": "f751d8d6b33c5196b4676710b38f610e3ebc6c1f331a8e85045534f0b6ba668e",
-      "version": "1.0.0"
+      "source_sha256": "6b578770a5d452a9a400cb8704f10d16248efa6ecde2a92ec234d226dfa8dc55",
+      "version": "1.1.0"
     },
     {
       "files": {
@@ -543,7 +543,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
-  "source_project_version": "1.1.7",
+  "source_project_version": "1.1.9",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

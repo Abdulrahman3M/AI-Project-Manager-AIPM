@@ -6,7 +6,7 @@ When using AIPM on another project, the AIPM repository itself is protected from
 
 ## Project Registry And State
 
-The project registry stores project IDs, display names, and root paths only. Its default location is `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, selected only after the first-run TUI prompt is accepted. The user may choose a different `registry.json` path outside the AIPM installation. Registry selection is saved in per-user AIPM UI settings; the registry itself is not stored in the AIPM repository.
+The project registry stores project IDs, display names, and root paths only. Its default location is `%LOCALAPPDATA%\AI-Project-Manager\registry.json` on Windows, selected only after the first-run TUI prompt is accepted. The user may choose any full file path outside the AIPM installation, with any filename ending in `.json`; a folder path alone is not a registry file path. Registry selection is saved in per-user AIPM UI settings; the registry itself is not stored in the AIPM repository.
 
 Each registered project's operational state remains in that project's `Shared-Project-State-Manager/` folder. Registering a project creates that AIPM-owned state folder after confirmation; it does not edit project source files. Unregistering removes only the pointer from the selected registry and never deletes the project's files or state. Registry backups are JSON plus SHA-256 sidecars; restore verifies the sidecar when present and saves a pre-restore copy before replacing the active registry. Changing the selected location does not copy or delete the previous registry.
 

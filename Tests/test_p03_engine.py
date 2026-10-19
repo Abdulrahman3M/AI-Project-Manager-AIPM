@@ -16,6 +16,14 @@ from aipm_core.storage import initialize_project_state, _atomic_json
 
 
 class CoreEngineTests(unittest.TestCase):
+    def assert_cli_stderr_clean(self, result):
+        # This host's Python launcher emits this exact relocation diagnostic before
+        # running any script. Ignore only that known host line; CLI diagnostics
+        # and every other stderr byte must still be absent for JSON error results.
+        expected_host_warning = f"Failed to find real location of {sys.executable}"
+        remaining = [line for line in result.stderr.splitlines() if line != expected_host_warning]
+        self.assertEqual(remaining, [])
+
     def test_invalid_command_metadata_leaves_state_unchanged_and_usable(self):
         # Publishing invalid event metadata would strand an unrecoverable intent.
         cases = [('actor', ''), ('actor', ' '), ('actor', 7),
@@ -185,7 +193,7 @@ class CoreEngineTests(unittest.TestCase):
             result = self.cli('list', '--registry', str(registry))
             self.assertEqual(result.returncode, 1)
             self.assertEqual(json.loads(result.stdout)['reason'], 'INVALID_REGISTRY')
-            self.assertEqual(result.stderr, '')
+            self.assert_cli_stderr_clean(result)
 
     def test_cli_malformed_state_returns_json_error(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
@@ -194,7 +202,7 @@ class CoreEngineTests(unittest.TestCase):
             result = self.cli('state-read', '--registry', str(self.registry(temporary, project)), '--project-id', 'managed')
             self.assertEqual(result.returncode, 1)
             self.assertEqual(json.loads(result.stdout)['reason'], 'INVALID_STATE')
-            self.assertEqual(result.stderr, '')
+            self.assert_cli_stderr_clean(result)
 
     def test_cli_unknown_project_returns_json_error(self):
         with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:

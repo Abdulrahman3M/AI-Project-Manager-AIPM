@@ -94,6 +94,12 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
         self.assertNotIn("morning", {item["slug"] for item in catalog["skills"]})
 
+    def test_aipm_owned_browser_environment_manager_is_not_byte_preserved_import(self) -> None:
+        migration = json.loads((ROOT / "docs" / "project" / "Provenance" / "Skill-Migration-Record.json").read_text(encoding="utf-8"))
+        first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
+        self.assertNotIn("browser-environment-manager", migration["byte_preserved_skills"])
+        self.assertIn("browser-environment-manager", {item["slug"] for item in first_party["skills"]})
+
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")
@@ -257,6 +263,13 @@ class CapabilityLibraryTests(unittest.TestCase):
 
     def test_release_baseline_reset_requires_its_own_explicit_confirmation(self) -> None:
         fixture = copy_library_fixture(self.workspace / "release-baseline", include_registry=True)
+        for version_path in (fixture / "01-Skills-General").glob("*/VERSION"):
+            version_path.write_text("1.0.0\n", encoding="utf-8")
+        first_party_path = fixture / "Capability-Library" / "First-Party-Skills.json"
+        first_party = json.loads(first_party_path.read_text(encoding="utf-8"))
+        for skill in first_party["skills"]:
+            skill["version"] = "1.0.0"
+        first_party_path.write_text(json.dumps(first_party, indent=2) + "\n", encoding="utf-8")
         registry_path = fixture / "Capability-Library" / "Registry.json"
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
         registry["skills"][0]["version"] = "1.0.1"

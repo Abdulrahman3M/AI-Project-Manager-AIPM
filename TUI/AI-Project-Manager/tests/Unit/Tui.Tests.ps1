@@ -303,10 +303,14 @@ $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } '0114'
 Assert-True 'first launch asks before creating the default per-user registry' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and $ui.Output.Contains('Use Default Registry Location') -and (Test-Path -LiteralPath $defaultRegistry -PathType Leaf)) $ui.Error
 Assert-Equal 'first-run registry choice is remembered in per-user settings' ([System.IO.Path]::GetFullPath($defaultRegistry)) (Get-UserSetting -Name 'registry_path')
 [void](Set-UserSetting -Name 'registry_path' -Value '')
-$customRegistry = Join-Path (Join-Path (Get-TestWork) 'Custom Registry Location') 'registry.json'
-$customKeys = '02' + $customRegistry + '{Enter}14'
+$customRegistry = Join-Path (Join-Path (Get-TestWork) 'Custom Registry Location') 'project-data.json'
+$customFolderEntry = (Split-Path -Parent $customRegistry) + [System.IO.Path]::DirectorySeparatorChar
+$eraseFolderEntry = '{Backspace}' * $customFolderEntry.Length
+$customKeys = '02' + $customFolderEntry + '{Enter}' + $eraseFolderEntry + $customRegistry + '{Enter}14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } $customKeys
-Assert-True 'first-run setup accepts a custom full path and creates registry.json there' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and (Test-Path -LiteralPath $customRegistry -PathType Leaf)) $ui.Error
+Assert-True 'first-run setup accepts a custom full path and any .json filename' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and (Test-Path -LiteralPath $customRegistry -PathType Leaf)) $ui.Error
+Assert-Contains 'registry location help requires the full path and permits a chosen JSON filename' $ui.Output 'Enter The Full File Path, Including Any File Name Ending In .json.'
+Assert-Contains 'folder-only registry input explains why the full JSON file path is required' $ui.Output 'Enter A Full File Path Ending In .json; A Folder Path Alone Is Not A File.'
 Assert-Equal 'custom registry choice is saved without changing the selected path' ([System.IO.Path]::GetFullPath($customRegistry)) (Get-UserSetting -Name 'registry_path')
 $env:LOCALAPPDATA = $previousLocalAppData
 [void](Set-UserSetting -Name 'registry_path' -Value '')
@@ -324,9 +328,17 @@ $statePath = Join-Path $stateRoot 'State-Manifest.json'
 $registeredPath = Join-Path (Get-TestWork) 'registry.json'
 $registered = @{ schema_version='1.0'; projects=@(@{ project_id='P08-Fixture'; root_path=$fixtureRoot; alias='Registered Fixture' }); preferences=@{} }
 [System.IO.File]::WriteAllText($registeredPath, ($registered | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}15'
-Assert-True 'project detail is derived from the registered Core state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) ($ui.Error + $ui.Output)
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '03{Enter}15'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '14'
+Assert-True 'registered projects are not separate actions on the main dashboard' ($ui.Error -eq '' -and -not $ui.Output.Contains('Registered Fixture')) ($ui.Error + $ui.Output)
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}14'
+Assert-True 'Projects section lists registered projects and their verified state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) ($ui.Error + $ui.Output)
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '02{Enter}14'
 Assert-True 'task view lists verified tasks from Core without local state copies' ($ui.Error -eq '' -and $ui.Output.Contains('Verify AIPM TUI') -and $ui.Output.Contains('Passed')) ($ui.Error + $ui.Output)
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '05{Enter}15'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '04{Enter}14'
 Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)
+$registrationRegistry = Join-Path (Get-TestWork) 'registration-message-registry.json'
+$newProjectRoot = Join-Path (Get-TestWork) 'New Project Fixture'
+[void](New-Item -ItemType Directory -Path $newProjectRoot -Force)
+$registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}01{Enter}071201{Enter}14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registrationRegistry } $registrationKeys
+Assert-True 'successful project registration shows English refresh instructions and the refreshed Projects section lists it' ($ui.Error -eq '' -and $ui.Output.Contains('Project Folder Added Successfully.') -and $ui.Output.Contains('Please Select') -and $ui.Output.Contains('Refresh From The Home Page.') -and $ui.Output.Contains('New Project')) ($ui.Error + $ui.Output)

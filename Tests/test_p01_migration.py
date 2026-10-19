@@ -34,7 +34,7 @@ class P01MigrationTests(unittest.TestCase):
         approved = {item["slug"] for item in registry["skills"]}
         first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
         declared_first_party = {item["slug"] for item in first_party["skills"]}
-        self.assertEqual({"tui-intelligence"}, declared_first_party)
+        self.assertEqual({"browser-environment-manager", "tui-intelligence"}, declared_first_party)
         self.assertEqual(approved, installed)
         self.assertEqual(12, len(installed))
         self.assertTrue(declared_first_party <= installed)

@@ -2,6 +2,15 @@
   "schema_version": "1.0",
   "skills": [
     {
+      "slug": "browser-environment-manager",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "AI Project Manager Personal Use License",
+      "license_path": "LICENSE",
+      "version": "1.1.0",
+      "source_reference": "AI Project Manager"
+    },
+    {
       "slug": "tui-intelligence",
       "owner": "AIPM Project Owner",
       "origin": "AIPM_FIRST_PARTY",

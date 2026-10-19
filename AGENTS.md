@@ -5,7 +5,7 @@
 - The Core Engine independently enforces the same boundary for managed-project roots, project-state operations, and registry files/backups: any path equal to, inside, or containing the detected AIPM installation is rejected before the operation. The Core guard is fail-closed and has no user-facing bypass for ordinary project workflows.
 - This rule and Core guard do not replace operating-system or AI-host permissions: an external agent with direct filesystem write access can bypass application APIs. Keep AIPM outside that agent's writable workspace, or deny writes through the host sandbox/ACL; use a separately authorized AIPM-development session when changing AIPM.
 - The owner may add or remove Skills in `01-Skills-General`. Keep provenance and license metadata accurate; preserve source hashes for retained imported Skills. Declare new AIPM-authored Skills in `Capability-Library/First-Party-Skills.json`; update protected capability baselines only through the confirmed CLI workflow.
-- `project-orchestrator` is the documented derivative; `tui-intelligence` is the declared AIPM first-party Skill in `Capability-Library/First-Party-Skills.json`.
+- `project-orchestrator` is the documented derivative; `browser-environment-manager` and `tui-intelligence` are the declared AIPM first-party Skills in `Capability-Library/First-Party-Skills.json`.
 - Do not add `02-Skills-Personal`, `import-memory`, or `morning`.
 - Use English Title Case for new human-facing names. Preserve technical filenames and Skill slugs.
 - Do not push, publish, or modify the Universal AI ToolKit source without explicit authorization.
