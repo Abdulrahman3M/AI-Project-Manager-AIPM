@@ -1,5 +1,14 @@
 # AIPM Change Log
 
+## [1.4.5] — Skill Routing And Managed TUI Input Lifecycle
+
+- Improved Project Orchestrator routing by analyzing outcome, work mode, deliverable, recipient, and constraints before choosing a Skill. Agent-directed implementation Markdown now routes explicitly to Create Strict Implementation Handoff; generic Markdown does not trigger it automatically.
+- Replaced stale Skill catalog entries with the active Capability Library registry, added safe online discovery for genuine capability gaps, and defined verified native-agent fallback when network discovery is unavailable.
+- Expanded PowerShell TUI App Designer with a managed typed-input/frame lifecycle reference, structured input/output path context, and regression tests for sequential prompts and stale-value removal.
+- Updated platform and TUI versions together to `1.4.5`; Project Orchestrator advances to `1.0.4`, and PowerShell TUI App Designer advances to `1.2.1`. The protected imported Create Strict Implementation Handoff Skill remains at `1.0.0`.
+- Rebuilt the legacy Project Agent Bridge and ChatGPT/Codex, Claude Code, and Google Antigravity local distribution archives from the refreshed registry. Local validation is not a claim of host installation or runtime acceptance.
+- This release is a patch over `v1.4.0`; no breaking project API changes are intended.
+
 ## [1.4.0] — TUI Reliability And Capability Distribution
 
 - Added resize-aware terminal frame lifecycle engineering to the PowerShell TUI App Designer Skill, including shared Input/Renderer templates, regression tests, reusable references, and a Windows Terminal trailing-separator argument parser probe; the Skill advances to `1.1.0`.

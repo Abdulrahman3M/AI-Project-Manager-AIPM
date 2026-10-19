@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.5] — Managed Input And Frame Lifecycle
+
+- Synchronizes the TUI package with AIPM `1.4.5`; this release carries no TUI product behavior change beyond the accompanying platform release metadata.
+
 ## [1.4.0] — Synchronized Product Release
 
 - Synchronized the PowerShell TUI version with the AIPM platform at `1.4.0` for the source release.

@@ -2,6 +2,17 @@
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
 
+## 1.2.1 — 2026-10-20
+
+- Synchronized the package overview and embedded version references with the managed Input/Frame lifecycle release.
+
+## 1.2.0 — 2026-10-19
+
+- Added a managed Input/Frame lifecycle contract and reference for typed prompts, cursor ownership, renderer-cache reconciliation, retries, Browse, resize, completion, and Run Again behavior.
+- Added structured result-path rendering to the generated TUI template, preserving only explicit input/output values and avoiding stale input residue.
+- Added regression coverage for consecutive path prompts, result frames, multiple inputs, and omitted output paths; documented the attached screenshots' root-cause explanation as a hypothesis unless source tracing confirms it.
+- Updated the skill package validator to require the new lifecycle guidance and template behavior.
+
 # Changelog
 
 ## 1.1.0 - 2026-10-19

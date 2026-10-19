@@ -2,6 +2,25 @@
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
 
+## [1.0.4] — 2026-10-20
+
+- Synchronized the maintained Skill catalog's PowerShell TUI App Designer version with the current active registry.
+
+## [1.0.3] — 2026-10-20
+
+- Added regression coverage ensuring generic README and explanatory Markdown are not automatically treated as execution handoffs.
+
+## [1.0.2] — 2026-10-20
+
+- Clarified that the active Capability Library registry is authoritative, removed stale Universal AI ToolKit index references, and limited governance/shared-state setup to tasks where relevant.
+- Made direct specialist routing explicit for narrow deliverables and added generic-Markdown false-positive coverage.
+
+## [1.0.1] — 2026-10-19
+
+- Added deliverable-first Skill routing with explicit detection for implementation handoffs, execution prompts, and task instructions for another AI agent; generic Markdown no longer triggers handoff authoring by extension alone. The imported handoff Skill itself remains unchanged.
+- Added trusted online discovery for genuine catalog gaps and a safe native-agent fallback when search is unavailable.
+- Replaced stale removed-Skill entries with the exact active registry catalog and added regression tests for routing and catalog parity.
+
 ## 1.3.10 — 2026-10-13
 - Synchronized the Skill catalog with Strict Implementation Handoff v1.4.0 and Token Optimization v1.0.1.
 - Clarified browser-manager handoff integration and explicit owner approval for multi-agent fan-out.

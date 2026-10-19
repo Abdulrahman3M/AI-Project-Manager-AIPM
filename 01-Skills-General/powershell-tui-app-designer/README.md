@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | **Skill name** | `powershell-tui-app-designer` (display name: PowerShell TUI App Designer) |
-| **Version** | 1.1.0 |
-| **Purpose** | Teach an AI agent to design, build, update, diagnose, test, package and release professional PowerShell terminal applications, including resize-safe rendering and Windows Terminal launcher diagnostics |
+| **Version** | 1.2.0 |
+| **Purpose** | Teach an AI agent to design, build, update, diagnose, test, package and release professional PowerShell terminal applications, including resize-safe rendering, managed input/frame lifecycle, and Windows Terminal launcher diagnostics |
 | **Compatibility** | Generated apps: Windows PowerShell 5.1 and PowerShell 7.x on Windows; PowerShell 7.x on Linux/macOS. Skill scripts: same |
 | **Last updated** | 2026-10-19 |
 
@@ -15,9 +15,9 @@ An **executable methodology**, not an essay. `SKILL.md` gives an agent 13 ordere
 ```text
 PowerShell TUI App Designer/
   SKILL.md              the strict procedure (start here)
-  README.md  VERSION    this file; version 1.1.0
+  README.md  VERSION    this file; version 1.2.1
   Prompts/              reusable engineering prompts (complete frame + resize lifecycle)
-  references/           architecture, reliability, launcher diagnosis, testing and design rules
+  references/           architecture, resize/input lifecycle, launcher diagnosis, testing and design rules
   scripts/              generator, validators, test runner, packager, self-check
   templates/App/        a complete working scaffold (the generator copies it)
   examples/             nine small, runnable patterns (+ Shared/TinyTui.ps1)
@@ -84,6 +84,8 @@ For every new or existing TUI, the methodology now requires an audit of frame ow
 
 | Version | Date | Changes |
 |---|---|---|
+| 1.2.1 | 2026-10-20 | Reconciled the package overview and embedded version references with the managed Input/Frame lifecycle release. |
+| 1.2.0 | 2026-10-19 | Added managed input/frame lifecycle guidance, structured result-path context, and stale-input regression tests. |
 | 1.1.0 | 2026-10-19 | Added reusable resize/frame-lifecycle engineering, shared input/renderer implementation, regression coverage, and Windows Terminal launcher argument diagnostics and parser probe. |
 | 1.0.0 | 2026-10-18 | Reset the independent Skill release line to the AIPM-owned baseline. |
 | 2.0.3 | 2026-10-14 | ANSI in-place frames, differential updates, centralized rendering prompt, semantic colors, Emoji fallbacks and Title Case |

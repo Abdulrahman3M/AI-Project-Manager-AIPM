@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "c5c91b66e5a2fe7503c28a594d0841459c90e8c15783dc352d70c7085aadf9cf",
+  "changelog_sha256": "03f3835cc95aa696cdf5ef436c914e3528adc5c261cd7dc3661b34f67aea39cf",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.0.12",
-  "previous_plugin_version": "1.0.11",
+  "plugin_version": "1.0.14",
+  "previous_plugin_version": "1.0.13",
   "schema_version": "1.0",
   "skills": [
     {
@@ -102,11 +102,11 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "7b55cf6e01c84e517549d9fcfb0e6062083c28e1804f5a6457cf606b504a8428",
+        "CHANGELOG.md": "e9ea8173683b1e38fc98fcc6ff437f959c9b5eb4873f031abd993a0551130dca",
         "Prompts/Flicker-Free-PowerShell-TUI-Architecture.md": "df778c34bfa74b110a8bd200784a864ee9189f621616cdc00cecc5f71b179fb5",
-        "README.md": "026e43c7e56fe8d3cef6d233874be383c5ee48b97af0ddfcba607edda62e36f9",
-        "SKILL.md": "9746922a9f6f6d54c14701c926ea41eb7b72bfca0ac283d244eb27f1e8ac5c7e",
-        "VERSION": "6ca2e3356014241331fb2b399428fca23c558e3f3d428edcf4f56eb0fe907069",
+        "README.md": "d6a7b741d9bff30345343ba00b0c800f3d3d131adb281c3c919abe8f1cf71a72",
+        "SKILL.md": "b2325de81dcc0ca5bc1c585a4e8d49a497210308767478122793213406e4b7d3",
+        "VERSION": "d7c5f05b8f509e61cbb54803e95dedf5b328af81cd5456f7554fb2990f91acce",
         "assets/Assistant-Console.svg": "a4944947535045c4d53929a3197f0c7e29230446d86b1ee19a9f4185cbc6ad23",
         "assets/Classic-Numbered.svg": "f31ed0a8a4e975423e7b5286a5b0a712d79fe1ed5e8314a6759fe653971b60a0",
         "assets/Command-Palette.svg": "8f254c0965fe9e2303aadb9d872026d511f33b7ff49d1e1c2e0877ab0efcc6d8",
@@ -129,6 +129,7 @@
         "references/Design-Preview-Gallery.md": "8d160a856ecd802676d17d16dc32f744af0ca9638a82712bd633adfef86411a9",
         "references/Error-Handling.md": "7c2e2a49abf2162737b066db8b800ddb0f5f27aff8126d73a95f19eebe21162c",
         "references/General-Terminal-Engineering-Lessons.md": "8fb65ab5585612bce34231e60cec6b143d62763b4778bbba2c314028710ab316",
+        "references/Input-Frame-Lifecycle.md": "16fd900a71cc000b16156def579c9997b3f7c2a9dfda26ddc5fe03bfa9e4d2fb",
         "references/Interactive-Design-Wizard.md": "4d389d51c6d6c3da78502c3a76f29e2a46a66f98aee849f8833da2d82ec7d0e2",
         "references/Modern-Presets.md": "80f84f1185e1a05a9bc3fea0a009d97a744903ec947b4ceda1011b4b78831583",
         "references/Packaging-and-Release.md": "adb4bbe78af7ee6700c91789b38d4d02fbcac7641301cfa5b4f4e5968a3ee538",
@@ -140,7 +141,7 @@
         "scripts/Invoke-TuiTests.ps1": "cf7c43b382fa66b8d8b8d940cae42ef7d4004f73ef6bfdb64d6bf1ad7d478af3",
         "scripts/New-TuiPackage.ps1": "a673709b522e40185efe2b6857cc26d054eef2e0049a47895c4e24bc5d2c072c",
         "scripts/New-TuiProject.ps1": "741a4e78bad6f967d53477e926ae1362cd28925b0bd6a4a3961ae776ec172b79",
-        "scripts/Test-SkillPackage.ps1": "865c40129d8a9f8501ccf5ec3a1d5a9744fff748aeed8eb2e1197d888a6249f9",
+        "scripts/Test-SkillPackage.ps1": "e3409693836a9d3eb840369ee1456279aba120e3d8800b1cb99fdd762349defb",
         "scripts/Test-TuiEnvironment.ps1": "40d8e6ef3db569b1a92c6fdac6d8c49795b6e7bbdacad03796408f958f5b17e7",
         "scripts/Test-TuiProject.ps1": "aefff5bccceba8f2fc2ac6f4acf6db6423efbeafcf1f7c877ba397ad113b5e06",
         "templates/App/.gitignore": "82dd710c784ac8f91f1ff414ee540f4c63fec254e6ca7723c04d21543f21985e",
@@ -154,7 +155,7 @@
         "templates/App/src/Core/Process.psm1": "d3ed4f5baf73c547d345b6a9aebc888e11ecea64f762ffde412587bc0905a14a",
         "templates/App/src/Core/Settings.psm1": "aeebc93d317ece95f4ddfcb0361149134361ed016252deb8d23e177d917b278f",
         "templates/App/src/Import-Modules.ps1": "35397017573261f6c96233e681b086eb2b2cbba824c36efd8c367147194301ba",
-        "templates/App/src/TUI/Dialog.psm1": "26fdf303a0e3707b281d0ec5a1992bcc30f6d7a07f84a962ed52f6b4ef543816",
+        "templates/App/src/TUI/Dialog.psm1": "c851c494b3d40a62af974522b3aeec74f4ad3e2cbf5ac1336396d45d86ca3c52",
         "templates/App/src/TUI/Input.psm1": "b8ead0c54c3156662dd97daef251240e11db9fee43b2a6f9c01b2e94c8961c26",
         "templates/App/src/TUI/Menu.psm1": "33d5d2b78dd1010914d8a3dfedeeeb72b398a7b41ea64f5c04bb4371ba96da29",
         "templates/App/src/TUI/Presets.psm1": "6150d59d83c548bc54290f1e16c7de8603010cc14d173e602eb3040c5370e34c",
@@ -165,7 +166,7 @@
         "templates/App/tests/TestHelpers.ps1": "4c0fce945a9f4a58b30b23c41b3c88ccdbc4368309f39662167cb5014ce5bcd9",
         "templates/App/tests/Unit/Core.Tests.ps1": "1ef9904197a06d57d3eb5f71f6980232842ab4ca014a1506b74a8394df1b51e2",
         "templates/App/tests/Unit/Static.Tests.ps1": "5a7f955a8700524f90170592c3a427a18b90c208a48defa94555926b4567f3b2",
-        "templates/App/tests/Unit/Tui.Tests.ps1": "58cc97d53e71e0b8fb6251804ae28995701d4bfa1d518dfe7664fd3e1e59059d",
+        "templates/App/tests/Unit/Tui.Tests.ps1": "cda467a3a6d23193b05e022fae46d0c169175b258ba046842a1e5ed9130543cb",
         "templates/App/{{AppId}}.bat": "879a6e0d94ff79ccf6d2cf032ad10d58fc3ea8081bac1e77e7c81bbf75b9e606",
         "templates/App/{{AppId}}.sh": "7d0254067d93bc74b92eea1cba1e68fdc37c286030121c075740d5bf5dcb3233"
       },
@@ -177,8 +178,8 @@
         "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
       },
       "slug": "powershell-tui-app-designer",
-      "source_sha256": "16ba597bcb521da868e65bab8d615fdff9e6eedcef9dfc401582a377a9ea0071",
-      "version": "1.1.0"
+      "source_sha256": "fb9bee68698cc381deff4206df3e78c3c01deb06b811f507c0d812c982fc4c60",
+      "version": "1.2.1"
     },
     {
       "files": {
@@ -381,13 +382,14 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "95bf3714631b7dc4ee1593575865b964698c82569d50f550940a66cfc68dd675",
-        "README.md": "1896b41d789960d57c9f059ac3121e03259e0c00395b26673d45d36a56e3bf27",
-        "SKILL.md": "7ec8cb8250b1fda633bd02344b42fc62aaac3bdbdaba53405b3b53b4dfcf0f7a",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+        "CHANGELOG.md": "9aa99e8a3ffcc62b3626d5b4e23a3554ca2aee9eecd607cc45da0dcc78a4a598",
+        "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
+        "SKILL.md": "e503d7410db10acddeb5e2e2d1418b2c6485a0149603f5d482c4c7e0f1b7e189",
+        "VERSION": "eb8d72a2c4783965876f89d494d6ecdd3502c814e0229d50cea66eb65169856d",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
-        "references/Skill-Selection-Protocol.md": "134af3d46f63bad66dc3f8e94e1616d8e4fe5a88b52364e479a7e76192ed7370",
-        "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab"
+        "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
+        "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
+        "tests/Test-SkillSelectionContract.py": "827e9c8893f60f1bd140a414e4348cf518d7efafe205afc96bf52e87c22a7ca3"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -397,8 +399,8 @@
         "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
       },
       "slug": "project-orchestrator",
-      "source_sha256": "a28f8c21e109f4bafd44e0f8301011eccc3c101fc74ab7502489d1d39db7a192",
-      "version": "1.0.0"
+      "source_sha256": "842c64c3c0ca5c708c2ba36aad3874e2fe4f706b4a5580b223090601e9057cec",
+      "version": "1.0.4"
     },
     {
       "files": {
@@ -546,7 +548,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
-  "source_project_version": "1.4.0",
+  "source_project_version": "1.4.5",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

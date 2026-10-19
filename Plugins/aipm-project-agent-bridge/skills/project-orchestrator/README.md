@@ -33,13 +33,13 @@ It:
 | `references/Orchestration-Model.md` | Manager/Supervisor/Team Leader operating model |
 | `templates/Orchestration-Brief.md` | Reusable project/task orchestration plan |
 
-Current version: **1.3.10**.
+Current version: **1.0.4**.
 
 ## Core Capabilities — Detailed Guide
 
 ### 1. Automatic Skill Discovery and Selection
 
-Identify required capabilities, consult the local Skill catalog, and choose the smallest sufficient set. If a capability is missing, direct the agent to research trusted sources (including `find-skills` where available). Compare candidate Skills for functional fit, provenance, maintenance, license, compatibility, permission requirements, security, and demonstrated quality. Read instructions and dependencies before use. Never auto-install or execute untrusted third-party code; ask for owner approval for new installations, dependencies, or permissions. Preserve explicit user-selected Skills unless substitution is approved. If none is safe, proceed using native capabilities only when verifiable, otherwise report the limitation.
+Parse the requested outcome, work mode, deliverable, recipient, and constraints before routing. Consult the active registry; choose the narrowest sufficient Skill. A request for a handoff, execution prompt, or Markdown instructions another AI agent will use to implement/change/repair work routes to `create-strict-implementation-handoff`; a generic README or explanatory Markdown does not. For a genuine catalog gap, search trusted online sources when available, evaluate candidates, and obtain approval before install/download/execute or permissions. If search is unavailable, use base-agent capabilities only when safely verifiable; otherwise report the limitation. See `references/Skill-Selection-Protocol.md`.
 
 ### 2. Risk Management
 

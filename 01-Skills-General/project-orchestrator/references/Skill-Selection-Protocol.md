@@ -1,165 +1,93 @@
 # Skill Selection Protocol
 
-This reference defines how Project Orchestrator chooses Skills from a large library without creating context overload.
+This protocol makes Skill routing intent-aware, evidence-based, and lightweight. The goal is to choose the right capability for the user's requested outcome—not to invoke the Orchestrator for every request or match Skills by keywords alone.
 
-## Principle
+## 1. Parse the Request Before Selecting a Skill
 
-Select by required capability, not by library size.
+Write a short internal task model with:
 
-The Orchestrator should discover broadly from metadata but read deeply only for shortlisted Skills.
+1. **Outcome:** what result does the user want?
+2. **Work mode:** explain, inspect, diagnose, plan, author a handoff, implement, review, or publish?
+3. **Deliverable:** what must exist at the end (answer, file, code change, handoff, release)?
+4. **Recipient/use:** is the artifact for the user, the current agent, or another AI agent to execute?
+5. **Constraints:** scope, platform, permissions, risk, and verification requirements.
 
-## Selection Pipeline
+Do not choose a Skill from a file extension, an isolated noun, or a superficial phrase match. A request to explain how to write a Markdown file is not necessarily a request to author one; a request for an `.md` handoff that another agent will implement is.
 
-### 1. Capability Decomposition
+## 2. Consult the Active Catalog
 
-Convert the task into capability statements, for example:
+- Use `Capability-Library/Registry.json` as the AIPM source of truth when it is available. In other environments, use the current installed Skill list and its authoritative descriptions.
+- Ignore removed, excluded, stale, or merely historical Skills. Do not route to a Skill absent from the active catalog as if it were installed.
+- Shortlist by the outcome and capability required, then read only candidate `SKILL.md` files needed to resolve ambiguity.
+- Check prerequisites, platform fit, permission needs, output scope, verification method, and overlap before activation.
 
-- project governance;
-- state/handoff continuity;
-- UI design;
-- document generation;
-- browser automation;
-- database migration;
-- testing;
-- deployment.
+## 3. Deliverable-First Handoff Rule
 
-Do not start with Skill names.
+Select `create-strict-implementation-handoff` as the **LEAD authoring Skill** when the user requests a document whose purpose is to transfer executable implementation instructions to another AI agent. Common phrasings include:
 
-### 2. Metadata Scan
+- “Create an implementation handoff/task file for another agent.”
+- “Write a prompt/instructions/brief that tells an AI agent to implement, update, or fix this.”
+- “Make an `.md` file the next agent can follow to perform this change.”
+- “Prepare a strict execution plan/handoff; do not start the work.”
 
-Use available lightweight sources such as:
+This Skill authors the handoff only. Do not implement the underlying task unless the user separately requests implementation. A generic README, project overview, meeting notes, explanation, tutorial, or reference document is **not** a handoff merely because it is Markdown or mentions an AI agent. Route those by their actual purpose. If the user's requested purpose is unclear and changes whether implementation is authorized, ask one concise clarifying question.
 
-- Skill registry;
-- manifest;
-- Skills index;
-- plugin Skill list;
-- installed-tool Skill descriptions.
+## 4. Candidate Ranking and Minimal Selection
 
-Do not open every `SKILL.md`.
+For each candidate, assess:
 
-### 3. Candidate Shortlist
+| Criterion | Question |
+|---|---|
+| Outcome fit | Does the Skill directly produce or enable the requested result? |
+| Trigger fit | Do its active description and instructions cover this request? |
+| Scope fit | Can it do the work without taking on unrelated responsibilities? |
+| Environment fit | Does it support the target OS, host, tools, and formats? |
+| Safety fit | Are permissions, side effects, and approval requirements compatible? |
+| Verification fit | Can the promised output be checked with available evidence? |
+| Incremental value | Does it add a distinct capability not already covered? |
 
-For each capability, shortlist Skills whose description/trigger clearly matches.
+Choose the smallest sufficient set: one LEAD per responsibility, SUPPORT only for a distinct needed capability, and keep plausible alternatives inactive. A clear single-specialist task goes directly to that specialist. Use Project Orchestrator as LEAD only when selecting/coordination is requested or the work truly spans capabilities, phases, or supervision. Governance and shared-state Skills are foundational only when project rules, risk, or substantial continuity needs make them applicable.
 
-A candidate should have a reason such as:
+## 5. Routing Examples
 
-- direct specialist fit;
-- mandatory foundational responsibility;
-- unique supporting capability;
-- explicit owner request.
+| User intent | Route | Boundary |
+|---|---|---|
+| “Write an `.md` prompt for another AI to implement this bug; don't implement it.” | `create-strict-implementation-handoff` — LEAD | Produce execution-ready handoff only; no product code changes. |
+| “Create a README explaining how to install this tool.” | Route by documentation task or use native authoring | Do not invoke handoff merely because the output is Markdown. |
+| “Explain how I can create a handoff.” | Answer/explain, optionally teach | The user asked for guidance, not a handoff artifact. |
+| “Build a new PowerShell menu app with validated input.” | `powershell-tui-app-designer` — LEAD | Follow its full create/build/test workflow. |
+| “Review this TUI's resize and typed-input lifecycle.” | `powershell-tui-app-designer` — LEAD; add `tui-intelligence` only for a distinct accessibility/interaction review | Inspect existing behavior and test; avoid unrelated redesign. |
+| “Choose the right skills and coordinate a multi-phase migration.” | `project-orchestrator` — LEAD | Establish scope, roster, dependencies, and verification gates. |
+| “Turn this attached PDF into reliable Markdown.” | `doc-to-md` — LEAD | Preserve provenance and report conversion uncertainty. |
 
-### 4. Deep Read
+If more than one Skill seems relevant, distinguish the user's deliverable from optional downstream work. Do not silently chain into work the user did not request.
 
-Read the authoritative `SKILL.md` only for shortlisted candidates.
+## 6. No Suitable Skill: Online Discovery and Native Fallback
 
-Check:
+When the active catalog has no adequate Skill:
 
-- trigger conditions;
-- scope;
-- prerequisites;
-- outputs;
-- limitations;
-- destructive/state-changing behavior;
-- conflicts with project rules;
-- overlap with other candidates.
+1. Re-check the active catalog and candidate descriptions to ensure the gap is real.
+2. If web search or another trusted discovery source is available and useful, search for maintained Skills that cover the capability. Prefer primary/repository sources over reposts.
+3. Evaluate capability fit, maintenance, provenance, license, security, requested permissions, platform compatibility, dependencies, and evidence of quality. Inspect the candidate instructions before recommending use.
+4. Report findings and recommend a candidate. Discovery does not itself authorize downloading, installing, executing, granting access, or adding dependencies; obtain required owner/environment approval first.
+5. If online search is unavailable, the base AI agent may perform the work using native capabilities only when it is competent to do so and can verify the result. Otherwise explain exactly what cannot be done and give the safest next step.
+6. Do not invent a claim that a missing Skill is installed, or create a permanent Skill as an unrequested workaround. Skill creation requires an explicit request or approval.
 
-### 5. Minimal Set Decision
+If no safe verified route exists, mark the capability gap as UNVERIFIED/BLOCKED as appropriate rather than claiming success.
 
-Choose:
+## 7. Explicit User Choice and Re-Evaluation
 
-- mandatory FOUNDATION Skills;
-- one LEAD per major workstream;
-- SUPPORT Skills only for distinct missing capabilities.
+- If the user names a Skill, honor that choice. If a different Skill appears materially better, explain the reason and get approval before substituting or adding it.
+- Re-evaluate selection only when the scope changes, evidence shows a candidate is unsuitable, or a new phase introduces a distinct capability.
+- Keep a compact record of selected Skills and why when orchestration is substantial; do not create an orchestration report for trivial work unless requested.
 
-Keep other plausible candidates as RESERVE rather than activating them.
+## 8. Routing Quality Tests
 
-### 6. Conflict Check
+When changing this protocol or its catalog:
 
-Look for:
-
-- duplicated ownership;
-- contradictory instructions;
-- incompatible output formats;
-- incompatible tool/environment requirements;
-- one Skill modifying artifacts owned by another;
-- different assumptions about source of truth.
-
-Resolve before execution where possible.
-
-### 7. Team Map
-
-Record selected Skills against concrete workstreams.
-
-Every active Skill must answer:
-
-- What capability does it provide?
-- What workstream owns it?
-- What does it receive?
-- What must it deliver?
-- Who verifies it?
-- When does its role end?
-
-## Selection Heuristics
-
-Prefer a Skill when it:
-
-- directly matches the required outcome;
-- has a narrower, better-defined specialist scope;
-- provides a required workflow or validation discipline;
-- is explicitly required by project governance or the owner.
-
-Avoid selecting a Skill when it:
-
-- only loosely matches by name;
-- duplicates an already covered capability;
-- adds large context without unique value;
-- requires unavailable tooling;
-- conflicts with the project's current architecture;
-- is useful only for a future phase that has not started.
-
-## Core Assistants
-
-The Orchestrator treats these specially:
-
-### project-governance-manager
-
-FOUNDATION for interpreting project governance, authority, rules, and conflicts.
-
-### shared-project-state-manager
-
-FOUNDATION for continuity, phases, checkpoints, handoffs, and recovery on substantial work.
-
-These two do not replace specialist Skills. They govern and preserve the work around them.
-
-## Capability Gap Escalation
-
-If no Skill matches:
-
-1. verify the gap;
-2. consider safe base-agent execution;
-3. use `find-skills` when discovery is appropriate;
-4. request authorization before installation when required;
-5. use `skill-creator` only when the owner asks for or approves creation of a new permanent Skill.
-
-## Anti-Overload Rule
-
-A large library is not a reason to produce a large active team.
-
-If five Skills can do the work but two are sufficient, use two.
-
-If one specialist Skill covers a workstream completely, do not add extra Skills merely for reassurance.
-
-## Re-Evaluation
-
-Re-evaluate the roster only when:
-
-- scope changes;
-- a selected Skill proves incompatible;
-- a new blocker appears;
-- a new phase requires a capability not previously needed.
-
-Do not repeatedly rescan the entire library after every small step.
-
-## Automatic Skill Discovery and Selection
-
-If the installed catalog has no suitable Skill, instruct the agent to search for the best relevant Skill in trusted available sources, including `find-skills` when available. Evaluate candidate Skills by capability fit, reliability, maintained status, provenance, license, security, permission scope, compatibility, and quality evidence. Inspect the selected Skill instructions and dependencies before use. Prefer the best verified candidate rather than the first search result. Obtain owner approval before installing third-party code, adding dependencies, granting access, or executing downloaded code. Never run untrusted code automatically. Preserve any explicitly owner-selected Skill unless the owner authorizes substitution. If no safe Skill is available, proceed with native capabilities only when results can be competently verified; otherwise explain the blocker. Apply measurable quality and accuracy gates to the result.
+- test exact registry/catalog slug and version parity;
+- test that another-agent implementation Markdown routes to `create-strict-implementation-handoff`;
+- test that generic Markdown does not automatically route there;
+- test online discovery and unavailable-network/native-agent fallbacks;
+- test that installation/execution remains approval-gated;
+- inspect examples for false positives, removed Skill names, and claims exceeding actual platform support.

@@ -19,7 +19,7 @@ function Add-Unverified { param([string]$Name, [string]$Reason) $unverified.Add(
 
 # structure
 foreach ($p in 'SKILL.md', 'README.md', 'VERSION', 'references', 'scripts', 'examples', 'assets', 'templates/App', 'Prompts/Flicker-Free-PowerShell-TUI-Architecture.md') { Add-Check "exists: $p" (Test-Path -LiteralPath (Join-Path $root $p)) }
-foreach ($r in 'Architecture', 'TUI-Design-Rules', 'Modern-Presets', 'Interactive-Design-Wizard', 'Design-Preview-Gallery', 'Cross-Platform-Compatibility', 'Unicode-and-Emoji-Handling', 'Error-Handling', 'Testing-Strategy', 'Packaging-and-Release', 'Coding-Conventions', 'Resize-And-Frame-Lifecycle-Reliability', 'Windows-Terminal-Launcher-Diagnostics') { Add-Check "reference: $r.md" (Test-Path -LiteralPath (Join-Path $root "references/$r.md")) }
+foreach ($r in 'Architecture', 'TUI-Design-Rules', 'Modern-Presets', 'Interactive-Design-Wizard', 'Design-Preview-Gallery', 'Cross-Platform-Compatibility', 'Unicode-and-Emoji-Handling', 'Error-Handling', 'Testing-Strategy', 'Packaging-and-Release', 'Coding-Conventions', 'Resize-And-Frame-Lifecycle-Reliability', 'Input-Frame-Lifecycle', 'Windows-Terminal-Launcher-Diagnostics') { Add-Check "reference: $r.md" (Test-Path -LiteralPath (Join-Path $root "references/$r.md")) }
 
 $promptText = [System.IO.File]::ReadAllText((Join-Path $root 'Prompts/Flicker-Free-PowerShell-TUI-Architecture.md'))
 Add-Check 'Prompt defines ANSI, differential, centralized and fallback design' ($promptText.Contains('ANSI In-Place Rendering') -and $promptText.Contains('Differential Updates') -and $promptText.Contains('Centralized TUI Renderer') -and $promptText.Contains('legacy'))
@@ -36,6 +36,12 @@ Add-Check 'generated scripted input supports deterministic Resize events' ($inpu
 # front matter + version
 $skill = [System.IO.File]::ReadAllText((Join-Path $root 'SKILL.md'))
 Add-Check 'skill routes TUI work to resize/frame and Windows Terminal launcher references' ($skill.Contains('Resize-And-Frame-Lifecycle-Reliability.md') -and $skill.Contains('Windows-Terminal-Launcher-Diagnostics.md'))
+Add-Check 'skill routes managed input and Run Again lifecycle to its canonical reference' ($skill.Contains('Input-Frame-Lifecycle.md') -and $skill.Contains('Write-ResultPathContext'))
+$inputFrame = [System.IO.File]::ReadAllText((Join-Path $root 'references/Input-Frame-Lifecycle.md'))
+Add-Check 'input lifecycle reference distinguishes cursor ownership and frame-cache divergence' ($inputFrame.Contains('Cursor is not re-established') -and $inputFrame.Contains('Visible text and committed renderer cache diverge'))
+Add-Check 'input lifecycle reference covers retries, Browse, Run Again, structured paths and resize' ($inputFrame.Contains('validation retry') -and $inputFrame.Contains('Browse') -and $inputFrame.Contains('Run Again') -and $inputFrame.Contains('structured') -and $inputFrame.Contains('Resize'))
+$dialogSource = [System.IO.File]::ReadAllText((Join-Path $root 'templates/App/src/TUI/Dialog.psm1'))
+Add-Check 'generated Dialog exposes structured result path context through Renderer' ($dialogSource.Contains('function Write-ResultPathContext') -and $dialogSource.Contains('Export-ModuleMember -Function Show-Confirm, Show-Notice, Write-ResultPathContext'))
 Add-Check 'Windows launcher parser example is present' (Test-Path -LiteralPath (Join-Path $root 'examples/09-Windows-Launcher-ArgumentProbe.ps1'))
 $fm = [regex]::Match($skill, '(?s)\A---\r?\nname:\s*([a-z0-9-]+)\r?\ndescription:\s*(.+?)\r?\n---')
 Add-Check 'SKILL.md front matter has name (lowercase-hyphen) and description' ($fm.Success) ''

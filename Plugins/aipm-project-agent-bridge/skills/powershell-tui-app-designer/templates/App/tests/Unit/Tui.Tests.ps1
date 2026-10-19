@@ -44,6 +44,31 @@ $lastFrame = Get-LastFrame
 Assert-Contains 'the next screen is the committed current frame' $lastFrame 'New Screen'
 Assert-True 'the next frame removes obsolete prompt, help and input rows' (-not $lastFrame.Contains('Old Prompt Unique') -and -not $lastFrame.Contains('Old Hint Unique') -and -not $lastFrame.Contains('typed'))
 
+Set-TestGroup 'Managed input frame lifecycle'
+$ui = Invoke-Ui {
+    $firstPath = Read-ValidatedInput -Prompt 'First Input' -Help 'Type the first path.' -Example 'C:\Temp\first.txt'
+    $secondPath = Read-ValidatedInput -Prompt 'Second Input' -Help 'Type a different path.' -Example 'C:\Temp\second.txt'
+    Clear-Ui
+    Write-UiLine 'Completed' 'Success'
+    Write-ResultPathContext -InputPaths @($secondPath) -OutputPath 'C:\Temp\result.txt'
+    Complete-UiFrame
+} 'C:\Temp\old.txt{Enter}C:\Temp\new.txt{Enter}'
+$resultFrame = Get-LastFrame
+Assert-Equal 'a second input workflow and result presentation complete without errors' '' $ui.Error
+Assert-Contains 'result context uses the current structured input path' $resultFrame 'C:\Temp\new.txt'
+Assert-Contains 'result context labels its output path' $resultFrame 'Output:'
+Assert-True 'a completed frame does not retain the previous input path' (-not $resultFrame.Contains('C:\Temp\old.txt'))
+
+$ui = Invoke-Ui {
+    Clear-Ui
+    Write-ResultPathContext -InputPaths @('C:\Temp\source-a.txt', 'C:\Temp\source-b.txt')
+    Complete-UiFrame
+} ''
+$resultFrame = Get-LastFrame
+Assert-Contains 'multiple structured input paths remain visible' $resultFrame 'C:\Temp\source-a.txt'
+Assert-Contains 'all structured input paths remain visible' $resultFrame 'C:\Temp\source-b.txt'
+Assert-True 'an absent output path is not fabricated' (-not $resultFrame.Contains('Output:'))
+
 Set-TestGroup 'Icon tiers'
 $wt = @{ WT_SESSION = 'x' }
 Assert-Equal 'Windows Terminal -> Emoji' 'Emoji' (Resolve-IconTier -Env $wt -IsWin $true -Redirected $false)

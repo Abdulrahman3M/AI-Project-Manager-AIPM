@@ -20,4 +20,18 @@ function Show-Notice {
     [void](Show-Menu -Title ($icon + '  ' + $Title) -Description $msg -Items @((New-MenuItem -Label $ContinueLabel -Desc 'Close this message.' -Value 'ok' -Icon $Kind)))
 }
 
-Export-ModuleMember -Function Show-Confirm, Show-Notice
+function Write-ResultPathContext {
+    # Add semantic paths from workflow state to the current result frame; never parse a command string.
+    param([string[]]$InputPaths = @(), [AllowNull()][string]$OutputPath = '')
+    $sources = @($InputPaths | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($sources.Count -gt 0) {
+        Write-UiLine 'Input:' 'Key'
+        foreach ($source in $sources) { Write-UiLine ('  ' + $source) 'Normal' }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
+        Write-UiLine 'Output:' 'Key'
+        Write-UiLine ('  ' + $OutputPath) 'Normal'
+    }
+}
+
+Export-ModuleMember -Function Show-Confirm, Show-Notice, Write-ResultPathContext

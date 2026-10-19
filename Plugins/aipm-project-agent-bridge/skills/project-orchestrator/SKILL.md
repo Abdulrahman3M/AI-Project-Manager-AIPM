@@ -1,6 +1,6 @@
 ---
 name: project-orchestrator
-description: Orchestrate complex projects and tasks by acting as Manager, Supervisor, and Team Leader in one Skill. Use when the user wants one coordinating Skill to choose and combine the right specialist Skills, distribute work across teams or workstreams, supervise execution, reduce confusion in a large Skill library, manage project-wide execution, or coordinate multi-phase work. Treat project-governance-manager and shared-project-state-manager as foundational assistants.
+description: Select and coordinate specialist Skills when the user asks for help choosing a Skill, the request spans multiple capabilities or workstreams, or project-level supervision is needed. Analyze the requested outcome and deliverable before routing; send execution instructions or handoff documents for another AI agent to create-strict-implementation-handoff. For a clear single-specialist deliverable, invoke that specialist directly without adding orchestration overhead. Use project-governance-manager and shared-project-state-manager as foundational assistants when applicable to substantial work.
 ---
 
 # Project Orchestrator
@@ -9,7 +9,7 @@ description: Orchestrate complex projects and tasks by acting as Manager, Superv
 
 Act as a **Manager, Supervisor, and Team Leader at the same time**.
 
-This Skill is the coordination layer for projects, complex tasks, and large Skill libraries. Its purpose is to prevent the user or execution agent from manually choosing among dozens or hundreds of Skills for every task.
+This Skill coordinates multi-capability work and helps select Skills when requested or genuinely needed. For an unambiguous single deliverable, route directly to the narrow specialist rather than making orchestration a mandatory extra step.
 
 The Orchestrator must understand the requested outcome, identify the capabilities required, select the **smallest sufficient set of Skills**, organize them into workstreams, supervise their output, enforce project governance, preserve shared execution state, and integrate the final result.
 
@@ -102,9 +102,9 @@ The Team Leader asks: **What is the next executable task, who owns it, and what 
 
 ---
 
-## 3. Mandatory Foundational Assistants
+## 3. Foundational Assistants
 
-Two Skills are the Orchestrator's primary operational assistants.
+Two Skills provide foundational support for substantial orchestration where relevant.
 
 ### 3.1 Project Governance Manager
 
@@ -142,7 +142,7 @@ The Orchestrator must:
 
 For a genuinely trivial single-step task, creating a new persistent state workspace may be unnecessary, but an existing Shared Project State must never be ignored when it is relevant.
 
-These two foundational assistants are not ordinary optional Skills. They define how the Orchestrator governs and preserves work.
+For a narrow, single-step specialist request, do not activate these assistants unless project rules, existing state, or risk level make them relevant.
 
 ---
 
@@ -171,42 +171,40 @@ Read `references/Skill-Selection-Protocol.md` for the detailed selection method.
 
 ## Cross-Stage Analysis and Token Protocol
 
-- Route complex ideation, diagnosis or design to `deep-brainstorming` as the LEAD for **analysis only**; require a decision with evidence and option comparison, not product implementation.
-- After analysis, invoke the **existing** `create-strict-implementation-handoff` as the LEAD for the execution-ready **Markdown document**. This is document authoring, never auto-starting implementation.
-- For browser-relevant strict handoffs, delegate isolated AI-browser checks, authorized startup and repair to `browser-environment-manager`; the handoff owns consent and authorized fallback order. Never silently use personal browser profiles.
-- `token-optimization` is an independent SUPPORT Skill for analysis, handoff generation and later authorized implementation. Apply lightweight context/agent controls continuously on significant tasks and load its full Skill instructions only when useful. Complete requirements, safety, governance and verification always outrank token reduction.
-- Default to a single agent; spawning subagents or multi-agent teams requires explicit owner approval, including during strict handoff execution. Efficient batching of independent tool reads within one agent remains allowed. Preserve the explicit owner-selected Skill exception.
+- Route analysis to a specialist only when an active catalog entry explicitly covers the analysis deliverable; do not refer to removed or unavailable Skills as installed.
+- If an analysis is followed by a requested execution-ready handoff, use `create-strict-implementation-handoff` to author it. Writing a handoff does not authorize starting the implementation.
+- For browser-related work, use `browser-environment-manager` only when isolated browser environment setup or repair is actually in scope.
+- `token-optimization` is optional SUPPORT on substantial work; requirements, safety, governance and verification outrank token reduction.
+- Default to a single agent; spawning subagents or multi-agent teams requires explicit owner approval. Efficient batching of independent reads within one agent is allowed.
 
 ---
 
 ### 4.1 Current Skill Catalog — Mandatory Routing Source
 
-Before choosing a Skill, consult this catalog. It is the Orchestrator's current routing map for the Universal AI ToolKit library.
+Before choosing a Skill, consult this catalog. It is the Orchestrator's routing summary for the active AIPM Capability Library.
 
-The catalog must remain synchronized whenever any Skill is added, removed, renamed, updated, version-bumped, or materially changes scope. If this table conflicts with `skills-manifest.json`, `Skills-Index.md`, the Skills Registry, or a master Skill's authoritative `SKILL.md`, treat the catalog as stale, verify the authoritative source, and update the catalog before relying on it for routing.
+The catalog must remain synchronized whenever any Skill is added, removed, renamed, updated, version-bumped, or materially changes scope. `Capability-Library/Registry.json` is the AIPM source of truth for active Skill slugs and versions; use each Skill's own `SKILL.md` for authoritative behavior and triggers. If this summary conflicts with either source, treat it as stale and reconcile it before relying on it.
 
 | Skill | Current Version | Primary Function | Choose It When |
 |---|---:|---|---|
-| `project-orchestrator` | `1.3.10` | Manage complex tasks/projects as Manager, Supervisor, and Team Leader; select and coordinate the minimum sufficient Skill set. | The owner did not explicitly name a Skill, the task needs Skill selection, several Skills/workstreams may be involved, or project-level supervision is needed. |
-| `browser-environment-manager` | `1.0.1` | Manage isolated Edge/Chrome AI browser profiles, CDP connections, port/process verification, and safe maintenance. | When dedicated AI browser environments, profile separation, remote debugging, or browser MCP connectivity are requested. |
-| `create-strict-implementation-handoff` | `1.4.0` | Create a strict, execution-ready Implementation Handoff Markdown file for another AI coding agent without implementing the underlying task. | The user asks for an implementation handoff, execution task file, strict coding handoff, or equivalent transfer document. |
-| `deep-brainstorming` | `1.0.0` | Preserve brainstorming discovery, deeply analyze causes and compare options, recommend a design, never implement; hand off to the existing MD Skill. | Analyze an unclear feature, complex defect, design or architectural decision without executing the target work. |
-| `token-optimization` | `1.0.1` | Independent context/token efficiency support across analysis, handoff and implementation; avoid unnecessary agents and repetition without losing requirements/tests. | Apply lightweight support across substantial tasks or under cost/context pressure; load full Skill only where warranted. |
-| `powershell-tui-app-designer` | `2.0.2` | Design, build, review and release interactive PowerShell terminal (TUI) applications: twenty modern design presets, interactive preferences, optional arrow/number/search navigation, validated input, icon fallbacks, safe process execution, tests, packaging; includes a scaffold generator and validator. | The task is to create, extend, review or release a PowerShell console app, wizard or menu-driven tool (Windows PowerShell 5.1, PowerShell 7, Linux). |
-| `doc-to-md` | `1.0.0` | Convert user-supplied PDFs, Office documents, images, audio, archives and structured files into quality-audited Markdown with a strict PASS/REVIEW/BLOCK gate. | The user asks to convert or analyze attached content, preserve text/data integrity, or prepare reliable Markdown for AI ingestion; check source for layout-sensitive material. |
-| `professional-word-designer` | `5.0.0` | Build evidence-controlled research-to-Word publications with academic structures, multiple citation systems, native Word design/QA, 150 normative/illustrated examples, and Chapter Package Mode for 100+ pages. | The deliverable is a professional Word research paper, article, report, book, thesis, educational publication, or long-form document where evidence traceability, academic formatting, or chapter packaging matters. |
-| `find-skills` | `1.0.1` | Discover and install agent Skills that match a required capability. | The Orchestrator confirms the current library does not contain a suitable Skill and external Skill discovery is appropriate. |
-| `frontend-design` | `1.0.0` | Guide distinctive, intentional frontend/UI visual design and interface implementation. | A task requires designing or substantially reshaping a user interface, visual system, or frontend experience. |
-| `import-memory` | `1.0.0` | Import memory exports from another AI assistant into Claude memory conversationally and additively. | The user wants to migrate/import assistant memory into Claude rather than manually recreate it. |
-| `morning` | `1.0.0` | Render a morning brief as a styled HTML artifact or set up a recurring weekday morning task. | The user requests a morning briefing, morning dashboard/artifact, or recurring weekday brief workflow. |
-| `plugin-creator` | `1.0.0` | Scaffold Codex plugin directories, manifests, and optional marketplace integration. | The task is to create or structure a Codex-compatible plugin package. |
-| `project-governance-manager` | `1.0.0` | Create, merge, audit, and maintain project governance and AI-agent rule files such as `AGENTS.md`. | The task concerns project rules, AGENTS files, governance hierarchy, reusable rules, conflict resolution, or governance auditing. |
-| `shared-project-state-manager` | `2.1.0` | Maintain verified cross-agent project state with restartable phases, exact handoffs, Node/Python helpers, quarantine-first file operations, schemas/templates, and worked recovery examples. | Work is long-running, multi-phase, risky, likely to cross agent/session limits, must be resumed by another agent, or needs controlled task-state/temp/protected-file continuity. |
-| `resume-task` | `1.3.0` | Restore and finish any interrupted task, particularly after usage limits, context loss or agent handover; preserve full requirements and verify actual outputs before replay. | Use for resumed/unfinished work across agents and domains, with evidence checkpoints and a compact optional Short Prompt; follow the active project's rules. |
-| `skill-creator` | `1.0.0` | Create, improve, evaluate, and optimize agent Skills. | The owner asks to create a new Skill, redesign an existing Skill, improve triggering, or evaluate Skill performance. |
-| `teach` | `1.0.1` | Teach a user a concept or skill within workspace context. | The primary goal is explanation, guided learning, or structured teaching rather than producing a project artifact. |
+| `audio-timing-author` | `1.0.0` | Produce transcript-aligned SRT and structured timing JSON from audio. | Accurate sentence/word synchronization is required. |
+| `browser-environment-manager` | `1.1.0` | Create, diagnose and maintain isolated Edge/Chrome environments for agents. | Dedicated browser profiles, CDP/MCP connections, or browser-session troubleshooting are in scope. |
+| `create-strict-implementation-handoff` | `1.0.0` | Author a strict execution-ready handoff without executing its underlying implementation. | The requested deliverable is a handoff, implementation task file, execution prompt, or instructions/brief for another AI agent to implement/change/repair. A generic README or explanatory Markdown is not enough. |
+| `doc-to-md` | `1.0.0` | Convert user-supplied files into evidence-audited Markdown. | Extracting or analyzing supplied document contents is the task. |
+| `powershell-tui-app-designer` | `1.2.1` | Design, build, update and test interactive PowerShell terminal applications. | A new or existing PowerShell TUI, wizard, menu, or input/render lifecycle is in scope. |
+| `professional-word-designer` | `1.0.0` | Produce evidence-controlled professional Word publications. | The requested artifact is a substantial Word document or publication. |
+| `project-governance-manager` | `1.0.0` | Create, audit and maintain AI-agent governance rules. | `AGENTS.md`, rule hierarchy, or project governance needs work. |
+| `project-orchestrator` | `1.0.4` | Select and coordinate a minimum set of Skills/workstreams. | The user requests Skill selection, the task spans capabilities, or orchestration/supervision itself is needed. Do not add it as overhead for a clear single-specialist deliverable. |
+| `resume-task` | `1.0.0` | Recover and finish interrupted work from verified current state. | Work is resuming after interruption, loss, timeout, or agent handoff. |
+| `shared-project-state-manager` | `1.0.0` | Preserve verified cross-agent/task state and handoffs. | Work is substantial, long-running, risky, or must survive session/agent changes. |
+| `token-optimization` | `1.0.0` | Reduce avoidable context and repetition without dropping quality gates. | Lightweight efficiency support is useful for substantial work. |
+| `tui-intelligence` | `1.0.0` | Specify and evaluate accessible terminal interaction and visual behavior. | TUI accessibility, navigation, information hierarchy, or visual interaction needs design/review. |
 
-### 4.2 Explicit Owner Skill Selection
+### 4.2 Deliverable-First Routing
+
+The requested outcome and deliverable determine routing; file extension or a keyword alone does not. Consult `references/Skill-Selection-Protocol.md` before selecting Skills. When the owner asks for a Markdown file, prompt, task brief, or instructions that another AI agent will use to implement/change/repair work, assign `create-strict-implementation-handoff` as the LEAD authoring Skill and do not begin that implementation unless separately requested. Generic README, notes, explanation, or project documentation route by their actual purpose instead. This routing rule lives here so the imported handoff Skill's protected source content remains unchanged.
+
+### 4.3 Explicit Owner Skill Selection
 
 If the owner explicitly names a Skill, treat that Skill as selected and do not replace it through automatic routing.
 
@@ -216,7 +214,7 @@ If another Skill appears better suited:
 2. recommend the alternative briefly and explain the advantage;
 3. wait for owner approval before substituting or adding it.
 
-This explicit-name rule is the only normal exception to Orchestrator-first Skill routing.
+Preserve an explicitly named Skill. If another Skill seems better suited, explain the fit and obtain approval before substituting or adding it. Do not force Orchestrator-first routing for a clear specialist deliverable.
 
 ---
 
@@ -460,16 +458,7 @@ When a selected Skill stops being useful, retire it from the active roster.
 
 ## 15. Capability Gaps
 
-If no installed Skill adequately covers a required capability:
-
-1. verify that the capability is genuinely missing;
-2. determine whether the base agent can perform it safely without a specialist Skill;
-3. if discovery is useful, use `find-skills` when available;
-4. do not install external Skills automatically without the authorization required by the environment/user;
-5. do not invoke `skill-creator` to create a new permanent Skill unless the owner explicitly asks for a new Skill or clearly authorizes that expansion;
-6. record unresolved capability gaps as blockers when they prevent safe completion.
-
-A missing Skill is not permission to invent unsupported capabilities.
+Follow `references/Skill-Selection-Protocol.md`. Confirm a gap against the active registry, then search trusted online sources when web access is available and discovery can materially help. Evaluate fit, maintenance, provenance, license, security, permissions and compatibility before recommending a candidate. Search or discovery does not authorize downloading, installing, executing, granting permissions, or adding dependencies. If online search is unavailable, use the base agent's native capabilities only when it can perform and verify the work competently; otherwise state the limitation and safe next step. Do not create a permanent Skill unless the owner asks for or approves that work.
 
 ---
 
@@ -579,8 +568,8 @@ Only real unresolved items.
 ## 21. Non-Negotiable Rules
 
 - Act through the three layers: Manager, Supervisor, Team Leader.
-- Use `project-governance-manager` as the foundational governance assistant.
-- Use `shared-project-state-manager` as the foundational continuity/state assistant for substantial work and never ignore relevant existing shared state.
+- Use `project-governance-manager` as foundational support when governance is relevant to the task.
+- Use `shared-project-state-manager` as foundational support for substantial work and never ignore relevant existing shared state.
 - Select the minimum sufficient Skill set.
 - Do not load the entire library by default.
 - Give every active Skill a clear workstream and responsibility.
@@ -598,7 +587,7 @@ Only real unresolved items.
 
 When this Skill is explicitly invoked, assume responsibility for organizing the project or task from management through supervised execution.
 
-Start with governance and shared-state awareness, then select the minimum necessary specialist Skills, construct the Team Map, execute through controlled workstreams, apply Supervisor gates, and maintain resumable state.
+For substantial orchestration, start with governance and shared-state awareness, then select the minimum necessary specialist Skills, construct the Team Map, execute through controlled workstreams, apply Supervisor gates, and maintain resumable state. For a narrow specialist deliverable, route directly and do not add orchestration steps.
 
 The success criterion is:
 
@@ -606,7 +595,7 @@ The success criterion is:
 
 ## Automatic Skill Discovery and Selection
 
-If the installed catalog has no suitable Skill, instruct the agent to search for the best relevant Skill in trusted available sources, including `find-skills` when available. Evaluate candidate Skills by capability fit, reliability, maintained status, provenance, license, security, permission scope, compatibility, and quality evidence. Inspect the selected Skill instructions and dependencies before use. Prefer the best verified candidate rather than the first search result. Obtain owner approval before installing third-party code, adding dependencies, granting access, or executing downloaded code. Never run untrusted code automatically. Preserve any explicitly owner-selected Skill unless the owner authorizes substitution. If no safe Skill is available, proceed with native capabilities only when results can be competently verified; otherwise explain the blocker. Apply measurable quality and accuracy gates to the result.
+Use the deliverable-first routing and capability-gap process in `references/Skill-Selection-Protocol.md`.
 
 - **audio-timing-author v1.0.0** — Use for audio/transcript synchronization work that requires accurate SRT sentence timing and structured sentence/word JSON timing metadata while preserving authoritative transcript text and excluding unspoken speaker labels from the timeline.
 

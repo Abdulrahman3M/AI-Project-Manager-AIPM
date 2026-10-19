@@ -3,7 +3,7 @@ name: powershell-tui-app-designer
 description: Designs, builds, updates, diagnoses, and tests professional PowerShell terminal applications across Windows PowerShell 5.1 and PowerShell 7, including resize-aware frame lifecycle, launchers, configurable navigation, packaging, and release. Use for new or existing interactive apps, not unrelated shell scripts.
 ---
 
-# PowerShell TUI App Designer (v1.1.0)
+# PowerShell TUI App Designer (v1.2.1)
 
 You are following an EXECUTABLE METHODOLOGY. Work through the phases IN ORDER. Each phase has: **Do** (steps), **Gate** (checks that must all pass), **If it fails**. You may not start phase N+1 until every Gate item of phase N is satisfied with evidence (a command you ran and its result). Do not skip, merge or reorder phases. Do not invent facts: inspect first.
 
@@ -23,6 +23,7 @@ Files you will use (relative to this skill folder):
 9. **Complete-frame and resize-aware rendering.** Every visible row (including help, validation, key hints, and editable-input context) belongs to a committed frame. While real interactive input is pending, detect width/height changes without requiring a key and return an internal Resize event; recompose from the same screen state. For interactive arrows, never call Clear-Host or ANSI 2J on every key or poll. Render in place using differential rows and clear obsolete rows centrally. Keep semantic colors, independently colored icons, Emoji/Symbol/Ascii tiers, and muted readable hints and descriptions intact; test resize and rapid navigation without blank frames. Preserve redirected plain output.
 10. **Title Case UI text.** Write every static, user-visible application string in English Title Case: titles, headings, menu choices, prompts, help, status, validation, success, warning and error messages. Preserve proper nouns and acronyms; leave user-provided or dynamic content, code identifiers and source snippets unchanged.
 11. **Reliability applies to new and existing apps.** For every create, extend, update, repair, or review task, audit the current frame lifecycle and idle resize behavior. Fix verified missing behavior at the shared renderer/input boundary, not one menu at a time, and preserve the app's selected navigation and active workflow state.
+12. **Managed input is part of the frame lifecycle.** Never let `Read-Host`, `Console.ReadLine()`, or another independent editor write inside a managed screen without an explicit renderer/editor contract. Track typed values as workflow state, render them through the centralized renderer, reconcile cache after every edit, and clear retired prompt rows on transitions and **Run Again**. For input rows, cursor ownership, validation/Browse transitions and structured result paths, follow `references/Input-Frame-Lifecycle.md`.
 
 ---
 
@@ -38,10 +39,12 @@ Load `Prompts/Flicker-Free-PowerShell-TUI-Architecture.md` and `references/Archi
 2. List which of `pwsh` (7.x) and `powershell` (5.1) exist. Decide which you can execute tests with; everything else will be UNVERIFIED locally and needs CI or a human.
 3. If a project folder already exists: read its README/AGENTS/rules files, folder layout, `VERSION`, tests, launchers. Reuse what exists; do not create duplicates of modules that already do the job.
 4. For new and existing apps alike, record renderer/input ownership, committed-frame boundaries, direct screen writes, blocking key waits, resize behavior, and prompt/input state preservation. Read `references/Resize-And-Frame-Lifecycle-Reliability.md` before changing those areas.
-5. Write down the request in your own words: users, tasks, platforms, external tools, constraints.
+5. For any typed input or repeated workflow, record the editor model (key-event or integrated editor), prompt row/cursor owner, cache reconciliation, and behavior on Enter, validation retry, Esc/Back, Browse, resize, completion, and **Run Again**. Read `references/Input-Frame-Lifecycle.md` before changing these areas.
+6. Write down the request in your own words: users, tasks, platforms, external tools, constraints.
 
 **Gate**
 - [ ] Environment facts recorded. - [ ] Executable editions listed. - [ ] Existing rules/structure read (or "greenfield" stated). - [ ] Request restated in <= 10 lines.
+- [ ] If text input/repeat workflows exist, their editor/frame ownership and transition behavior are recorded.
 
 **If it fails**: stop and report what is unknown; do not proceed on assumptions about the platform.
 
@@ -72,9 +75,11 @@ Open `references/Architecture.md`, `references/Cross-Platform-Compatibility.md`,
 2. Decide which logic is pure (goes in Core, unit-testable) and which is screen code (TUI).
 3. Decide platform support matrix (Windows PS 5.1, Windows PS 7, Linux PS 7) and write it in the README plan.
 4. Decide the per-user data folder name and the persistent settings (keep them few).
+5. For interactive fields, define the prompt/value row, logical cursor behavior, live-edit/cache contract, and a state-transition table before implementing screens. Define result input/output fields from structured operation state.
 
 **Gate**
 - [ ] Module list with one responsibility each. - [ ] Support matrix written. - [ ] Pure/screen split stated for each task.
+- [ ] Any input screen has an explicit editor/frame contract and tested transition plan; result paths are structured data, not parsed command text.
 
 ## Phase 3 - Scaffold
 
@@ -128,10 +133,12 @@ Open `references/Coding-Conventions.md`. Build ONE task at a time, smallest firs
 4. Run external programs only through `Invoke-External` with an argument array; apply a timeout; handle `Started=$false`.
 5. Add the task to the main menu with its description.
 6. Run the unit tests and `Test-TuiProject` after EVERY task.
+7. For any input workflow, add regression cases for prompt-row ownership, cache reconciliation, transitions, and **Run Again** with a different value; use `Write-ResultPathContext` for real structured file paths where appropriate.
 
 **Gate (per task)**
 - [ ] New functions have tests (PASS). - [ ] `Test-TuiProject`: 0 failed. - [ ] Screen driven through `-ScriptedInput` end to end without error. - [ ] Selection labels, help and tests match the chosen interaction mode.
 - [ ] A Resize event recomposes the same screen without changing selection, query, partial number, typed text, or workflow state.
+- [ ] Input transitions do not leave unmanaged rows; **Run Again** starts from its specified value, and result path context comes only from structured data.
 
 **If it fails**: fix before starting the next task. Never accumulate failing tasks.
 

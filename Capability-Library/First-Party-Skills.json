@@ -16,7 +16,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "AI Project Manager Personal Use License",
       "license_path": "LICENSE",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "source_reference": "Owner-authorized AIPM maintenance of the migrated PowerShell TUI App Designer lineage; historical source hashes remain in Skill-Migration-Record.json"
     },
     {
