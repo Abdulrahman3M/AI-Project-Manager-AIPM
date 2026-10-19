@@ -2,7 +2,7 @@
 
 Welcome to **AI Project Manager (AIPM)**. This guide assumes you are new to the project and explains how to get it, open it, understand what you see, and work with its approved capabilities safely.
 
-> **Important:** AIPM manages task context and supporting files under `Shared-Project-State-Manager/`; it does not edit, test, or approve changes to your project's source files. AI Agents work on the originals in your project folder under the permissions of your project and AI host. The TUI is a read-only task view; task authoring is available through the Core CLI. The Agent Bridge is a package sample, not an installed agent or an automatic file-access grant.
+> **Important:** AIPM manages task context and supporting files under `Shared-Project-State-Manager/`; it does not edit, test, or approve changes to your project's source files. AI Agents work on the originals in your project folder under the permissions of your project and AI host. The TUI can create and manage task records, while keeping project source files untouched. The Agent Bridge is a package sample, not an installed agent or an automatic file-access grant.
 
 ## 1. What AIPM Does
 
@@ -12,7 +12,7 @@ AIPM keeps project information understandable and evidence-based for people and 
 | --- | --- |
 | Core Engine | Reads and validates project state; it also provides task and handoff commands. |
 | Capability Library | Keeps an approved catalog of Skills and Prompts with version and provenance records. |
-| PowerShell TUI | Shows a keyboard-driven dashboard and guarded project-registry controls. |
+| PowerShell TUI | Shows a keyboard-driven dashboard, project registry controls, and guided task management. |
 | Project Agent Bridge | Describes how a compatible agent could work with AIPM; the included package is not installed or active. |
 | Host Adapters | Describe permitted integrations and deny unsupported operations by default. |
 
@@ -77,7 +77,7 @@ To request Windows PowerShell 5.1 explicitly:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File TUI\AI-Project-Manager\Start-AIPM.ps1
 ```
 
-On the first launch, the TUI asks you to approve the default registry location or choose another one. The dashboard offers sections for projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. Registered project names appear inside **Projects**, not as separate dashboard actions. The **Registry Management** screen can add/remove project pointers, change the selected registry, and back it up or restore it. The TUI does not edit source code or author tasks; use the Core CLI task commands below. Those commands update AIPM-owned task state only.
+On the first launch, the TUI lets you use the default registry, connect an existing registry file, or choose another location. The dashboard offers sections for projects, tasks, phase records, test evidence, handoffs, Skills, Prompts, and settings. Registered project names appear inside **Projects**, not as separate dashboard actions. The **Registry Management** screen can connect an existing registry, add/remove project pointers, change the selected registry, and back it up or restore it. The **Tasks** section first refreshes the registry and requires you to choose a registered project before it can create or manage that project's task records. These task operations update AIPM-owned state only, never project source files.
 
 ## 6. Choose Where AIPM Stores Its Project List
 
@@ -101,7 +101,7 @@ So the usual full path is:
 C:\Users\YourWindowsName\AppData\Local\AI-Project-Manager\registry.json
 ```
 
-This is per-user application data, not a second AIPM installation and not a folder inside any project. Accept it in the first-run prompt or enter a complete file path outside the AIPM installation. You may choose any file name, but it must end in `.json`; entering only a folder is not enough. The choice is remembered in `%APPDATA%\AIPM\settings.json`. Passing `-RegistryPath` when starting AIPM is also treated as choosing the path.
+This is per-user application data, not a second AIPM installation and not a folder inside any project. On a new device, choose **Use An Existing Registry File** during first-run setup and enter the full path to the registry JSON you copied to that device. You can also choose **Registry Management → Connect Existing Registry File** later. AIPM validates the file read-only and saves the selection in `%APPDATA%\AIPM\settings.json`; it does not rewrite the registry. The file stores project paths, not project folders or task state. Those project folders must exist at the recorded paths on this device, or their entries will appear unverified. If you choose a new location instead, enter a complete file path outside the AIPM installation; any file name ending in `.json` is accepted, but entering only a folder is not enough. Passing `-RegistryPath` when starting AIPM is also treated as choosing the path.
 
 Project operational state is separate: for each registered project, AIPM stores it in that project's own `Shared-Project-State-Manager/` folder. The central registry stays small while each project's working state stays with that project.
 
@@ -138,6 +138,7 @@ Other registry actions:
 - **Back Up Registry** writes a new JSON backup and a `.sha256` checksum file. It will not overwrite an existing file.
 - **Restore Registry Backup** checks the checksum when its sidecar exists and automatically saves a pre-restore backup before changing the registry.
 - **Change Registry Location** selects or creates another registry. It does not copy or delete the previous registry; back it up first if you need to preserve its contents.
+- **Connect Existing Registry File** validates and selects an existing `.json` registry without replacing its contents. Use this when moving your AIPM setup to another device; make sure project folders exist at the paths recorded in that file.
 
 Never place the registry or backup inside the AIPM installation. Core rejects AIPM-root and overlapping paths.
 
@@ -176,7 +177,19 @@ For regular registry use, prefer the TUI confirmations. Do not commit a personal
 
 ## 10. Manage A Task And Hand It To Another Agent
 
-Each registered project stores independent task records and supporting files under its own `Shared-Project-State-Manager/Tasks/<Task-ID>/` folder. Set the AIPM installation folder, your registry path, and the project ID that appears in the registry. Run these commands from PowerShell:
+Each registered project stores independent task records and supporting files under its own `Shared-Project-State-Manager/Tasks/<Task-ID>/` folder. For the normal beginner workflow, no commands are needed:
+
+1. From the dashboard, choose **Tasks**.
+2. AIPM refreshes the selected registry. If it is empty, choose **Register A Project First**, finish project registration, then return to **Tasks**.
+3. Select the registered project that owns this work. A folder of tasks is not itself a project unless it is an independent project workspace.
+4. Choose **Create New Task** to describe a new unit of work, or **Add Existing Work Folder** to create a task record that points to an existing folder inside the selected project. AIPM leaves the existing files exactly where they are; it does not copy or move them. Use any clear task name—numbered names such as `Task 01` are optional.
+5. Choose **Open Existing Task** and select the task. Its **Manage Task** action menu opens immediately; the current status and task ID appear in the menu header. Choose **View Task Status And Details** only when you want the longer status page. Core derives the status from recorded blockers, verification, and report evidence; there is no manual status toggle. From the action menu you can update the plan and checkpoint, add or clear blockers, record verification evidence, or save a short progress/completion note. AIPM records evidence; it does not run the project's tests.
+6. To attach a report or plan file, choose **Attach Plan, Report Or Supporting File**, select **Reports** or **Instructions And Plans**, enter the full path to the existing file, confirm the task filename, and approve the copy. AIPM copies the selected file into that task's supporting-artifact folder; the original stays in place. Files are limited to 16 MiB, and an existing artifact is never silently overwritten. Choose **View Attached Task Files** to review attachments. Long lists show a page counter; use Up/Down or PageUp/PageDown to browse all entries, including Reports near the end. From this screen only, press **/** and enter a full or partial filename or relative path. An exact-match result confirms whether that file is attached; partial matches show candidate paths and hashes. Leave the search empty to restore the full list. Press Enter/Esc to return. **Update Task Report** saves a short note in task state; it does not attach a document.
+7. Give the AI Agent the task name/ID and ask it to work on the original project files. Put only instructions, handoffs, reports, scripts, examples, or references that the agent needs under the task's declared support folders. Keep source files in the project tree.
+
+Advanced users can also manage tasks from the Core CLI. To use those commands, set the AIPM installation folder, registry path, and registered project ID, then run them in PowerShell:
+
+If the files you are working on are already inside a task subfolder of a registered project, do **not** register that subfolder as a project. Create a task under the registered project's ID and mention the existing folder path in the task scope or instructions. AIPM creates its own task-state folder; the agent continues working with the existing files in their original folder. Use a descriptive task title—AIPM generates a unique `Task-ID`; names such as `Task 01` are not required. Register a folder as a separate project only when it is an independent project workspace.
 
 ```powershell
 $aipmRoot = 'C:\Path\To\AI-Project-Manager-AIPM'

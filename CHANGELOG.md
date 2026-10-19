@@ -1,8 +1,46 @@
 # AIPM Change Log
 
-## [Unreleased]
+## [1.3.4] — Development Synchronization (Development; Not Published)
 
-- No unreleased changes.
+- Synchronized the complete accumulated local development tree with the GitHub `main` branch at version `1.3.4`.
+- Platform and PowerShell TUI versions remain aligned; the latest published GitHub Release remains `v1.0.2`.
+- No Release or tag was created.
+
+## [1.3.3] — Search Attached Task Files (Development; Not Published)
+
+- Added filename and relative-path search only within **View Attached Task Files**, with exact-match status, partial-match results, and a clear-search path back to the full list.
+- Documented the scoped search behavior in the TUI architecture, TUI README, and English/Arabic beginner guides; added scripted UI coverage.
+- Advanced synchronized platform and TUI development versions to `1.3.3`. No Skills or Prompts changed, so Plugin archives were not rebuilt. No Release or tag was created.
+
+## [1.3.2] — Paginated Task File Listings (Development; Not Published)
+
+- Added height-aware pagination to long TUI information pages so all attached task artifacts remain reachable on short terminal windows.
+- Added Up/Down and PageUp/PageDown navigation with a visible page indicator; Enter/Esc still return to the previous view.
+- Added a short-terminal regression test. No Skills or Prompts changed, so Plugin archives were not rebuilt. No Release or tag was created.
+- Advanced synchronized platform and TUI development versions to `1.3.2`.
+
+## [1.3.1] — Direct Task Actions And File Attachments (Development; Not Published)
+
+- Task selection now opens the task-management action menu directly, with status visible in the menu and a separate optional details view.
+- Added TUI attachment and listing for task-scoped plan, report, handoff, and supporting files through Core. The chosen source file remains unchanged; existing task files are not silently overwritten.
+- Updated beginner and TUI architecture documentation. No Skills or Prompts changed, so Plugin archives were not rebuilt. No Release or tag was created.
+- Advanced synchronized platform and TUI development versions to `1.3.1`.
+
+## [1.3.0] — Guided TUI Task Management (Development; Not Published)
+
+- Added guided TUI task management: refresh and select a registered project first, create a task or task context for an existing work folder, and open/update tasks through a fixed Core command allowlist.
+- Added TUI actions for plans, progress checkpoints, blockers, verification evidence, and reports. Existing work-folder files remain in place; task history is not deleted from the UI.
+- Updated the English and Arabic beginner guides and TUI architecture documentation to make the no-PowerShell task workflow clear.
+- Verified task creation, listing, plan/checkpoint/blocker/verification/report mutations, no-project registration routing, and existing-folder preservation with local test fixtures. No Skill/Prompt content, plugin packages, release assets, or GitHub state changed.
+- Advanced the synchronized platform and TUI development versions to `1.3.0`; this is an unpublished development update with no Release or tag.
+
+## [1.2.0] — Existing Registry Connection And Task Guidance (Development; Not Published)
+
+- Added an explicit first-run path and Registry Management action to connect an existing, valid registry JSON without rewriting it; the selection is saved in per-user settings.
+- Validate registry structure through the read-only Core list operation before switching, and report that project folders must exist on the current device because the registry contains paths, not project copies.
+- Clarified how to create a task inside a registered project when the existing work is in a subfolder, without registering the task folder as a separate project or copying source files into AIPM state.
+- Advanced the synchronized platform and TUI development version to `1.2.0`; no Release or tag was created.
+- Refreshed protected capability metadata for platform `1.2.0`, rebuilt the local Bridge at `1.0.10` and all three host archives at `1.2.0`, then validated inventories and SHA-256 files; packages remain unpublished and uninstalled.
 
 ## [1.1.9] — Projects Navigation And Registry Guidance (Development; Not Published)
 

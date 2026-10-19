@@ -531,8 +531,9 @@ function Get-AipmPageLines {
         'Help' {
             $lines.Add('Up/Down: Move Selection | Enter: Open Or Select | Esc: Back')
             $lines.Add('Type A Number: Select Directly | /: Search Actions | ?: Help | F1: Help | Q: Request Exit')
-            $lines.Add('Portfolio, Task, Phase, Evidence, Skill And Plugin Screens Are Read-Only.')
-            $lines.Add('Registry Management Can Register Projects And Back Up Or Restore Registry Pointers.')
+            $lines.Add('Portfolio, Phase, Evidence, Skill And Plugin Views Are Read-Only; Task Actions Update AIPM-Owned State Only.')
+            $lines.Add('Task Actions Never Edit Project Source Files Or Run Project Tests.')
+            $lines.Add('Registry Management Can Connect Existing Registries, Register Projects, And Back Up Or Restore Registry Pointers.')
             $lines.Add('AIPM Core Blocks Managed Project Roots And Registry Files Inside The AIPM Installation.')
             $lines.Add('Unverified Means The Required Source Evidence Is Missing Or Could Not Be Checked.')
         }
@@ -569,11 +570,17 @@ function Resolve-AipmRegistryPath {
     while ($true) {
         $items = @(
             (New-MenuItem -Label 'Use Default Registry Location' -Desc $defaultPath -Value 'default' -Icon 'Yes'),
-            (New-MenuItem -Label 'Choose A Different Location' -Desc 'Enter A Full File Path With Any Name Ending In .json.' -Value 'custom' -Icon 'Settings'),
+            (New-MenuItem -Label 'Use An Existing Registry File' -Desc 'Connect A Valid Registry From Another Device Without Replacing It.' -Value 'existing' -Icon 'Project'),
+            (New-MenuItem -Label 'Choose A Different Location' -Desc 'Create Or Select A Full File Path With Any Name Ending In .json.' -Value 'custom' -Icon 'Settings'),
             (New-MenuItem -Label 'Exit Without Setup' -Desc 'Do Not Create Or Select A Registry.' -Value 'cancel' -Icon 'Exit')
         )
-        $choice = Show-Menu -Title 'Project Registry Setup' -Description 'Choose Where AIPM Will Store Project Pointers. Project State Remains In Each Project.' -Items $items
+        $choice = Show-Menu -Title 'Project Registry Setup' -Description 'Choose A New Registry Location Or Connect A Registry File You Already Have. Project State Remains In Each Project.' -Items $items
         if ($choice -in @($null, 'cancel', 'Exit', '__QUIT__')) { return $null }
+        if ($choice -eq 'existing') {
+            $existingPath = Connect-AipmExistingRegistry -Root $Root
+            if ($existingPath) { return $existingPath }
+            continue
+        }
         $path = $defaultPath
         if ($choice -eq 'custom') {
             $entered = Read-ValidatedInput -Prompt 'Registry File Path' -Help 'Enter The Full File Path, Including Any File Name Ending In .json.' -Example $defaultPath -Default '' -Validate {
@@ -606,6 +613,36 @@ function Get-AipmRegistryEntries {
     return [pscustomobject]@{ Status='PASS'; Reason=''; Projects=@((Get-AipmField $result.Data 'projects' @())) }
 }
 
+function Connect-AipmExistingRegistry {
+    param([Parameter(Mandatory)][string]$Root)
+    $defaultPath = Get-AipmDefaultRegistryPath
+    $entered = Read-ValidatedInput -Prompt 'Existing Registry File Path' -Help 'Enter The Full Path To An Existing .json Registry File. AIPM Validates It Without Replacing Its Contents.' -Example $defaultPath -Default '' -Validate {
+        param($text)
+        if (-not $text.Trim()) { return 'Enter The Full Path To An Existing Registry File.' }
+        try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full File Path.' }
+        if (-not [System.IO.Path]::IsPathRooted($text.Trim())) { return 'Enter A Full Path To An Existing .json File.' }
+        if ([System.IO.Path]::GetExtension($candidate) -ine '.json') { return 'The Existing Registry File Must End In .json.' }
+        if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { return 'The Existing Registry File Was Not Found.' }
+        return $null
+    }
+    if (-not $entered) { return $null }
+    $path = [System.IO.Path]::GetFullPath($entered.Trim())
+    $inventory = Get-AipmRegistryEntries -Root $Root -RegistryPath $path
+    if ($inventory.Status -ne 'PASS') {
+        Show-Notice -Title 'Existing Registry Could Not Be Connected' -Lines @([string]$inventory.Reason, 'The Selected Registry Was Not Changed. Choose A Valid AIPM Registry File.') -Kind Error
+        return $null
+    }
+    $saved = Set-UserSetting -Name 'registry_path' -Value $path
+    $lines = @(
+        ('Loaded ' + $inventory.Projects.Count + ' Registered Project(s).'),
+        'The Existing Registry File Was Validated And Kept Unchanged.',
+        'Project Root Paths Must Exist On This Device; AIPM Does Not Copy Project Files.'
+    )
+    if (-not $saved) { $lines += 'This Session Can Continue, But The Registry Choice Could Not Be Saved For Next Time.' }
+    Show-Notice -Title 'Existing Registry Connected' -Lines $lines -Kind $(if ($saved) { 'Success' } else { 'Warning' })
+    return $path
+}
+
 function ConvertFrom-AipmCodePoints {
     param([Parameter(Mandatory)][string]$Sequence)
     $text = ''
@@ -628,6 +665,7 @@ function Invoke-AipmRegistryManagement {
             (New-MenuItem -Label 'Back Up Registry' -Desc 'Create A JSON Copy And SHA-256 Sidecar; Existing Files Are Never Overwritten.' -Value 'backup' -Icon 'Handoff'),
             (New-MenuItem -Label 'Restore Registry Backup' -Desc 'Validate Its Checksum And Save A Pre-Restore Safety Copy.' -Value 'restore' -Icon 'Run'),
             (New-MenuItem -Label 'Change Registry Location' -Desc 'Select Or Create Another Registry; The Current Registry Is Kept Untouched.' -Value 'location' -Icon 'Settings'),
+            (New-MenuItem -Label 'Connect Existing Registry File' -Desc 'Use A Valid Registry From Another Device Without Replacing Its Contents.' -Value 'connect' -Icon 'Project'),
             (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
         )
         $choice = Show-Menu -Title 'Registry Management' -Description $inventoryDescription -Items $actions
@@ -735,31 +773,349 @@ function Invoke-AipmRegistryManagement {
             }
             continue
         }
+        if ($choice -eq 'connect') {
+            $existingPath = Connect-AipmExistingRegistry -Root $Root
+            if ($existingPath) { $currentPath = $existingPath }
+            continue
+        }
     }
 }
 
-function Show-AipmPage {
-    param([string]$Title, [string[]]$Lines)
+function Show-AipmTaskRecord {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [Parameter(Mandatory)]$TaskRow)
+    $recordResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+    if ($recordResult.Status -ne 'PASS') {
+        Show-Notice -Title 'Task Could Not Be Read' -Lines @([string]$recordResult.Reason) -Kind Error
+        return
+    }
+    $task = $recordResult.Data.task
     while ($true) {
+        $freshResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+        if ($freshResult.Status -ne 'PASS') {
+            Show-Notice -Title 'Task Could Not Be Refreshed' -Lines @([string]$freshResult.Reason, 'Return To The Task List And Try Again.') -Kind Error
+            return
+        }
+        $task = $freshResult.Data.task
+        $lines = @(
+            ('Task ID: ' + [string]$TaskRow.task_id),
+            ('Status: ' + [string]$TaskRow.status + ' (Derived From Task Evidence And Blockers)'),
+            ('Scope: ' + [string]$task.scope),
+            ('Last Verified Action: ' + [string](Get-AipmField $task 'last_verified_action' 'Not Recorded')),
+            ('Next Action: ' + [string](Get-AipmField $task 'next_action' 'Not Recorded')),
+            '',
+            'Plan:',
+            [string]$task.plan
+        )
+        foreach ($blocker in @($task.blockers)) { $lines += ('Blocker: ' + [string]$blocker) }
+        if ($task.verification) { $lines += ('Verification: ' + [string]$task.verification.result + ' | ' + [string]$task.verification.evidence) }
+        if ($task.report) { $lines += ('Report: ' + [string]$task.report) }
+        $actions = @(
+            (New-MenuItem -Label 'View Task Status And Details' -Desc ('Current Status: ' + [string]$task.task_status + ' | Review Scope, Progress, Plan And Evidence.') -Value 'view' -Icon 'Task'),
+            (New-MenuItem -Label 'Update Task Plan' -Desc 'Replace The Current Plan In AIPM Task State.' -Value 'plan' -Icon 'Edit'),
+            (New-MenuItem -Label 'Update Progress Checkpoint' -Desc 'Record The Last Verified Action And The Exact Next Action.' -Value 'checkpoint' -Icon 'Handoff'),
+            (New-MenuItem -Label 'Add A Blocker' -Desc 'Record A Current Obstacle Without Editing Project Files.' -Value 'blocker' -Icon 'Warning'),
+            (New-MenuItem -Label 'Clear Blockers' -Desc 'Remove All Recorded Blockers After They Are Resolved.' -Value 'clear' -Icon 'Success'),
+            (New-MenuItem -Label 'Record Verification' -Desc 'Record A Result And Its Evidence; AIPM Does Not Run Tests.' -Value 'verify' -Icon 'Success'),
+            (New-MenuItem -Label 'Update Task Report' -Desc 'Save A Progress Or Completion Note In Task State.' -Value 'report' -Icon 'Handoff'),
+            (New-MenuItem -Label 'Attach Plan, Report Or Supporting File' -Desc 'Copy One Selected File Into This Task; The Original File Stays In Place.' -Value 'attach' -Icon 'Item'),
+            (New-MenuItem -Label 'View Attached Task Files' -Desc 'List Supporting Files Already Stored In This Task.' -Value 'artifacts' -Icon 'Project'),
+            (New-MenuItem -Label 'Back' -Desc 'Return To The Project Task List.' -Value 'back' -Icon 'Exit')
+        )
+        $action = Show-Menu -Title ('Manage Task: ' + [string]$task.title) -Description ('Status: ' + [string]$task.task_status + ' | Task ID: ' + [string]$TaskRow.task_id) -Items $actions
+        if ($action -in @($null, 'back', 'Back', '__QUIT__')) { return }
+        if ($action -eq 'view') {
+            [void](Show-AipmPage -Title ('Task Status And Details: ' + [string]$task.title) -Lines $lines)
+            continue
+        }
+        if ($action -eq '__HELP__') {
+            [void](Show-AipmPage -Title 'Task Management Help' -Lines @(
+                'Selecting A Task Opens This Action Menu Directly; Choose View Task Status And Details For The Full Status Page.',
+                'Task Status Is Derived From Blockers, Verification, And Report Evidence; It Is Not Manually Toggled.',
+                'Task Changes Update Only AIPM-Owned Shared Project State.',
+                'Attach Plan, Report Or Supporting File Copies One Selected File Into A Task Category And Leaves The Original In Place.',
+                'Project Source Files Stay In Their Original Locations And Are Never Edited By AIPM.',
+                'Verification Records Evidence Supplied By You; AIPM Does Not Execute Project Tests.',
+                'Task Records Are Kept As Project History And Cannot Be Deleted From This Screen.'
+            ))
+            continue
+        }
+        if ($action -eq 'attach') {
+            $categories = @(
+                (New-MenuItem -Label 'Instructions And Plans' -Desc 'Store Task-Scoped Instructions Or A Plan Document.' -Value 'Instructions' -Icon 'Edit'),
+                (New-MenuItem -Label 'Handoffs' -Desc 'Store A Handoff For Another Agent Or Session.' -Value 'Handoff' -Icon 'Handoff'),
+                (New-MenuItem -Label 'Reports' -Desc 'Store A Progress, Verification Or Completion Report.' -Value 'Reports' -Icon 'Item'),
+                (New-MenuItem -Label 'Scripts' -Desc 'Store A Task Helper Script.' -Value 'Scripts' -Icon 'Settings'),
+                (New-MenuItem -Label 'Examples' -Desc 'Store A Supporting Example.' -Value 'Examples' -Icon 'Item'),
+                (New-MenuItem -Label 'References' -Desc 'Store A Reference Needed To Resume This Task.' -Value 'References' -Icon 'Project'),
+                (New-MenuItem -Label 'Cancel' -Desc 'Return Without Attaching A File.' -Value 'cancel' -Icon 'Exit')
+            )
+            $category = Show-Menu -Title 'Choose Task File Category' -Description 'The Selected File Is Copied Into AIPM Task State; Its Original Is Not Changed.' -Items $categories
+            if (-not $category -or $category -eq 'cancel' -or $category -in @('__HELP__','__QUIT__')) { continue }
+            $sourcePath = Read-ValidatedInput -Prompt 'Task Support File Path' -Help 'Enter The Full Path To One Existing File. Files Over 16 MiB Cannot Be Attached.' -Example 'D:\Work\Project\Progress-Report.md' -Default '' -Validate {
+                param($text)
+                try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full File Path.' }
+                if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { return 'The Selected File Was Not Found.' }
+                try { if ((New-Object System.IO.FileInfo($candidate)).Length -gt 16777216) { return 'The Selected File Exceeds The 16 MiB Task Artifact Limit.' } } catch { return 'The Selected File Could Not Be Read.' }
+                return $null
+            }
+            if (-not $sourcePath) { continue }
+            $sourcePath = [System.IO.Path]::GetFullPath($sourcePath.Trim())
+            $defaultName = [System.IO.Path]::GetFileName($sourcePath)
+            $fileName = Read-ValidatedInput -Prompt 'Task Artifact File Name' -Help 'Choose A File Name Only; The Category Folder Is Added Automatically. Existing Files Are Never Overwritten.' -Example $defaultName -Default $defaultName -Validate {
+                param($text)
+                $name = $text.Trim()
+                if (-not $name -or $name -in @('.', '..')) { return 'Enter A Valid File Name.' }
+                if ($name -match '[\\/:]' -or $name -match '[<>"|?*]' -or $name.EndsWith('.') -or $name.EndsWith(' ')) { return 'Enter A File Name Without Folder Separators Or Invalid Characters.' }
+                return $null
+            }
+            if (-not $fileName) { continue }
+            $relativePath = [string]$category + '/' + $fileName.Trim()
+            $confirm = Show-Confirm -Title 'Attach This Task File?' -Message ('Source: ' + $sourcePath + ' | Task File: ' + $relativePath) -YesLabel 'Attach File' -YesDesc 'Copy This File Into The Selected Task; Keep The Original.' -NoLabel 'Cancel' -NoDesc 'Do Not Copy The File.' -Default $false
+            if (-not $confirm) { continue }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-artifact-write' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -RelativePath $relativePath -FromFile $sourcePath
+        } elseif ($action -eq 'artifacts') {
+            $listed = Invoke-AipmCore -AppRoot $Root -Command 'task-artifact-list' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+            if ($listed.Status -ne 'PASS') {
+                Show-Notice -Title 'Task Files Could Not Be Listed' -Lines @([string]$listed.Reason, 'Return To The Task Menu And Try Again.') -Kind Error
+            } else {
+                $artifactRows = @($listed.Data.artifacts)
+                $searchQuery = ''
+                while ($true) {
+                    $visibleArtifacts = @()
+                    $exactArtifacts = @()
+                    $normalizedQuery = $searchQuery.Trim().Replace('\', '/')
+                    if (-not $normalizedQuery) {
+                        $visibleArtifacts = $artifactRows
+                    } else {
+                        foreach ($artifact in $artifactRows) {
+                            $artifactPath = [string]$artifact.path
+                            $artifactName = [System.IO.Path]::GetFileName($artifactPath)
+                            if ($artifactPath.IndexOf($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or $artifactName.IndexOf($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                                $visibleArtifacts += $artifact
+                            }
+                            if ($artifactPath.Equals($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase) -or $artifactName.Equals($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase)) {
+                                $exactArtifacts += $artifact
+                            }
+                        }
+                    }
+                    $queryLabel = if ($normalizedQuery) { $normalizedQuery } else { 'All Files' }
+                    $artifactLines = @('Task: ' + [string]$task.title, 'Status: ' + [string]$task.task_status, ('Search Query: ' + $queryLabel))
+                    if ($normalizedQuery) {
+                        $exactLabel = if ($exactArtifacts.Count -gt 0) { 'Found' } else { 'Not Found' }
+                        $artifactLines += ('Exact File Match: ' + $exactLabel)
+                    }
+                    $artifactLines += ('Matching Files: ' + $visibleArtifacts.Count)
+                    $artifactLines += ''
+                    if ($visibleArtifacts.Count -eq 0) {
+                        if ($artifactRows.Count -eq 0 -and -not $normalizedQuery) { $artifactLines += 'No Supporting Files Are Attached To This Task Yet.' }
+                        else { $artifactLines += 'No Matching Files Found.' }
+                    }
+                    foreach ($artifact in $visibleArtifacts) { $artifactLines += ([string]$artifact.path + ' | ' + [string]$artifact.sha256) }
+                    $pageResult = Show-AipmPage -Title 'Attached Task Files' -Lines $artifactLines -Searchable
+                    if ($pageResult -ne '__SEARCH__') { break }
+                    $enteredQuery = Read-ValidatedInput -Prompt 'Search Attached Task Files' -Help 'Enter A Full Or Partial File Name Or Relative Path. Leave Empty To Show All Attached Files.' -Example 'Agent Progress Report.md' -Default $searchQuery
+                    if ($null -ne $enteredQuery) { $searchQuery = $enteredQuery.Trim() }
+                }
+            }
+            continue
+        } elseif ($action -eq 'checkpoint') {
+            $lastAction = Read-ValidatedInput -Prompt 'Last Verified Action' -Help 'State The Most Recent Action Confirmed By Direct Evidence.' -Example 'Reviewed Existing Task Files; No Source Files Changed.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Last Verified Action.' }; return $null }
+            if (-not $lastAction) { continue }
+            $nextAction = Read-ValidatedInput -Prompt 'Exact Next Action' -Help 'Describe The Next Concrete Step For The Agent.' -Example 'Inspect The Main Workflow And Record A Short Plan.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Next Action.' }; return $null }
+            if (-not $nextAction) { continue }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-checkpoint' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -LastVerifiedAction $lastAction.Trim() -NextAction $nextAction.Trim()
+        } elseif ($action -eq 'plan' -or $action -eq 'report' -or $action -eq 'blocker') {
+            $promptTitle = @{ plan='Task Plan'; report='Task Report'; blocker='Blocker Description' }[$action]
+            $helpText = @{ plan='Describe The Work Steps For This Task.'; report='Summarize Progress, Outcome, Or Handoff Context.'; blocker='Describe The Obstacle That Needs Attention.' }[$action]
+            $entered = Read-ValidatedInput -Prompt $promptTitle -Help $helpText -Example 'Describe The Current Task Context' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Description.' }; return $null }
+            if (-not $entered) { continue }
+            $command = @{ plan='task-plan'; report='task-report'; blocker='task-blocker-add' }[$action]
+            $updated = Invoke-AipmCore -AppRoot $Root -Command $command -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Text $entered.Trim()
+        } elseif ($action -eq 'clear') {
+            if (-not (Show-Confirm -Title 'Clear Task Blockers?' -Message 'This Updates AIPM Task State Only. Confirm The Recorded Blockers Have Been Resolved.' -YesLabel 'Clear Blockers' -YesDesc 'Remove The Existing Blocker List.' -NoLabel 'Cancel' -NoDesc 'Keep The Blockers.' -Default $false)) { continue }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-blocker-clear' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+        } elseif ($action -eq 'verify') {
+            $resultItems = @(
+                (New-MenuItem -Label 'Passed' -Desc 'Evidence Supports Successful Completion.' -Value 'PASS' -Icon 'Success'),
+                (New-MenuItem -Label 'Failed' -Desc 'Evidence Shows The Check Did Not Pass.' -Value 'FAIL' -Icon 'Warning'),
+                (New-MenuItem -Label 'Unverified' -Desc 'No Conclusive Verification Is Available Yet.' -Value 'UNVERIFIED' -Icon 'Progress')
+            )
+            $verificationResult = Show-Menu -Title 'Verification Result' -Items $resultItems
+            if (-not $verificationResult -or $verificationResult -in @('__HELP__','__QUIT__')) { continue }
+            $evidence = Read-ValidatedInput -Prompt 'Verification Evidence' -Help 'Record What Was Checked And The Actual Result. AIPM Does Not Run The Check.' -Example 'PowerShell unit suite passed; 12 tests.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Evidence Or Observation.' }; return $null }
+            if (-not $evidence) { continue }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-verify' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Result ([string]$verificationResult) -Evidence $evidence.Trim()
+        } else { continue }
+        if ($updated.Status -eq 'PASS') {
+            Show-Notice -Title 'Task Updated' -Lines @('AIPM Task State Was Updated Successfully.', 'Project Source Files Were Not Changed.') -Kind Success
+            $recordResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+            if ($recordResult.Status -eq 'PASS') { $task = $recordResult.Data.task }
+        } else {
+            Show-Notice -Title 'Task Update Failed' -Lines @([string]$updated.Reason) -Kind Error
+        }
+    }
+}
+
+function Invoke-AipmTaskManagement {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
+    $currentPath = [System.IO.Path]::GetFullPath($RegistryPath)
+    while ($true) {
+        # Always re-read the selected registry before task operations; never rely on a stale dashboard snapshot.
+        $inventory = Get-AipmRegistryEntries -Root $Root -RegistryPath $currentPath
+        if ($inventory.Status -ne 'PASS') {
+            Show-Notice -Title 'Project Registry Is Unavailable' -Lines @([string]$inventory.Reason, 'Resolve The Registry Before Managing Tasks.') -Kind Error
+            return $currentPath
+        }
+        if ($inventory.Projects.Count -eq 0) {
+            $emptyItems = @(
+                (New-MenuItem -Label 'Register A Project First' -Desc 'Task Records Must Belong To A Registered Project.' -Value 'register' -Icon 'Project'),
+                (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
+            )
+            $emptyChoice = Show-Menu -Title 'No Projects Are Registered' -Description 'Register A Project Before Creating Or Managing Tasks.' -Items $emptyItems
+            if ($emptyChoice -ne 'register') { return $currentPath }
+            $currentPath = Invoke-AipmRegistryManagement -Root $Root -RegistryPath $currentPath
+            continue
+        }
+        $projectItems = @($inventory.Projects | ForEach-Object {
+            New-MenuItem -Label ([string]$_.alias) -Desc ([string]$_.root_path) -Value ([string]$_.project_id) -Icon 'Project'
+        })
+        $projectItems += New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit'
+        $selectedProjectId = Show-Menu -Title 'Select Registered Project' -Description 'Choose The Project Whose Task State You Want To Manage.' -Items $projectItems
+        if (-not $selectedProjectId -or $selectedProjectId -in @('back','__QUIT__')) { return $currentPath }
+        $project = @($inventory.Projects | Where-Object { [string]$_.project_id -eq [string]$selectedProjectId }) | Select-Object -First 1
+        if (-not $project) { continue }
+        while ($true) {
+            $taskResult = Invoke-AipmCore -AppRoot $Root -Command 'task-list' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId)
+            if ($taskResult.Status -ne 'PASS') {
+                Show-Notice -Title 'Project Tasks Could Not Be Read' -Lines @([string]$taskResult.Reason) -Kind Error
+                break
+            }
+            $taskItems = @(
+                (New-MenuItem -Label 'Create New Task' -Desc 'Create A Task Record In AIPM State For This Project.' -Value 'create' -Icon 'Yes'),
+                (New-MenuItem -Label 'Add Existing Work Folder' -Desc 'Create A Task Record Referencing A Folder; Keep Its Files In Place.' -Value 'folder' -Icon 'Project'),
+                (New-MenuItem -Label 'Open Existing Task' -Desc 'Review Or Update An Existing Core-Managed Task.' -Value 'open' -Icon 'Task'),
+                (New-MenuItem -Label 'Back To Project Selection' -Desc 'Choose Another Registered Project.' -Value 'back' -Icon 'Exit')
+            )
+            $taskChoice = Show-Menu -Title ('Tasks: ' + [string]$project.alias) -Description ('Managed State: ' + [string]$project.root_path) -Items $taskItems
+            if (-not $taskChoice -or $taskChoice -in @('back','__QUIT__')) { break }
+            if ($taskChoice -eq '__HELP__') {
+                [void](Show-AipmPage -Title 'Task Management Help' -Lines @(
+                    'Select A Registered Project Before Managing Its Tasks.',
+                    'New Tasks Are Stored Under The Project Shared-Project-State-Manager.',
+                    'Add Existing Work Folder Creates Task Context Only; It Does Not Move Or Copy Files.',
+                    'Task Names Are Descriptive And Do Not Need Numbered Labels.'
+                ))
+                continue
+            }
+            if ($taskChoice -eq 'create' -or $taskChoice -eq 'folder') {
+                $scopePrefix = ''
+                if ($taskChoice -eq 'folder') {
+                    $folderPath = Read-ValidatedInput -Prompt 'Existing Work Folder Path' -Help 'Enter A Full Path To An Existing Folder Inside The Selected Project. Its Files Will Stay In Place.' -Example ([string]$project.root_path) -Default '' -Validate {
+                        param($text)
+                        try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Folder Path.' }
+                        if (-not (Test-Path -LiteralPath $candidate -PathType Container)) { return 'The Existing Work Folder Must Already Exist.' }
+                        $base = [System.IO.Path]::GetFullPath([string]$project.root_path).TrimEnd([char[]]@('\','/')) + [System.IO.Path]::DirectorySeparatorChar
+                        if (-not $candidate.StartsWith($base, [System.StringComparison]::OrdinalIgnoreCase)) { return 'Choose A Folder Inside The Selected Registered Project.' }
+                        return $null
+                    }
+                    if (-not $folderPath) { continue }
+                    $scopePrefix = 'Existing Work Folder: ' + [System.IO.Path]::GetFullPath($folderPath.Trim()) + "`nFiles Remain In Their Original Location."
+                }
+                $title = Read-ValidatedInput -Prompt 'Task Name' -Help 'Use Any Clear, Descriptive Name; Numbered Task Names Are Optional.' -Example 'Organize Existing Work Files' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Task Name.' }; return $null }
+                if (-not $title) { continue }
+                $scopeHelp = if ($scopePrefix) { 'Describe The Goal Or Next Work For This Existing Folder.' } else { 'Describe The Goal, Boundaries, And Expected Outcome For This Task.' }
+                $scope = Read-ValidatedInput -Prompt 'Task Scope And Goal' -Help $scopeHelp -Example 'Describe The Expected Outcome And Boundaries' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Task Scope And Goal.' }; return $null }
+                if (-not $scope) { continue }
+                $finalScope = if ($scopePrefix) { $scopePrefix + "`nTask Goal: " + $scope.Trim() } else { $scope.Trim() }
+                $created = Invoke-AipmCore -AppRoot $Root -Command 'task-create' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Title $title.Trim() -Scope $finalScope
+                if ($created.Status -eq 'PASS') {
+                    $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
+                    Show-Notice -Title 'Task Created' -Lines @(('Task: ' + $title.Trim()), ('Task ID: ' + $createdId), 'The Task Record Was Saved In AIPM Project State. No Project Files Were Moved Or Edited.') -Kind Success
+                } else { Show-Notice -Title 'Task Creation Failed' -Lines @([string]$created.Reason) -Kind Error }
+                continue
+            }
+            if ($taskChoice -eq 'open') {
+                $rows = @($taskResult.Data.tasks)
+                if ($rows.Count -eq 0) { Show-Notice -Title 'No Tasks Yet' -Lines @('Create A New Task Or Add An Existing Work Folder First.') -Kind Info; continue }
+                $existingItems = @($rows | ForEach-Object {
+                    New-MenuItem -Label ([string]$_.title) -Desc (([string]$_.status) + ' | ' + [string]$_.task_id) -Value ([string]$_.task_id) -Icon 'Task'
+                })
+                $existingItems += New-MenuItem -Label 'Back' -Desc 'Return To Task Management.' -Value 'back' -Icon 'Exit'
+                $selectedTaskId = Show-Menu -Title 'Open Existing Task' -Items $existingItems
+                if (-not $selectedTaskId -or $selectedTaskId -in @('back','__QUIT__')) { continue }
+                $selectedTask = @($rows | Where-Object { [string]$_.task_id -eq [string]$selectedTaskId }) | Select-Object -First 1
+                if ($selectedTask) { Show-AipmTaskRecord -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -TaskRow $selectedTask }
+            }
+        }
+    }
+}
+
+function ConvertTo-AipmPageRows {
+    param([string[]]$Lines, [int]$Width)
+    $indent = '  '
+    $limit = [Math]::Max(12, $Width - $indent.Length - 3)
+    $rows = New-Object System.Collections.Generic.List[string]
+    foreach ($line in $Lines) {
+        $remaining = [string]$line
+        if (-not $remaining) { $rows.Add(''); continue }
+        while ($remaining.Length -gt $limit) {
+            $cut = $remaining.LastIndexOf(' ', $limit)
+            if ($cut -lt 1) { $cut = $limit }
+            $rows.Add($indent + $remaining.Substring(0, $cut).TrimEnd())
+            $remaining = $remaining.Substring($cut).TrimStart()
+        }
+        if ($remaining) { $rows.Add($indent + $remaining) }
+    }
+    return $rows.ToArray()
+}
+
+function Show-AipmPage {
+    param([string]$Title, [string[]]$Lines, [switch]$Searchable)
+    $pageNumber = 0
+    while ($true) {
+        $size = Get-TerminalSize
+        $displayRows = @(ConvertTo-AipmPageRows -Lines $Lines -Width $size.Width)
+        $footerTemplate = if ($Searchable) { 'Page 1 of 1 | Up/Down Or PageUp/PageDown Navigate | Enter/Esc Back | / Search | ? Help | Q Exit' } else { 'Page 1 of 1 | Up/Down Or PageUp/PageDown Navigate | Enter/Esc Back | ? Help | Q Exit' }
+        $footerRows = @(ConvertTo-AipmPageRows -Lines @($footerTemplate) -Width $size.Width).Count
+        # Reserve the product shell, title/rule, blank separator, footer, and last terminal row.
+        $pageCapacity = [Math]::Max(1, $size.Height - 1 - 4 - 2 - 1 - $footerRows)
+        $pageCount = [Math]::Max(1, [int][Math]::Ceiling($displayRows.Count / [double]$pageCapacity))
+        if ($pageNumber -ge $pageCount) { $pageNumber = $pageCount - 1 }
+        $start = $pageNumber * $pageCapacity
+        $end = [Math]::Min($displayRows.Count, $start + $pageCapacity)
+
         Clear-Ui
         $productShell = Get-TuiProductShell
-        if ($productShell.Version) { Write-AipmProductHeader -Version $productShell.Version -Status $productShell.Status -Width (Get-TerminalSize).Width }
+        if ($productShell.Version) { Write-AipmProductHeader -Version $productShell.Version -Status $productShell.Status -Width $size.Width }
         Write-UiLine ('  ' + $Title) 'Title'
-        Write-TuiRule -Width (Get-TerminalSize).Width
-        foreach ($line in $Lines) {
+        Write-TuiRule -Width $size.Width
+        for ($i = $start; $i -lt $end; $i++) {
+            $line = [string]$displayRows[$i]
             $role = 'Normal'
             if ($line -match '(?i)\b(Ready|Passed|Complete)\b') { $role = 'Success' }
             elseif ($line -match '(?i)\b(Failed|Error)\b') { $role = 'Error' }
             elseif ($line -match '(?i)\b(Blocked|Warning)\b') { $role = 'Warning' }
             elseif ($line -match '(?i)\b(Unverified|Unknown|Not Registered)\b') { $role = 'Dim' }
-            Write-MenuWrapped -Text $line -Width (Get-TerminalSize).Width -Role $role -Indent '  '
+            Write-UiLine $line $role
         }
         Write-UiLine ''
-        Write-Ui 'Enter / Esc ' 'Key'; Write-UiLine 'Back  |  ? / F1 Help  |  Q Request Exit' 'Dim'
+        if ($pageCount -gt 1) {
+            $footer = 'Page ' + ($pageNumber + 1) + ' of ' + $pageCount + ' | Up/Down Or PageUp/PageDown Navigate | Enter/Esc Back'
+            if ($Searchable) { $footer += ' | / Search' }
+            $footer += ' | ? Help | Q Exit'
+            foreach ($row in (ConvertTo-AipmPageRows -Lines @($footer) -Width $size.Width)) { Write-UiLine $row 'Dim' }
+        } else {
+            Write-Ui 'Enter / Esc ' 'Key'; Write-Ui 'Back  |  ' 'Dim'
+            if ($Searchable) { Write-Ui '/ Search  |  ' 'Key' }
+            Write-UiLine '? / F1 Help  |  Q Request Exit' 'Dim'
+        }
         Complete-UiFrame
         $key = Read-AppKey
         if ($key.Name -in @('Enter','Esc')) { return $null }
+        if ($key.Name -in @('Down','PageDown') -and $pageNumber -lt ($pageCount - 1)) { $pageNumber++; continue }
+        if ($key.Name -in @('Up','PageUp') -and $pageNumber -gt 0) { $pageNumber--; continue }
         if ($key.Name -eq 'Help' -or ($key.Name -eq 'Char' -and $key.Char -eq '?')) { return '__HELP__' }
+        if ($Searchable -and $key.Name -eq 'Char' -and $key.Char -eq '/') { return '__SEARCH__' }
         if ($key.Name -eq 'Char' -and $key.Char -match '^[qQ]$') { return '__QUIT__' }
     }
 }
@@ -789,14 +1145,14 @@ function Start-TuiApp {
         }
         $items = @(
             (New-MenuItem -Label 'Projects' -Desc 'Review Registered Projects And Their Verified State.' -Value 'Projects' -Icon 'Project'),
-            (New-MenuItem -Label 'Tasks' -Desc 'Read Current Task State And Evidence.' -Value 'Tasks' -Icon 'Task'),
+            (New-MenuItem -Label 'Tasks' -Desc 'Select A Registered Project, Then Create Or Manage Its Tasks.' -Value 'Tasks' -Icon 'Task'),
             (New-MenuItem -Label 'Phases' -Desc 'Review Active Phase; Missing History Stays Unverified.' -Value 'Phases' -Icon 'Progress'),
             (New-MenuItem -Label 'Tests & Evidence' -Desc 'Separate Task Evidence From Test Runs.' -Value 'Tests & Evidence' -Icon 'Success' -IconRole 'Success'),
             (New-MenuItem -Label 'Agents & Handoffs' -Desc 'Show Only Session Evidence Exposed By A Host.' -Value 'Agents & Handoffs' -Icon 'Agent'),
             (New-MenuItem -Label 'Timeline' -Desc 'Review Verified Update Metadata, Not Invented Events.' -Value 'Timeline' -Icon 'Handoff'),
             (New-MenuItem -Label 'Skills & Plugins' -Desc 'Review Approved Skills And The Unverified Project-Agent Bridge Package.' -Value 'Skills & Plugins' -Icon 'Item'),
             (New-MenuItem -Label 'Assistant Console' -Desc 'Offline Evidence View; No AI Session Is Implied.' -Value 'Assistant Console' -Icon 'Agent'),
-            (New-MenuItem -Label 'Registry Management' -Desc 'Choose Registry Location, Register Projects, And Back Up Or Restore The Registry.' -Value 'Registry Management' -Icon 'Settings'),
+            (New-MenuItem -Label 'Registry Management' -Desc 'Connect Existing Registries, Register Projects, And Back Up Or Restore The Registry.' -Value 'Registry Management' -Icon 'Settings'),
             (New-MenuItem -Label 'Settings' -Desc 'Change UI Preferences Only.' -Value 'Settings' -Icon 'Settings'),
             (New-MenuItem -Label 'Help' -Desc 'Keyboard, Evidence And Read-Only Behavior.' -Value 'Help' -Icon 'About'),
             (New-MenuItem -Label 'Refresh' -Desc 'Read The Latest Core State Again.' -Value 'Refresh' -Icon 'Run'),
@@ -836,6 +1192,12 @@ function Start-TuiApp {
                 $session = Get-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath
                 $refreshNotice = ''
             }
+            continue
+        }
+        elseif ($choice -eq 'Tasks') {
+            $RegistryPath = Invoke-AipmTaskManagement -Root $Root -RegistryPath $RegistryPath
+            $session = Get-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath
+            $refreshNotice = ''
             continue
         }
         else { $section = [string]$choice }

@@ -29,11 +29,21 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-artifact-list', 'task-artifact-write')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',
         [string]$Alias = '',
+        [string]$TaskId = '',
+        [string]$Title = '',
+        [string]$Scope = '',
+        [string]$Text = '',
+        [string]$Result = '',
+        [string]$Evidence = '',
+        [string]$LastVerifiedAction = '',
+        [string]$NextAction = '',
+        [string]$RelativePath = '',
+        [string]$FromFile = '',
         [string]$Destination = '',
         [string]$Source = '',
         [string]$PythonPath = '',
@@ -45,12 +55,22 @@ function Invoke-AipmCore {
 
     $entry = Join-Path (Join-Path $root 'Core-Engine') 'aipm.py'
     $arguments = @($entry, $Command)
-    if ($RegistryPath -and $Command -in @('list', 'dashboard', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore')) {
+    if ($RegistryPath -and ($Command -in @('list', 'dashboard', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore') -or $Command.StartsWith('task-'))) {
         $arguments += @('--registry', [System.IO.Path]::GetFullPath($RegistryPath))
     }
     if ($ProjectRoot) { $arguments += @('--project-root', [System.IO.Path]::GetFullPath($ProjectRoot)) }
     if ($ProjectId) { $arguments += @('--project-id', $ProjectId) }
     if ($Alias) { $arguments += @('--alias', $Alias) }
+    if ($TaskId) { $arguments += @('--task-id', $TaskId) }
+    if ($Title) { $arguments += @('--title', $Title) }
+    if ($Scope) { $arguments += @('--scope', $Scope) }
+    if ($Text) { $arguments += @('--text', $Text) }
+    if ($Result) { $arguments += @('--result', $Result) }
+    if ($Evidence) { $arguments += @('--evidence', $Evidence) }
+    if ($LastVerifiedAction) { $arguments += @('--last-verified-action', $LastVerifiedAction) }
+    if ($NextAction) { $arguments += @('--next-action', $NextAction) }
+    if ($RelativePath) { $arguments += @('--relative-path', $RelativePath) }
+    if ($FromFile) { $arguments += @('--from-file', [System.IO.Path]::GetFullPath($FromFile)) }
     if ($Destination) { $arguments += @('--destination', [System.IO.Path]::GetFullPath($Destination)) }
     if ($Source) { $arguments += @('--source', [System.IO.Path]::GetFullPath($Source)) }
     $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec

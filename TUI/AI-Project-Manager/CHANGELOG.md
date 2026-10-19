@@ -1,8 +1,41 @@
 # AI Project Manager TUI Change Log
 
-## [Unreleased]
+## [1.3.4] — Development Synchronization (Development; Not Published)
 
-- No unreleased changes.
+- Synchronized the TUI package version with the AIPM platform at `1.3.4` for the accumulated repository update.
+- No Release or tag was created.
+
+## [1.3.3] — Search Attached Task Files (Development; Not Published)
+
+- Added `/` filename and relative-path search exclusively to **View Attached Task Files**.
+- Search results show exact-match availability and matching artifacts; clearing the query restores the complete inventory.
+- Added scripted regression coverage and synchronized the TUI version with AIPM `1.3.3`; no Release or tag was created.
+
+## [1.3.2] — Paginated Information Pages (Development; Not Published)
+
+- Paginated long read-only pages according to the current terminal height so late task artifacts are not hidden below the viewport.
+- Added Up/Down and PageUp/PageDown navigation and an explicit page counter; Enter/Esc continue to return.
+- Added short-terminal regression coverage and synchronized the TUI version with AIPM `1.3.2`; no Release or tag was created.
+
+## [1.3.1] — Direct Task Actions And File Attachments (Development; Not Published)
+
+- Opened the task action menu immediately after task selection and made the detailed status view optional.
+- Added TUI actions to attach plans, reports, handoffs, and supporting files into task-scoped categories through Core, and to list attached task files.
+- Documented that attaching copies the selected file while preserving the original; retained the 16 MiB limit and no-silent-overwrite behavior.
+- Kept the TUI and platform development versions synchronized at `1.3.1`; no Release or tag was created.
+
+## [1.3.0] — Guided Task Management (Development; Not Published)
+
+- Added a guided task workflow that refreshes the registry and requires project selection before task operations.
+- Added task creation, existing-work-folder context without file moves/copies, existing-task review, and updates for plans, checkpoints, blockers, verification evidence, and reports through whitelisted Core calls.
+- Documented the workflow and its project-source safety boundary in both beginner guides and the TUI architecture guide.
+- Synchronized the TUI development version with AIPM `1.3.0`; no Release or tag was created.
+
+## [1.2.0] — Existing Registry Connection (Development; Not Published)
+
+- Added explicit first-run and Registry Management flows for validating and selecting an existing registry file without replacing it.
+- Clarified device-specific project path behavior and task-folder use within a registered project.
+- Synchronized the TUI development version with AIPM `1.2.0`; no Release or tag was created.
 
 ## [1.1.9] — Projects Navigation And Registry Guidance (Development; Not Published)
 

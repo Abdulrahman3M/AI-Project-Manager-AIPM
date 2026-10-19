@@ -303,10 +303,24 @@ $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } '0114'
 Assert-True 'first launch asks before creating the default per-user registry' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and $ui.Output.Contains('Use Default Registry Location') -and (Test-Path -LiteralPath $defaultRegistry -PathType Leaf)) $ui.Error
 Assert-Equal 'first-run registry choice is remembered in per-user settings' ([System.IO.Path]::GetFullPath($defaultRegistry)) (Get-UserSetting -Name 'registry_path')
 [void](Set-UserSetting -Name 'registry_path' -Value '')
+$existingRegistry = Join-Path (Get-TestWork) 'Existing Device Registry.json'
+$existingProjectRoot = Join-Path (Get-TestWork) 'Existing Registered Project'
+[void](New-Item -ItemType Directory -Path $existingProjectRoot -Force)
+$existingData = @{ schema_version='1.0'; projects=@(@{ project_id='Project-Existing123'; root_path=$existingProjectRoot; alias='Existing Device Project' }); preferences=@{} }
+[System.IO.File]::WriteAllText($existingRegistry, ($existingData | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
+$existingKeys = '02' + $existingRegistry + '{Enter}{Enter}01{Enter}14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } $existingKeys
+Assert-True 'first-run setup can connect to and display a valid registry already copied from another device' ($ui.Error -eq '' -and $ui.Output.Contains('Use An Existing Registry File') -and $ui.Output.Contains('Existing Registry Connected') -and $ui.Output.Contains('Project Root Paths Must Exist On This Device') -and $ui.Output.Contains('Existing Device Project') -and (Get-UserSetting -Name 'registry_path') -eq [System.IO.Path]::GetFullPath($existingRegistry)) ($ui.Error + $ui.Output)
+[void](Set-UserSetting -Name 'registry_path' -Value '')
+$invalidExistingRegistry = Join-Path (Get-TestWork) 'Invalid Existing Registry.json'
+[System.IO.File]::WriteAllText($invalidExistingRegistry, '{ not valid registry json', (New-Object System.Text.UTF8Encoding($false)))
+$invalidExistingKeys = '02' + $invalidExistingRegistry + '{Enter}{Enter}04'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } $invalidExistingKeys
+Assert-True 'invalid existing registry files are refused without being overwritten or remembered' ($ui.Error -eq '' -and $ui.Output.Contains('Existing Registry Could Not Be Connected') -and (Get-Content -LiteralPath $invalidExistingRegistry -Raw) -eq '{ not valid registry json' -and -not (Get-UserSetting -Name 'registry_path')) ($ui.Error + $ui.Output)
 $customRegistry = Join-Path (Join-Path (Get-TestWork) 'Custom Registry Location') 'project-data.json'
 $customFolderEntry = (Split-Path -Parent $customRegistry) + [System.IO.Path]::DirectorySeparatorChar
 $eraseFolderEntry = '{Backspace}' * $customFolderEntry.Length
-$customKeys = '02' + $customFolderEntry + '{Enter}' + $eraseFolderEntry + $customRegistry + '{Enter}14'
+$customKeys = '03' + $customFolderEntry + '{Enter}' + $eraseFolderEntry + $customRegistry + '{Enter}14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) } $customKeys
 Assert-True 'first-run setup accepts a custom full path and any .json filename' ($ui.Error -eq '' -and $ui.Output.Contains('Project Registry Setup') -and (Test-Path -LiteralPath $customRegistry -PathType Leaf)) $ui.Error
 Assert-Contains 'registry location help requires the full path and permits a chosen JSON filename' $ui.Output 'Enter The Full File Path, Including Any File Name Ending In .json.'
@@ -314,8 +328,21 @@ Assert-Contains 'folder-only registry input explains why the full JSON file path
 Assert-Equal 'custom registry choice is saved without changing the selected path' ([System.IO.Path]::GetFullPath($customRegistry)) (Get-UserSetting -Name 'registry_path')
 $env:LOCALAPPDATA = $previousLocalAppData
 [void](Set-UserSetting -Name 'registry_path' -Value '')
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '090714'
-Assert-True 'the main TUI exposes a dedicated Registry Management section' ($ui.Error -eq '' -and $ui.Output.Contains('Registry Management') -and $ui.Output.Contains('View Registered Projects') -and $ui.Output.Contains('Back Up Registry')) $ui.Error
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '090814'
+Assert-True 'the main TUI exposes a dedicated Registry Management section with explicit existing-registry connection' ($ui.Error -eq '' -and $ui.Output.Contains('Registry Management') -and $ui.Output.Contains('View Registered Projects') -and $ui.Output.Contains('Back Up Registry') -and $ui.Output.Contains('Connect Existing Registry File')) $ui.Error
+$managementRegistry = Join-Path (Get-TestWork) 'Current Management Registry.json'
+$remoteRegistry = Join-Path (Get-TestWork) 'Copied Device Registry.json'
+$remoteRoot = Join-Path (Get-TestWork) 'Copied Device Project'
+[void](New-Item -ItemType Directory -Path $remoteRoot -Force)
+$emptyRegistryData = @{ schema_version='1.0'; projects=@(); preferences=@{} }
+$remoteRegistryData = @{ schema_version='1.0'; projects=@(@{ project_id='Project-Copied789'; root_path=$remoteRoot; alias='Copied Device Project' }); preferences=@{} }
+[System.IO.File]::WriteAllText($managementRegistry, ($emptyRegistryData | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($remoteRegistry, ($remoteRegistryData | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
+$connectKeys = '0907' + $remoteRegistry + '{Enter}{Enter}01{Enter}0814'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managementRegistry } $connectKeys
+Assert-True 'Registry Management connects to a validated existing file and makes its registered projects active' ($ui.Error -eq '' -and $ui.Output.Contains('Existing Registry Connected') -and $ui.Output.Contains('Project Root Paths Must Exist On This Device') -and $ui.Output.Contains('Copied Device Project') -and (Get-UserSetting -Name 'registry_path') -eq [System.IO.Path]::GetFullPath($remoteRegistry)) ($ui.Error + $ui.Output)
+$afterConnect = Get-Content -LiteralPath $remoteRegistry -Raw | ConvertFrom-Json
+Assert-Equal 'connecting an existing registry does not rewrite its source file' 1 $afterConnect.projects.Count
 
 Set-TestGroup 'Core State Integration'
 $fixtureRoot = Join-Path (Get-TestWork) 'Registered Project Fixture'
@@ -328,17 +355,71 @@ $statePath = Join-Path $stateRoot 'State-Manifest.json'
 $registeredPath = Join-Path (Get-TestWork) 'registry.json'
 $registered = @{ schema_version='1.0'; projects=@(@{ project_id='P08-Fixture'; root_path=$fixtureRoot; alias='Registered Fixture' }); preferences=@{} }
 [System.IO.File]::WriteAllText($registeredPath, ($registered | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
+$taskEditRoot = Join-Path (Get-TestWork) 'Task Edit Fixture'
+[void](New-Item -ItemType Directory -Path $taskEditRoot -Force)
+$taskEditRegistry = Join-Path (Get-TestWork) 'task-edit-registry.json'
+$taskEditProjectId = 'Task-Edit-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+$taskEditRegistration = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $taskEditRegistry -ProjectRoot $taskEditRoot -ProjectId $taskEditProjectId -Alias 'Task Edit Fixture'
+$taskEditCreated = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-create' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -Title 'Verify TUI Task Editing' -Scope 'Exercise task plan editing from the user interface.'
+$taskEditId = [System.IO.Path]::GetFileName([string]$taskEditCreated.Data.task_path)
+$appModule = @(Get-Module | Where-Object { $_.Path -eq (Join-Path (Join-Path (Get-TestRoot) 'src/Core') 'App.psm1') }) | Select-Object -First 1
+$taskRow = [pscustomobject]@{ task_id=$taskEditId; title='Verify TUI Task Editing'; status='NOT-STARTED' }
+$taskRecordUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } '02Update plan from TUI{Enter}{Enter}03Verified first test flow{Enter}Next inspect issue boundaries{Enter}{Enter}{Esc}'
+$updatedFixtureTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
+Assert-True 'task selection opens the management menu directly and task detail is an explicit action' ($taskEditRegistration.Status -eq 'PASS' -and $taskRecordUi.Error -eq '' -and $taskRecordUi.Output.Contains('Manage Task: Verify TUI Task Editing') -and $taskRecordUi.Output.Contains('View Task Status And Details') -and $taskRecordUi.Output.Contains('Current Status: IN-PROGRESS') -and $updatedFixtureTask.Status -eq 'PASS' -and $updatedFixtureTask.Data.task.plan.Contains('Update plan from TUI') -and $updatedFixtureTask.Data.task.last_verified_action -eq 'Verified first test flow' -and $updatedFixtureTask.Data.task.next_action -eq 'Next inspect issue boundaries') ($taskRecordUi.Error + $taskRecordUi.Output)
+$reportSource = Join-Path (Get-TestWork) 'Agent Progress Report.md'
+[System.IO.File]::WriteAllText($reportSource, '# Verified Agent Report`n- Tests: PASS', (New-Object System.Text.UTF8Encoding($false)))
+$attachKeys = '08' + '03' + $reportSource + '{Enter}{Enter}01{Enter}{Esc}'
+$attachUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $attachKeys
+$attachedFiles = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-artifact-list' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
+Assert-True 'TUI attaches a selected report through Core without changing its original file' ($attachUi.Error -eq '' -and $attachUi.Output.Contains('Attach Plan, Report Or Supporting File') -and $attachedFiles.Status -eq 'PASS' -and @($attachedFiles.Data.artifacts | Where-Object { $_.path -eq 'Reports/Agent Progress Report.md' }).Count -eq 1 -and [System.IO.File]::ReadAllText($reportSource).Contains('Verified Agent Report')) ($attachUi.Error + $attachUi.Output)
+$artifactListingUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } '09{Enter}{Esc}'
+Assert-True 'attached task files can be reviewed from the task management menu' ($artifactListingUi.Error -eq '' -and $artifactListingUi.Output.Contains('Attached Task Files') -and $artifactListingUi.Output.Contains('Reports/Agent Progress Report.md')) ($artifactListingUi.Error + $artifactListingUi.Output)
+$artifactSearchUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } '09/Agent Progress Report.md{Enter}/Definitely Missing.md{Enter}/{Enter}{Esc}{Esc}'
+Assert-True 'attached task file search reports exact matches, missing files, and restores the full list when cleared' ($artifactSearchUi.Error -eq '' -and $artifactSearchUi.Output.Contains('Exact File Match: Found') -and $artifactSearchUi.Output.Contains('Matching Files: 1') -and $artifactSearchUi.Output.Contains('Exact File Match: Not Found') -and $artifactSearchUi.Output.Contains('No Matching Files Found') -and $artifactSearchUi.Output.Contains('Search Query: All Files') -and $artifactSearchUi.Output.Contains('Reports/Agent Progress Report.md')) ($artifactSearchUi.Error + $artifactSearchUi.Output)
+$longArtifactLines = @('Task: GitHub Learning Series', 'Status: IN-PROGRESS', '') + @(1..12 | ForEach-Object { 'Artifact Entry {0:D2}' -f $_ })
+$pagedArtifactUi = Invoke-Ui {
+    Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 100 -CaptureHeight 14
+    [void](Show-AipmPage -Title 'Attached Task Files' -Lines $longArtifactLines)
+} '{PageDown}{PageDown}{Esc}'
+Assert-True 'long attached task file lists are paginated and the last artifact is reachable on a short terminal' ($pagedArtifactUi.Error -eq '' -and $pagedArtifactUi.Output.Contains('Page 1 of 3') -and $pagedArtifactUi.Output.Contains('Page 3 of 3') -and $pagedArtifactUi.Output.Contains('Artifact Entry 12')) ($pagedArtifactUi.Error + $pagedArtifactUi.Output)
+$ordinaryPageUi = Invoke-Ui {
+    Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 100 -CaptureHeight 20
+    [void](Show-AipmPage -Title 'Ordinary Read-Only Page' -Lines @('Ordinary Content'))
+} '/{Esc}'
+Assert-True 'search affordance is absent from non-attachment information pages' ($ordinaryPageUi.Error -eq '' -and -not $ordinaryPageUi.Output.Contains('/ Search')) ($ordinaryPageUi.Error + $ordinaryPageUi.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '14'
 Assert-True 'registered projects are not separate actions on the main dashboard' ($ui.Error -eq '' -and -not $ui.Output.Contains('Registered Fixture')) ($ui.Error + $ui.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}14'
 Assert-True 'Projects section lists registered projects and their verified state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) ($ui.Error + $ui.Output)
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '02{Enter}14'
-Assert-True 'task view lists verified tasks from Core without local state copies' ($ui.Error -eq '' -and $ui.Output.Contains('Verify AIPM TUI') -and $ui.Output.Contains('Passed')) ($ui.Error + $ui.Output)
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '0201040214'
+Assert-True 'task management refreshes projects and offers opening existing tasks after project selection' ($ui.Error -eq '' -and $ui.Output.Contains('Select Registered Project') -and $ui.Output.Contains('Tasks: Registered Fixture') -and $ui.Output.Contains('Open Existing Task')) ($ui.Error + $ui.Output)
+$emptyTaskRegistry = Join-Path (Get-TestWork) 'empty-task-registry.json'
+$emptyRegistryData = @{ schema_version='1.0'; projects=@(); preferences=@{} }
+[System.IO.File]::WriteAllText($emptyTaskRegistry, ($emptyRegistryData | ConvertTo-Json -Depth 10), (New-Object System.Text.UTF8Encoding($false)))
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $emptyTaskRegistry } '02214'
+Assert-True 'task management requires a registered project and directs an empty registry to project registration' ($ui.Error -eq '' -and $ui.Output.Contains('No Projects Are Registered') -and $ui.Output.Contains('Register A Project First')) ($ui.Error + $ui.Output)
+$managedTaskRoot = Join-Path (Get-TestWork) 'TUI Task Management Project'
+$existingWorkFolder = Join-Path $managedTaskRoot 'Incoming Work'
+[void](New-Item -ItemType Directory -Path $existingWorkFolder -Force)
+[System.IO.File]::WriteAllText((Join-Path $existingWorkFolder 'notes.md'), 'User work stays here.', (New-Object System.Text.UTF8Encoding($false)))
+$managedTaskRegistry = Join-Path (Get-TestWork) 'tui-task-management-registry.json'
+$managedTaskProjectId = 'TUI-Task-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+$taskProjectRegistration = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $managedTaskRegistry -ProjectRoot $managedTaskRoot -ProjectId $managedTaskProjectId -Alias 'TUI Task Fixture'
+Assert-Equal 'TUI task fixture is registered in Core' 'PASS' $taskProjectRegistration.Status
+$taskCreateKeys = '02' + '01' + '01' + 'Organize The Existing Work{Enter}' + 'Review files and agree on next steps{Enter}' + '{Enter}' + '04' + '02' + '14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRegistry } $taskCreateKeys
+$createdTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
+Assert-True 'TUI creates a new task only after selecting a registered project and Core lists it' ($ui.Error -eq '' -and $createdTaskList.Status -eq 'PASS' -and $createdTaskList.Data.tasks.Count -eq 1 -and $createdTaskList.Data.tasks[0].title -eq 'Organize The Existing Work') ($ui.Error + $ui.Output)
+$taskFolderKeys = '02' + '01' + '02' + $existingWorkFolder + '{Enter}' + 'Organize Imported Notes{Enter}' + 'Review existing task files in place{Enter}' + '{Enter}' + '04' + '02' + '14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRegistry } $taskFolderKeys
+$afterFolderTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
+Assert-True 'existing work folder is added as task context without moving its files' ($ui.Error -eq '' -and $afterFolderTaskList.Status -eq 'PASS' -and $afterFolderTaskList.Data.tasks.Count -eq 2 -and (Test-Path -LiteralPath (Join-Path $existingWorkFolder 'notes.md') -PathType Leaf) -and $ui.Output.Contains($existingWorkFolder)) ($ui.Error + $ui.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '04{Enter}14'
 Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)
 $registrationRegistry = Join-Path (Get-TestWork) 'registration-message-registry.json'
 $newProjectRoot = Join-Path (Get-TestWork) 'New Project Fixture'
 [void](New-Item -ItemType Directory -Path $newProjectRoot -Force)
-$registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}01{Enter}071201{Enter}14'
+$registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}01{Enter}081201{Enter}14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registrationRegistry } $registrationKeys
 Assert-True 'successful project registration shows English refresh instructions and the refreshed Projects section lists it' ($ui.Error -eq '' -and $ui.Output.Contains('Project Folder Added Successfully.') -and $ui.Output.Contains('Please Select') -and $ui.Output.Contains('Refresh From The Home Page.') -and $ui.Output.Contains('New Project')) ($ui.Error + $ui.Output)
