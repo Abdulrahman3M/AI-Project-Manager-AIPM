@@ -6,7 +6,7 @@
 
 ## [1.4.5] — Managed Input And Frame Lifecycle
 
-- Synchronizes the TUI package with AIPM `1.4.5`; this release carries no TUI product behavior change beyond the accompanying platform release metadata.
+- Synchronizes the TUI package with AIPM `1.4.5`; this repository update carried no TUI product behavior change beyond the accompanying platform version metadata.
 
 ## [1.4.0] — Synchronized Product Release
 

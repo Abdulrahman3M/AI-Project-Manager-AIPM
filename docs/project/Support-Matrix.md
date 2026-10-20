@@ -35,7 +35,7 @@
 
 ## Operating Boundaries
 
-- Platform and PowerShell TUI repository versions are synchronized at `1.4.6`; the latest published release and previously validated package artifacts remain at `1.4.5`. Skill versions are independently managed; Plugin archives remain local and uninstalled unless separately installed by the owner.
+- Platform and PowerShell TUI repository versions are synchronized at `1.4.6`; the latest published GitHub Release is `1.4.0`. The previously validated source package and multi-host Plugin archives remain at `1.4.5`. Skill versions are independently managed; Plugin archives remain local and uninstalled unless separately installed by the owner.
 - TUI task management uses Core-validated operations for AIPM-owned task records. It does not edit project source files or run project tests; existing task folders are references and remain in place.
 - AIPM does not edit target-project implementation files, execute target-project tests, or impose AIPM approval gates on agent source edits. Agents work directly in original files under target-project and AI-host permissions.
 - Host adapters remain capability-declared, permission-gated for AIPM state mutations, and fail-closed. This state permission does not gate source edits performed through an AI host.

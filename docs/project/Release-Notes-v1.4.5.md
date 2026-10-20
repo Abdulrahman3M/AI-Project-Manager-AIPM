@@ -1,6 +1,8 @@
 # AI Project Manager v1.4.5
 
-This patch release follows the published `v1.4.0` and improves two capability workflows: more accurate Skill selection for user intent and safer PowerShell TUI input/frame handling. No breaking project API changes are intended.
+Repository update; not published as a GitHub Release. The latest published release remains `v1.4.0`, and no `v1.4.5` tag was created.
+
+This update follows `v1.4.0` and improves two capability workflows: more accurate Skill selection for user intent and safer PowerShell TUI input/frame handling. No breaking project API changes are intended.
 
 ## Skill Selection Improvements
 
@@ -31,6 +33,6 @@ This patch release follows the published `v1.4.0` and improves two capability wo
 ## Verification And Limits
 
 - Routing and generated TUI regression checks are included in repository test suites.
-- ChatGPT/Codex, Claude Code, and Google Antigravity archives are local distribution builds; this Release does not imply host installation or acceptance.
+- ChatGPT/Codex, Claude Code, and Google Antigravity archives are local distribution builds; they do not imply host installation or acceptance.
 - External-host handoff, Google Antigravity native format/runtime acceptance, and a live real-terminal visual run remain separate checks and are not inferred from package tests.
-- The source ZIP and `.sha256` sidecar attached to this Release are generated locally from the same committed source and verified before publication.
+- The source ZIP and `.sha256` sidecar were generated and verified locally; they were not attached to a GitHub Release.
