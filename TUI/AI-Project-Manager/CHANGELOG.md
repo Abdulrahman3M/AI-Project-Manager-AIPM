@@ -1,5 +1,10 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.7] — Wrapped Prompt Input (Not Published)
+
+- Rendered long typed prompt values as explicit terminal rows, preserving the Enter/Esc instructions and preventing visual overwrites in Windows Terminal.
+- Added a narrow-terminal regression test for a multi-row task report value.
+
 ## [1.4.6] — Repository Version Synchronization (Not Published)
 
 - Synchronized the TUI version with AIPM `1.4.6` for the documentation-only repository update. No TUI behavior changed; no GitHub Release or tag was created.

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.4.6</sub></h1>
+  <h1>AI Project Manager <sub>v1.4.7</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
@@ -109,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository and PowerShell TUI development version is `1.4.6`. This documentation update is not a GitHub Release; `v1.4.0` remains the latest published release. See the [v1.4.6 repository update notes](docs/project/Release-Notes-v1.4.6.md) and [v1.4.5 repository update notes](docs/project/Release-Notes-v1.4.5.md). P09's physically external project, live independent-host handoff, external Plugin installation, and durable terminal-capture provenance remain `UNVERIFIED`.
+The current repository and PowerShell TUI development version is `1.4.7`. This repository update is not a GitHub Release; `v1.4.0` remains the latest published release. See the [v1.4.7 repository update notes](docs/project/Release-Notes-v1.4.7.md) and [v1.4.6 repository update notes](docs/project/Release-Notes-v1.4.6.md). P09's physically external project, live independent-host handoff, external Plugin installation, and durable terminal-capture provenance remain `UNVERIFIED`.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -163,7 +163,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Latest Repository Update Notes](docs/project/Release-Notes-v1.4.6.md)
+- [Latest Repository Update Notes](docs/project/Release-Notes-v1.4.7.md)
 - [Latest Published Release Notes](docs/project/Release-Notes-v1.4.0.md)
 
 ## License

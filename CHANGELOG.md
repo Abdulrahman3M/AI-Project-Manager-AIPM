@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.4.7] — Task Report Prompt Rendering (Repository Update; Not Published)
+
+- Fixed the PowerShell TUI prompt renderer so a long task report is split into explicit physical rows before the terminal draws it. Prompt guidance is no longer visually overwritten by terminal line wrapping.
+- Added a narrow-terminal regression check that keeps the report text intact and the confirmation controls visible.
+- Synchronized the platform and PowerShell TUI versions at `1.4.7`. No Skill or Prompt content changed, so no Plugin distribution was rebuilt. No GitHub Release or tag was created.
+
 ## [1.4.6] — General Capability Documentation (Repository Update; Not Published)
 
 - Added alphabetical General Skills and General Prompts reference pages with descriptions, use guidance, and links to their authoritative files; linked both from the project README and indexes.

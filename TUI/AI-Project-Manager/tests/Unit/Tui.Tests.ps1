@@ -270,6 +270,13 @@ $ui = Invoke-Ui { Read-ValidatedInput -Prompt 'P' -Help 'h' -Example 'e' -Valida
 Assert-Equal 'invalid input is rejected, then the valid value is accepted' 'Bob' $ui.Value
 Assert-Contains 'the validation message is shown' $ui.Output 'Please type a name.'
 Assert-True 'Esc cancels a prompt' ($null -eq (Invoke-Ui { Read-ValidatedInput -Prompt 'P' -Help 'h' -Example 'e' } '{Esc}').Value)
+$longPromptText = 'This report summary is long enough to span several terminal rows without hiding the confirmation instructions.'
+Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 30 -CaptureHeight 24
+$ui = Invoke-Ui { Read-ValidatedInput -Prompt 'Task Report' -Help 'h' -Example 'e' -Default $longPromptText } '{Enter}'
+Assert-Equal 'long prompt input is accepted intact' $longPromptText $ui.Value
+$promptFrame = Get-LastFrame
+Assert-Contains 'wrapped prompt retains its input prefix' $promptFrame '> This report summary is long'
+Assert-Contains 'wrapped prompt retains confirmation instructions below the input' $promptFrame 'Enter Confirm'
 
 Set-TestGroup 'Whole application (scripted)'
 $registry = Join-Path (Get-TestWork) 'registry.json'
