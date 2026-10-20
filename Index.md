@@ -12,6 +12,8 @@
 ## Capability Library
 
 - [Capability Library Guide](Capability-Library/README.md)
+- [General Skills](docs/guides/General-Skills.md)
+- [General Prompts](docs/guides/General-Prompts.md)
 - [Machine-Readable Registry](Capability-Library/Registry.json)
 - [Standalone General Prompts](02-Prompt-General/README.md)
 - [Source Revision](docs/project/Provenance/Source-Revision.json)
@@ -19,6 +21,8 @@
 
 ## Release History
 
+- [Repository Update Notes v1.4.6 — Not Published](docs/project/Release-Notes-v1.4.6.md)
+- [Release Notes v1.4.5](docs/project/Release-Notes-v1.4.5.md)
 - [Release Notes v1.4.0](docs/project/Release-Notes-v1.4.0.md)
 - [Development Update Notes v1.1.7](docs/project/Release-Notes/Release-Notes-v1.1.7.md)
 - [Release Notes v1.0.7](docs/project/Release-Notes/Release-Notes-v1.0.7.md)

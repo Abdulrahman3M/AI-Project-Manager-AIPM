@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.6] — Repository Version Synchronization (Not Published)
+
+- Synchronized the TUI version with AIPM `1.4.6` for the documentation-only repository update. No TUI behavior changed; no GitHub Release or tag was created.
+
 ## [1.4.5] — Managed Input And Frame Lifecycle
 
 - Synchronizes the TUI package with AIPM `1.4.5`; this release carries no TUI product behavior change beyond the accompanying platform release metadata.

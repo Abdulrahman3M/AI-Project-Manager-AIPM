@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.4.5</sub></h1>
+  <h1>AI Project Manager <sub>v1.4.6</sub></h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
@@ -16,6 +16,7 @@
   <p>
     <a href="#overview">Overview</a> ·
     <a href="#capabilities">Capabilities</a> ·
+    <a href="#explore-skills-and-prompts">Skills &amp; Prompts</a> ·
     <a href="#quick-start">Quick Start</a> ·
     <a href="#security-and-privacy">Security</a> ·
     <a href="#project-status">Project Status</a>
@@ -42,6 +43,12 @@ AIPM is designed to make project context explicit and portable while keeping aut
 | **Legacy Agent Bridge** | A separately versioned compatibility package that explains how an AI agent should use AIPM Core and approved Skills. |
 | **Host Adapters** | Declared host capabilities, explicit permission gates, and fail-closed behavior for unsupported operations. |
 | **Intelligent TUI** | Project dashboards, task and evidence views, capability catalog, guarded registry setup/connection/backup/restore, keyboard navigation, and accessible terminal styling. |
+
+## Explore Skills And Prompts
+
+| [**Explore General Skills →**](docs/guides/General-Skills.md) | [**Explore General Prompts →**](docs/guides/General-Prompts.md) |
+| --- | --- |
+| Browse all 12 General Skills to learn what they do, when to use them, and where to read their full instructions. | Browse the standalone General Prompt index for a concise guide to each prompt and a link to its complete text. |
 
 ## Quick Start
 
@@ -102,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current repository and PowerShell TUI version is `1.4.5`. See the [v1.4.5 release notes](docs/project/Release-Notes-v1.4.5.md) for changes since `v1.4.0`. P09's physically external project, live independent-host handoff, external Plugin installation, and durable terminal-capture provenance remain `UNVERIFIED`. A repository release does not imply Plugin installation or close those external gates.
+The current repository and PowerShell TUI development version is `1.4.6`. This documentation update is not a GitHub Release; `v1.4.5` remains the latest published release. See the [v1.4.6 repository update notes](docs/project/Release-Notes-v1.4.6.md) and [v1.4.5 release notes](docs/project/Release-Notes-v1.4.5.md). P09's physically external project, live independent-host handoff, external Plugin installation, and durable terminal-capture provenance remain `UNVERIFIED`.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -150,11 +157,14 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Project Index](Index.md)
 - [Beginner Guides — English And Arabic](docs/guides/README.md)
 - [Capability Library](Capability-Library/README.md)
+- [General Skills](docs/guides/General-Skills.md)
+- [General Prompts](docs/guides/General-Prompts.md)
 - [Host Capability Matrix](Plugins/Adapters/Host-Capability-Matrix.json)
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Latest Release Notes](docs/project/Release-Notes-v1.4.5.md)
+- [Latest Repository Update Notes](docs/project/Release-Notes-v1.4.6.md)
+- [Latest Published Release Notes](docs/project/Release-Notes-v1.4.5.md)
 
 ## License
 

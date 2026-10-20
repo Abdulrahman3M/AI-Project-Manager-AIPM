@@ -5,6 +5,8 @@ This folder contains maintained user and product documentation. Historical const
 | Location | Purpose |
 | --- | --- |
 | [`guides/`](guides/README.md) | Beginner guides in English and Arabic. |
+| [`guides/General-Skills.md`](guides/General-Skills.md) | Alphabetical educational index of all General Skills. |
+| [`guides/General-Prompts.md`](guides/General-Prompts.md) | Alphabetical educational index of all standalone General Prompts. |
 | [`project/Architecture/`](project/Architecture/Plugin-Distribution-Architecture.md) | Current AIPM architecture, repository map, capability flow, and Plugin distribution workflow. |
 | [`project/Support-Matrix.md`](project/Support-Matrix.md) | Verified local environments and owner/host checks that remain unverified. |
 | `project/Release-Notes-v*.md` | Release history and user-facing changes. |

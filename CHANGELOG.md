@@ -1,5 +1,12 @@
 # AIPM Change Log
 
+## [1.4.6] — General Capability Documentation (Repository Update; Not Published)
+
+- Added alphabetical General Skills and General Prompts reference pages with descriptions, use guidance, and links to their authoritative files; linked both from the project README and indexes.
+- Added permanent `AGENTS.md` synchronization rules and an automated inventory, ordering, and link check for both indexes.
+- Synchronized platform and PowerShell TUI versions at `1.4.6`. This documentation update is not a GitHub Release and creates no tag.
+- No Skill or Prompt content changed. The protected capability baseline was refreshed through its confirmed CLI workflow, and the legacy Bridge was regenerated at `1.0.15` for source-version metadata. Multi-host Plugin archives were not rebuilt.
+
 ## [1.4.5] — Skill Routing And Managed TUI Input Lifecycle
 
 - Improved Project Orchestrator routing by analyzing outcome, work mode, deliverable, recipient, and constraints before choosing a Skill. Agent-directed implementation Markdown now routes explicitly to Create Strict Implementation Handoff; generic Markdown does not trigger it automatically.
