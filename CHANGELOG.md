@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.4.8] — Project Phase Closure And Evidence Reconciliation (Repository Update; Not Published)
+
+- Recorded owner acceptance of phases P00–P10 as complete and reconciled P09 with the owner's successful real-project, two-agent workflow and submitted terminal evidence.
+- Distinguished P09 phase closure from optional host Plugin installation/native Antigravity acceptance, which remain separately unverified and are not claimed as tested.
+- Added a consolidated completion record and a root-level ZIP archive containing the retained closeout report, support matrix, and phase verification suite sources. No historical phase reports absent from the repository were recreated.
+- Cleaned generated test workspaces and Python bytecode caches after validation.
+- Prepared the accumulated project updates since `v1.4.0`, synchronized platform and PowerShell TUI versions at `1.4.8`, and verified the local source archive and SHA-256 sidecar. No tag or GitHub Release is being created in this task.
+
 ## [1.4.7] — Task Report Prompt Rendering (Repository Update; Not Published)
 
 - Fixed the PowerShell TUI prompt renderer so a long task report is split into explicit physical rows before the terminal draws it. Prompt guidance is no longer visually overwritten by terminal line wrapping.

@@ -161,5 +161,5 @@ Platform and TUI versions move together under SemVer. Skill versions remain inde
 - The AIPM installation is protected during work on other projects; Core-managed state and registry paths cannot overlap the installation.
 - A Plugin package manifest is descriptive metadata, not proof of authorization or installation.
 - No ChatGPT text conversation is assumed to have local file access.
-- P09 external-project, live cross-agent, and durable host-capture gates remain as recorded in the [Support Matrix](../Support-Matrix.md); never convert an unavailable host check into a passing result.
+- P09 phase closure and the evidence basis are recorded in the [Support Matrix](../Support-Matrix.md#p09-closure). Owner-confirmed project/cross-agent use closes the phase; optional Plugin installation and host-native runtime claims remain separate and must not be inferred.
 - The source and Plugin build paths exclude temporary test/cache directories from their deliverables.

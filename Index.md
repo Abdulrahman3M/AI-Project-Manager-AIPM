@@ -8,6 +8,8 @@
 - [Project Rules](docs/project/Project-Rules.md)
 - [Change Log](CHANGELOG.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
+- [Project Completion Record — P00–P10](docs/project/Project-Completion-Record-v1.4.8.md)
+- [Project Completion Archive](AIPM-Project-Completion-Archive-v1.4.8.zip)
 
 ## Capability Library
 
@@ -21,6 +23,8 @@
 
 ## Release History
 
+- [Repository Update Notes v1.4.8 — Not Published](docs/project/Release-Notes-v1.4.8.md)
+- [Repository Update Notes v1.4.7 — Not Published](docs/project/Release-Notes-v1.4.7.md)
 - [Repository Update Notes v1.4.6 — Not Published](docs/project/Release-Notes-v1.4.6.md)
 - [Repository Update Notes v1.4.5 — Not Published](docs/project/Release-Notes-v1.4.5.md)
 - [Release Notes v1.4.0](docs/project/Release-Notes-v1.4.0.md)

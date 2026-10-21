@@ -4,7 +4,10 @@
 
 | Component | Environment | Status | Evidence |
 | --- | --- | --- | --- |
-| Core, State, Task Context, Adapters, Plugins, And Release Tests | Python 3.12.14 | PASS | Full `python -m unittest discover -s Tests`: 146 tests, 0 failures, 4 skipped because this host denies Windows junction/hard-link creation. Windows ACL-denial initialization tests complete promptly and pass. |
+| Core, State, Task Context, Adapters, Plugins, And Release Tests | Python 3.12.14 | PASS | Most recent full `python -m unittest discover -s Tests` run on repository version `1.4.7`: 146 tests, 0 failures, 4 skipped because this host denies Windows junction/hard-link creation. Windows ACL-denial initialization tests complete promptly and pass. |
+| P09 Integrated Security Regression | Python 3.12.14 | PASS | Closeout rerun on `1.4.8`: `test_p09_integrated_security.py`, 3 tests, 0 failures. This is local security/process-boundary evidence; the live real-project agent handoff is owner-verified separately below. |
+| P10 Release Packaging Regression | Python 3.12.14 | PASS | Closeout rerun on `1.4.8`: `test_p10_release.py`, 3 tests, 0 failures; the current source archive also verifies successfully. |
+| Project Documentation Navigation | Python 3.12.14 | PASS | Closeout rerun on `1.4.8`: `test_general_capability_docs.py`, 3 tests, 0 failures. |
 | Terminal TUI Tests | PowerShell 7.6.5 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1 -Filter Tui`: 146 pass, 0 fail, 0 unverified. Includes exact/partial attachment search, missing-file result, full-list reset, search scope, report attachment/listing, and source-file preservation. |
 | Terminal TUI Tests | Windows PowerShell 5.1.26100.9444 | PASS | `TUI/AI-Project-Manager/tests/Run-Tests.ps1 -Filter Tui`: 146 pass, 0 fail, 0 unverified. |
 | Task Continuity Across Core Processes | Python CLI / separate Core Engine instances | PASS (local simulation) | Three independent tasks were created. A fresh Core Engine and later CLI processes read persisted checkpoint/handoff/artifact data; the project-source fixture stayed unchanged. This does not prove a live external AI-host session. |
@@ -17,25 +20,33 @@
 | ChatGPT/Codex Plugin Archive | Local package validation | PASS (format verified) | `Plugins/Dist/AIPM-ChatGPT-Plugin-v1.4.5.zip` and `.sha256`; 12 Skills, validated, not installed in ChatGPT. |
 | Claude Code Plugin Archive | Local package validation | PASS (format verified) | `Plugins/Dist/AIPM-Claude-Plugin-v1.4.5.zip` and `.sha256`; 12 Skills, validated, not installed in Claude Code. |
 | Google Antigravity Plugin Archive | Local package validation | PASS (host format unverified) | `Plugins/Dist/AIPM-Antigavity-Plugin-v1.4.5.zip` and `.sha256`; contents/hashes validate, native host format/runtime remains UNVERIFIED. |
-| Local Source Package | Python standard library | PASS | `Releases/AI-Project-Manager-v1.4.5.zip` (855 files) and `.zip.sha256`; allowlist, embedded file hashes, and checksum verified. |
+| Local Source Package | Python standard library | PASS | `Releases/AI-Project-Manager-v1.4.8.zip` (857 files) and `.zip.sha256`; build, allowlist, embedded file hashes, and checksum verified. |
+
+## P09 Closure
+
+| Acceptance Area | Status | Evidence Basis |
+| --- | --- | --- |
+| Integrated security behavior | COMPLETE | The repository's P09 automated integration suite and full repository test run are recorded as passing in this matrix. |
+| Physically external project use | OWNER-VERIFIED | The owner confirmed successful use of AIPM on real projects outside the AIPM installation. This agent did not independently access those project files. |
+| Live two-agent handoff | OWNER-VERIFIED | The owner confirmed successful handoff and continuation between two agents on active real-project work. The supplied AIPM terminal screenshots show the attached task-file view and task status/details. |
+| Terminal evidence capture | OWNER-VERIFIED | Genuine terminal screenshots were submitted in this conversation on 2026-10-21. They are not copied into this repository/archive because they expose details from a separate private project. |
+| Phase decision | COMPLETE | The owner explicitly accepted P09 and declared P00–P10 complete on 2026-10-21. This is owner acceptance, not a claim that this agent re-ran an external provider session. |
 
 ## Deliberately Not Claimed
 
 | Capability | Status | Reason And Owner-Controlled Next Action |
 | --- | --- | --- |
-| Live cross-agent handoff through separate AI providers | UNVERIFIED | The automated test uses separate local Core/CLI processes. Confirm only with a real supported host session and explicit access grant. |
-| Physically external project fixture | UNVERIFIED | All test writes were kept inside the AIPM repository as required by the task boundary. |
 | Direct Windows hard-link write-through test | UNVERIFIED | `Path.hardlink_to` returned Windows `Access is denied`; a platform-independent atomic-replacement test passed instead. |
 | Windows junction/reparse-point live creation tests | UNVERIFIED | Windows denied junction creation for three tests. Other path-boundary, reparse checks, and refusal cases passed. |
-| Plugin installation in an AI host | UNVERIFIED | Local ZIP validation is not host installation or runtime evidence. |
-| ChatGPT Plugin uploader acceptance | UNVERIFIED | Archives were not uploaded to an authenticated ChatGPT host in this task. |
-| Antigravity host format/runtime acceptance | UNVERIFIED | The official host-format/runtime path was not exercised. |
+| Plugin installation in an AI host | UNVERIFIED; NOT A P09 BLOCKER | Local ZIP validation is not host installation or runtime evidence. This separate capability is not included in P09 closure. |
+| ChatGPT Plugin uploader acceptance | UNVERIFIED; NOT A P09 BLOCKER | Archives were not uploaded to an authenticated ChatGPT host in this task. |
+| Antigravity host format/runtime acceptance | UNVERIFIED; NOT A P09 BLOCKER | The official host-format/runtime path was not exercised. |
 | Public repository visibility or marketplace listing | NOT PERFORMED | Repository visibility and marketplace publication remain separate owner-controlled actions. |
-| Reproducible native-terminal capture provenance | UNVERIFIED | Automated TUI tests passed, but this task did not capture new durable screenshots from the actual terminal hosts. |
+| Independently reproducible terminal capture provenance | UNVERIFIED | Owner-submitted screenshots establish a real terminal view, but this agent did not reproduce or hash the capture artifacts. P09 closure is owner-accepted. |
 
 ## Operating Boundaries
 
-- Platform and PowerShell TUI repository versions are synchronized at `1.4.7`; the latest published GitHub Release is `1.4.0`. The previously validated source package and multi-host Plugin archives remain at `1.4.5`. Skill versions are independently managed; Plugin archives remain local and uninstalled unless separately installed by the owner.
+- Platform and PowerShell TUI repository versions are synchronized at `1.4.8`; the latest published GitHub Release remains `v1.4.0`. The local source package and SHA-256 sidecar are verified but are not attached to a release. Multi-host Plugin archives remain at `1.4.5`; Skill and Plugin versions are independently managed and were not changed by this update. Local package validation does not mean the Plugins are installed in their target hosts.
 - TUI task management uses Core-validated operations for AIPM-owned task records. It does not edit project source files or run project tests; existing task folders are references and remain in place.
 - AIPM does not edit target-project implementation files, execute target-project tests, or impose AIPM approval gates on agent source edits. Agents work directly in original files under target-project and AI-host permissions.
 - Host adapters remain capability-declared, permission-gated for AIPM state mutations, and fail-closed. This state permission does not gate source edits performed through an AI host.

@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.8] — Repository Version Synchronization (Not Published)
+
+- Synchronized the TUI repository version with AIPM `1.4.8`. No TUI behavior change was introduced by the closeout itself; no GitHub Release or tag is created by this repository update.
+
 ## [1.4.7] — Wrapped Prompt Input (Not Published)
 
 - Rendered long typed prompt values as explicit terminal rows, preserving the Enter/Esc instructions and preventing visual overwrites in Windows Terminal.
