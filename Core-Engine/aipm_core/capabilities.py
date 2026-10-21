@@ -18,7 +18,10 @@ MIGRATION_PATH = Path("docs/project/Provenance/Skill-Migration-Record.json")
 FIRST_PARTY_SKILLS_PATH = Path("Capability-Library/First-Party-Skills.json")
 SOURCE_REVISION_PATH = Path("docs/project/Provenance/Source-Revision.json")
 SOURCE_LICENSE_PATH = Path("LICENSE")
-PERSONAL_LICENSE_NAME = "AI Project Manager Personal Use License"
+NOTICE_PATH = Path("NOTICE")
+PROJECT_LICENSE_NAME = "Apache License 2.0"
+PLUGIN_LICENSE_RELATIVE = "licenses/Apache-2.0.txt"
+LEGACY_PLUGIN_LICENSE_RELATIVE = "licenses/AI-Project-Manager-Personal-Use-License.txt"
 PLUGIN_VERSION_INITIAL = "1.0.0"
 PLUGIN_SLUG = "aipm-project-agent-bridge"
 PLUGIN_DISPLAY_NAME = "AIPM Project Agent Bridge"
@@ -233,7 +236,7 @@ def _first_party_skills(root: Path) -> dict[str, dict[str, Any]]:
         required = {"slug", "owner", "origin", "license", "license_path", "version", "source_reference"}
         if not required.issubset(item) or not isinstance(slug, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug) or slug in records:
             raise CapabilityError("First-party Skill record has invalid identity or fields")
-        if item.get("origin") != "AIPM_FIRST_PARTY" or item.get("license") != PERSONAL_LICENSE_NAME or item.get("license_path") != "LICENSE":
+        if item.get("origin") != "AIPM_FIRST_PARTY" or item.get("license") != PROJECT_LICENSE_NAME or item.get("license_path") != "LICENSE":
             raise CapabilityError(f"First-party Skill license/provenance is invalid: {slug}")
         if not isinstance(item.get("owner"), str) or not item["owner"].strip() or not isinstance(item.get("source_reference"), str) or not item["source_reference"].strip():
             raise CapabilityError(f"First-party Skill provenance is incomplete: {slug}")
@@ -359,7 +362,7 @@ def _catalog(root: Path) -> dict[str, Any]:
             "files": files,
             "skill_owned_prompts": prompts,
             "license": {
-                "source_license": PERSONAL_LICENSE_NAME,
+                "source_license": PROJECT_LICENSE_NAME,
                 "source_license_path": SOURCE_LICENSE_PATH.as_posix(),
                 "source_license_sha256": _sha256_file(root / SOURCE_LICENSE_PATH),
                 "retained_skill_notices": notices,
@@ -388,7 +391,7 @@ def _catalog(root: Path) -> dict[str, Any]:
             "version": version,
             "path": path.relative_to(root).as_posix(),
             "sha256": file_hash,
-            "license_scope": "AI Project Manager Personal Use License applies",
+            "license_scope": f"{PROJECT_LICENSE_NAME} applies",
         })
     if not standalone:
         raise CapabilityError("No approved standalone Prompt is registered")
@@ -441,7 +444,7 @@ def _provenance_ledger(catalog: dict[str, Any]) -> dict[str, Any]:
             for skill in catalog["skills"]
         ],
         "standalone_prompts": catalog["standalone_prompts"],
-        "license_scope": "AI Project Manager Personal Use License applies to all registered project material.",
+        "license_scope": f"{PROJECT_LICENSE_NAME} applies to all registered project material.",
         "distribution": "Local sample only; not published or installed.",
     }
 
@@ -627,7 +630,7 @@ def _plugin_readme(count: int) -> str:
         "This generated local bridge prepares an AI agent to work with an AI Project Manager project. It supplies the project-agent handoff, AIPM Core guidance, and "
         f"{count} approved General Skills copied from `01-Skills-General`.\n\n"
         "Read `AIPM-Agent-Bridge.md` before using a Skill. It defines the project boundary, Core authority, and capability limits.\n\n"
-        "This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the AI Project Manager Personal Use License. See `licenses/`.\n"
+        "This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the Apache License 2.0. See `licenses/` and `NOTICE`.\n"
         f"\nProject Website: [{PROJECT_URL}]({PROJECT_URL})\n"
     )
 
@@ -674,7 +677,8 @@ def _plugin_expected_files(root: Path, catalog: dict[str, Any], version: str, *,
         "AIPM-Agent-Bridge.md": _agent_bridge_document().encode("utf-8"),
         "VERSION": (version + "\n").encode("utf-8"),
         "CHANGELOG.md": changelog,
-        "licenses/AI-Project-Manager-Personal-Use-License.txt": (root / SOURCE_LICENSE_PATH).read_bytes(),
+        PLUGIN_LICENSE_RELATIVE: (root / SOURCE_LICENSE_PATH).read_bytes(),
+        "NOTICE": (root / NOTICE_PATH).read_bytes(),
     }
     return files
 
@@ -743,7 +747,8 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
         "AIPM-Agent-Bridge.md",
         "VERSION",
         "CHANGELOG.md",
-        "licenses/AI-Project-Manager-Personal-Use-License.txt",
+        PLUGIN_LICENSE_RELATIVE,
+        "NOTICE",
     }
     for skill in manifest_skills:
         slug, files = skill.get("slug"), skill.get("files")
@@ -820,11 +825,14 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
     if not isinstance(skills, list) or not skills:
         raise CapabilityError("Generated Plugin manifest has no valid Skill inventory")
 
+    license_relative = PLUGIN_LICENSE_RELATIVE if (target / PLUGIN_LICENSE_RELATIVE).is_file() else LEGACY_PLUGIN_LICENSE_RELATIVE
     expected_paths = {
         "plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json", "gemini-extension.json",
         "AIPM-Distribution-Manifest.json", "README.md", "AIPM-Agent-Bridge.md", "VERSION", "CHANGELOG.md",
-        "licenses/AI-Project-Manager-Personal-Use-License.txt",
+        license_relative,
     }
+    if (target / NOTICE_PATH).is_file():
+        expected_paths.add(NOTICE_PATH.as_posix())
     seen_slugs: set[str] = set()
     for skill in skills:
         if not isinstance(skill, dict) or set(skill) != {"slug", "version", "source_sha256", "files", "license"}:
@@ -846,7 +854,7 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
         license_keys = {"source_license", "source_license_path", "source_license_sha256", "retained_skill_notices", "aipm_personal_license_applies"}
         if (
             set(license_record) != license_keys
-            or license_record.get("source_license") != PERSONAL_LICENSE_NAME
+            or license_record.get("source_license") not in (PROJECT_LICENSE_NAME, "AI Project Manager Personal Use License")
             or license_record.get("source_license_path") != SOURCE_LICENSE_PATH.as_posix()
             or license_record.get("source_license_sha256") != source_license_hash
             or not isinstance(license_record.get("retained_skill_notices"), list)
@@ -880,8 +888,8 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
     changelog = target / "CHANGELOG.md"
     if _read_version(version_file, changelog=changelog) != version or _sha256_file(changelog) != changelog_hash:
         raise CapabilityError("Generated Plugin version or changelog integrity is invalid")
-    license_path = target / "licenses" / "AI-Project-Manager-Personal-Use-License.txt"
-    if license_path.read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes() or _sha256_file(license_path) != source_license_hash:
+    license_path = target / license_relative
+    if _sha256_file(license_path) != source_license_hash:
         raise CapabilityError("Generated Plugin project license has changed")
     if (target / "AIPM-Agent-Bridge.md").read_bytes() != _agent_bridge_document().encode("utf-8"):
         raise CapabilityError("Generated Plugin bridge guidance has changed")
@@ -907,7 +915,17 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
             raise CapabilityError(f"Generated Plugin metadata drifted: {relative}")
     expected_readme = _plugin_readme(len(skills))
     stale_readme = expected_readme.replace(f"\n\nProject Website: [{PROJECT_URL}]({PROJECT_URL})\n", "\n")
-    if (target / "README.md").read_text(encoding="utf-8") not in (expected_readme, stale_readme):
+    prior_license_readme = expected_readme.replace(
+        "Every included Skill is covered by the Apache License 2.0. See `licenses/` and `NOTICE`.",
+        "Every included Skill is covered by the AI Project Manager Personal Use License. See `licenses/`.",
+    )
+    prior_license_stale_readme = prior_license_readme.replace(f"\n\nProject Website: [{PROJECT_URL}]({PROJECT_URL})\n", "\n")
+    if (target / "README.md").read_text(encoding="utf-8") not in (
+        expected_readme,
+        stale_readme,
+        prior_license_readme,
+        prior_license_stale_readme,
+    ):
         raise CapabilityError("Generated Plugin README has unexpected changes")
     codex_data = _json(target / ".codex-plugin" / "plugin.json")
     if codex_data.get("license") is not None or codex_data.get("skills") != "./skills/":
@@ -968,7 +986,7 @@ def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
     for item in catalog["skills"]:
         if _tree_files(target_path / "skills" / item["slug"]) != item["files"]:
             raise CapabilityError(f"Plugin source parity failure: {item['slug']}")
-    if (target_path / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes():
+    if (target_path / PLUGIN_LICENSE_RELATIVE).read_bytes() != (root / SOURCE_LICENSE_PATH).read_bytes():
         raise CapabilityError("Generated Plugin did not preserve the project license bytes")
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": 0, "published": False, "installed": False}
 

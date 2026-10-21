@@ -36,7 +36,7 @@ The TUI supports creating tasks, attaching an existing work folder as task conte
 - **Up/Down** Moves The Highlight; **Enter** Opens Or Selects; **Esc** Goes Back.
 - Type A Shown Number To Select Immediately In Numbered Or Hybrid Menus.
 - Press **/** And Type To Filter Actions, Or Choose **Command Palette** For Search-First Navigation.
-- Press **?** Or **F1** For Help. Press **Q** To Request Exit; The Dashboard Requires Confirmation.
+- Press **?** Or **F1** For Help. Press **Q** To Request Exit; The Dashboard Requires Confirmation. Pressing **Esc** At The Dashboard Also Shows The Exit Confirmation Before Returning To PowerShell.
 - Descriptions Remain Visible Below Choices In Muted, Unshaded Text. The Selected Action Uses A Colored Arrow And Brighter Text Without A Background Fill, Including In No-Color Mode.
 
 ## Theme And Settings
@@ -57,4 +57,4 @@ For Published-Release And Local-Version Status, See The Repository [Support Matr
 
 ## License And Notices
 
-The AI Project Manager Personal Use License Applies To This TUI Package And Its AIPM-Owned Material.
+The Apache License 2.0 Applies To This TUI Package And Its AIPM-Owned Material. Copyright 2026 Abdulrahman Elbatrah. See [NOTICE](NOTICE) For Attribution.

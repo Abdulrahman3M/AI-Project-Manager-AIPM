@@ -37,7 +37,7 @@ The capability registry is a protected integrity baseline. Its initial creation 
 
 ## Licensing And Provenance
 
-Apply the repository's AI Project Manager Personal Use License to project-owned material and generated distributions. Keep any applicable upstream notices and obligations for imported material accurate; a repository license file alone does not establish ownership or override third-party rights. The source repository is read-only unless the owner explicitly authorizes otherwise.
+Apply the repository's Apache License 2.0 to project-owned material and generated distributions. Keep any applicable upstream notices and obligations for imported material accurate; a repository license file alone does not establish ownership or override third-party rights. The source repository is read-only unless the owner explicitly authorizes otherwise.
 
 ## Generated Plugin Boundary
 

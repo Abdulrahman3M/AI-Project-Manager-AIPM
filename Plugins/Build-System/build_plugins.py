@@ -21,7 +21,8 @@ STATIC_FILES = {
     "AIPM-Distribution-Manifest.json",
     "README.md",
     "VERSION",
-    "licenses/AI-Project-Manager-Personal-Use-License.txt",
+    "licenses/Apache-2.0.txt",
+    "NOTICE",
 }
 CHATGPT_STATIC_FILES = {"assets/aipm-icon.svg"}
 EXCLUDED_SKILLS = {"import-memory", "morning"}
@@ -220,7 +221,8 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
         source = root / _safe_relative(prompt["path"])
         target = stage / "prompts" / _safe_relative(str(Path(prompt["path"]).relative_to("02-Prompt-General")))
         _copy_file(source, target, prompt["sha256"])
-    _copy_file(root / "LICENSE", stage / "licenses" / "AI-Project-Manager-Personal-Use-License.txt", catalog["source"]["source_license_sha256"])
+    _copy_file(root / "LICENSE", stage / "licenses" / "Apache-2.0.txt", catalog["source"]["source_license_sha256"])
+    _copy_file(root / "NOTICE", stage / "NOTICE", _sha256_bytes((root / "NOTICE").read_bytes()))
     _write_json(stage / "AIPM-Capability-Index.json", _capability_index(catalog))
     _write_json(stage / "AIPM-Distribution-Manifest.json", _manifest_payload(profile, catalog))
     for relative in profile["manifest_paths"]:

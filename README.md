@@ -1,13 +1,13 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager v1.4.8</h1>
+  <h1>AI Project Manager v1.4.9</h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
     <a href="https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/releases/tag/v1.4.0"><img alt="Latest published release v1.4.0" src="https://img.shields.io/badge/LATEST%20RELEASE-v1.4.0-0F766E?style=for-the-badge" /></a>
     <img alt="Private repository" src="https://img.shields.io/badge/REPOSITORY-PRIVATE-334155?style=for-the-badge" />
-    <a href="LICENSE"><img alt="AI Project Manager Personal Use License" src="https://img.shields.io/badge/LICENSE-PERSONAL%20USE-F59E0B?style=for-the-badge" /></a>
+    <a href="LICENSE"><img alt="Apache License 2.0" src="https://img.shields.io/badge/LICENSE-APACHE%202.0-2563EB?style=for-the-badge" /></a>
     <img alt="Windows PowerShell 5.1 and PowerShell 7.x" src="https://img.shields.io/badge/RUNTIME-WINDOWS%20PS%205.1%20%7C%20PS%207.x-2563EB?style=for-the-badge" />
     <img alt="Python 3.10 or later" src="https://img.shields.io/badge/PYTHON-3.10%2B-3776AB?style=for-the-badge" />
     <a href="docs/project/Support-Matrix.md#p09-closure"><img alt="P09 complete owner verified" src="https://img.shields.io/badge/P09-COMPLETE%20OWNER%20VERIFIED-15803D?style=for-the-badge" /></a>
@@ -109,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current AIPM repository and PowerShell TUI development version is `1.4.8`; the latest published GitHub Release remains `v1.4.0`. See the [v1.4.8 repository update notes](docs/project/Release-Notes-v1.4.8.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
+The current AIPM repository and PowerShell TUI development version is `1.4.9`; the latest published GitHub Release remains `v1.4.0`. See the [v1.4.9 repository update notes](docs/project/Release-Notes-v1.4.9.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -163,9 +163,9 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Latest Repository Update Notes](docs/project/Release-Notes-v1.4.8.md)
+- [Latest Repository Update Notes](docs/project/Release-Notes-v1.4.9.md)
 - [Latest Published Release Notes](docs/project/Release-Notes-v1.4.0.md)
 
 ## License
 
-The project is distributed under the [AI Project Manager Personal Use License](LICENSE). Review its terms before copying, modifying, redistributing, or using project material.
+The project is distributed under the [Apache License 2.0](LICENSE). Copyright 2026 Abdulrahman Elbatrah. See [NOTICE](NOTICE) for attribution information.

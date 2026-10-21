@@ -156,7 +156,7 @@ Platform and TUI versions move together under SemVer. Skill versions remain inde
 
 ## Security, License, And Status Boundaries
 
-- Apply the AI Project Manager Personal Use License to project material and generated distributions.
+- Apply the Apache License 2.0 to project material and generated distributions.
 - Host adapters are capability-declared, permission-gated, and fail-closed.
 - The AIPM installation is protected during work on other projects; Core-managed state and registry paths cannot overlap the installation.
 - A Plugin package manifest is descriptive metadata, not proof of authorization or installation.

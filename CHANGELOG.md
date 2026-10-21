@@ -1,5 +1,14 @@
 # AIPM Change Log
 
+## [1.4.9] — Escape Exit Confirmation And Apache License (Repository Update; Not Published)
+
+- Added an explicit "Exit AI Project Manager?" confirmation when pressing Esc at the main dashboard, so repeated Esc navigation no longer closes the PowerShell window immediately; choosing No returns to the Task Dashboard and choosing Exit AIPM closes the application.
+- Extended the PowerShell TUI scripted regression suite with confirmation and cancellation cases for the root Esc exit path, and made the existing work-folder task-context assertion tolerant of prompt-wrapped folder paths.
+- Relicensed AIPM first-party project material from the AI Project Manager Personal Use License to the Apache License 2.0, recording `Copyright 2026 Abdulrahman Elbatrah` in `LICENSE` and `NOTICE`.
+- Added a root `NOTICE` with the attribution reference to the original project, and included `LICENSE` and `NOTICE` in source releases and generated Plugin packages; packaged license copies now use `licenses/Apache-2.0.txt`.
+- Refreshed the protected capability baseline through the confirmed CLI workflow and regenerated the legacy Bridge at `1.0.16` with Apache License 2.0 metadata; multi-host Plugin archives were not rebuilt.
+- Synchronized the platform and PowerShell TUI versions at `1.4.9`. No Skill or Prompt content changed. No GitHub Release or tag was created.
+
 ## [1.4.8] — Project Phase Closure And Evidence Reconciliation (Repository Update; Not Published)
 
 - Recorded owner acceptance of phases P00–P10 as complete and reconciled P09 with the owner's successful real-project, two-agent workflow and submitted terminal evidence.

@@ -9,7 +9,7 @@
 - Do not add `02-Skills-Personal`, `import-memory`, or `morning`.
 - Use English Title Case for new human-facing names. Preserve technical filenames and Skill slugs.
 - Do not push, publish, or modify the Universal AI ToolKit source without explicit authorization.
-- Apply the AI Project Manager Personal Use License to project material and generated distributions.
+- Apply the Apache License 2.0 to project material and generated distributions.
 - Treat `Capability-Library/Registry.json` and its provenance ledger as protected integrity baselines. Refresh only with the explicit CLI confirmation flag, a reason, and required version/changelog updates.
 - Generate the legacy Project Agent Bridge only with `Maintenance-Tools/Invoke-Capability-Library.py`; generate multi-host distribution archives only with `Plugins/Build-System/Build-AIPM-Plugin.ps1`. Keep all output inside this repository and unpublished/uninstalled unless separately authorized.
 - **Automatic Plugin Synchronization:** Any addition, removal, reorganization, or functional, technical, instructional, or supporting-file change to a Skill or Prompt requires a Plugin impact review before the task can be complete. Identify every affected legacy and multi-host distribution; update required version, metadata, and changelog records; rebuild ChatGPT/Codex, Claude Code, and Google Antigravity archives with the approved build commands; validate their inventories, hashes, exclusions, and host-specific manifests; and report the updated package names, versions, paths, and target platforms. A package is never considered installed merely because it is ready for the host's documented installation/update mechanism.

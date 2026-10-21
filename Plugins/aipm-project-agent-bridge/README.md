@@ -4,6 +4,6 @@ This generated local bridge prepares an AI agent to work with an AI Project Mana
 
 Read `AIPM-Agent-Bridge.md` before using a Skill. It defines the project boundary, Core authority, and capability limits.
 
-This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the AI Project Manager Personal Use License. See `licenses/`.
+This package is not published or installed and does not grant automatic local file access. It excludes Personal Skills and standalone Prompts. Every included Skill is covered by the Apache License 2.0. See `licenses/` and `NOTICE`.
 
 Project Website: [https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/](https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/)

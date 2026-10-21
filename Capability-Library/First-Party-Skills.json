@@ -5,7 +5,7 @@
       "slug": "browser-environment-manager",
       "owner": "AIPM Project Owner",
       "origin": "AIPM_FIRST_PARTY",
-      "license": "AI Project Manager Personal Use License",
+      "license": "Apache License 2.0",
       "license_path": "LICENSE",
       "version": "1.1.0",
       "source_reference": "AI Project Manager"
@@ -14,7 +14,7 @@
       "slug": "powershell-tui-app-designer",
       "owner": "AIPM Project Owner",
       "origin": "AIPM_FIRST_PARTY",
-      "license": "AI Project Manager Personal Use License",
+      "license": "Apache License 2.0",
       "license_path": "LICENSE",
       "version": "1.2.1",
       "source_reference": "Owner-authorized AIPM maintenance of the migrated PowerShell TUI App Designer lineage; historical source hashes remain in Skill-Migration-Record.json"
@@ -23,7 +23,7 @@
       "slug": "tui-intelligence",
       "owner": "AIPM Project Owner",
       "origin": "AIPM_FIRST_PARTY",
-      "license": "AI Project Manager Personal Use License",
+      "license": "Apache License 2.0",
       "license_path": "LICENSE",
       "version": "1.0.0",
       "source_reference": "AI-Project-Manager-AIPM-V2/Skill-Blueprints/tui-intelligence"

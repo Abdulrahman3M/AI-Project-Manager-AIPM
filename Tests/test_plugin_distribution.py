@@ -59,7 +59,8 @@ class PluginDistributionTests(unittest.TestCase):
                 with zipfile.ZipFile(archive) as package:
                     names = set(package.namelist())
                     self.assertIn("prompts/Autonomous-Task-Execution.md", names)
-                    self.assertIn("licenses/AI-Project-Manager-Personal-Use-License.txt", names)
+                    self.assertIn("licenses/Apache-2.0.txt", names)
+                    self.assertIn("NOTICE", names)
                     self.assertNotIn("skills/import-memory/SKILL.md", names)
                     self.assertNotIn("skills/morning/SKILL.md", names)
                     for skill in catalog["skills"]:

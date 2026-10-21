@@ -40,7 +40,7 @@ Set-Location AI-Project-Manager-AIPM
 
 If you received a ZIP instead, extract it to a folder you control, open PowerShell in that folder, and continue. The project root is the folder containing `README.md`, `VERSION`, `Core-Engine`, and `TUI`.
 
-Before using or redistributing project material, read the root [AI Project Manager Personal Use License](../../LICENSE).
+Before using or redistributing project material, read the root [Apache License 2.0](../../LICENSE).
 
 ## 4. Learn The Folder Map
 
@@ -114,7 +114,7 @@ For sample task plans, handoffs, and file-operation notes, see [`Templates/Share
 - Type a displayed number to choose that numbered item.
 - Press **/** to search or filter where available.
 - Press **?** or **F1** for help.
-- Press **Esc** to return to the previous screen.
+- Press **Esc** to return to the previous screen. At the main dashboard, **Esc** shows an exit confirmation instead of closing PowerShell immediately; choose **Stay Here** to remain in AIPM.
 - Press **Q** to exit and confirm when prompted.
 
 The selected row is identified by a colored arrow and brighter text. Descriptions below menu items are intentionally not selected or shaded. If a symbol does not display correctly, start with the ASCII icon setting described in the [TUI User Guide](../../TUI/AI-Project-Manager/README.md).
@@ -296,4 +296,4 @@ The package includes public project material and both beginner guides, and exclu
 - [TUI User Guide](../../TUI/AI-Project-Manager/README.md)
 - [Support Matrix](../../docs/project/Support-Matrix.md)
 - [Capability Library Guide](../../Capability-Library/README.md)
-- [AI Project Manager Personal Use License](../../LICENSE)
+- [Apache License 2.0](../../LICENSE)

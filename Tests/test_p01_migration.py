@@ -21,11 +21,11 @@ def sha256(path: Path) -> str:
 
 
 class P01MigrationTests(unittest.TestCase):
-    def test_root_license_is_the_project_personal_use_license(self) -> None:
+    def test_root_license_is_the_apache_license(self) -> None:
         text = (ROOT / "LICENSE").read_text(encoding="utf-8")
-        self.assertIn("AI Project Manager — Personal Use License", text)
-        self.assertIn("Copyright (c) 2026 Abdulrahman Elbatrah", text)
-        self.assertIn("your own personal, non-commercial use", text)
+        self.assertIn("Apache License", text)
+        self.assertIn("Version 2.0, January 2004", text)
+        self.assertIn("Copyright 2026 Abdulrahman Elbatrah", text)
 
     def test_approved_skill_subset_is_installed_and_verified(self) -> None:
         self.assertTrue(TARGET.is_dir(), "approved Skills directory is not installed")

@@ -157,8 +157,8 @@ $pageCatalog = [pscustomobject]@{
     catalog=[pscustomobject]@{
         integrity_status='UNVERIFIED'; skill_count=2
         skills=@(
-            [pscustomobject]@{slug='tui-intelligence';version='1.0.0';source_license='AI Project Manager Personal Use License';aipm_personal_license_applies=$true}
-            [pscustomobject]@{slug='audio-timing-author';version='1.0.0';source_license='AI Project Manager Personal Use License';aipm_personal_license_applies=$true}
+            [pscustomobject]@{slug='tui-intelligence';version='1.0.0';source_license='Apache License 2.0';aipm_personal_license_applies=$true}
+            [pscustomobject]@{slug='audio-timing-author';version='1.0.0';source_license='Apache License 2.0';aipm_personal_license_applies=$true}
         )
         plugin_sample=[pscustomobject]@{version='0.1.0';status='PACKAGE_SAMPLE_ONLY';installation='UNVERIFIED';publication='UNVERIFIED';manifests=@('plugin.json')}
     }
@@ -184,7 +184,7 @@ if (Get-Command Show-AipmCapabilityLibrary -ErrorAction SilentlyContinue) {
 }
 Assert-True 'wide Capability Library uses compact framed Skill tables and keeps Plugin installation unverified' ($capabilityPageError -eq '' -and -not $wideCapabilityText.Contains('Source License') -and $wideCapabilityText.Contains('AIPM Project Agent Bridge') -and $wideCapabilityText.Contains('Unverified')) $capabilityPageError
 Assert-True 'medium Capability Library keeps the agent bridge visible without truncating the license into rows' ($capabilityPageError -eq '' -and $mediumCapabilityText.Contains('AIPM Project Agent Bridge') -and $mediumCapabilityText.Contains('Installation: Unverified')) $capabilityPageError
-Assert-True 'narrow Capability Library keeps the AIPM license statement below the Skills table' ($capabilityPageError -eq '' -and $compactCapabilityText.Contains('TUI Intelligence') -and $compactCapabilityText.Contains('All Listed Skills Are Covered') -and -not $compactCapabilityText.Contains('License: AIPM Personal Use License.')) $capabilityPageError
+Assert-True 'narrow Capability Library keeps the AIPM license statement below the Skills table' ($capabilityPageError -eq '' -and $compactCapabilityText.Contains('TUI Intelligence') -and $compactCapabilityText.Contains('All Listed Skills Are Covered') -and -not $compactCapabilityText.Contains('License: Apache License 2.0.')) $capabilityPageError
 $pluginHeadingIndex = $wideCapabilityText.IndexOf('Plugin Packages')
 $pluginRuleIndex = if ($pluginHeadingIndex -ge 0) { $wideCapabilityText.LastIndexOf([string][char]0x251C, $pluginHeadingIndex) } else { -1 }
 $pluginTableIndex = if ($pluginHeadingIndex -ge 0) { $wideCapabilityText.IndexOf([string][char]0x250C, $pluginHeadingIndex) } else { -1 }
@@ -289,13 +289,17 @@ $malformedRegistry = Join-Path (Get-TestWork) 'malformed-app-registry.json'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $malformedRegistry } '14'
 Assert-True 'a blocked Core registry stays visibly Unverified without crashing the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Core Blocked') -and $ui.Output.Contains('UNVERIFIED')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '07{Enter}14'
-Assert-True 'Skills and Plugins page reports the project license and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('AI Project Manager Personal Use License') -and $ui.Output.Contains('Unverified')) $ui.Error
+Assert-True 'Skills and Plugins page reports the project license and unverified package status in Title Case' ($ui.Error -eq '' -and $ui.Output.Contains('Skills & Plugins') -and $ui.Output.Contains('Apache License 2.0') -and $ui.Output.Contains('Unverified')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '?{Enter}14'
 Assert-True 'question mark opens keyboard and evidence Help' ($ui.Error -eq '' -and $ui.Output.Contains('Up/Down: Move Selection')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '/help{Enter}{Enter}14'
 Assert-True 'slash search opens matching Help action' ($ui.Error -eq '' -and $ui.Output.Contains('Search: help')) $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } 'q0214'
 Assert-True 'Q requires explicit confirmation before leaving the dashboard' ($ui.Error -eq '' -and $ui.Output.Contains('Exit AI Project Manager?')) $ui.Error
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '{Esc}0214'
+Assert-True 'Esc at the main dashboard asks for confirmation before closing AIPM' ($ui.Error -eq '' -and $ui.Output.Contains('Exit AI Project Manager?') -and $ui.Output.Contains('Task Dashboard')) $ui.Error
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '{Esc}01'
+Assert-True 'confirming the Esc exit prompt closes AIPM without an error' ($ui.Error -eq '') $ui.Error
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registry } '100102Exit{Enter}'
 Assert-True 'Command Palette mode persists as a UI preference' ($ui.Error -eq '' -and $ui.Output.Contains('Command Palette') -and (Get-AipmViewMode) -eq 'Command Palette') $ui.Error
 [void](Set-UserSetting -Name 'view_mode' -Value 'Assistant Console')
@@ -421,7 +425,7 @@ Assert-True 'TUI creates a new task only after selecting a registered project an
 $taskFolderKeys = '02' + '01' + '02' + $existingWorkFolder + '{Enter}' + 'Organize Imported Notes{Enter}' + 'Review existing task files in place{Enter}' + '{Enter}' + '04' + '02' + '14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRegistry } $taskFolderKeys
 $afterFolderTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
-Assert-True 'existing work folder is added as task context without moving its files' ($ui.Error -eq '' -and $afterFolderTaskList.Status -eq 'PASS' -and $afterFolderTaskList.Data.tasks.Count -eq 2 -and (Test-Path -LiteralPath (Join-Path $existingWorkFolder 'notes.md') -PathType Leaf) -and $ui.Output.Contains($existingWorkFolder)) ($ui.Error + $ui.Output)
+Assert-True 'existing work folder is added as task context without moving its files' ($ui.Error -eq '' -and $afterFolderTaskList.Status -eq 'PASS' -and $afterFolderTaskList.Data.tasks.Count -eq 2 -and (Test-Path -LiteralPath (Join-Path $existingWorkFolder 'notes.md') -PathType Leaf) -and (($ui.Output -replace '\s','').Contains(($existingWorkFolder -replace '\s','')))) ($ui.Error + $ui.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '04{Enter}14'
 Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)
 $registrationRegistry = Join-Path (Get-TestWork) 'registration-message-registry.json'

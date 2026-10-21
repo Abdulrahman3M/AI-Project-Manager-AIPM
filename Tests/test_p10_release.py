@@ -31,7 +31,8 @@ class ReleasePackagingTests(unittest.TestCase):
         for relative, text in {
             "VERSION": "1.0.2\n",
             "CHANGELOG.md": "# Change Log\n\n## [1.0.2] — Test Release\n",
-            "LICENSE": "AI Project Manager Personal Use License\n",
+            "LICENSE": "Apache License 2.0\n",
+            "NOTICE": "Copyright 2026 Abdulrahman Elbatrah\n",
             "README.md": "# AIPM\n",
             "AGENTS.md": "# Rules\n",
             "Core-Engine/aipm.py": "print('aipm')\n",

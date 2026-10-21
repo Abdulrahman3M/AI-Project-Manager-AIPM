@@ -35,4 +35,4 @@ Skills use independent SemVer streams. Edits require PATCH, additions/removals r
 
 ## License Boundaries
 
-The AI Project Manager Personal Use License applies to every registered Skill and the generated local sample.
+The Apache License 2.0 applies to every registered Skill and the generated local sample.

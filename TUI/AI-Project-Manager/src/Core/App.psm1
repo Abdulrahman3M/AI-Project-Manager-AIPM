@@ -419,7 +419,7 @@ function Show-AipmCapabilityLibrary {
                 }
             }
         }
-        Write-MenuWrapped -Text 'All Listed Skills Are Covered By The AI Project Manager Personal Use License.' -Width $size.Width -Role 'Dim' -Indent '  '
+        Write-MenuWrapped -Text 'All Listed Skills Are Covered By The Apache License 2.0.' -Width $size.Width -Role 'Dim' -Indent '  '
         Write-TuiRule -Width $size.Width -OpenRight
         Write-UiLine '  Plugin Packages' 'Heading'
         if ($size.Width -ge 106) {
@@ -507,7 +507,7 @@ function Get-AipmPageLines {
             if ($c) {
                 $lines.Add(('Capability Integrity: ' + [string]$c.integrity_status))
                 $lines.Add(('AIPM-Owned Skills: ' + [string]$c.skill_count))
-                $lines.Add('All Listed Skills Are Covered By The AI Project Manager Personal Use License.')
+                $lines.Add('All Listed Skills Are Covered By The Apache License 2.0.')
                 foreach ($skill in @($c.skills)) { $lines.Add(('  ' + [string]$skill.slug + ' ' + [string]$skill.version + ' | ' + [string]$skill.source_license)) }
                 if ($c.plugin_sample) { $lines.Add(('Plugin Package: ' + [string]$c.plugin_sample.status + ' | Install: ' + [string]$c.plugin_sample.installation + ' | Publish: ' + [string]$c.plugin_sample.publication)) }
             } else { $lines.Add('Capability Catalog Is Unverified.') }
@@ -529,7 +529,7 @@ function Get-AipmPageLines {
             $lines.Add('Project Tasks And Core State Are Not Stored In TUI Settings.')
         }
         'Help' {
-            $lines.Add('Up/Down: Move Selection | Enter: Open Or Select | Esc: Back')
+            $lines.Add('Up/Down: Move Selection | Enter: Open Or Select | Esc: Back (At The Dashboard Esc Requests Exit Confirmation)')
             $lines.Add('Type A Number: Select Directly | /: Search Actions | ?: Help | F1: Help | Q: Request Exit')
             $lines.Add('Portfolio, Phase, Evidence, Skill And Plugin Views Are Read-Only; Task Actions Update AIPM-Owned State Only.')
             $lines.Add('Task Actions Never Edit Project Source Files Or Run Project Tests.')
@@ -1176,7 +1176,12 @@ function Start-TuiApp {
             continue
         }
         if ($choice -eq '__HELP__') { $section = 'Help' }
-        elseif ($choice -eq 'Exit' -or $null -eq $choice) { $quit = $true; continue }
+        elseif ($null -eq $choice) {
+            $confirmExit = Show-Confirm -Title 'Exit AI Project Manager?' -Message 'You Pressed Esc At The Main Dashboard. Exiting Closes AIPM; No Project Data Will Be Changed.' -YesLabel 'Exit AIPM' -YesDesc 'Close AIPM And Return To The PowerShell Window.' -NoLabel 'Stay Here' -NoDesc 'Return To The Task Dashboard.' -Default $false
+            if ($confirmExit) { $quit = $true }
+            continue
+        }
+        elseif ($choice -eq 'Exit') { $quit = $true; continue }
         elseif ($choice -eq 'Refresh') {
             $refresh = Refresh-AipmSessionSnapshot -Root $Root -RegistryPath $RegistryPath -CurrentSnapshot $session
             $session = $refresh.Snapshot

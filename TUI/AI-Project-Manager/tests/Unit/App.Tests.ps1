@@ -43,8 +43,8 @@ $capabilityCatalog = [pscustomobject]@{
         integrity_status = 'UNVERIFIED'
         skill_count = 2
         skills = @(
-            [pscustomobject]@{ slug='tui-intelligence'; version='1.0.0'; source_license='AI Project Manager Personal Use License'; aipm_personal_license_applies=$true }
-            [pscustomobject]@{ slug='audio-timing-author'; version='1.0.0'; source_license='AI Project Manager Personal Use License'; aipm_personal_license_applies=$true }
+            [pscustomobject]@{ slug='tui-intelligence'; version='1.0.0'; source_license='Apache License 2.0'; aipm_personal_license_applies=$true }
+            [pscustomobject]@{ slug='audio-timing-author'; version='1.0.0'; source_license='Apache License 2.0'; aipm_personal_license_applies=$true }
         )
         plugin_sample = [pscustomobject]@{ version='0.1.0'; status='PACKAGE_SAMPLE_ONLY'; installation='UNVERIFIED'; publication='UNVERIFIED'; manifests=@('plugin.json') }
     }

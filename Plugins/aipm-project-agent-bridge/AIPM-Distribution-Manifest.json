@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "bde7a59f7e8a85aa275f8d4e0e6516e37fa9bb1e53ce8074b3c321f7e2697682",
+  "changelog_sha256": "1ff06a261a327668912dfbfdee83b382182385cdd9ab5fd927f1b3fd47d43690",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.0.15",
-  "previous_plugin_version": "1.0.14",
+  "plugin_version": "1.0.16",
+  "previous_plugin_version": "1.0.15",
   "schema_version": "1.0",
   "skills": [
     {
@@ -25,9 +25,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "audio-timing-author",
       "source_sha256": "c7257900e569cdd845e893aaf3fb12e1cf71b88e7ad7d3e34dfad16c47b25a67",
@@ -52,9 +52,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "browser-environment-manager",
       "source_sha256": "6b578770a5d452a9a400cb8704f10d16248efa6ecde2a92ec234d226dfa8dc55",
@@ -71,9 +71,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "create-strict-implementation-handoff",
       "source_sha256": "c4eef8dfb064578a3059eed337ec67ecbf1a89219074338849c577ae4ddf52e6",
@@ -92,9 +92,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "doc-to-md",
       "source_sha256": "dcaf41d1ec5b274ab7d79117b41c8a0b526abd84d868fabcc2786527e0cef03b",
@@ -173,9 +173,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "powershell-tui-app-designer",
       "source_sha256": "fb9bee68698cc381deff4206df3e78c3c01deb06b811f507c0d812c982fc4c60",
@@ -349,9 +349,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "professional-word-designer",
       "source_sha256": "5b2f109e302300d99c161f6002def4a434a94ce58d08d1636c68cfbc465ae949",
@@ -372,9 +372,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "project-governance-manager",
       "source_sha256": "15dc7acbbda6aaee7dbb0ca6f2b7bc2da855dd20e7631a275fb1a9192931ab2b",
@@ -394,9 +394,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "project-orchestrator",
       "source_sha256": "842c64c3c0ca5c708c2ba36aad3874e2fe4f706b4a5580b223090601e9057cec",
@@ -419,9 +419,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "resume-task",
       "source_sha256": "8a31c7b6a9aafd0b747202ddeab0768ac7852ee7b2a4266ed0ef36181e31ce0b",
@@ -489,9 +489,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "shared-project-state-manager",
       "source_sha256": "0f8ca4db71e04db18c369702fa3d8160443a2ec08350f54127a1e7d5459ad3bf",
@@ -507,9 +507,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "token-optimization",
       "source_sha256": "7f244c62d91157e1ff077261a5585dd9552a7f7e1350734b8f6c5c23d7a11f4f",
@@ -537,9 +537,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "tui-intelligence",
       "source_sha256": "7c6c8cea3a8fe4defb688afe9a3d0c796c26326c18fdc91231642ee963c00d73",
@@ -547,8 +547,8 @@
     }
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
-  "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
-  "source_project_version": "1.4.6",
+  "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
+  "source_project_version": "1.4.9",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

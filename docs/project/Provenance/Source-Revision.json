@@ -7,7 +7,7 @@
   "verification_method": "Read-only GitHub API fetch of the main ref and commit",
   "source_archive_sha256": "6A1B15D7F3C0D297160FF51F6E00D14512354898F1C78EF789E7194E44F09631",
   "source_license_path": "LICENSE",
-  "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
+  "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
   "source_license_git_blob_sha1": null,
   "source_writes": 0,
   "distribution_authorization": "Owner-requested local P06 Plugin sample; not published or installed"

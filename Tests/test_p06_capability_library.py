@@ -66,6 +66,7 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
     shutil.copy2(ROOT / "VERSION", destination / "VERSION")
     shutil.copy2(ROOT / "CHANGELOG.md", destination / "CHANGELOG.md")
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
+    shutil.copy2(ROOT / "NOTICE", destination / "NOTICE")
     if include_registry:
         shutil.copytree(ROOT / "Capability-Library", destination / "Capability-Library")
     else:
@@ -303,7 +304,7 @@ class CapabilityLibraryTests(unittest.TestCase):
         manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(len(manifest["skills"]), 12)
         self.assertNotIn("license", json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")))
-        self.assertTrue((target / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").is_file())
+        self.assertTrue((target / "licenses" / "Apache-2.0.txt").is_file())
 
         original_validate = capabilities.validate_plugin
         validation_calls = 0

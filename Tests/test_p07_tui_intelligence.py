@@ -67,7 +67,7 @@ class TuiIntelligenceContractTests(unittest.TestCase):
         catalog = scan_library(ROOT)
         skills = {item["slug"]: item for item in catalog["skills"]}
         self.assertEqual(len(skills), 12)
-        self.assertEqual(skills["tui-intelligence"]["license"]["source_license"], "AI Project Manager Personal Use License")
+        self.assertEqual(skills["tui-intelligence"]["license"]["source_license"], "Apache License 2.0")
         self.assertTrue(skills["tui-intelligence"]["license"]["aipm_personal_license_applies"])
         self.assertTrue(skills["audio-timing-author"]["license"]["aipm_personal_license_applies"])
         self.assertEqual(validate_registry(ROOT)["skill_count"], 12)
@@ -91,7 +91,7 @@ class TuiIntelligenceContractTests(unittest.TestCase):
         self.assertEqual(claude["version"], version)
         self.assertEqual(gemini["version"], version)
         self.assertFalse(any("license" in manifest for manifest in (portable, claude, gemini)))
-        self.assertEqual((package / "licenses" / "AI-Project-Manager-Personal-Use-License.txt").read_bytes(), (ROOT / "LICENSE").read_bytes())
+        self.assertEqual((package / "licenses" / "Apache-2.0.txt").read_bytes(), (ROOT / "LICENSE").read_bytes())
 
 
 if __name__ == "__main__":

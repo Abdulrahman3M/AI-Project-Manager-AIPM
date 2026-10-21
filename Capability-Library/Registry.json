@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.4.6",
+  "platform_version": "1.4.9",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -52,9 +52,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "audio-timing-author",
       "path": "01-Skills-General/audio-timing-author",
@@ -89,9 +89,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "browser-environment-manager",
       "path": "01-Skills-General/browser-environment-manager",
@@ -120,9 +120,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "create-strict-implementation-handoff",
       "path": "01-Skills-General/create-strict-implementation-handoff",
@@ -154,9 +154,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "doc-to-md",
       "path": "01-Skills-General/doc-to-md",
@@ -245,9 +245,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "powershell-tui-app-designer",
       "path": "01-Skills-General/powershell-tui-app-designer",
@@ -433,9 +433,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "professional-word-designer",
       "path": "01-Skills-General/professional-word-designer",
@@ -466,9 +466,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "project-governance-manager",
       "path": "01-Skills-General/project-governance-manager",
@@ -498,9 +498,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "project-orchestrator",
       "path": "01-Skills-General/project-orchestrator",
@@ -533,9 +533,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "resume-task",
       "path": "01-Skills-General/resume-task",
@@ -616,9 +616,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "shared-project-state-manager",
       "path": "01-Skills-General/shared-project-state-manager",
@@ -647,9 +647,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "token-optimization",
       "path": "01-Skills-General/token-optimization",
@@ -687,9 +687,9 @@
       "license": {
         "aipm_personal_license_applies": true,
         "retained_skill_notices": [],
-        "source_license": "AI Project Manager Personal Use License",
+        "source_license": "Apache License 2.0",
         "source_license_path": "LICENSE",
-        "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07"
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "name": "tui-intelligence",
       "path": "01-Skills-General/tui-intelligence",
@@ -712,13 +712,13 @@
     "ref": "main",
     "repository": "Abdulrahman3M/Universal-AI-ToolKit",
     "source_archive_sha256": "6A1B15D7F3C0D297160FF51F6E00D14512354898F1C78EF789E7194E44F09631",
-    "source_license_sha256": "ca65f078792f95c45a659b831833591a7d04e60a90f72c305e6a8306b9679c07",
+    "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
     "verified_on": "2026-10-16",
     "writes": 0
   },
   "standalone_prompts": [
     {
-      "license_scope": "AI Project Manager Personal Use License applies",
+      "license_scope": "Apache License 2.0 applies",
       "name": "Autonomous Task Execution",
       "path": "02-Prompt-General/Autonomous-Task-Execution.md",
       "sha256": "0b4c2ed5a1d27a39072306f59ba725e1a40712f6702f733a85e93fb2c5526001",

@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.4.9] — Escape Exit Confirmation And Apache License (Not Published)
+
+- Pressing Esc at the main dashboard now opens an "Exit AI Project Manager?" confirmation instead of closing PowerShell immediately. Encountering the prompt requires an explicit "Exit AIPM" choice; "Stay Here" returns to the Task Dashboard.
+- Added scripted regression coverage for both the confirmation prompt and the confirmed exit path.
+- Made the existing work-folder task-context assertion tolerant of prompt-wrapped folder paths, which restored a green suite on `1.4.9`.
+- Relicensed the TUI package under the Apache License 2.0 with `Copyright 2026 Abdulrahman Elbatrah`, added a package `NOTICE`, and updated the Capability Library license statement.
+
 ## [1.4.8] — Repository Version Synchronization (Not Published)
 
 - Synchronized the TUI repository version with AIPM `1.4.8`. No TUI behavior change was introduced by the closeout itself; no GitHub Release or tag is created by this repository update.
