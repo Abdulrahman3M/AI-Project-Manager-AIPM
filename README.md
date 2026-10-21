@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager <sub>v1.4.8</sub></h1>
+  <h1>AI Project Manager v1.4.8</h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
