@@ -134,7 +134,7 @@ $taskRegProjectId = 'Task-Create-' + [guid]::NewGuid().ToString('N').Substring(0
 $regResult = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $taskRegRegistry -ProjectRoot $taskRegRoot -ProjectId $taskRegProjectId -Alias 'Task Create Regression Fixture'
 Assert-Equal 'project registers for task creation test' 'PASS' $regResult.Status
 
-$createKeys = '02' + '01' + '01' + 'Regression Test Task{Enter}' + 'Verify task creation under strict mode{Enter}' + '{Enter}' + '04' + '02' + '14'
+$createKeys = '02' + '01' + '01' + 'Regression Test Task{Enter}' + 'Verify task creation under strict mode{Enter}' + '{Enter}' + '05' + '02' + '14'
 $createUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskRegRegistry } $createKeys
 Assert-True 'Create New Task completes without uninitialized folderPath error' ($createUi.Error -eq '' -and -not $createUi.Output.Contains('folderPath')) ($createUi.Error + $createUi.Output)
 $createdList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
@@ -143,7 +143,7 @@ Assert-True 'task record was created in Core by Create New Task' ($createdList.S
 $workFolder = Join-Path $taskRegRoot 'Existing-Work'
 [void](New-Item -ItemType Directory -Path $workFolder -Force)
 [System.IO.File]::WriteAllText((Join-Path $workFolder 'file.txt'), 'Work file content', (New-Object System.Text.UTF8Encoding($false)))
-$importKeys = '02' + '01' + '02' + $workFolder + '{Enter}' + 'Imported Work Folder Task{Enter}' + 'Verify folder import{Enter}' + '{Enter}' + '04' + '02' + '14'
+$importKeys = '02' + '01' + '02' + $workFolder + '{Enter}' + 'Imported Work Folder Task{Enter}' + 'Verify folder import{Enter}' + '{Enter}' + '05' + '02' + '14'
 $importUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskRegRegistry } $importKeys
 Assert-True 'Add Existing Work Folder completes without error' ($importUi.Error -eq '') ($importUi.Error + $importUi.Output)
 $afterImportList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId

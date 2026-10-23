@@ -1,6 +1,7 @@
 """Project-scoped task context and attachment operations; never edits project source files."""
 from __future__ import annotations
 
+import copy
 from contextlib import contextmanager
 from datetime import date, datetime, timezone
 import hashlib
@@ -22,6 +23,9 @@ TASK_ARTIFACT_CATEGORIES = frozenset({"Instructions", "Handoff", "Reports", "Scr
 MAX_TASK_ARTIFACT_BYTES = 16 * 1024 * 1024
 MAX_TASK_ARTIFACT_PATH_CHARS = 240
 CORE_PROJECTIONS = frozenset({"Task-Plan.md", "Blockers.md", "Final-Report.md", "Test-Status.md", "Task-State.md", "Metadata.json", "Metadat.json"})
+TASK_RECORD_FIELDS = ('title', 'scope', 'plan', 'blockers', 'verification', 'report', 'status_override', 'last_verified_action', 'next_action', 'completed_work', 'changed_files', 'test_results')
+MAX_IMPORT_ARCHIVE_ENTRIES = 20000
+MAX_IMPORT_ARCHIVE_BYTES = 1024 * 1024 * 1024
 _WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
@@ -182,9 +186,12 @@ class TaskOperations:
                 })
 
         metadata: dict[str, Any] = {
-            'schema_version': '1.0',
+            'schema_version': '1.1',
             'format': 'AIPM-Task-Metadata',
             'exported_at': datetime.now(timezone.utc).isoformat(),
+            'restore_instructions': 'Self-contained task record. Use AIPM "Import Archived Task From ZIP" (CLI: task-import-archive) to re-register this task and restore its folder, even if it was removed from State-Manifest.json.',
+            'task_record': {key: copy.deepcopy(record[key]) for key in TASK_RECORD_FIELDS if key in record},
+            'history': self._task_history(task_id),
             'task_id': task_id,
             'title': record.get('title', ''),
             'scope': record.get('scope', ''),
@@ -305,6 +312,8 @@ class TaskOperations:
         if delete_folder:
             shutil.rmtree(task_root)
 
+        with zipfile.ZipFile(archive_path, 'r') as package:
+            package_names = package.namelist()
         return {
             'archive_path': archive_path,
             'checksum_path': checksum_path,
@@ -312,7 +321,7 @@ class TaskOperations:
             'verified': True,
             'folder_deleted': delete_folder,
             'sha256': digest,
-            'file_count': len(archive_path.read_bytes()),
+            'file_count': len(package_names),
         }
 
     def delete_task_folder(self, task: Path) -> dict[str, Any]:
@@ -330,6 +339,157 @@ class TaskOperations:
         if task_root.exists():
             shutil.rmtree(task_root)
         return {'task_id': task_id, 'folder_deleted': True, 'status': 'PASS'}
+
+    def _task_history(self, task_id: str) -> list[dict[str, Any]]:
+        """Return the ordered Core command history for one task (no copied project sources)."""
+        events: list[dict[str, Any]] = []
+        events_root = self.root / 'History' / 'Events'
+        if not events_root.is_dir():
+            return events
+        for path in sorted(events_root.glob('*.json')):
+            try:
+                event = json.loads(path.read_text(encoding='utf-8'))
+            except (OSError, ValueError):
+                continue
+            payload = event.get('input')
+            if not isinstance(event, dict) or not isinstance(payload, dict) or payload.get('task_id') != task_id:
+                continue
+            summary = {key: value for key, value in payload.items() if key != 'record'}
+            events.append({'revision': event.get('revision'), 'command': event.get('command'), 'actor': event.get('actor'), 'input': summary})
+        return sorted(events, key=lambda item: item.get('revision') or 0)
+
+    @staticmethod
+    def _record_from_metadata(meta: dict[str, Any]) -> dict[str, Any]:
+        """Rebuild and validate the Core task record from Metadata.json (v1.1 record or v1.0 flat fields)."""
+        source = meta.get('task_record') if isinstance(meta.get('task_record'), dict) else meta
+        record = copy.deepcopy({key: source[key] for key in TASK_RECORD_FIELDS if key in source})
+        record.setdefault('blockers', [])
+        record.setdefault('verification', None)
+        record.setdefault('report', '')
+        try:
+            CoreEngine._validate_task_record(record)
+        except StateError as error:
+            raise StateError('Archive Metadata Does Not Contain A Valid Task Record') from error
+        return record
+
+    def unregister_task(self, task: Path) -> dict[str, Any]:
+        """Remove a completed, archived task from the AIPM registry; the verified archive remains the only copy."""
+        task_id = self._task_id(task)
+        task_root = self.root / 'Tasks' / task_id
+        if self.read_task(task)['task_status'] != 'COMPLETE':
+            raise StateError('Only Completed Tasks Can Be Removed From The Registry')
+        if task_root.exists():
+            raise StateError('Delete The Live Task Folder Before Removing The Registry Record')
+        archive_path = self.root / 'Archive' / f'{task_id}.zip'
+        checksum_path = archive_path.with_suffix('.zip.sha256')
+        if not archive_path.is_file() or not checksum_path.is_file():
+            raise StateError('Cannot Remove Registry Record: Verified Archive Does Not Exist')
+        self._verify_archive_integrity(task_root, archive_path, checksum_path.read_text(encoding='ascii').split()[0].strip())
+        with zipfile.ZipFile(archive_path, 'r') as package:
+            self._record_from_metadata(json.loads(package.read('Metadata.json').decode('utf-8')))
+        state = self._request('state.read', {})
+        self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
+        return {'task_id': task_id, 'registry_record_removed': True, 'archive_path': archive_path, 'status': 'PASS'}
+
+    def import_archive(self, zip_path: Path) -> dict[str, Any]:
+        """Verify an external task ZIP, re-register its task record, and restore its live folder."""
+        source = Path(zip_path)
+        if not source.is_file():
+            raise StateError('Task Archive File Not Found')
+        source = source.resolve()
+        with zipfile.ZipFile(source, 'r') as package:
+            bad = package.testzip()
+            if bad is not None:
+                raise StateError(f'Task Archive Corrupted: {bad}')
+            infos = package.infolist()
+            if len(infos) > MAX_IMPORT_ARCHIVE_ENTRIES or sum(info.file_size for info in infos) > MAX_IMPORT_ARCHIVE_BYTES:
+                raise StateError('Task Archive Exceeds Import Limits')
+            for info in infos:
+                name = info.filename
+                parts = name.split('/')
+                if info.is_dir():
+                    continue
+                if (not name or name.startswith('/') or '\\' in name or '\x00' in name or ':' in name
+                        or any(part in {'', '.', '..'} for part in parts)):
+                    raise StateError('Task Archive Contains An Unsafe Path')
+            meta_name = next((candidate for candidate in ('Metadata.json', 'Metadat.json') if candidate in package.namelist()), None)
+            if meta_name is None:
+                raise StateError('Task Archive Missing Metadata.json')
+            try:
+                meta = json.loads(package.read(meta_name).decode('utf-8'))
+            except (ValueError, UnicodeDecodeError) as error:
+                raise StateError('Task Archive Metadata Cannot Be Read') from error
+            if not isinstance(meta, dict) or meta.get('format') != 'AIPM-Task-Metadata':
+                raise StateError('Task Archive Metadata Invalid')
+            task_id = meta.get('task_id')
+            if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id):
+                raise StateError('Task Archive Metadata Invalid')
+            record = self._record_from_metadata(meta)
+            names = set(package.namelist())
+            for item in meta.get('files', []):
+                relative = item.get('relative_path') if isinstance(item, dict) else None
+                if relative not in names:
+                    raise StateError(f'Task Archive Missing File: {relative}')
+                if hashlib.sha256(package.read(relative)).hexdigest() != item.get('sha256'):
+                    raise StateError(f'Task Archive File Hash Mismatch: {relative}')
+
+            sidecar = source.with_suffix('.zip.sha256')
+            digest = hashlib.sha256(source.read_bytes()).hexdigest()
+            if sidecar.is_file() and not sidecar.read_text(encoding='ascii', errors='ignore').strip().startswith(digest):
+                raise StateError('Task Archive Checksum Mismatch')
+
+            state = self._request('state.read', {})
+            if task_id in state['state'].get('tasks', {}):
+                raise StateError('Task Already Registered; Use Reopen Task Instead')
+            task_root = self.root / 'Tasks' / task_id
+            if task_root.exists():
+                raise StateError('Live Task Folder Already Exists')
+
+            archive_root = self.root / 'Archive'
+            archive_root.mkdir(parents=True, exist_ok=True)
+            target_archive = archive_root / f'{task_id}.zip'
+            if target_archive.exists():
+                if hashlib.sha256(target_archive.read_bytes()).hexdigest() != digest:
+                    raise StateError('A Different Archive Already Exists For This Task')
+            else:
+                shutil.copy2(source, target_archive)
+            checksum_path = target_archive.with_suffix('.zip.sha256')
+            if not checksum_path.is_file():
+                checksum_path.write_text(f'{digest}  {target_archive.name}\n', encoding='ascii', newline='\n')
+
+            staging = Path(tempfile.mkdtemp(prefix='.aipm-import-', dir=self.root))
+            try:
+                for info in infos:
+                    if info.is_dir() or info.filename.startswith('.aipm-') or info.filename.endswith('.tmp'):
+                        continue
+                    destination = staging.joinpath(*info.filename.split('/'))
+                    if not _inside(_canonical(destination), _canonical(staging)):
+                        raise StateError('Task Archive Contains An Unsafe Path')
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(package.read(info.filename))
+                (self.root / 'Tasks').mkdir(parents=True, exist_ok=True)
+                self._request('task.restore', {'task_id': task_id, 'record': record}, revision=state['revision'], mutation=True)
+                try:
+                    os.replace(staging, task_root)
+                    staging = None
+                    self.sync_artifacts(task_root)
+                except Exception:
+                    state = self._request('state.read', {})
+                    self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
+                    raise
+            finally:
+                if staging is not None:
+                    shutil.rmtree(staging, ignore_errors=True)
+        restored = self.read_task(task_root)
+        return {
+            'task_id': task_id,
+            'title': restored['title'],
+            'task_status': restored['task_status'],
+            'archive_path': target_archive,
+            'task_path': task_root,
+            'source_project_id': (meta.get('project') or {}).get('project_id'),
+            'status': 'PASS',
+        }
 
     def read_task(self, task: Path) -> dict[str, Any]:
         task_id = self._task_id(task)

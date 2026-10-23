@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.5.3] — Self-Contained Archive Metadata, Registry Removal And ZIP Import (Repository Update; Not Published)
+
+- `Metadata.json` / `Metadat.json` (schema `1.1`) now embeds the complete Core `task_record` and the task's ordered command `history` in addition to the readable fields and file inventory, so an archive alone can restore a task even if it was removed from `State-Manifest.json`.
+- Added `task.restore` and `task.unregister` Core commands (replayed through history and pending-commit recovery) plus `unregister_task`, which removes a completed task from the registry only after its live folder is gone and its archive passes integrity checks.
+- Added `import_archive` and the `task-import-archive` / `task-unregister` CLI commands: verify the ZIP (CRC, unsafe paths, import limits, per-file SHA-256 against the inventory, optional `.sha256` sidecar), re-register the task, restore its folder atomically, and keep a checksummed copy in `Archive/`. Legacy `1.0` flat-metadata archives remain importable.
+- Fixed the archive result `file_count`, which reported the ZIP byte size instead of the number of files.
+- Synchronized the platform and PowerShell TUI versions at `1.5.3`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.2] — Task Archive Metadata And Optional Folder Deletion Lifecycle (Repository Update; Not Published)
 
 - Added rich task metadata generation (`Metadata.json` and `Metadat.json`) compiling complete task identity, status, revision, scope, plan, checkpoints, completed work, changed files, blockers, verification evidence, test status, task report, project info, and a file inventory with relative paths, sizes, SHA-256 hashes, categories, and modification timestamps.

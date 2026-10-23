@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -85,6 +85,11 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
                 task = operations.read_task(operations.root / "Tasks" / task_id)
                 rows.append({"task_id": task_id, "title": record["title"], "status": task["task_status"], "task_path": str(operations.root / "Tasks" / task_id)})
             return {"schema_version": "1.0", "status": "PASS", "tasks": rows}
+        if args.command == "task-import-archive":
+            if not args.source:
+                raise StateError("TASK_ARCHIVE_SOURCE_REQUIRED")
+            result = operations.import_archive(Path(args.source))
+            return {"schema_version": "1.0", **{key: (str(value) if isinstance(value, Path) else value) for key, value in result.items()}}
         if not args.task_id:
             raise StateError("TASK_ID_REQUIRED")
         task = operations.root / "Tasks" / args.task_id
@@ -149,6 +154,9 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
         if args.command == "task-delete-folder":
             result = operations.delete_task_folder(task)
             return {"schema_version": "1.0", "status": "PASS", **result}
+        if args.command == "task-unregister":
+            result = operations.unregister_task(task)
+            return {"schema_version": "1.0", **{key: (str(value) if isinstance(value, Path) else value) for key, value in result.items()}}
         if args.command == "task-checkpoint":
             if not args.last_verified_action or not args.next_action:
                 raise StateError("CHECKPOINT_ACTIONS_REQUIRED")

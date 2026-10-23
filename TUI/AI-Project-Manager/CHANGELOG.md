@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.3] — Registry Removal Choice And Import Archived Task From ZIP (Not Published)
+
+- After a verified archive's live folder is deleted, the archive flow now offers `Remove Task From AIPM Registry?` (the archive is always kept).
+- Added `Import Archived Task From ZIP` to Task Management: choose any `.zip` path, and AIPM verifies it, re-registers the task, and restores its folder from `Metadata.json`.
+- Added client commands `task-unregister` and `task-import-archive`, with regression coverage for registry removal and ZIP re-import.
+- Synchronized the TUI version with AIPM platform `1.5.3`.
+
 ## [1.5.2] — Task Archive Retention Choice And Metadata Client Support (Not Published)
 
 - Extended task archiving flow in `Show-AipmTaskRecord` to prompt with a two-choice confirmation dialog (`01 Delete Task Folder` / `02 Keep Task Folder`) after archive creation and verification pass.

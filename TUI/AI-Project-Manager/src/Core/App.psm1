@@ -1000,6 +1000,18 @@ function Show-AipmTaskRecord {
                         'Metadata: Metadata.json Verified Inside Archive.',
                         'Live Folder: Removed (All Task Details Preserved In Archive).'
                     ) -Kind Success
+                    $unregisterChoice = Show-Confirm -Title 'Remove Task From AIPM Registry?' -Message 'Metadata.json Inside The Archive Holds The Complete Task Record. You Can Restore This Task Later With Import Archived Task From ZIP, Even After Removing It From State-Manifest.json.' -YesLabel 'Remove From Registry' -YesDesc 'Remove The Task Record From AIPM State; The Verified Archive Is Kept.' -NoLabel 'Keep In Registry' -NoDesc 'Keep The Task Listed In AIPM; It Can Still Be Reopened From The Archive.' -Default $false
+                    if ($unregisterChoice) {
+                        $unregisterResult = Invoke-AipmCore -AppRoot $Root -Command 'task-unregister' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+                        if ($unregisterResult.Status -eq 'PASS') {
+                            Show-Notice -Title 'Task Removed From Registry' -Lines @(
+                                ('Archive Kept: ' + [string]$updated.Data.archive_path),
+                                'Restore Anytime: Task Management > Import Archived Task From ZIP.'
+                            ) -Kind Success
+                            return
+                        }
+                        Show-Notice -Title 'Registry Removal Failed' -Lines @([string]$unregisterResult.Reason, 'The Task Remains Registered.') -Kind Warning
+                    }
                 } else {
                     Show-Notice -Title 'Task Archived But Folder Deletion Failed' -Lines @([string]$deletedResult.Reason) -Kind Warning
                 }
@@ -1094,6 +1106,7 @@ function Invoke-AipmTaskManagement {
                 (New-MenuItem -Label 'Create New Task' -Desc 'Create A Task Record In AIPM State For This Project.' -Value 'create' -Icon 'Yes'),
                 (New-MenuItem -Label 'Add Existing Work Folder' -Desc 'Create A Task Record Referencing A Folder; Keep Its Files In Place.' -Value 'folder' -Icon 'Project'),
                 (New-MenuItem -Label 'Open Existing Task' -Desc 'Review Or Update An Existing Core-Managed Task.' -Value 'open' -Icon 'Task'),
+                (New-MenuItem -Label 'Import Archived Task From ZIP' -Desc 'Restore And Re-Register A Task From Its Archive ZIP Using Metadata.json.' -Value 'import' -Icon 'Project'),
                 (New-MenuItem -Label 'Back To Project Selection' -Desc 'Choose Another Registered Project.' -Value 'back' -Icon 'Exit')
             )
             $taskChoice = Show-Menu -Title ('Tasks: ' + [string]$project.alias) -Description ('Managed State: ' + [string]$project.root_path) -Items $taskItems
@@ -1141,6 +1154,28 @@ function Invoke-AipmTaskManagement {
                     $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
                     Show-Notice -Title 'Task Created' -Lines @(('Task: ' + $title.Trim()), ('Task ID: ' + $createdId), 'The Task Record Was Saved In AIPM Project State. No Project Files Were Moved Or Edited.') -Kind Success
                 } else { Show-Notice -Title 'Task Creation Failed' -Lines @([string]$created.Reason) -Kind Error }
+                continue
+            }
+            if ($taskChoice -eq 'import') {
+                $zipPath = Read-ValidatedInput -Prompt 'Archive ZIP File Path' -Help 'Enter The Full Path To A Task Archive ZIP Created By AIPM, From Any Folder Or Drive.' -Example 'D:\Archives\Task-2026-10-23-Example-0123456789ab.zip' -Default '' -Validate {
+                    param($text)
+                    $candidateText = $text.Trim().Trim('"')
+                    try { $candidate = [System.IO.Path]::GetFullPath($candidateText) } catch { return 'Enter A Valid Full File Path.' }
+                    if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) { return 'The ZIP File Must Already Exist.' }
+                    if ([System.IO.Path]::GetExtension($candidate).ToLowerInvariant() -ne '.zip') { return 'Choose A .zip Task Archive.' }
+                    return $null
+                }
+                if (-not $zipPath) { continue }
+                $imported = Invoke-AipmCore -AppRoot $Root -Command 'task-import-archive' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Source ($zipPath.Trim().Trim('"'))
+                if ($imported.Status -eq 'PASS') {
+                    Show-Notice -Title 'Archived Task Imported' -Lines @(
+                        ('Task: ' + [string]$imported.Data.title),
+                        ('Task ID: ' + [string]$imported.Data.task_id),
+                        ('Status: ' + [string]$imported.Data.task_status),
+                        ('Archive Copy: ' + [string]$imported.Data.archive_path),
+                        'The Task Was Re-Registered And Its Live Folder Was Restored From Metadata.json And The Archive.'
+                    ) -Kind Success
+                } else { Show-Notice -Title 'Archive Import Failed' -Lines @([string]$imported.Reason, 'Nothing Was Registered Or Changed.') -Kind Error }
                 continue
             }
             if ($taskChoice -eq 'open') {

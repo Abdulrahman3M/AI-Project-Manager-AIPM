@@ -1,4 +1,4 @@
-Set-TestGroup 'Differential frame rendering'
+﻿Set-TestGroup 'Differential frame rendering'
 Assert-Equal 'Unchanged styled frame updates zero rows' 0 @(Get-UiChangedRows -Before @('A','B') -After @('A','B')).Count
 Assert-Equal 'One changed selection role updates exactly one row' '1' (@(Get-UiChangedRows -Before @('row', 'ESC[NormalmChoice') -After @('row', 'ESC[SelectedmChoice')) -join ',')
 Assert-Equal 'Moving selection updates two rows' '0,1' (@(Get-UiChangedRows -Before @('Selected','Normal') -After @('Normal','Selected')) -join ',')
@@ -396,11 +396,22 @@ $archiveFolderToDelete = Join-Path (Join-Path $taskEditRoot 'Shared-Project-Stat
 if (Test-Path -LiteralPath $archiveFolderToDelete) { Remove-Item -LiteralPath $archiveFolderToDelete -Force }
 $archiveShaToDelete = $archiveFolderToDelete + '.sha256'
 if (Test-Path -LiteralPath $archiveShaToDelete) { Remove-Item -LiteralPath $archiveShaToDelete -Force }
-$closeDeleteArchiveKeys = '08Close and remove folder{Enter}{Enter}100101{Enter}{Esc}'
+$closeDeleteArchiveKeys = '08Close and remove folder{Enter}{Enter}100101{Enter}{Esc}{Esc}'
 $delUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $closeDeleteArchiveKeys
 $afterDeleteTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
 $liveTaskDir = Join-Path (Join-Path $taskEditRoot 'Shared-Project-State-Manager/Tasks') $taskEditId
 Assert-True 'TUI archives and removes live folder when requested' ($delUi.Error -eq '' -and $delUi.Output.Contains('Task Archived & Folder Removed') -and -not (Test-Path -LiteralPath $liveTaskDir) -and $afterDeleteTask.Data.is_archived) ($delUi.Error + $delUi.Output)
+$reopenForUnregister = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-reopen' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId -Text 'Reopen to test registry removal'
+Assert-True 'Core restores the deleted live folder when reopening an archived task' ($reopenForUnregister.Status -eq 'PASS' -and (Test-Path -LiteralPath $liveTaskDir)) ([string]$reopenForUnregister.Reason)
+if (Test-Path -LiteralPath $archiveFolderToDelete) { Remove-Item -LiteralPath $archiveFolderToDelete -Force }
+if (Test-Path -LiteralPath $archiveShaToDelete) { Remove-Item -LiteralPath $archiveShaToDelete -Force }
+$closeUnregisterKeys = '08Close and unregister{Enter}{Enter}100101{Enter}01{Enter}'
+$unregUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $closeUnregisterKeys
+$afterUnregister = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
+Assert-True 'TUI offers registry removal after folder deletion and keeps the archive' ($unregUi.Error -eq '' -and $unregUi.Output.Contains('Remove Task From AIPM Registry') -and $unregUi.Output.Contains('Task Removed From Registry') -and $afterUnregister.Status -ne 'PASS' -and (Test-Path -LiteralPath $archiveFolderToDelete)) ($unregUi.Error + $unregUi.Output)
+$importResult = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-import-archive' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -Source $archiveFolderToDelete
+$afterImport = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
+Assert-True 'Core imports an archived task ZIP back into the registry with its folder' ($importResult.Status -eq 'PASS' -and $afterImport.Status -eq 'PASS' -and $afterImport.Data.task.task_status -eq 'COMPLETE' -and (Test-Path -LiteralPath $liveTaskDir)) ([string]$importResult.Reason)
 $longArtifactLines = @('Task: GitHub Learning Series', 'Status: IN-PROGRESS', '') + @(1..12 | ForEach-Object { 'Artifact Entry {0:D2}' -f $_ })
 $pagedArtifactUi = Invoke-Ui {
     Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 100 -CaptureHeight 14
@@ -416,7 +427,7 @@ $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPat
 Assert-True 'registered projects are not separate actions on the main dashboard' ($ui.Error -eq '' -and -not $ui.Output.Contains('Registered Fixture')) ($ui.Error + $ui.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '01{Enter}14'
 Assert-True 'Projects section lists registered projects and their verified state' ($ui.Error -eq '' -and $ui.Output.Contains('Registered Fixture') -and $ui.Output.Contains('Phase: P08')) ($ui.Error + $ui.Output)
-$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '0201040214'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '0201050214'
 Assert-True 'task management refreshes projects and offers opening existing tasks after project selection' ($ui.Error -eq '' -and $ui.Output.Contains('Select Registered Project') -and $ui.Output.Contains('Tasks: Registered Fixture') -and $ui.Output.Contains('Open Existing Task')) ($ui.Error + $ui.Output)
 $emptyTaskRegistry = Join-Path (Get-TestWork) 'empty-task-registry.json'
 $emptyRegistryData = @{ schema_version='1.0'; projects=@(); preferences=@{} }
@@ -431,11 +442,11 @@ $managedTaskRegistry = Join-Path (Get-TestWork) 'tui-task-management-registry.js
 $managedTaskProjectId = 'TUI-Task-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
 $taskProjectRegistration = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $managedTaskRegistry -ProjectRoot $managedTaskRoot -ProjectId $managedTaskProjectId -Alias 'TUI Task Fixture'
 Assert-Equal 'TUI task fixture is registered in Core' 'PASS' $taskProjectRegistration.Status
-$taskCreateKeys = '02' + '01' + '01' + 'Organize The Existing Work{Enter}' + 'Review files and agree on next steps{Enter}' + '{Enter}' + '04' + '02' + '14'
+$taskCreateKeys = '02' + '01' + '01' + 'Organize The Existing Work{Enter}' + 'Review files and agree on next steps{Enter}' + '{Enter}' + '05' + '02' + '14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRegistry } $taskCreateKeys
 $createdTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
 Assert-True 'TUI creates a new task only after selecting a registered project and Core lists it' ($ui.Error -eq '' -and $createdTaskList.Status -eq 'PASS' -and $createdTaskList.Data.tasks.Count -eq 1 -and $createdTaskList.Data.tasks[0].title -eq 'Organize The Existing Work') ($ui.Error + $ui.Output)
-$taskFolderKeys = '02' + '01' + '02' + $existingWorkFolder + '{Enter}' + 'Organize Imported Notes{Enter}' + 'Review existing task files in place{Enter}' + '{Enter}' + '04' + '02' + '14'
+$taskFolderKeys = '02' + '01' + '02' + $existingWorkFolder + '{Enter}' + 'Organize Imported Notes{Enter}' + 'Review existing task files in place{Enter}' + '{Enter}' + '05' + '02' + '14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRegistry } $taskFolderKeys
 $afterFolderTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
 Assert-True 'existing work folder is added as task context without moving its files' ($ui.Error -eq '' -and $afterFolderTaskList.Status -eq 'PASS' -and $afterFolderTaskList.Data.tasks.Count -eq 2 -and (Test-Path -LiteralPath (Join-Path $existingWorkFolder 'notes.md') -PathType Leaf) -and (($ui.Output -replace '\s','').Contains(($existingWorkFolder -replace '\s','')))) ($ui.Error + $ui.Output)

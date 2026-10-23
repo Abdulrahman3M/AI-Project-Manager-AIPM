@@ -259,6 +259,70 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertTrue((task / "Metadata.json").is_file())
         self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
 
+    def test_archive_can_be_unregistered_moved_and_imported_back_from_zip(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Portable Archive", "Round trip through an external ZIP.")
+        operations.write_artifact(task, "Reports/Report.md", b"Round trip content.\n")
+        operations.checkpoint(task, last_verified_action="Did work", next_action="Nothing", completed_work=["Step A"], changed_files=["src/a.py"], test_results=["12 passed"])
+        operations.verify(task, "PASS", "Verified by test.")
+        operations.close(task, "Closed for archive.")
+
+        # Registry removal is refused while the live folder or archive is missing.
+        with self.assertRaises(StateError):
+            operations.unregister_task(task)
+        archive = operations.archive(task, delete_folder=False)
+        with self.assertRaises(StateError):
+            operations.unregister_task(task)
+        operations.delete_task_folder(task)
+        metadata = operations.read_metadata(task)
+        self.assertEqual(metadata["task_record"]["completed_work"], ["Step A"])
+        self.assertTrue(any(event["command"] == "task.checkpoint" for event in metadata["history"]))
+
+        external = self.project_root.parent / f"{task.name}-moved.zip"
+        external.write_bytes(archive["archive_path"].read_bytes())
+        operations.unregister_task(task)
+        archive["archive_path"].unlink()
+        archive["checksum_path"].unlink()
+        with self.assertRaises(StateError):
+            operations.read_task(task)
+
+        tampered = self.project_root.parent / "tampered.zip"
+        with zipfile.ZipFile(external) as source, zipfile.ZipFile(tampered, "w") as target:
+            for item in source.infolist():
+                data = source.read(item.filename)
+                target.writestr(item.filename, b"tampered" if item.filename == "Reports/Report.md" else data)
+        with self.assertRaises(StateError):
+            operations.import_archive(tampered)
+
+        result = operations.import_archive(external)
+        self.assertEqual(result["task_id"], task.name)
+        self.assertEqual(result["task_status"], "COMPLETE")
+        restored = operations.read_task(task)
+        self.assertEqual(restored["completed_work"], ["Step A"])
+        self.assertEqual(restored["changed_files"], ["src/a.py"])
+        self.assertEqual(restored["test_results"], ["12 passed"])
+        self.assertEqual(restored["verification"], {"result": "PASS", "evidence": "Verified by test."})
+        self.assertEqual((task / "Reports" / "Report.md").read_bytes(), b"Round trip content.\n")
+        self.assertTrue((self.project.state_root / "Archive" / f"{task.name}.zip").is_file())
+        with self.assertRaises(StateError):
+            operations.import_archive(external)
+
+    def test_import_accepts_legacy_flat_metadata_archives(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task_id = "Task-2026-10-23-Legacy-Archive-abcdef123456"
+        legacy = {
+            "schema_version": "1.0", "format": "AIPM-Task-Metadata", "task_id": task_id,
+            "title": "Legacy", "scope": "Legacy scope", "plan": "# Legacy\n", "status_override": "COMPLETE",
+            "blockers": [], "verification": None, "report": "Done", "files": [],
+        }
+        legacy_zip = self.project_root.parent / "legacy.zip"
+        with zipfile.ZipFile(legacy_zip, "w") as package:
+            package.writestr("Metadata.json", json.dumps(legacy))
+            package.writestr("Metadat.json", json.dumps(legacy))
+        result = operations.import_archive(legacy_zip)
+        self.assertEqual(result["task_status"], "COMPLETE")
+        self.assertTrue((self.project.state_root / "Tasks" / task_id / "Task-Plan.md").is_file())
+
     def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:
         operations = TaskOperations(self.engine, self.project)
         work = self.project_root / "Manual-Work"

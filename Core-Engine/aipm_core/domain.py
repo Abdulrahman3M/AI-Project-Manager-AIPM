@@ -29,7 +29,7 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
-    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen'}
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister'}
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
@@ -46,7 +46,27 @@ class CoreEngine:
         if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id):
             raise StateError('Invalid Task Identity')
         tasks = manifest.setdefault('tasks', {})
-        if command == 'task.create':
+        if command == 'task.restore':
+            if task_id in tasks:
+                raise StateError('Task Already Exists')
+            record = payload.get('record')
+            allowed = ('title', 'scope', 'plan', 'blockers', 'verification', 'report', 'status_override', 'last_verified_action', 'next_action', 'completed_work', 'changed_files', 'test_results')
+            if not isinstance(record, dict):
+                raise StateError('Invalid Task Input')
+            restored = copy.deepcopy({key: record[key] for key in allowed if key in record})
+            restored.setdefault('blockers', [])
+            restored.setdefault('verification', None)
+            restored.setdefault('report', '')
+            cls._validate_task_record(restored)
+            tasks[task_id] = restored
+        elif command == 'task.unregister':
+            if task_id not in tasks:
+                raise StateError('Task Not Found')
+            del tasks[task_id]
+            manifest['task_id'] = None
+            manifest['task_status'] = 'NOT-STARTED'
+            return
+        elif command == 'task.create':
             if task_id in tasks:
                 raise StateError('Task Already Exists')
             if any(not isinstance(payload.get(key), str) or not payload[key].strip() for key in ('title', 'scope')):
@@ -124,20 +144,24 @@ class CoreEngine:
         for task_id, task in manifest.get('tasks', {}).items():
             if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id) or not isinstance(task, dict):
                 raise StateError('Invalid Task State')
-            if any(not isinstance(task.get(key), str) or not task[key].strip() for key in ('title', 'scope', 'plan')) or not isinstance(task.get('report'), str) or not isinstance(task.get('blockers'), list) or any(not isinstance(text, str) or not text.strip() for text in task['blockers']):
-                raise StateError('Invalid Task State')
-            verification = task.get('verification')
-            if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
-                raise StateError('Invalid Task Evidence')
-            task.setdefault('status_override', None)
-            if task['status_override'] not in (None, 'COMPLETE'):
-                raise StateError('Invalid Task Status Override')
-            for field in ('last_verified_action', 'next_action'):
-                if field in task and (not isinstance(task[field], str) or not task[field].strip()):
-                    raise StateError('Invalid Task Checkpoint')
-            for field in ('completed_work', 'changed_files', 'test_results'):
-                if field in task and (not isinstance(task[field], list) or len(task[field]) > 100 or any(not isinstance(value, str) or not value.strip() for value in task[field])):
-                    raise StateError('Invalid Task Checkpoint')
+            CoreEngine._validate_task_record(task)
+
+    @staticmethod
+    def _validate_task_record(task: dict[str, Any]) -> None:
+        if any(not isinstance(task.get(key), str) or not task[key].strip() for key in ('title', 'scope', 'plan')) or not isinstance(task.get('report'), str) or not isinstance(task.get('blockers'), list) or any(not isinstance(text, str) or not text.strip() for text in task['blockers']):
+            raise StateError('Invalid Task State')
+        verification = task.get('verification')
+        if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
+            raise StateError('Invalid Task Evidence')
+        task.setdefault('status_override', None)
+        if task['status_override'] not in (None, 'COMPLETE'):
+            raise StateError('Invalid Task Status Override')
+        for field in ('last_verified_action', 'next_action'):
+            if field in task and (not isinstance(task[field], str) or not task[field].strip()):
+                raise StateError('Invalid Task Checkpoint')
+        for field in ('completed_work', 'changed_files', 'test_results'):
+            if field in task and (not isinstance(task[field], list) or len(task[field]) > 100 or any(not isinstance(value, str) or not value.strip() for value in task[field])):
+                raise StateError('Invalid Task Checkpoint')
 
     @staticmethod
     def _validate_event(event: Any, project: ManagedProject) -> None:
