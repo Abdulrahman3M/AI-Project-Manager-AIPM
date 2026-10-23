@@ -148,3 +148,13 @@ $importUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskReg
 Assert-True 'Add Existing Work Folder completes without error' ($importUi.Error -eq '') ($importUi.Error + $importUi.Output)
 $afterImportList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
 Assert-True 'task record was created in Core for imported work folder' ($afterImportList.Status -eq 'PASS' -and @($afterImportList.Data.tasks | Where-Object { $_.title -eq 'Imported Work Folder Task' }).Count -eq 1)
+
+$tasksDir = Join-Path (Join-Path $taskRegRoot 'Shared-Project-State-Manager') 'Tasks'
+$existingTaskFolder = Join-Path $tasksDir 'Task-2026-10-23-Manual-Task-Folder-abcdef123456'
+[void](New-Item -ItemType Directory -Path $existingTaskFolder -Force)
+[System.IO.File]::WriteAllText((Join-Path $existingTaskFolder 'Task-Plan.md'), "# Manual Task Folder`n`nRegistered directly in place.`n", (New-Object System.Text.UTF8Encoding($false)))
+$registerExistingTaskKeys = '02' + '01' + '02' + $existingTaskFolder + '{Enter}' + '{Enter}' + '05' + '02' + '14'
+$registerExistingTaskUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskRegRegistry } $registerExistingTaskKeys
+Assert-True 'Add Existing Work Folder registers an existing task folder in place without prompting for a new name or creating a second folder' ($registerExistingTaskUi.Error -eq '' -and $registerExistingTaskUi.Output.Contains('Existing Task Folder Registered')) ($registerExistingTaskUi.Error + $registerExistingTaskUi.Output)
+$afterTaskFolderList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
+Assert-True 'existing task folder is officially registered under its own Task ID' ($afterTaskFolderList.Status -eq 'PASS' -and @($afterTaskFolderList.Data.tasks | Where-Object { $_.task_id -eq 'Task-2026-10-23-Manual-Task-Folder-abcdef123456' -and $_.title -eq 'Manual Task Folder' }).Count -eq 1)

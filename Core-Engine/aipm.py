@@ -74,9 +74,9 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             record = operations.read_task(path)
             return {"schema_version": "1.0", "status": "PASS", "task": record, "task_path": str(path)}
         if args.command == "task-import-work-folder":
-            if not args.title or not args.scope or not args.source:
-                raise StateError("TASK_TITLE_SCOPE_AND_WORK_FOLDER_REQUIRED")
-            path = operations.import_work_folder(args.title, args.scope, Path(args.source))
+            if not args.source:
+                raise StateError("TASK_WORK_FOLDER_REQUIRED")
+            path = operations.import_work_folder(args.title or "", args.scope or "", Path(args.source))
             return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(path), "task_path": str(path)}
         if args.command == "task-list":
             state = engine.execute(CommandEnvelope("task-cli-list", "state.read", "aipm-cli", operations.project.project_id, 0, None, {}))

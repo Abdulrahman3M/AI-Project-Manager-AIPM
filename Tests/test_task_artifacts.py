@@ -335,6 +335,29 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         inventory = operations.read_artifact(task, "References/Existing-Work-Folder.md").decode("utf-8")
         self.assertIn("README.md", inventory)
 
+    def test_existing_task_folder_under_tasks_is_registered_in_place_without_creating_new_folder(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        tasks_root = self.project.state_root / "Tasks"
+        tasks_root.mkdir(parents=True, exist_ok=True)
+        existing_task = tasks_root / "Task-2026-10-23-Agent-Created-1234567890ab"
+        existing_task.mkdir()
+        (existing_task / "Task-Plan.md").write_text("# Agent Created Plan\n\nStep 1: Verify in place.\n", encoding="utf-8")
+        (existing_task / "Reports").mkdir()
+        (existing_task / "Reports" / "Note.md").write_text("Existing report.\n", encoding="utf-8")
+
+        before_dirs = set(tasks_root.iterdir())
+        registered_path = operations.import_work_folder("", "", existing_task)
+        after_dirs = set(tasks_root.iterdir())
+
+        self.assertEqual(registered_path.resolve(), existing_task.resolve())
+        self.assertEqual(before_dirs, after_dirs)
+        read = operations.read_task(existing_task)
+        self.assertEqual(read["task_id"], existing_task.name)
+        self.assertEqual(read["title"], "Agent Created Plan")
+        self.assertIn("Step 1: Verify in place.", read["plan"])
+        self.assertTrue((existing_task / "Reports" / "Note.md").is_file())
+        self.assertTrue((existing_task / "Metadata.json").is_file())
+
     def test_cli_creates_checkpoints_and_transfers_task_context_without_source_paths(self) -> None:
         registry_path = Path(self.temp.name) / "User-Data" / "registry.json"
         ProjectRegistry(registry_path).register(self.project)

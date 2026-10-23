@@ -1123,10 +1123,13 @@ function Invoke-AipmTaskManagement {
             if ($taskChoice -eq 'create' -or $taskChoice -eq 'folder') {
                 $scopePrefix = ''
                 $folderPath = ''
+                $isExistingTaskFolder = $false
+                $defaultTitle = ''
                 if ($taskChoice -eq 'folder') {
                     $folderPath = Read-ValidatedInput -Prompt 'Existing Work Folder Path' -Help 'Enter A Full Path To An Existing Folder Inside The Selected Project. Its Files Will Stay In Place.' -Example ([string]$project.root_path) -Default '' -Validate {
                         param($text)
-                        try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Folder Path.' }
+                        $candidateText = $text.Trim().Trim('"')
+                        try { $candidate = [System.IO.Path]::GetFullPath($candidateText) } catch { return 'Enter A Valid Full Folder Path.' }
                         if (-not (Test-Path -LiteralPath $candidate -PathType Container)) { return 'The Existing Work Folder Must Already Exist.' }
                         $base = [System.IO.Path]::GetFullPath([string]$project.root_path).TrimEnd([char[]]@('\','/')) + [System.IO.Path]::DirectorySeparatorChar
                         if (-not $candidate.StartsWith($base, [System.StringComparison]::OrdinalIgnoreCase)) { return 'Choose A Folder Inside The Selected Registered Project.' }
@@ -1139,9 +1142,41 @@ function Invoke-AipmTaskManagement {
                         return $null
                     }
                     if (-not $folderPath) { continue }
-                    $scopePrefix = 'Existing Work Folder: ' + [System.IO.Path]::GetFullPath($folderPath.Trim()) + "`nFiles Remain In Their Original Location."
+                    $folderPath = [System.IO.Path]::GetFullPath($folderPath.Trim().Trim('"')).TrimEnd([char[]]@('\','/'))
+                    $tasksContainer = (Join-Path (Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager') 'Tasks').TrimEnd([char[]]@('\','/'))
+                    $parentCandidate = (Split-Path -Parent $folderPath).TrimEnd([char[]]@('\','/'))
+                    if ($parentCandidate.Equals($tasksContainer, [System.StringComparison]::OrdinalIgnoreCase)) {
+                        $isExistingTaskFolder = $true
+                        $leafName = [System.IO.Path]::GetFileName($folderPath)
+                        $defaultTitle = ($leafName -replace '^Task-(?:\d{4}-\d{2}-\d{2}-)?', '' -replace '-[0-9a-fA-F]{12}$', '' -replace '[-_]', ' ').Trim()
+                        if (-not $defaultTitle) { $defaultTitle = $leafName }
+                    } else {
+                        $defaultTitle = ''
+                        $scopePrefix = 'Existing Work Folder: ' + $folderPath + "`nFiles Remain In Their Original Location."
+                    }
                 }
-                $title = Read-ValidatedInput -Prompt 'Task Name' -Help 'Use Any Clear, Descriptive Name; Numbered Task Names Are Optional.' -Example 'Organize Existing Work Files' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Task Name.' }; return $null }
+                if ($isExistingTaskFolder) {
+                    $created = Invoke-AipmCore -AppRoot $Root -Command 'task-import-work-folder' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Source $folderPath
+                    if ($created.Status -eq 'PASS') {
+                        $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
+                        $createdTitle = [string]$created.Data.task.title
+                        Show-Notice -Title 'Existing Task Folder Registered' -Lines @(
+                            ('Task: ' + $createdTitle),
+                            ('Task ID: ' + $createdId),
+                            'The Existing Task Folder Was Registered In Place Without Creating A New Folder.'
+                        ) -Kind Success
+                    } else {
+                        Show-Notice -Title 'Task Registration Failed' -Lines @([string]$created.Reason) -Kind Error
+                    }
+                    continue
+                }
+                $title = Read-ValidatedInput -Prompt 'Task Name' -Help 'Use Any Clear, Descriptive Name; Numbered Task Names Are Optional.' -Example 'Organize Existing Work Files' -Default $defaultTitle -Validate {
+                    param($text)
+                    $trimmed = $text.Trim().Trim('"')
+                    if (-not $trimmed) { return 'Enter A Task Name.' }
+                    if ($trimmed -match '^[A-Za-z]:[\\/]' -or $trimmed -match '[\\/]') { return 'Enter A Descriptive Task Name, Not A Folder Path.' }
+                    return $null
+                }
                 if (-not $title) { continue }
                 $scopeHelp = if ($scopePrefix) { 'Describe The Goal Or Next Work For This Existing Folder.' } else { 'Describe The Goal, Boundaries, And Expected Outcome For This Task.' }
                 $scope = Read-ValidatedInput -Prompt 'Task Scope And Goal' -Help $scopeHelp -Example 'Describe The Expected Outcome And Boundaries' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Task Scope And Goal.' }; return $null }

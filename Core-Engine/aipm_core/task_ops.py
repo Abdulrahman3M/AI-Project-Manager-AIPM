@@ -122,14 +122,135 @@ class TaskOperations:
                 package.extractall(task_root)
         self._mutate('task.reopen', task, text=next_work)
 
-    def import_work_folder(self, title: str, scope: str, work_folder: Path) -> Path:
-        """Register an existing project folder and preserve a small, readable inventory."""
+    @staticmethod
+    def _infer_task_record_from_folder(folder: Path, title: str, scope: str) -> dict[str, Any]:
+        """Infer a Core task record from an existing task folder without overwriting its files."""
+        for name in ('Metadata.json', 'Metadat.json'):
+            candidate = folder / name
+            if candidate.is_file():
+                try:
+                    meta = json.loads(candidate.read_text(encoding='utf-8'))
+                    if isinstance(meta, dict):
+                        record = TaskOperations._record_from_metadata(meta)
+                        if title.strip():
+                            record['title'] = title.strip()
+                        if scope.strip():
+                            record['scope'] = scope.strip()
+                        return record
+                except Exception:
+                    pass
+
+        inferred_title = title.strip()
+        inferred_scope = scope.strip()
+        inferred_plan = ''
+        inferred_report = ''
+        inferred_blockers: list[str] = []
+
+        state_file = folder / 'Task-State.md'
+        if state_file.is_file():
+            try:
+                state_text = state_file.read_text(encoding='utf-8', errors='replace')
+                if not inferred_title:
+                    first_line = next((line.strip() for line in state_text.splitlines() if line.strip()), '')
+                    if first_line.startswith('# '):
+                        inferred_title = first_line[2:].strip()
+                if not inferred_scope and '## Scope' in state_text:
+                    after_scope = state_text.split('## Scope', 1)[1]
+                    scope_section = re.split(r'\n##\s+', after_scope, maxsplit=1)[0].strip()
+                    if scope_section:
+                        inferred_scope = scope_section
+            except OSError:
+                pass
+
+        plan_file = folder / 'Task-Plan.md'
+        if plan_file.is_file():
+            try:
+                inferred_plan = plan_file.read_text(encoding='utf-8', errors='replace')
+                if not inferred_title:
+                    first_line = next((line.strip() for line in inferred_plan.splitlines() if line.strip()), '')
+                    if first_line.startswith('# '):
+                        inferred_title = first_line[2:].strip()
+            except OSError:
+                pass
+
+        report_file = folder / 'Final-Report.md'
+        if report_file.is_file():
+            try:
+                inferred_report = report_file.read_text(encoding='utf-8', errors='replace')
+            except OSError:
+                pass
+
+        blockers_file = folder / 'Blockers.md'
+        if blockers_file.is_file():
+            try:
+                inferred_blockers = [line.strip() for line in blockers_file.read_text(encoding='utf-8', errors='replace').splitlines() if line.strip()]
+            except OSError:
+                pass
+
+        if not inferred_title:
+            if folder.name.startswith('Task-'):
+                stem = re.sub(r'^Task-(?:\d{4}-\d{2}-\d{2}-)?', '', folder.name)
+                stem = re.sub(r'-[0-9a-fA-F]{12}$', '', stem)
+                inferred_title = stem.replace('-', ' ').replace('_', ' ').strip() or folder.name
+            else:
+                inferred_title = folder.name
+
+        if not inferred_scope:
+            inferred_scope = f'Existing Work Folder: {folder}\nFiles Remain In Their Original Location.'
+
+        if not inferred_plan.strip():
+            inferred_plan = f'# {inferred_title}\n\n{inferred_scope}\n'
+
+        record: dict[str, Any] = {
+            'title': inferred_title,
+            'scope': inferred_scope,
+            'plan': inferred_plan,
+            'blockers': inferred_blockers,
+            'verification': None,
+            'report': inferred_report,
+            'status_override': None,
+        }
+        CoreEngine._validate_task_record(record)
+        return record
+
+    def import_work_folder(self, title: str = '', scope: str = '', work_folder: Path | None = None) -> Path:
+        """Register an existing project folder or an existing task folder in place without creating duplicates."""
+        if work_folder is None:
+            raise StateError('Existing Work Folder Is Required')
         folder = _canonical(work_folder)
         project_root = _canonical(self.project.root)
         state_root = _canonical(self.root)
-        if not folder.is_dir() or not _inside(folder, project_root) or folder in {state_root, state_root / 'Tasks'}:
+        tasks_root = _canonical(state_root / 'Tasks')
+        if not folder.is_dir() or not _inside(folder, project_root) or folder in {state_root, tasks_root}:
             raise StateError('Existing Work Folder Must Be Inside The Managed Project')
-        task = self.create(title, f'Existing Work Folder: {folder}\n{scope}')
+
+        # Case 1: The folder is already a direct child of Shared-Project-State-Manager/Tasks/
+        if folder.parent == tasks_root:
+            if not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', folder.name):
+                slug = re.sub(r'[^A-Za-z0-9_-]+', '-', folder.name).strip('-')[:100] or 'Task'
+                target_name = f'Task-{slug}'
+                target_folder = tasks_root / target_name
+                if target_folder.exists():
+                    target_folder = tasks_root / f'Task-{slug}-{uuid4().hex[:8]}'
+                os.replace(folder, target_folder)
+                folder = _canonical(target_folder)
+            task_id = folder.name
+            state = self._request('state.read', {})
+            if task_id in state['state'].get('tasks', {}):
+                self.sync_artifacts(folder)
+                return folder
+            record = self._infer_task_record_from_folder(folder, title, scope)
+            self._request('task.restore', {'task_id': task_id, 'record': record}, revision=state['revision'], mutation=True)
+            self.sync_artifacts(folder)
+            return folder
+
+        # Case 2: The folder is elsewhere inside the managed project; register a task referencing it in place.
+        record_info = self._infer_task_record_from_folder(folder, title, scope)
+        effective_title = record_info['title']
+        effective_scope = scope.strip() if scope.strip() else f'Existing Work Folder: {folder}\nFiles Remain In Their Original Location.'
+        if f'{folder}' not in effective_scope:
+            effective_scope = f'Existing Work Folder: {folder}\n{effective_scope}'
+        task = self.create(effective_title, effective_scope)
         entries = []
         for entry in sorted(folder.rglob('*')):
             if entry.is_file():

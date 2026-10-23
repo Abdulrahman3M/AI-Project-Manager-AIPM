@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.5.5] — Register Existing Task Folders In Place Without Creating Duplicates (Repository Update; Not Published)
+
+- `import_work_folder` (`task-import-work-folder`) now detects when the selected folder is already a direct child of `Shared-Project-State-Manager/Tasks/`: instead of calling `create()` and generating a second `Task-...` folder, it registers the existing folder directly in place (`task.restore`) and infers its title, scope, plan, blockers, and report from existing files (`Metadata.json`, `Task-State.md`, `Task-Plan.md`, `Final-Report.md`, `Blockers.md`, or the folder name).
+- Updated the PowerShell TUI `Add Existing Work Folder` flow: when an existing task folder under `Shared-Project-State-Manager/Tasks/` is entered, it is registered immediately in place without prompting for a new task name or scope, and `Task Name` validation now rejects folder paths so a pasted path can never become a task slug.
+- Synchronized the platform and PowerShell TUI versions at `1.5.5`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.4] — Accept Agent-Created Task Folders As Existing Work Folders (Repository Update; Not Published)
 
 - `import_work_folder` now accepts specific folders inside `Shared-Project-State-Manager` (for example an agent-created `Tasks/<Task-ID>` folder) and rejects only the state root and its `Tasks` container, compared on canonical paths.

@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.5] — Register Existing Task Folders Directly In Place (Not Published)
+
+- When `Add Existing Work Folder` receives a folder inside `Shared-Project-State-Manager/Tasks/`, the TUI now registers that exact folder in place immediately without prompting for a new task name or creating a second folder.
+- Added validation on `Task Name` to reject folder paths so a pasted path is never used as a task name.
+- Synchronized the TUI version with AIPM platform `1.5.5`.
+
 ## [1.5.4] — Add Existing Work Folder Accepts Agent-Created Task Folders (Not Published)
 
 - `Add Existing Work Folder` no longer rejects existing folders inside `Shared-Project-State-Manager`; only the state root and its `Tasks` root are refused.
