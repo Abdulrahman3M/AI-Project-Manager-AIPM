@@ -1,5 +1,10 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.4] — Add Existing Work Folder Accepts Agent-Created Task Folders (Not Published)
+
+- `Add Existing Work Folder` no longer rejects existing folders inside `Shared-Project-State-Manager`; only the state root and its `Tasks` root are refused.
+- Synchronized the TUI version with AIPM platform `1.5.4`.
+
 ## [1.5.3] — Registry Removal Choice And Import Archived Task From ZIP (Not Published)
 
 - After a verified archive's live folder is deleted, the archive flow now offers `Remove Task From AIPM Registry?` (the archive is always kept).

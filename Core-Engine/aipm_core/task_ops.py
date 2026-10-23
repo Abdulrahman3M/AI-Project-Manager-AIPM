@@ -126,7 +126,8 @@ class TaskOperations:
         """Register an existing project folder and preserve a small, readable inventory."""
         folder = _canonical(work_folder)
         project_root = _canonical(self.project.root)
-        if not folder.is_dir() or not _inside(folder, project_root) or folder == self.root:
+        state_root = _canonical(self.root)
+        if not folder.is_dir() or not _inside(folder, project_root) or folder in {state_root, state_root / 'Tasks'}:
             raise StateError('Existing Work Folder Must Be Inside The Managed Project')
         task = self.create(title, f'Existing Work Folder: {folder}\n{scope}')
         entries = []

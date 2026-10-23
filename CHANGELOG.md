@@ -1,5 +1,10 @@
 # AIPM Change Log
 
+## [1.5.4] — Accept Agent-Created Task Folders As Existing Work Folders (Repository Update; Not Published)
+
+- `import_work_folder` now accepts specific folders inside `Shared-Project-State-Manager` (for example an agent-created `Tasks/<Task-ID>` folder) and rejects only the state root and its `Tasks` container, compared on canonical paths.
+- Synchronized the platform and PowerShell TUI versions at `1.5.4`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.3] — Self-Contained Archive Metadata, Registry Removal And ZIP Import (Repository Update; Not Published)
 
 - `Metadata.json` / `Metadat.json` (schema `1.1`) now embeds the complete Core `task_record` and the task's ordered command `history` in addition to the readable fields and file inventory, so an archive alone can restore a task even if it was removed from `State-Manifest.json`.

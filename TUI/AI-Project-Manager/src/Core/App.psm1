@@ -1131,8 +1131,10 @@ function Invoke-AipmTaskManagement {
                         $base = [System.IO.Path]::GetFullPath([string]$project.root_path).TrimEnd([char[]]@('\','/')) + [System.IO.Path]::DirectorySeparatorChar
                         if (-not $candidate.StartsWith($base, [System.StringComparison]::OrdinalIgnoreCase)) { return 'Choose A Folder Inside The Selected Registered Project.' }
                         $stateBase = (Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager').TrimEnd([char[]]@('\','/'))
-                        if ($candidate.TrimEnd([char[]]@('\','/')).Equals($stateBase, [System.StringComparison]::OrdinalIgnoreCase) -or $candidate.StartsWith($stateBase + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
-                            return 'Choose A Project Work Folder Outside Shared-Project-State-Manager.'
+                        # Agent-created task folders inside Shared-Project-State-Manager are valid; only the state root and its Tasks container are rejected.
+                        $trimmedCandidate = $candidate.TrimEnd([char[]]@('\','/'))
+                        if ($trimmedCandidate.Equals($stateBase, [System.StringComparison]::OrdinalIgnoreCase) -or $trimmedCandidate.Equals((Join-Path $stateBase 'Tasks'), [System.StringComparison]::OrdinalIgnoreCase)) {
+                            return 'Choose A Specific Work Folder, Not The Shared-Project-State-Manager Or Its Tasks Root.'
                         }
                         return $null
                     }
