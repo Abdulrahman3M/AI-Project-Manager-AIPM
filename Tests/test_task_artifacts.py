@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -150,6 +151,35 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         read = operations.read_task(task)
         self.assertEqual(read["next_action"], "Unknown; reconcile the task with current project evidence.")
+
+    def test_task_can_be_closed_reopened_and_archived_without_losing_its_record(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Close And Archive", "Preserve a completed task as a portable archive.")
+        operations.write_artifact(task, "Reports/Completion.md", b"Completed work.\n")
+
+        operations.close(task, "The task is complete and its evidence is recorded.")
+        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+        archive = operations.archive(task)
+        self.assertTrue(archive["archive_path"].is_file())
+        self.assertTrue(archive["checksum_path"].is_file())
+        with zipfile.ZipFile(archive["archive_path"]) as package:
+            self.assertIn("Reports/Completion.md", package.namelist())
+        self.assertTrue(task.is_dir())
+
+        operations.reopen(task, "Follow-up work is required.")
+        self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
+
+    def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        work = self.project_root / "Manual-Work"
+        work.mkdir()
+        (work / "README.md").write_text("Existing task work.\n", encoding="utf-8")
+        task = operations.import_work_folder("Imported Work", "Continue the existing work.", work)
+
+        read = operations.read_task(task)
+        self.assertIn(str(work.resolve()), read["scope"])
+        inventory = operations.read_artifact(task, "References/Existing-Work-Folder.md").decode("utf-8")
+        self.assertIn("README.md", inventory)
 
     def test_cli_creates_checkpoints_and_transfers_task_context_without_source_paths(self) -> None:
         registry_path = Path(self.temp.name) / "User-Data" / "registry.json"

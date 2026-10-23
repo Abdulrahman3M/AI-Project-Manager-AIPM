@@ -125,3 +125,26 @@ Assert-Equal 'a failed refresh reports blocked status and preserves the last kno
 Assert-True 'failed refresh exposes the exact last known-good snapshot instance' ($snapshotLifecycleResults.FailedRefresh -and $snapshotLifecycleResults.SuccessfulRefresh.Snapshot -and $snapshotLifecycleResults.FailedRefresh.Snapshot -and [object]::ReferenceEquals($snapshotLifecycleResults.SuccessfulRefresh.Snapshot, $snapshotLifecycleResults.FailedRefresh.Snapshot))
 Assert-True 'the dashboard surfaces a failed Refresh while retaining the known-good session' ($snapshotLifecycleResults.FailedRefreshUi -and $snapshotLifecycleResults.FailedRefreshUi.Error -eq '' -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Refresh Failed: TEST_REFRESH_BLOCKED') -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Last Snapshot Preserved') -and $snapshotLifecycleResults.FailedRefreshUi.Output.Contains('Core Ready'))
 Assert-Equal 'failed Refresh makes only one new Core call before preserving the snapshot' 4 $snapshotLifecycleResults.FailedRefreshUiReadCount
+
+Set-TestGroup 'Task Management Regression'
+$taskRegRoot = Join-Path (Get-TestWork) 'Task Creation Test Project'
+[void](New-Item -ItemType Directory -Path $taskRegRoot -Force)
+$taskRegRegistry = Join-Path (Get-TestWork) 'task-creation-regression-registry.json'
+$taskRegProjectId = 'Task-Create-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+$regResult = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $taskRegRegistry -ProjectRoot $taskRegRoot -ProjectId $taskRegProjectId -Alias 'Task Create Regression Fixture'
+Assert-Equal 'project registers for task creation test' 'PASS' $regResult.Status
+
+$createKeys = '02' + '01' + '01' + 'Regression Test Task{Enter}' + 'Verify task creation under strict mode{Enter}' + '{Enter}' + '04' + '02' + '14'
+$createUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskRegRegistry } $createKeys
+Assert-True 'Create New Task completes without uninitialized folderPath error' ($createUi.Error -eq '' -and -not $createUi.Output.Contains('folderPath')) ($createUi.Error + $createUi.Output)
+$createdList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
+Assert-True 'task record was created in Core by Create New Task' ($createdList.Status -eq 'PASS' -and @($createdList.Data.tasks | Where-Object { $_.title -eq 'Regression Test Task' }).Count -eq 1)
+
+$workFolder = Join-Path $taskRegRoot 'Existing-Work'
+[void](New-Item -ItemType Directory -Path $workFolder -Force)
+[System.IO.File]::WriteAllText((Join-Path $workFolder 'file.txt'), 'Work file content', (New-Object System.Text.UTF8Encoding($false)))
+$importKeys = '02' + '01' + '02' + $workFolder + '{Enter}' + 'Imported Work Folder Task{Enter}' + 'Verify folder import{Enter}' + '{Enter}' + '04' + '02' + '14'
+$importUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $taskRegRegistry } $importKeys
+Assert-True 'Add Existing Work Folder completes without error' ($importUi.Error -eq '') ($importUi.Error + $importUi.Output)
+$afterImportList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
+Assert-True 'task record was created in Core for imported work folder' ($afterImportList.Status -eq 'PASS' -and @($afterImportList.Data.tasks | Where-Object { $_.title -eq 'Imported Work Folder Task' }).Count -eq 1)

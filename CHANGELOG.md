@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.5.0] — Task Lifecycle And Existing Work Registration (Repository Update; Not Published)
+
+- Added explicit complete/reopen task lifecycle actions and integrity-checked ZIP archives for completed task records.
+- Changed existing work-folder registration to create a reference inventory instead of only embedding a path in task scope.
+- Repaired Create New Task Core invocation under PowerShell strict mode so new task creation succeeds independently of work-folder imports.
+- Added reviewed Git status and confirmed local commit actions that exclude AIPM state; no remote push is performed.
+- Synchronized the platform and PowerShell TUI versions at `1.5.0`. No GitHub Release or tag was created.
+
 ## [1.4.9] — Escape Exit Confirmation And Apache License (Repository Update; Not Published)
 
 - Added an explicit "Exit AI Project Manager?" confirmation when pressing Esc at the main dashboard, so repeated Esc navigation no longer closes the PowerShell window immediately; choosing No returns to the Task Dashboard and choosing Exit AIPM closes the application.

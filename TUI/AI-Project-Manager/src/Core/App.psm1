@@ -782,7 +782,7 @@ function Invoke-AipmRegistryManagement {
 }
 
 function Show-AipmTaskRecord {
-    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [Parameter(Mandatory)]$TaskRow)
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)]$TaskRow)
     $recordResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
     if ($recordResult.Status -ne 'PASS') {
         Show-Notice -Title 'Task Could Not Be Read' -Lines @([string]$recordResult.Reason) -Kind Error
@@ -817,6 +817,11 @@ function Show-AipmTaskRecord {
             (New-MenuItem -Label 'Clear Blockers' -Desc 'Remove All Recorded Blockers After They Are Resolved.' -Value 'clear' -Icon 'Success'),
             (New-MenuItem -Label 'Record Verification' -Desc 'Record A Result And Its Evidence; AIPM Does Not Run Tests.' -Value 'verify' -Icon 'Success'),
             (New-MenuItem -Label 'Update Task Report' -Desc 'Save A Progress Or Completion Note In Task State.' -Value 'report' -Icon 'Handoff'),
+            (New-MenuItem -Label 'Mark Task Complete' -Desc 'Close This Task With A Completion Note.' -Value 'close' -Icon 'Success'),
+            (New-MenuItem -Label 'Reopen Task' -Desc 'Return A Completed Task To In-Progress Work.' -Value 'reopen' -Icon 'Progress'),
+            (New-MenuItem -Label 'Archive Completed Task' -Desc 'Create A Portable ZIP And SHA-256 Checksum For This Completed Task.' -Value 'archive' -Icon 'Project'),
+            (New-MenuItem -Label 'Review Git Changes' -Desc 'View The Current Git Changes For This Managed Project.' -Value 'git-status' -Icon 'Project'),
+            (New-MenuItem -Label 'Commit Git Changes' -Desc 'Stage Project Changes Excluding AIPM State, Then Create A Local Commit.' -Value 'git-commit' -Icon 'Success'),
             (New-MenuItem -Label 'Attach Plan, Report Or Supporting File' -Desc 'Copy One Selected File Into This Task; The Original File Stays In Place.' -Value 'attach' -Icon 'Item'),
             (New-MenuItem -Label 'View Attached Task Files' -Desc 'List Supporting Files Already Stored In This Task.' -Value 'artifacts' -Icon 'Project'),
             (New-MenuItem -Label 'Back' -Desc 'Return To The Project Task List.' -Value 'back' -Icon 'Exit')
@@ -825,6 +830,31 @@ function Show-AipmTaskRecord {
         if ($action -in @($null, 'back', 'Back', '__QUIT__')) { return }
         if ($action -eq 'view') {
             [void](Show-AipmPage -Title ('Task Status And Details: ' + [string]$task.title) -Lines $lines)
+            continue
+        }
+        if ($action -eq 'git-status') {
+            $projectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+            $git = Find-Executable -Name 'git'
+            if (-not $git) { Show-Notice -Title 'Git Is Unavailable' -Lines @('Install Git Or Add It To PATH, Then Try Again.') -Kind Error; continue }
+            $projectResult = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'status', '--short') -TimeoutSec 10
+            if (-not $projectResult.Started -or $projectResult.TimedOut -or $projectResult.ExitCode -ne 0) { Show-Notice -Title 'Git Status Failed' -Lines @($projectResult.StdErr.Trim()) -Kind Error; continue }
+            $gitLines = @($projectResult.StdOut.Trim() -split "`r?`n" | Where-Object { $_ })
+            if ($gitLines.Count -eq 0) { $gitLines = @('Working Tree Is Clean.') }
+            [void](Show-AipmPage -Title 'Git Changes' -Lines $gitLines)
+            continue
+        }
+        if ($action -eq 'git-commit') {
+            $message = Read-ValidatedInput -Prompt 'Git Commit Message' -Help 'AIPM Stages Project Changes While Excluding Shared-Project-State-Manager, Then Creates A Local Commit.' -Example ('Complete task: ' + [string]$task.title) -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Commit Message.' }; return $null }
+            if (-not $message) { continue }
+            if (-not (Show-Confirm -Title 'Create Local Git Commit?' -Message 'This Stages The Current Project Changes, Excludes AIPM State, And Creates A Local Git Commit. It Does Not Push To Any Remote.' -YesLabel 'Commit Changes' -YesDesc 'Create The Local Commit.' -NoLabel 'Cancel' -NoDesc 'Return Without Changing Git.' -Default $false)) { continue }
+            $git = Find-Executable -Name 'git'
+            if (-not $git) { Show-Notice -Title 'Git Is Unavailable' -Lines @('Install Git Or Add It To PATH, Then Try Again.') -Kind Error; continue }
+            $projectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+            $stage = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'add', '-A', '--', '.', ':!Shared-Project-State-Manager/**') -TimeoutSec 30
+            if (-not $stage.Started -or $stage.TimedOut -or $stage.ExitCode -ne 0) { Show-Notice -Title 'Git Stage Failed' -Lines @($stage.StdErr.Trim()) -Kind Error; continue }
+            $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '-m', $message.Trim()) -TimeoutSec 30
+            if (-not $commit.Started -or $commit.TimedOut -or $commit.ExitCode -ne 0) { Show-Notice -Title 'Git Commit Failed' -Lines @($commit.StdErr.Trim(), $commit.StdOut.Trim()) -Kind Error; continue }
+            Show-Notice -Title 'Git Commit Created' -Lines @($commit.StdOut.Trim()) -Kind Success
             continue
         }
         if ($action -eq '__HELP__') {
@@ -918,6 +948,16 @@ function Show-AipmTaskRecord {
                 }
             }
             continue
+        } elseif ($action -eq 'archive') {
+            if (-not (Show-Confirm -Title 'Archive Completed Task?' -Message 'AIPM Creates A ZIP And SHA-256 Checksum In Shared-Project-State-Manager/Archive. The Live Task Record Remains Available.' -YesLabel 'Create Archive' -YesDesc 'Create A Portable Integrity-Checked Archive.' -NoLabel 'Cancel' -NoDesc 'Return Without Creating An Archive.' -Default $false)) { continue }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-archive' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+            if ($updated.Status -eq 'PASS') { Show-Notice -Title 'Task Archived' -Lines @([string]$updated.Data.archive_path, [string]$updated.Data.checksum_path) -Kind Success; continue }
+        } elseif ($action -eq 'close' -or $action -eq 'reopen') {
+            $promptTitle = if ($action -eq 'close') { 'Completion Note' } else { 'Reopen Note' }
+            $entered = Read-ValidatedInput -Prompt $promptTitle -Help 'Record The Reason And Current Evidence In The Authoritative Task State.' -Example 'Work Is Complete And Ready For Handoff.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Note.' }; return $null }
+            if (-not $entered) { continue }
+            $command = if ($action -eq 'close') { 'task-close' } else { 'task-reopen' }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command $command -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Text $entered.Trim()
         } elseif ($action -eq 'checkpoint') {
             $lastAction = Read-ValidatedInput -Prompt 'Last Verified Action' -Help 'State The Most Recent Action Confirmed By Direct Evidence.' -Example 'Reviewed Existing Task Files; No Source Files Changed.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Last Verified Action.' }; return $null }
             if (-not $lastAction) { continue }
@@ -1027,7 +1067,11 @@ function Invoke-AipmTaskManagement {
                 $scope = Read-ValidatedInput -Prompt 'Task Scope And Goal' -Help $scopeHelp -Example 'Describe The Expected Outcome And Boundaries' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Task Scope And Goal.' }; return $null }
                 if (-not $scope) { continue }
                 $finalScope = if ($scopePrefix) { $scopePrefix + "`nTask Goal: " + $scope.Trim() } else { $scope.Trim() }
-                $created = Invoke-AipmCore -AppRoot $Root -Command 'task-create' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Title $title.Trim() -Scope $finalScope
+                $created = if ($taskChoice -eq 'folder') {
+                    Invoke-AipmCore -AppRoot $Root -Command 'task-import-work-folder' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Title $title.Trim() -Scope $finalScope -Source $folderPath
+                } else {
+                    Invoke-AipmCore -AppRoot $Root -Command 'task-create' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Title $title.Trim() -Scope $finalScope
+                }
                 if ($created.Status -eq 'PASS') {
                     $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
                     Show-Notice -Title 'Task Created' -Lines @(('Task: ' + $title.Trim()), ('Task ID: ' + $createdId), 'The Task Record Was Saved In AIPM Project State. No Project Files Were Moved Or Edited.') -Kind Success
@@ -1044,7 +1088,7 @@ function Invoke-AipmTaskManagement {
                 $selectedTaskId = Show-Menu -Title 'Open Existing Task' -Items $existingItems
                 if (-not $selectedTaskId -or $selectedTaskId -in @('back','__QUIT__')) { continue }
                 $selectedTask = @($rows | Where-Object { [string]$_.task_id -eq [string]$selectedTaskId }) | Select-Object -First 1
-                if ($selectedTask) { Show-AipmTaskRecord -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -TaskRow $selectedTask }
+                if ($selectedTask) { Show-AipmTaskRecord -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -ProjectRoot ([string]$project.root_path) -TaskRow $selectedTask }
             }
         }
     }

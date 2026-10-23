@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.4.9",
+  "platform_version": "1.5.0",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [

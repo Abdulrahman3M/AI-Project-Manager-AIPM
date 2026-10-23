@@ -29,7 +29,7 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-artifact-list', 'task-artifact-write')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-artifact-list', 'task-artifact-write')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',

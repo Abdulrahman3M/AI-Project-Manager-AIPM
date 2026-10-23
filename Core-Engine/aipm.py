@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -66,6 +66,11 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             path = operations.create(args.title, args.scope)
             record = operations.read_task(path)
             return {"schema_version": "1.0", "status": "PASS", "task": record, "task_path": str(path)}
+        if args.command == "task-import-work-folder":
+            if not args.title or not args.scope or not args.source:
+                raise StateError("TASK_TITLE_SCOPE_AND_WORK_FOLDER_REQUIRED")
+            path = operations.import_work_folder(args.title, args.scope, Path(args.source))
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(path), "task_path": str(path)}
         if args.command == "task-list":
             state = engine.execute(CommandEnvelope("task-cli-list", "state.read", "aipm-cli", operations.project.project_id, 0, None, {}))
             rows = []
@@ -101,6 +106,19 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
                 raise StateError("TASK_REPORT_REQUIRED")
             operations.report(task, args.text)
             return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
+        if args.command == "task-close":
+            if not args.text:
+                raise StateError("TASK_CLOSE_NOTE_REQUIRED")
+            operations.close(task, args.text)
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
+        if args.command == "task-reopen":
+            if not args.text:
+                raise StateError("TASK_REOPEN_NOTE_REQUIRED")
+            operations.reopen(task, args.text)
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
+        if args.command == "task-archive":
+            archive = operations.archive(task)
+            return {"schema_version": "1.0", "status": "PASS", "archive_path": str(archive["archive_path"]), "checksum_path": str(archive["checksum_path"])}
         if args.command == "task-checkpoint":
             if not args.last_verified_action or not args.next_action:
                 raise StateError("CHECKPOINT_ACTIONS_REQUIRED")

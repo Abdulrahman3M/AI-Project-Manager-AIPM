@@ -29,12 +29,14 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
-    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint'}
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen'}
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
         if task['blockers']:
             return 'BLOCKED'
+        if task.get('status_override') == 'COMPLETE':
+            return 'COMPLETE'
         verification = task['verification']
         return 'COMPLETE' if verification and verification['result'] == 'PASS' and verification['evidence'].strip() and task['report'].strip() else 'IN-PROGRESS'
 
@@ -49,7 +51,7 @@ class CoreEngine:
                 raise StateError('Task Already Exists')
             if any(not isinstance(payload.get(key), str) or not payload[key].strip() for key in ('title', 'scope')):
                 raise StateError('Invalid Task Input')
-            tasks[task_id] = {'title': payload['title'], 'scope': payload['scope'], 'plan': f"# {payload['title']}\n\n{payload['scope']}\n", 'blockers': [], 'verification': None, 'report': ''}
+            tasks[task_id] = {'title': payload['title'], 'scope': payload['scope'], 'plan': f"# {payload['title']}\n\n{payload['scope']}\n", 'blockers': [], 'verification': None, 'report': '', 'status_override': None}
         else:
             if task_id not in tasks:
                 raise StateError('Task Not Found')
@@ -83,6 +85,18 @@ class CoreEngine:
                     if not isinstance(values, list) or len(values) > 100 or any(not isinstance(value, str) or not value.strip() for value in values):
                         raise StateError('Invalid Task Checkpoint')
                     task[field] = values
+            elif command == 'task.close':
+                text = payload.get('text')
+                if not isinstance(text, str) or not text.strip():
+                    raise StateError('Invalid Task Close Note')
+                task['status_override'] = 'COMPLETE'
+                task['report'] = text
+            elif command == 'task.reopen':
+                text = payload.get('text')
+                if not isinstance(text, str) or not text.strip():
+                    raise StateError('Invalid Task Reopen Note')
+                task['status_override'] = None
+                task['report'] = text
             else:
                 raise StateError('Unsupported Task Command')
         manifest['task_id'] = task_id
@@ -110,6 +124,8 @@ class CoreEngine:
             verification = task.get('verification')
             if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
                 raise StateError('Invalid Task Evidence')
+            if task.get('status_override') not in (None, 'COMPLETE'):
+                raise StateError('Invalid Task Status Override')
             for field in ('last_verified_action', 'next_action'):
                 if field in task and (not isinstance(task[field], str) or not task[field].strip()):
                     raise StateError('Invalid Task Checkpoint')

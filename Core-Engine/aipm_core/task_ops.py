@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import zipfile
 from typing import Any, Iterator
 from uuid import uuid4
 
@@ -100,6 +101,57 @@ class TaskOperations:
 
     def report(self, task: Path, text: str) -> None:
         self._mutate('task.report', task, text=text)
+
+    def close(self, task: Path, completion_note: str) -> None:
+        """Mark a task complete with a user-authored closeout note."""
+        self._mutate('task.close', task, text=completion_note)
+
+    def reopen(self, task: Path, next_work: str) -> None:
+        """Return a closed task to active work without losing its history."""
+        self._mutate('task.reopen', task, text=next_work)
+
+    def import_work_folder(self, title: str, scope: str, work_folder: Path) -> Path:
+        """Register an existing project folder and preserve a small, readable inventory."""
+        folder = _canonical(work_folder)
+        project_root = _canonical(self.project.root)
+        if not folder.is_dir() or not _inside(folder, project_root) or folder == self.root:
+            raise StateError('Existing Work Folder Must Be Inside The Managed Project')
+        task = self.create(title, f'Existing Work Folder: {folder}\n{scope}')
+        entries = []
+        for entry in sorted(folder.rglob('*')):
+            if entry.is_file():
+                relative = entry.relative_to(folder).as_posix()
+                if relative.startswith('.git/') or relative.startswith('Shared-Project-State-Manager/'):
+                    continue
+                entries.append(f'- `{relative}` ({entry.stat().st_size} bytes)')
+                if len(entries) >= 500:
+                    entries.append('- Inventory truncated after 500 files.')
+                    break
+        body = '# Existing Work Folder\n\n'
+        body += f'Original folder: `{folder}`\n\n'
+        body += 'Files remain at their original paths. This inventory records the folder at registration time.\n\n'
+        body += '## Files\n\n' + ('\n'.join(entries) if entries else '_No files found._') + '\n'
+        self.write_artifact(task, 'References/Existing-Work-Folder.md', body.encode('utf-8'))
+        return task
+
+    def archive(self, task: Path) -> dict[str, Path]:
+        """Create an integrity-checked portable ZIP while keeping the live task record."""
+        task_root = self._task_path(task)
+        if self.read_task(task)['task_status'] != 'COMPLETE':
+            raise StateError('Only Completed Tasks Can Be Archived')
+        archive_root = self.root / 'Archive'
+        archive_root.mkdir(parents=True, exist_ok=True)
+        archive_path = archive_root / f'{task_root.name}.zip'
+        if archive_path.exists():
+            raise StateError('Task Archive Already Exists')
+        with zipfile.ZipFile(archive_path, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as package:
+            for entry in sorted(task_root.rglob('*')):
+                if entry.is_file():
+                    package.write(entry, entry.relative_to(task_root).as_posix())
+        digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+        checksum_path = archive_path.with_suffix('.zip.sha256')
+        checksum_path.write_text(f'{digest}  {archive_path.name}\n', encoding='ascii', newline='\n')
+        return {'archive_path': archive_path, 'checksum_path': checksum_path}
 
     def read_task(self, task: Path) -> dict[str, Any]:
         task_id = self._task_id(task)

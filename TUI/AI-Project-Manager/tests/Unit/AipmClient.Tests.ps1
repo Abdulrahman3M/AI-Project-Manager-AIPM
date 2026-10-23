@@ -43,6 +43,12 @@ Assert-Equal 'task create crosses the Core client boundary' 'PASS' $createdTask.
 Assert-Equal 'task create returns the requested title from Core state' 'Organize Existing Work' $createdTask.Data.task.title
 $listedTasks = Invoke-AipmCore -AppRoot $appRoot -Command 'task-list' -RegistryPath $taskRegistry -ProjectId $taskProjectId
 Assert-Equal 'task list returns the Core-authoritative new task' 'Organize Existing Work' $listedTasks.Data.tasks[0].title
+$importWorkFolder = Join-Path $taskProjectRoot 'Incoming-Work-Folder'
+[void](New-Item -ItemType Directory -Path $importWorkFolder -Force)
+[System.IO.File]::WriteAllText((Join-Path $importWorkFolder 'notes.md'), 'Task notes remain in place.', (New-Object System.Text.UTF8Encoding($false)))
+$importedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-import-work-folder' -RegistryPath $taskRegistry -ProjectId $taskProjectId -Title 'Imported Existing Folder' -Scope 'Track work in place' -Source $importWorkFolder
+Assert-Equal 'task import work folder passes validated path through the Core client boundary' 'PASS' $importedTask.Status
+Assert-Equal 'task import work folder returns the requested title from Core state' 'Imported Existing Folder' $importedTask.Data.task.title
 $taskId = [System.IO.Path]::GetFileName([string]$createdTask.Data.task_path)
 $plannedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-plan' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Text 'Review the existing folder without moving source files.'
 Assert-Equal 'task plan updates through the whitelisted Core client' 'PASS' $plannedTask.Status

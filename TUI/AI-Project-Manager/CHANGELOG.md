@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.0] — Task Lifecycle And Existing Work Registration (Not Published)
+
+- Added task close, reopen, and portable archive actions to the task management menu.
+- Added a separate existing-work-folder registration flow that records an inventory in task references.
+- Repaired Create New Task Core invocation under PowerShell strict mode to ensure it does not evaluate or pass an uninitialized work-folder path.
+
 ## [1.4.9] — Escape Exit Confirmation And Apache License (Not Published)
 
 - Pressing Esc at the main dashboard now opens an "Exit AI Project Manager?" confirmation instead of closing PowerShell immediately. Encountering the prompt requires an explicit "Exit AIPM" choice; "Stay Here" returns to the Task Dashboard.
