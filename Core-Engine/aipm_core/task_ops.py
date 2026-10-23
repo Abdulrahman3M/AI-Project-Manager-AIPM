@@ -139,6 +139,7 @@ class TaskOperations:
         task_root = self._task_path(task)
         if self.read_task(task)['task_status'] != 'COMPLETE':
             raise StateError('Only Completed Tasks Can Be Archived')
+        self.sync_artifacts(task)
         archive_root = self.root / 'Archive'
         archive_root.mkdir(parents=True, exist_ok=True)
         archive_path = archive_root / f'{task_root.name}.zip'

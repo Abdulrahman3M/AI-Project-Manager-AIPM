@@ -1,5 +1,14 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.1] — Legacy State Recovery, Git Boundary Hardening And Strict-Mode Reliability (Not Published)
+
+- Initialized `$folderPath` unconditionally in task creation and work-folder flows under PowerShell strict mode, and added immediate input validation rejecting `Shared-Project-State-Manager` as a work folder.
+- Made `$ProjectRoot` optional with automatic registry lookup in `Show-AipmTaskRecord`, and updated task detail views to display the live `task_status` from Core.
+- Guarded `Review Git Changes` and `Commit Git Changes` so they verify the managed project root is the top-level Git repository before running `git status`, `git add`, or `git commit`.
+- Updated `Register A Project` to reuse the existing `project_id` from `Shared-Project-State-Manager/Project-Manifest.json` when re-registering a previously managed project folder.
+- Extended `Write-AppLog` to accept `WARNING` in addition to `WARN`, preventing parameter validation errors when logging design configuration warnings.
+- Updated TUI regression tests for the expanded 15-item task management menu and added lifecycle coverage for task close, archive, and reopen.
+
 ## [1.5.0] — Task Lifecycle And Existing Work Registration (Not Published)
 
 - Added task close, reopen, and portable archive actions to the task management menu.

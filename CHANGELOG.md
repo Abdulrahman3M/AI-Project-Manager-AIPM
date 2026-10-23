@@ -1,5 +1,15 @@
 # AIPM Change Log
 
+## [1.5.1] — Legacy Task State Recovery, Lifecycle Hardening And TUI Reliability (Repository Update; Not Published)
+
+- Fixed `INVALID_STATE` (`Task History Conflicts With State`) when creating or updating tasks in projects containing pre-`1.5.0` task records that lacked `status_override`, and automatically recovered stranded `Pending-Commit.json` transactions on read.
+- Hardened Core task lifecycle state transitions: `task.reopen` now clears prior `PASS` verification so verified tasks reopen to `IN-PROGRESS`, `task.plan` clears `status_override`, `task.verify` clears `status_override` on non-`PASS` results, and `task.close` rejects closing tasks that still have active blockers.
+- Synced generated task markdown projections before creating task archives and automatically materialized missing task folders after recovering interrupted task commits.
+- Hardened TUI Git status and commit actions to verify that the managed project root is its own Git repository root before executing Git commands, preventing accidental staging or commits in a parent repository.
+- Updated TUI project registration to reuse an existing `Project-Manifest.json` `project_id` when re-registering an existing managed project folder, and validated existing project state before registration.
+- Initialized `$folderPath` unconditionally in TUI task creation under PowerShell strict mode, made `$ProjectRoot` optional with automatic registry resolution in `Show-AipmTaskRecord`, displayed live `$task.task_status` in task detail views, and accepted `WARNING` in `Write-AppLog`.
+- Synchronized the platform and PowerShell TUI versions at `1.5.1`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.0] — Task Lifecycle And Existing Work Registration (Repository Update; Not Published)
 
 - Added explicit complete/reopen task lifecycle actions and integrity-checked ZIP archives for completed task records.

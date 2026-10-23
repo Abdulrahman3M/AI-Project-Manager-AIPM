@@ -61,7 +61,7 @@ class CoreEngine:
                 if not isinstance(text, str) or not text.strip():
                     raise StateError('Invalid Task Text')
                 if command == 'task.plan':
-                    task.update(plan=text, verification=None, report='')
+                    task.update(plan=text, verification=None, report='', status_override=None)
                 elif command == 'task.report':
                     task['report'] = text
                 else:
@@ -73,6 +73,8 @@ class CoreEngine:
                 if result not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(evidence, str) or not evidence.strip():
                     raise StateError('Invalid Task Evidence')
                 task['verification'] = {'result': result, 'evidence': evidence}
+                if result != 'PASS':
+                    task['status_override'] = None
             elif command == 'task.checkpoint':
                 last_verified = payload.get('last_verified_action')
                 next_action = payload.get('next_action')
@@ -89,6 +91,8 @@ class CoreEngine:
                 text = payload.get('text')
                 if not isinstance(text, str) or not text.strip():
                     raise StateError('Invalid Task Close Note')
+                if task['blockers']:
+                    raise StateError('Task Blockers Must Be Cleared Before Closing')
                 task['status_override'] = 'COMPLETE'
                 task['report'] = text
             elif command == 'task.reopen':
@@ -96,6 +100,7 @@ class CoreEngine:
                 if not isinstance(text, str) or not text.strip():
                     raise StateError('Invalid Task Reopen Note')
                 task['status_override'] = None
+                task['verification'] = None
                 task['report'] = text
             else:
                 raise StateError('Unsupported Task Command')
@@ -124,7 +129,8 @@ class CoreEngine:
             verification = task.get('verification')
             if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
                 raise StateError('Invalid Task Evidence')
-            if task.get('status_override') not in (None, 'COMPLETE'):
+            task.setdefault('status_override', None)
+            if task['status_override'] not in (None, 'COMPLETE'):
                 raise StateError('Invalid Task Status Override')
             for field in ('last_verified_action', 'next_action'):
                 if field in task and (not isinstance(task[field], str) or not task[field].strip()):

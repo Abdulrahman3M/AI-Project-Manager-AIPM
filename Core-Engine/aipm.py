@@ -54,7 +54,12 @@ def _task_operations(registry_path: Path, project_id: str) -> tuple[TaskOperatio
     state = engine.execute(CommandEnvelope("task-cli-read", "state.read", "aipm-cli", project.project_id, 0, None, {}))
     if state.get("status") != "PASS":
         raise StateError(state.get("reason", "INVALID_STATE"))
-    return TaskOperations(engine, project), engine
+    operations = TaskOperations(engine, project)
+    for task_id in state["state"].get("tasks", {}):
+        task_dir = operations.root / "Tasks" / task_id
+        if not task_dir.exists():
+            operations.sync_artifacts(task_dir)
+    return operations, engine
 
 
 def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
@@ -278,6 +283,11 @@ def main(argv: Sequence[str] | None = None) -> int:
                     if manifest.get("project_id") != args.project_id or manifest.get("state_root_name") != STATE_ROOT_NAME:
                         raise StateError("PROJECT_STATE_IDENTITY_CONFLICT")
                     project = ManagedProject(args.project_id, args.alias.strip(), _canonical(root), state_root)
+                    state_check = CoreEngine({project.project_id: project}).execute(
+                        CommandEnvelope("registry-register-check", "state.read", "aipm-cli", project.project_id, 0, None, {})
+                    )
+                    if state_check.get("status") != "PASS":
+                        raise StateError(state_check.get("reason", "INVALID_PROJECT_STATE"))
                 else:
                     project = initialize_project_state(root, args.project_id, args.alias)
                 entry = registry.register(project)

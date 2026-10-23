@@ -708,6 +708,15 @@ function Invoke-AipmRegistryManagement {
             $confirm = Show-Confirm -Title 'Register This Project?' -Message ('AIPM Will Create Shared-Project-State-Manager Under ' + $projectPath + '. It Will Not Edit Project Source Files.') -YesLabel 'Create State And Register' -YesDesc 'Write AIPM-Owned State Metadata, Then Add The Registry Entry.' -NoLabel 'Cancel' -NoDesc 'Make No Project Or Registry Changes.' -Default $false
             if (-not $confirm) { continue }
             $projectId = 'Project-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
+            $existingManifestPath = Join-Path (Join-Path $projectPath 'Shared-Project-State-Manager') 'Project-Manifest.json'
+            if (Test-Path -LiteralPath $existingManifestPath -PathType Leaf) {
+                try {
+                    $existingManifest = Get-Content -LiteralPath $existingManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+                    if ($existingManifest -and $existingManifest.project_id -and ([string]$existingManifest.project_id).Trim()) {
+                        $projectId = ([string]$existingManifest.project_id).Trim()
+                    }
+                } catch { }
+            }
             $registered = Invoke-AipmCore -AppRoot $Root -Command 'registry-register' -RegistryPath $currentPath -ProjectRoot $projectPath -ProjectId $projectId -Alias $alias.Trim()
             if ($registered.Status -eq 'PASS') {
                 $successLines = @(
@@ -782,7 +791,14 @@ function Invoke-AipmRegistryManagement {
 }
 
 function Show-AipmTaskRecord {
-    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)]$TaskRow)
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [string]$ProjectRoot = '', [Parameter(Mandatory)]$TaskRow)
+    if (-not $ProjectRoot) {
+        $regEntries = Get-AipmRegistryEntries -Root $Root -RegistryPath $RegistryPath
+        if ($regEntries.Status -eq 'PASS') {
+            $matchedProject = @($regEntries.Projects | Where-Object { [string]$_.project_id -eq $ProjectId }) | Select-Object -First 1
+            if ($matchedProject) { $ProjectRoot = [string]$matchedProject.root_path }
+        }
+    }
     $recordResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
     if ($recordResult.Status -ne 'PASS') {
         Show-Notice -Title 'Task Could Not Be Read' -Lines @([string]$recordResult.Reason) -Kind Error
@@ -798,7 +814,7 @@ function Show-AipmTaskRecord {
         $task = $freshResult.Data.task
         $lines = @(
             ('Task ID: ' + [string]$TaskRow.task_id),
-            ('Status: ' + [string]$TaskRow.status + ' (Derived From Task Evidence And Blockers)'),
+            ('Status: ' + [string]$task.task_status + ' (Derived From Task Evidence And Blockers)'),
             ('Scope: ' + [string]$task.scope),
             ('Last Verified Action: ' + [string](Get-AipmField $task 'last_verified_action' 'Not Recorded')),
             ('Next Action: ' + [string](Get-AipmField $task 'next_action' 'Not Recorded')),
@@ -833,9 +849,16 @@ function Show-AipmTaskRecord {
             continue
         }
         if ($action -eq 'git-status') {
+            if (-not $ProjectRoot) { Show-Notice -Title 'Project Root Is Unavailable' -Lines @('Verify The Registered Project Path And Try Again.') -Kind Error; continue }
             $projectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
             $git = Find-Executable -Name 'git'
             if (-not $git) { Show-Notice -Title 'Git Is Unavailable' -Lines @('Install Git Or Add It To PATH, Then Try Again.') -Kind Error; continue }
+            $topResult = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'rev-parse', '--show-toplevel') -TimeoutSec 10
+            $topRoot = if ($topResult.Started -and -not $topResult.TimedOut -and $topResult.ExitCode -eq 0 -and $topResult.StdOut.Trim()) { [System.IO.Path]::GetFullPath($topResult.StdOut.Trim()).TrimEnd([char[]]@('\','/')) } else { '' }
+            if (-not $topRoot -or -not $topRoot.Equals($projectRoot.TrimEnd([char[]]@('\','/')), [System.StringComparison]::OrdinalIgnoreCase)) {
+                Show-Notice -Title 'Git Repository Not Initialized' -Lines @('The Managed Project Root Is Not A Git Repository Root.') -Kind Error
+                continue
+            }
             $projectResult = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'status', '--short') -TimeoutSec 10
             if (-not $projectResult.Started -or $projectResult.TimedOut -or $projectResult.ExitCode -ne 0) { Show-Notice -Title 'Git Status Failed' -Lines @($projectResult.StdErr.Trim()) -Kind Error; continue }
             $gitLines = @($projectResult.StdOut.Trim() -split "`r?`n" | Where-Object { $_ })
@@ -844,16 +867,28 @@ function Show-AipmTaskRecord {
             continue
         }
         if ($action -eq 'git-commit') {
+            if (-not $ProjectRoot) { Show-Notice -Title 'Project Root Is Unavailable' -Lines @('Verify The Registered Project Path And Try Again.') -Kind Error; continue }
             $message = Read-ValidatedInput -Prompt 'Git Commit Message' -Help 'AIPM Stages Project Changes While Excluding Shared-Project-State-Manager, Then Creates A Local Commit.' -Example ('Complete task: ' + [string]$task.title) -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Commit Message.' }; return $null }
             if (-not $message) { continue }
             if (-not (Show-Confirm -Title 'Create Local Git Commit?' -Message 'This Stages The Current Project Changes, Excludes AIPM State, And Creates A Local Git Commit. It Does Not Push To Any Remote.' -YesLabel 'Commit Changes' -YesDesc 'Create The Local Commit.' -NoLabel 'Cancel' -NoDesc 'Return Without Changing Git.' -Default $false)) { continue }
             $git = Find-Executable -Name 'git'
             if (-not $git) { Show-Notice -Title 'Git Is Unavailable' -Lines @('Install Git Or Add It To PATH, Then Try Again.') -Kind Error; continue }
             $projectRoot = [System.IO.Path]::GetFullPath($ProjectRoot)
+            $topResult = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'rev-parse', '--show-toplevel') -TimeoutSec 10
+            $topRoot = if ($topResult.Started -and -not $topResult.TimedOut -and $topResult.ExitCode -eq 0 -and $topResult.StdOut.Trim()) { [System.IO.Path]::GetFullPath($topResult.StdOut.Trim()).TrimEnd([char[]]@('\','/')) } else { '' }
+            if (-not $topRoot -or -not $topRoot.Equals($projectRoot.TrimEnd([char[]]@('\','/')), [System.StringComparison]::OrdinalIgnoreCase)) {
+                Show-Notice -Title 'Git Repository Not Initialized' -Lines @('The Managed Project Root Is Not A Git Repository Root.') -Kind Error
+                continue
+            }
             $stage = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'add', '-A', '--', '.', ':!Shared-Project-State-Manager/**') -TimeoutSec 30
             if (-not $stage.Started -or $stage.TimedOut -or $stage.ExitCode -ne 0) { Show-Notice -Title 'Git Stage Failed' -Lines @($stage.StdErr.Trim()) -Kind Error; continue }
             $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '-m', $message.Trim()) -TimeoutSec 30
-            if (-not $commit.Started -or $commit.TimedOut -or $commit.ExitCode -ne 0) { Show-Notice -Title 'Git Commit Failed' -Lines @($commit.StdErr.Trim(), $commit.StdOut.Trim()) -Kind Error; continue }
+            if (-not $commit.Started -or $commit.TimedOut -or $commit.ExitCode -ne 0) {
+                $errLines = @($commit.StdErr.Trim(), $commit.StdOut.Trim() | Where-Object { $_ })
+                if ($errLines.Count -eq 0) { $errLines = @('Git Commit Failed.') }
+                Show-Notice -Title 'Git Commit Failed' -Lines $errLines -Kind Error
+                continue
+            }
             Show-Notice -Title 'Git Commit Created' -Lines @($commit.StdOut.Trim()) -Kind Success
             continue
         }
@@ -1049,6 +1084,7 @@ function Invoke-AipmTaskManagement {
             }
             if ($taskChoice -eq 'create' -or $taskChoice -eq 'folder') {
                 $scopePrefix = ''
+                $folderPath = ''
                 if ($taskChoice -eq 'folder') {
                     $folderPath = Read-ValidatedInput -Prompt 'Existing Work Folder Path' -Help 'Enter A Full Path To An Existing Folder Inside The Selected Project. Its Files Will Stay In Place.' -Example ([string]$project.root_path) -Default '' -Validate {
                         param($text)
@@ -1056,6 +1092,10 @@ function Invoke-AipmTaskManagement {
                         if (-not (Test-Path -LiteralPath $candidate -PathType Container)) { return 'The Existing Work Folder Must Already Exist.' }
                         $base = [System.IO.Path]::GetFullPath([string]$project.root_path).TrimEnd([char[]]@('\','/')) + [System.IO.Path]::DirectorySeparatorChar
                         if (-not $candidate.StartsWith($base, [System.StringComparison]::OrdinalIgnoreCase)) { return 'Choose A Folder Inside The Selected Registered Project.' }
+                        $stateBase = (Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager').TrimEnd([char[]]@('\','/'))
+                        if ($candidate.TrimEnd([char[]]@('\','/')).Equals($stateBase, [System.StringComparison]::OrdinalIgnoreCase) -or $candidate.StartsWith($stateBase + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+                            return 'Choose A Project Work Folder Outside Shared-Project-State-Manager.'
+                        }
                         return $null
                     }
                     if (-not $folderPath) { continue }

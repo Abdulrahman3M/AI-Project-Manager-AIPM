@@ -976,8 +976,12 @@ def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
     catalog = _catalog(root)
     _check_sensitive_files(target_path)
     manifest = _validate_embedded_plugin(target_path)
+    source_project_version = manifest.get("source_project_version")
+    _semver_tuple(source_project_version)
+    if _semver_tuple(source_project_version) > _semver_tuple(catalog["platform_version"]):
+        raise CapabilityError("Generated Plugin claims a future project version")
     if manifest != _distribution_manifest(
-        catalog,
+        {**catalog, "platform_version": source_project_version},
         manifest["plugin_version"],
         previous_version=manifest["previous_plugin_version"],
         changelog_sha256=manifest["changelog_sha256"],

@@ -100,7 +100,12 @@ def _walk_public(root: Path, relative: Path) -> list[Path]:
 def _public_files(root: Path, version: str) -> list[Path]:
     selected = [root / name for name in ROOT_FILES if (root / name).is_file()]
     selected.extend(path for name in PUBLIC_DIRECTORIES for path in _walk_public(root, Path(name)))
-    for name in (f"docs/project/Release-Notes-v{version}.md", "docs/project/Support-Matrix.md", "docs/project/Project-Rules.md"):
+    for name in (
+        f"docs/project/Release-Notes-v{version}.md",
+        f"docs/project/Release-Notes/Release-Notes-v{version}.md",
+        "docs/project/Support-Matrix.md",
+        "docs/project/Project-Rules.md",
+    ):
         candidate = root / name
         if candidate.is_file():
             selected.append(candidate)

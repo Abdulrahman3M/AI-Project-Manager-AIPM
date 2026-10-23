@@ -2,7 +2,7 @@
 Set-StrictMode -Version 2.0
 
 function Write-AppLog {
-    param([Parameter(Mandatory)][string]$Message, [ValidateSet('INFO', 'WARN', 'ERROR')][string]$Level = 'INFO')
+    param([Parameter(Mandatory)][string]$Message, [ValidateSet('INFO', 'WARN', 'WARNING', 'ERROR')][string]$Level = 'INFO')
     try {
         $dir = Get-AppDataDirectory -AppName 'AIPM' -Override $env:AIPM_DATA_DIR
         if (-not (Test-Path -LiteralPath $dir)) { [void](New-Item -ItemType Directory -Path $dir -Force) }

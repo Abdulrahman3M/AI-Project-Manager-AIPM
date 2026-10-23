@@ -146,16 +146,61 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         manifest_path = self.project.state_root / "State-Manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         record = manifest["tasks"][task.name]
-        for key in ("last_verified_action", "next_action", "completed_work", "changed_files", "test_results"):
+        for key in ("last_verified_action", "next_action", "completed_work", "changed_files", "test_results", "status_override"):
             record.pop(key, None)
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         read = operations.read_task(task)
         self.assertEqual(read["next_action"], "Unknown; reconcile the task with current project evidence.")
+        second_task = operations.create("Post Legacy Task", "Mutate state when an older task lacks status_override.")
+        self.assertEqual(operations.read_task(second_task)["task_status"], "IN-PROGRESS")
+
+    def test_stranded_pending_commit_with_legacy_task_recovers_cleanly(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        first = operations.create("Legacy Task", "Created before status_override existed.")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        current = json.loads(manifest_path.read_text(encoding="utf-8"))
+        current["tasks"][first.name].pop("status_override", None)
+        manifest_path.write_text(json.dumps(current), encoding="utf-8")
+        pending_manifest = json.loads(json.dumps(current))
+        pending_task_id = "Task-2026-10-23-Recovered-1234567890ab"
+        pending_manifest["tasks"][pending_task_id] = {
+            "title": "Recovered Task",
+            "scope": "Recover from stranded v1.5.0 Pending-Commit.",
+            "plan": "# Recovered Task\n\nRecover from stranded v1.5.0 Pending-Commit.\n",
+            "blockers": [],
+            "verification": None,
+            "report": "",
+            "status_override": None,
+        }
+        pending_manifest["task_id"] = pending_task_id
+        pending_manifest["task_status"] = "IN-PROGRESS"
+        pending_manifest["revision"] = current["revision"] + 1
+        pending_manifest["updated_by"] = "aipm-task-operations"
+        pending_event = {
+            "schema_version": "1.0",
+            "request_id": "pending-recovery-test",
+            "command": "task.create",
+            "actor": "aipm-task-operations",
+            "project_id": self.project.project_id,
+            "revision": pending_manifest["revision"],
+            "idempotency_key": "pending-recovery-test",
+            "input": {"task_id": pending_task_id, "title": "Recovered Task", "scope": "Recover from stranded v1.5.0 Pending-Commit."},
+        }
+        pending_path = self.project.state_root / "History" / "Pending-Commit.json"
+        pending_path.write_text(json.dumps({"schema_version": "1.0", "manifest": pending_manifest, "event": pending_event}), encoding="utf-8")
+        recovered = operations.read_task(self.project.state_root / "Tasks" / pending_task_id)
+        self.assertEqual(recovered["title"], "Recovered Task")
+        self.assertFalse(pending_path.exists())
 
     def test_task_can_be_closed_reopened_and_archived_without_losing_its_record(self) -> None:
         operations = TaskOperations(self.engine, self.project)
         task = operations.create("Close And Archive", "Preserve a completed task as a portable archive.")
         operations.write_artifact(task, "Reports/Completion.md", b"Completed work.\n")
+
+        operations.add_blocker(task, "Unresolved blocker prevents closing.")
+        with self.assertRaises(StateError):
+            operations.close(task, "Cannot close while blocked.")
+        operations.clear_blockers(task)
 
         operations.close(task, "The task is complete and its evidence is recorded.")
         self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
@@ -167,6 +212,11 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertTrue(task.is_dir())
 
         operations.reopen(task, "Follow-up work is required.")
+        self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
+        operations.verify(task, "PASS", "All checks passed.")
+        operations.report(task, "Verified and reported complete.")
+        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+        operations.reopen(task, "Reopen after verification pass.")
         self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
 
     def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:
