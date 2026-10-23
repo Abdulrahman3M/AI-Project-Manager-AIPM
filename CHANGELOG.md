@@ -1,5 +1,15 @@
 # AIPM Change Log
 
+## [1.5.2] — Task Archive Metadata And Optional Folder Deletion Lifecycle (Repository Update; Not Published)
+
+- Added rich task metadata generation (`Metadata.json` and `Metadat.json`) compiling complete task identity, status, revision, scope, plan, checkpoints, completed work, changed files, blockers, verification evidence, test status, task report, project info, and a file inventory with relative paths, sizes, SHA-256 hashes, categories, and modification timestamps.
+- Implemented optional live task folder deletion (`--delete-folder` / `task-delete-folder`) guarded by fail-closed integrity verification (`testzip()`, SHA-256 archive checksum match, and validation that `Metadata.json` and all source files exist inside the ZIP).
+- Added archive-backed task inspection: `read_metadata`, `list_artifacts`, and `read_artifact` seamlessly read and extract data directly from `Archive/<Task-ID>.zip` when the live task folder has been deleted.
+- Extended task reopening (`task.reopen`) to automatically unpack and restore the live task folder from `Archive/<Task-ID>.zip` if the folder was previously deleted upon completion.
+- Updated Core startup task synchronization (`_task_operations`) to recognize archived tasks whose live folders were deleted, preventing unwanted folder auto-recreation on subsequent commands.
+- Extended PowerShell TUI task record view (`Show-AipmTaskRecord`) with a post-archive confirmation dialog giving users the choice to delete or retain the live task folder, displaying clear outcome notices.
+- Synchronized the platform and PowerShell TUI versions at `1.5.2`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.1] — Legacy Task State Recovery, Lifecycle Hardening And TUI Reliability (Repository Update; Not Published)
 
 - Fixed `INVALID_STATE` (`Task History Conflicts With State`) when creating or updating tasks in projects containing pre-`1.5.0` task records that lacked `status_override`, and automatically recovered stranded `Pending-Commit.json` transactions on read.

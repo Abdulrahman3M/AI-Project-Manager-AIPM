@@ -835,7 +835,7 @@ function Show-AipmTaskRecord {
             (New-MenuItem -Label 'Update Task Report' -Desc 'Save A Progress Or Completion Note In Task State.' -Value 'report' -Icon 'Handoff'),
             (New-MenuItem -Label 'Mark Task Complete' -Desc 'Close This Task With A Completion Note.' -Value 'close' -Icon 'Success'),
             (New-MenuItem -Label 'Reopen Task' -Desc 'Return A Completed Task To In-Progress Work.' -Value 'reopen' -Icon 'Progress'),
-            (New-MenuItem -Label 'Archive Completed Task' -Desc 'Create A Portable ZIP And SHA-256 Checksum For This Completed Task.' -Value 'archive' -Icon 'Project'),
+            (New-MenuItem -Label 'Archive Completed Task' -Desc 'Create A Portable ZIP With Metadata.json And SHA-256 Checksum.' -Value 'archive' -Icon 'Project'),
             (New-MenuItem -Label 'Review Git Changes' -Desc 'View The Current Git Changes For This Managed Project.' -Value 'git-status' -Icon 'Project'),
             (New-MenuItem -Label 'Commit Git Changes' -Desc 'Stage Project Changes Excluding AIPM State, Then Create A Local Commit.' -Value 'git-commit' -Icon 'Success'),
             (New-MenuItem -Label 'Attach Plan, Report Or Supporting File' -Desc 'Copy One Selected File Into This Task; The Original File Stays In Place.' -Value 'attach' -Icon 'Item'),
@@ -984,9 +984,34 @@ function Show-AipmTaskRecord {
             }
             continue
         } elseif ($action -eq 'archive') {
-            if (-not (Show-Confirm -Title 'Archive Completed Task?' -Message 'AIPM Creates A ZIP And SHA-256 Checksum In Shared-Project-State-Manager/Archive. The Live Task Record Remains Available.' -YesLabel 'Create Archive' -YesDesc 'Create A Portable Integrity-Checked Archive.' -NoLabel 'Cancel' -NoDesc 'Return Without Creating An Archive.' -Default $false)) { continue }
+            if (-not (Show-Confirm -Title 'Archive Completed Task?' -Message 'AIPM Creates A Portable ZIP Archive With Metadata.json And SHA-256 Checksum In Shared-Project-State-Manager/Archive.' -YesLabel 'Create Archive' -YesDesc 'Create A Portable Integrity-Checked Archive.' -NoLabel 'Cancel' -NoDesc 'Return Without Creating An Archive.' -Default $false)) { continue }
             $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-archive' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
-            if ($updated.Status -eq 'PASS') { Show-Notice -Title 'Task Archived' -Lines @([string]$updated.Data.archive_path, [string]$updated.Data.checksum_path) -Kind Success; continue }
+            if ($updated.Status -ne 'PASS') {
+                Show-Notice -Title 'Task Archive Failed' -Lines @([string]$updated.Reason, 'Task Folder Remains Intact.') -Kind Error
+                continue
+            }
+            $deleteChoice = Show-Confirm -Title 'Archive Verified: Delete Live Task Folder?' -Message ('The Archive And SHA-256 Checksum Were Verified. All Files And Metadata.json Are Safely Preserved in: ' + [string]$updated.Data.archive_path) -YesLabel 'Delete Task Folder' -YesDesc 'Remove The Live Task Folder; The Portable Archive Preserves All Data And Files.' -NoLabel 'Keep Task Folder' -NoDesc 'Retain The Live Task Folder In Place Alongside The Archive.' -Default $false
+            if ($deleteChoice) {
+                $deletedResult = Invoke-AipmCore -AppRoot $Root -Command 'task-delete-folder' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+                if ($deletedResult.Status -eq 'PASS') {
+                    Show-Notice -Title 'Task Archived & Folder Removed' -Lines @(
+                        ('Archive: ' + [string]$updated.Data.archive_path),
+                        ('Checksum: ' + [string]$updated.Data.checksum_path),
+                        'Metadata: Metadata.json Verified Inside Archive.',
+                        'Live Folder: Removed (All Task Details Preserved In Archive).'
+                    ) -Kind Success
+                } else {
+                    Show-Notice -Title 'Task Archived But Folder Deletion Failed' -Lines @([string]$deletedResult.Reason) -Kind Warning
+                }
+            } else {
+                Show-Notice -Title 'Task Archived & Folder Kept' -Lines @(
+                    ('Archive: ' + [string]$updated.Data.archive_path),
+                    ('Checksum: ' + [string]$updated.Data.checksum_path),
+                    'Metadata: Metadata.json Created And Verified.',
+                    'Live Folder: Retained In Place Alongside The Archive.'
+                ) -Kind Success
+            }
+            continue
         } elseif ($action -eq 'close' -or $action -eq 'reopen') {
             $promptTitle = if ($action -eq 'close') { 'Completion Note' } else { 'Reopen Note' }
             $entered = Read-ValidatedInput -Prompt $promptTitle -Help 'Record The Reason And Current Evidence In The Authoritative Task State.' -Example 'Work Is Complete And Ready For Handoff.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Note.' }; return $null }

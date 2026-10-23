@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from datetime import date
+from datetime import date, datetime, timezone
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
+import shutil
 import tempfile
 import zipfile
 from typing import Any, Iterator
@@ -19,7 +21,7 @@ from .storage import ManagedProject, StateError, _canonical, _inside, validate_m
 TASK_ARTIFACT_CATEGORIES = frozenset({"Instructions", "Handoff", "Reports", "Scripts", "Examples", "References"})
 MAX_TASK_ARTIFACT_BYTES = 16 * 1024 * 1024
 MAX_TASK_ARTIFACT_PATH_CHARS = 240
-CORE_PROJECTIONS = frozenset({"Task-Plan.md", "Blockers.md", "Final-Report.md", "Test-Status.md", "Task-State.md"})
+CORE_PROJECTIONS = frozenset({"Task-Plan.md", "Blockers.md", "Final-Report.md", "Test-Status.md", "Task-State.md", "Metadata.json", "Metadat.json"})
 _WINDOWS_RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
@@ -107,7 +109,13 @@ class TaskOperations:
         self._mutate('task.close', task, text=completion_note)
 
     def reopen(self, task: Path, next_work: str) -> None:
-        """Return a closed task to active work without losing its history."""
+        """Return a closed task to active work without losing its history, restoring live folder if archived."""
+        task_id = self._task_id(task)
+        task_root = self.root / 'Tasks' / task_id
+        archive_path = self.root / 'Archive' / f'{task_id}.zip'
+        if not task_root.exists() and archive_path.is_file():
+            with zipfile.ZipFile(archive_path, 'r') as package:
+                package.extractall(task_root)
         self._mutate('task.reopen', task, text=next_work)
 
     def import_work_folder(self, title: str, scope: str, work_folder: Path) -> Path:
@@ -134,25 +142,194 @@ class TaskOperations:
         self.write_artifact(task, 'References/Existing-Work-Folder.md', body.encode('utf-8'))
         return task
 
-    def archive(self, task: Path) -> dict[str, Path]:
-        """Create an integrity-checked portable ZIP while keeping the live task record."""
+    def generate_metadata(self, task: Path, *, archive_sha256: str | None = None) -> dict[str, Any]:
+        """Compile complete task state, steps, and file metadata into Metadata.json and Metadat.json."""
+        task_root = self.root / 'Tasks' / self._task_id(task)
+        record = self.read_task(task)
+        task_id = record['task_id']
+
+        files_data: list[dict[str, Any]] = []
+        categories_count: dict[str, int] = {}
+        total_bytes = 0
+
+        if task_root.exists():
+            for entry in sorted(task_root.rglob('*')):
+                if not entry.is_file():
+                    continue
+                if entry.name.startswith('.aipm-') or entry.name.endswith('.tmp'):
+                    continue
+                rel_posix = entry.relative_to(task_root).as_posix()
+                if rel_posix in {'Metadata.json', 'Metadat.json'}:
+                    continue
+                content = entry.read_bytes()
+                size = len(content)
+                total_bytes += size
+                digest = hashlib.sha256(content).hexdigest()
+                category = rel_posix.split('/')[0] if '/' in rel_posix else 'Root'
+                categories_count[category] = categories_count.get(category, 0) + 1
+                try:
+                    mtime = datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc).isoformat()
+                except (OSError, OverflowError):
+                    mtime = datetime.now(timezone.utc).isoformat()
+                files_data.append({
+                    'relative_path': rel_posix,
+                    'file_name': entry.name,
+                    'category': category,
+                    'size_bytes': size,
+                    'sha256': digest,
+                    'modified_at': mtime,
+                    'is_projection': entry.name in CORE_PROJECTIONS or rel_posix == 'Handoff/Next-Agent-Handoff.md' or rel_posix.endswith('/README.md'),
+                })
+
+        metadata: dict[str, Any] = {
+            'schema_version': '1.0',
+            'format': 'AIPM-Task-Metadata',
+            'exported_at': datetime.now(timezone.utc).isoformat(),
+            'task_id': task_id,
+            'title': record.get('title', ''),
+            'scope': record.get('scope', ''),
+            'task_status': record.get('task_status', ''),
+            'status_override': record.get('status_override'),
+            'revision': record.get('revision', 0),
+            'plan': record.get('plan', ''),
+            'last_verified_action': record.get('last_verified_action', ''),
+            'next_action': record.get('next_action', ''),
+            'completed_work': record.get('completed_work', []),
+            'changed_files': record.get('changed_files', []),
+            'blockers': record.get('blockers', []),
+            'verification': record.get('verification'),
+            'test_results': record.get('test_results', []),
+            'report': record.get('report', ''),
+            'project': {
+                'project_id': self.project.project_id,
+                'project_root': str(self.project.root),
+                'state_root': str(self.project.state_root),
+            },
+            'archive_info': {
+                'archive_name': f'{task_id}.zip',
+                'archive_sha256': archive_sha256,
+            },
+            'files_summary': {
+                'file_count': len(files_data),
+                'total_bytes': total_bytes,
+                'categories': categories_count,
+            },
+            'files': files_data,
+        }
+
+        if task_root.exists():
+            payload = json.dumps(metadata, indent=2, ensure_ascii=False) + '\n'
+            self._atomic_replace(task_root / 'Metadata.json', payload)
+            self._atomic_replace(task_root / 'Metadat.json', payload)
+
+        return metadata
+
+    def read_metadata(self, task: Path) -> dict[str, Any]:
+        """Read task metadata from live task folder, archived ZIP, or authoritative Core state."""
+        task_id = self._task_id(task)
+        task_root = self.root / 'Tasks' / task_id
+        for candidate in (task_root / 'Metadata.json', task_root / 'Metadat.json'):
+            if candidate.is_file():
+                try:
+                    return json.loads(candidate.read_text(encoding='utf-8'))
+                except (json.JSONDecodeError, OSError):
+                    pass
+        archive_path = self.root / 'Archive' / f'{task_id}.zip'
+        if archive_path.is_file():
+            with zipfile.ZipFile(archive_path, 'r') as package:
+                for arc_name in ('Metadata.json', 'Metadat.json'):
+                    if arc_name in package.namelist():
+                        try:
+                            return json.loads(package.read(arc_name).decode('utf-8'))
+                        except (json.JSONDecodeError, UnicodeDecodeError):
+                            pass
+        return self.generate_metadata(task)
+
+    def _verify_archive_integrity(self, task_root: Path, archive_path: Path, expected_sha256: str) -> None:
+        """Verify the integrity of a task archive, its checksum sidecar, and internal metadata."""
+        if not archive_path.is_file():
+            raise StateError('Task Archive File Missing')
+        actual_sha256 = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise StateError('Task Archive Checksum Mismatch')
+        checksum_path = archive_path.with_suffix('.zip.sha256')
+        if not checksum_path.is_file() or not checksum_path.read_text(encoding='ascii').startswith(expected_sha256):
+            raise StateError('Task Archive Checksum Sidecar Invalid')
+        with zipfile.ZipFile(archive_path, 'r') as package:
+            test_bad_file = package.testzip()
+            if test_bad_file is not None:
+                raise StateError(f'Task Archive Corrupted: {test_bad_file}')
+            names = set(package.namelist())
+            if 'Metadata.json' not in names or 'Metadat.json' not in names:
+                raise StateError('Task Archive Missing Metadata.json')
+            try:
+                meta = json.loads(package.read('Metadata.json').decode('utf-8'))
+                if meta.get('task_id') != task_root.name or meta.get('format') != 'AIPM-Task-Metadata':
+                    raise StateError('Task Archive Metadata Invalid')
+            except Exception as exc:
+                raise StateError('Task Archive Metadata Cannot Be Read') from exc
+            if task_root.exists():
+                for entry in task_root.rglob('*'):
+                    if entry.is_file():
+                        rel = entry.relative_to(task_root).as_posix()
+                        if rel not in names:
+                            raise StateError(f'Task Archive Missing File: {rel}')
+
+    def archive(self, task: Path, *, delete_folder: bool = False) -> dict[str, Any]:
+        """Create an integrity-checked portable ZIP with Metadata.json while optionally keeping the live task record."""
         task_root = self._task_path(task)
+        task_id = task_root.name
         if self.read_task(task)['task_status'] != 'COMPLETE':
             raise StateError('Only Completed Tasks Can Be Archived')
         self.sync_artifacts(task)
+        self.generate_metadata(task)
         archive_root = self.root / 'Archive'
         archive_root.mkdir(parents=True, exist_ok=True)
-        archive_path = archive_root / f'{task_root.name}.zip'
+        archive_path = archive_root / f'{task_id}.zip'
         if archive_path.exists():
             raise StateError('Task Archive Already Exists')
-        with zipfile.ZipFile(archive_path, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as package:
-            for entry in sorted(task_root.rglob('*')):
-                if entry.is_file():
-                    package.write(entry, entry.relative_to(task_root).as_posix())
-        digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+        try:
+            with zipfile.ZipFile(archive_path, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as package:
+                for entry in sorted(task_root.rglob('*')):
+                    if entry.is_file():
+                        package.write(entry, entry.relative_to(task_root).as_posix())
+            digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            checksum_path = archive_path.with_suffix('.zip.sha256')
+            checksum_path.write_text(f'{digest}  {archive_path.name}\n', encoding='ascii', newline='\n')
+            self._verify_archive_integrity(task_root, archive_path, digest)
+        except Exception:
+            archive_path.unlink(missing_ok=True)
+            archive_path.with_suffix('.zip.sha256').unlink(missing_ok=True)
+            raise
+
+        if delete_folder:
+            shutil.rmtree(task_root)
+
+        return {
+            'archive_path': archive_path,
+            'checksum_path': checksum_path,
+            'task_id': task_id,
+            'verified': True,
+            'folder_deleted': delete_folder,
+            'sha256': digest,
+            'file_count': len(archive_path.read_bytes()),
+        }
+
+    def delete_task_folder(self, task: Path) -> dict[str, Any]:
+        """Safely delete the live task folder after verifying the archive is intact."""
+        task_id = self._task_id(task)
+        task_root = self.root / 'Tasks' / task_id
+        if self.read_task(task)['task_status'] != 'COMPLETE':
+            raise StateError('Only Completed Tasks Can Have Their Live Folder Deleted')
+        archive_path = self.root / 'Archive' / f'{task_id}.zip'
         checksum_path = archive_path.with_suffix('.zip.sha256')
-        checksum_path.write_text(f'{digest}  {archive_path.name}\n', encoding='ascii', newline='\n')
-        return {'archive_path': archive_path, 'checksum_path': checksum_path}
+        if not archive_path.is_file() or not checksum_path.is_file():
+            raise StateError('Cannot Delete Task Folder: Verified Archive Does Not Exist')
+        expected_sha = checksum_path.read_text(encoding='ascii').split()[0].strip()
+        self._verify_archive_integrity(task_root, archive_path, expected_sha)
+        if task_root.exists():
+            shutil.rmtree(task_root)
+        return {'task_id': task_id, 'folder_deleted': True, 'status': 'PASS'}
 
     def read_task(self, task: Path) -> dict[str, Any]:
         task_id = self._task_id(task)
@@ -285,8 +462,16 @@ class TaskOperations:
         return self._artifact_metadata(normalized, content)
 
     def read_artifact(self, task: Path, relative_path: str) -> bytes:
-        _, _, target = self._artifact_target(task, relative_path)
+        normalized, task_root, target = self._artifact_target(task, relative_path)
         if not target.is_file():
+            archive_path = self.root / 'Archive' / f'{task_root.name}.zip'
+            if archive_path.is_file():
+                with zipfile.ZipFile(archive_path, 'r') as package:
+                    if normalized in package.namelist():
+                        data = package.read(normalized)
+                        if len(data) > MAX_TASK_ARTIFACT_BYTES:
+                            raise StateError('Task Artifact Exceeds Size Limit')
+                        return data
             raise StateError('Task Artifact Not Found')
         _canonical(target)
         if target.stat().st_size > MAX_TASK_ARTIFACT_BYTES:
@@ -295,6 +480,21 @@ class TaskOperations:
 
     def list_artifacts(self, task: Path) -> list[dict[str, Any]]:
         task_root = self._task_path(task)
+        task_id = task_root.name
+        archive_path = self.root / 'Archive' / f'{task_id}.zip'
+        if not task_root.exists() and archive_path.is_file():
+            meta = self.read_metadata(task)
+            artifacts: list[dict[str, Any]] = []
+            for f in meta.get('files', []):
+                if f.get('category') in TASK_ARTIFACT_CATEGORIES:
+                    artifacts.append({
+                        'path': f['relative_path'],
+                        'size_bytes': f['size_bytes'],
+                        'sha256': f['sha256'],
+                        'replayed': False,
+                    })
+            return sorted(artifacts, key=lambda item: item['path'].casefold())
+
         artifacts: list[dict[str, Any]] = []
         for category in sorted(TASK_ARTIFACT_CATEGORIES):
             category_root = task_root / category
@@ -344,6 +544,7 @@ class TaskOperations:
             _canonical(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             self._atomic_replace(path, content)
+        self.generate_metadata(task)
 
     @staticmethod
     def _render_task_state(record: dict[str, Any]) -> str:

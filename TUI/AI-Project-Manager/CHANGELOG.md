@@ -1,5 +1,13 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.2] — Task Archive Retention Choice And Metadata Client Support (Not Published)
+
+- Extended task archiving flow in `Show-AipmTaskRecord` to prompt with a two-choice confirmation dialog (`01 Delete Task Folder` / `02 Keep Task Folder`) after archive creation and verification pass.
+- Added client commands `task-delete-folder` and `task-metadata` with optional `-DeleteFolder` parameter on `Invoke-AipmTaskArchive`.
+- Displayed clear visual outcome notices differentiating between "Task Archived & Folder Removed" and "Task Archived & Folder Kept".
+- Expanded scripted TUI regression suite to 239 tests covering the archive retention and folder-deletion decision dialog.
+- Synchronized the TUI version with AIPM platform `1.5.2`.
+
 ## [1.5.1] — Legacy State Recovery, Git Boundary Hardening And Strict-Mode Reliability (Not Published)
 
 - Initialized `$folderPath` unconditionally in task creation and work-folder flows under PowerShell strict mode, and added immediate input validation rejecting `Shared-Project-State-Manager` as a work folder.

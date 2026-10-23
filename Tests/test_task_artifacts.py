@@ -209,6 +209,11 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertTrue(archive["checksum_path"].is_file())
         with zipfile.ZipFile(archive["archive_path"]) as package:
             self.assertIn("Reports/Completion.md", package.namelist())
+            self.assertIn("Metadata.json", package.namelist())
+            self.assertIn("Metadat.json", package.namelist())
+            meta = json.loads(package.read("Metadata.json").decode("utf-8"))
+            self.assertEqual(meta["task_id"], task.name)
+            self.assertEqual(meta["format"], "AIPM-Task-Metadata")
         self.assertTrue(task.is_dir())
 
         operations.reopen(task, "Follow-up work is required.")
@@ -217,6 +222,41 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         operations.report(task, "Verified and reported complete.")
         self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
         operations.reopen(task, "Reopen after verification pass.")
+        self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
+
+    def test_task_archive_integrity_and_optional_folder_deletion_lifecycle(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Archive Lifecycle", "Verify full metadata, integrity checks, and folder deletion.")
+        operations.write_artifact(task, "Reports/Report.md", b"Sample report content.\n")
+        operations.checkpoint(task, last_verified_action="Action 1", next_action="Action 2", completed_work=["Step 1", "Step 2"])
+        operations.close(task, "Task is verified and closed.")
+        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+
+        archive = operations.archive(task, delete_folder=True)
+        self.assertTrue(archive["verified"])
+        self.assertTrue(archive["folder_deleted"])
+        self.assertFalse(task.exists())
+        self.assertTrue(archive["archive_path"].is_file())
+        self.assertTrue(archive["checksum_path"].is_file())
+
+        # Metadata remains readable through Core even after live folder deletion
+        metadata = operations.read_metadata(task)
+        self.assertEqual(metadata["task_id"], task.name)
+        self.assertEqual(metadata["title"], "Archive Lifecycle")
+        self.assertEqual(metadata["completed_work"], ["Step 1", "Step 2"])
+        self.assertGreater(metadata["files_summary"]["file_count"], 0)
+
+        # Artifacts remain listable and readable through Core even after live folder deletion
+        artifacts = operations.list_artifacts(task)
+        self.assertTrue(any(a["path"] == "Reports/Report.md" for a in artifacts))
+        content = operations.read_artifact(task, "Reports/Report.md")
+        self.assertEqual(content, b"Sample report content.\n")
+
+        # Reopen automatically restores the live task folder from the verified archive
+        operations.reopen(task, "Resume work on task.")
+        self.assertTrue(task.is_dir())
+        self.assertTrue((task / "Reports" / "Report.md").is_file())
+        self.assertTrue((task / "Metadata.json").is_file())
         self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
 
     def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:

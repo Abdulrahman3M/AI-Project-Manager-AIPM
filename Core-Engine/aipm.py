@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--test-result", action="append", default=[])
     parser.add_argument("--relative-path")
     parser.add_argument("--expected-sha256")
+    parser.add_argument("--delete-folder", action="store_true")
     parser.add_argument("--stdin", action="store_true")
     parser.add_argument("--from-file")
     return parser
@@ -57,7 +58,8 @@ def _task_operations(registry_path: Path, project_id: str) -> tuple[TaskOperatio
     operations = TaskOperations(engine, project)
     for task_id in state["state"].get("tasks", {}):
         task_dir = operations.root / "Tasks" / task_id
-        if not task_dir.exists():
+        archive_path = operations.root / "Archive" / f"{task_id}.zip"
+        if not task_dir.exists() and not archive_path.is_file():
             operations.sync_artifacts(task_dir)
     return operations, engine
 
@@ -87,7 +89,17 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             raise StateError("TASK_ID_REQUIRED")
         task = operations.root / "Tasks" / args.task_id
         if args.command == "task-read":
-            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task), "artifacts": operations.list_artifacts(task)}
+            archive_path = operations.root / "Archive" / f"{task.name}.zip"
+            return {
+                "schema_version": "1.0",
+                "status": "PASS",
+                "task": operations.read_task(task),
+                "artifacts": operations.list_artifacts(task),
+                "metadata": operations.read_metadata(task),
+                "is_archived": archive_path.is_file(),
+            }
+        if args.command == "task-metadata":
+            return {"schema_version": "1.0", "status": "PASS", "metadata": operations.read_metadata(task)}
         if args.command == "task-plan":
             if not args.text:
                 raise StateError("TASK_PLAN_REQUIRED")
@@ -122,8 +134,21 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             operations.reopen(task, args.text)
             return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
         if args.command == "task-archive":
-            archive = operations.archive(task)
-            return {"schema_version": "1.0", "status": "PASS", "archive_path": str(archive["archive_path"]), "checksum_path": str(archive["checksum_path"])}
+            archive = operations.archive(task, delete_folder=args.delete_folder)
+            return {
+                "schema_version": "1.0",
+                "status": "PASS",
+                "archive_path": str(archive["archive_path"]),
+                "checksum_path": str(archive["checksum_path"]),
+                "verified": archive["verified"],
+                "folder_deleted": archive["folder_deleted"],
+                "task_id": archive["task_id"],
+                "file_count": archive["file_count"],
+                "sha256": archive["sha256"],
+            }
+        if args.command == "task-delete-folder":
+            result = operations.delete_task_folder(task)
+            return {"schema_version": "1.0", "status": "PASS", **result}
         if args.command == "task-checkpoint":
             if not args.last_verified_action or not args.next_action:
                 raise StateError("CHECKPOINT_ACTIONS_REQUIRED")

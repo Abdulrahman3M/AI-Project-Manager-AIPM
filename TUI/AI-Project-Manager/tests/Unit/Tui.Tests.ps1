@@ -388,10 +388,19 @@ $artifactListingUi = Invoke-Ui { & $appModule { param($root,$registryPath,$proje
 Assert-True 'attached task files can be reviewed from the task management menu' ($artifactListingUi.Error -eq '' -and $artifactListingUi.Output.Contains('Attached Task Files') -and $artifactListingUi.Output.Contains('Reports/Agent Progress Report.md')) ($artifactListingUi.Error + $artifactListingUi.Output)
 $artifactSearchUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } '14/Agent Progress Report.md{Enter}/Definitely Missing.md{Enter}/{Enter}{Esc}{Esc}'
 Assert-True 'attached task file search reports exact matches, missing files, and restores the full list when cleared' ($artifactSearchUi.Error -eq '' -and $artifactSearchUi.Output.Contains('Exact File Match: Found') -and $artifactSearchUi.Output.Contains('Matching Files: 1') -and $artifactSearchUi.Output.Contains('Exact File Match: Not Found') -and $artifactSearchUi.Output.Contains('No Matching Files Found') -and $artifactSearchUi.Output.Contains('Search Query: All Files') -and $artifactSearchUi.Output.Contains('Reports/Agent Progress Report.md')) ($artifactSearchUi.Error + $artifactSearchUi.Output)
-$closeReopenArchiveKeys = '08Completed all task requirements{Enter}{Enter}1001{Enter}09Follow-up work requested{Enter}{Enter}{Esc}'
+$closeReopenArchiveKeys = '08Completed all task requirements{Enter}{Enter}100102{Enter}09Follow-up work requested{Enter}{Enter}{Esc}'
 $lifecycleUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $closeReopenArchiveKeys
 $afterLifecycleTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
 Assert-True 'TUI closes, archives, and reopens a task through Core' ($lifecycleUi.Error -eq '' -and $lifecycleUi.Output.Contains('Task Archived') -and $afterLifecycleTask.Status -eq 'PASS' -and $afterLifecycleTask.Data.task.task_status -eq 'IN-PROGRESS') ($lifecycleUi.Error + $lifecycleUi.Output)
+$archiveFolderToDelete = Join-Path (Join-Path $taskEditRoot 'Shared-Project-State-Manager/Archive') ($taskEditId + '.zip')
+if (Test-Path -LiteralPath $archiveFolderToDelete) { Remove-Item -LiteralPath $archiveFolderToDelete -Force }
+$archiveShaToDelete = $archiveFolderToDelete + '.sha256'
+if (Test-Path -LiteralPath $archiveShaToDelete) { Remove-Item -LiteralPath $archiveShaToDelete -Force }
+$closeDeleteArchiveKeys = '08Close and remove folder{Enter}{Enter}100101{Enter}{Esc}'
+$delUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $closeDeleteArchiveKeys
+$afterDeleteTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
+$liveTaskDir = Join-Path (Join-Path $taskEditRoot 'Shared-Project-State-Manager/Tasks') $taskEditId
+Assert-True 'TUI archives and removes live folder when requested' ($delUi.Error -eq '' -and $delUi.Output.Contains('Task Archived & Folder Removed') -and -not (Test-Path -LiteralPath $liveTaskDir) -and $afterDeleteTask.Data.is_archived) ($delUi.Error + $delUi.Output)
 $longArtifactLines = @('Task: GitHub Learning Series', 'Status: IN-PROGRESS', '') + @(1..12 | ForEach-Object { 'Artifact Entry {0:D2}' -f $_ })
 $pagedArtifactUi = Invoke-Ui {
     Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 100 -CaptureHeight 14

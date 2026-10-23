@@ -66,3 +66,15 @@ $artifactWrite = Invoke-AipmCore -AppRoot $appRoot -Command 'task-artifact-write
 Assert-Equal 'task artifact files can be attached through the whitelisted Core client' 'PASS' $artifactWrite.Status
 $artifactList = Invoke-AipmCore -AppRoot $appRoot -Command 'task-artifact-list' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
 Assert-True 'attached artifacts are listed with verified metadata' ($artifactList.Status -eq 'PASS' -and @($artifactList.Data.artifacts | Where-Object { $_.path -eq 'Reports/Client Report.md' }).Count -eq 1 -and $artifactList.Data.artifacts[0].sha256)
+$clearBlockers = Invoke-AipmCore -AppRoot $appRoot -Command 'task-blocker-clear' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+$closedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-close' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Text 'Requirements satisfied.'
+Assert-Equal 'task close completes through the Core client' 'PASS' $closedTask.Status
+$archivedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-archive' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-Equal 'task archive completes through the Core client' 'PASS' $archivedTask.Status
+Assert-True 'archived task data contains checksum and archive paths' ($archivedTask.Data.archive_path -and $archivedTask.Data.checksum_path -and $archivedTask.Data.verified)
+$taskMeta = Invoke-AipmCore -AppRoot $appRoot -Command 'task-metadata' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-True 'task metadata contains files summary and steps' ($taskMeta.Status -eq 'PASS' -and $taskMeta.Data.metadata.task_id -eq $taskId -and $taskMeta.Data.metadata.files.Count -gt 0)
+$deletedFolder = Invoke-AipmCore -AppRoot $appRoot -Command 'task-delete-folder' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-Equal 'task live folder can be deleted after verified archive' 'PASS' $deletedFolder.Status
+$metaAfterDelete = Invoke-AipmCore -AppRoot $appRoot -Command 'task-metadata' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-True 'task metadata remains readable from archive after folder deletion' ($metaAfterDelete.Status -eq 'PASS' -and $metaAfterDelete.Data.metadata.task_id -eq $taskId)

@@ -29,7 +29,7 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-artifact-list', 'task-artifact-write')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-metadata', 'task-artifact-list', 'task-artifact-write')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',
@@ -46,6 +46,7 @@ function Invoke-AipmCore {
         [string]$FromFile = '',
         [string]$Destination = '',
         [string]$Source = '',
+        [switch]$DeleteFolder,
         [string]$PythonPath = '',
         [int]$TimeoutSec = 10
     )
@@ -73,6 +74,7 @@ function Invoke-AipmCore {
     if ($FromFile) { $arguments += @('--from-file', [System.IO.Path]::GetFullPath($FromFile)) }
     if ($Destination) { $arguments += @('--destination', [System.IO.Path]::GetFullPath($Destination)) }
     if ($Source) { $arguments += @('--source', [System.IO.Path]::GetFullPath($Source)) }
+    if ($DeleteFolder) { $arguments += @('--delete-folder') }
     $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec
     if (-not $process.Started) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_NOT_STARTED'; Data = $null } }
     if ($process.TimedOut) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_TIMED_OUT'; Data = $null } }
