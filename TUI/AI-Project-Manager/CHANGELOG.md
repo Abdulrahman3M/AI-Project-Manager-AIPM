@@ -1,5 +1,17 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.6] — Comprehensive Task Controls: Edit Details, Rename, Open Explorer, Archive Incomplete Tasks, Clone, And Delete (Not Published)
+
+- Extended the Task Management menu (`Show-AipmTaskRecord`) with comprehensive task controls:
+  - `Edit Task Name & Description`: interactive prompt to update title and/or description in Core state.
+  - `Rename Task Folder & Identity`: interactive prompt to rename task folder and Core task ID.
+  - `Open Task Folder In Explorer`: directly opens live task folder in Windows File Explorer.
+  - `Duplicate Task`: clone task scope and plan into a new task with custom title.
+  - `Delete Task`: permanently delete live task folder and unregister task, even if incomplete.
+  - `Archive Task Folder`: archive tasks at any status (incomplete, in-progress, blocked, or complete).
+- Extended `AipmClient.psm1` (`Invoke-AipmCore`) with `-NewTaskId` and `-DeleteArchive` parameter support and whitelisted `task-edit`, `task-rename`, `task-clone`, and `task-delete` Core commands.
+- Synchronized the TUI version with AIPM platform `1.5.6`.
+
 ## [1.5.5] — Register Existing Task Folders Directly In Place (Not Published)
 
 - When `Add Existing Work Folder` receives a folder inside `Shared-Project-State-Manager/Tasks/`, the TUI now registers that exact folder in place immediately without prompting for a new task name or creating a second folder.

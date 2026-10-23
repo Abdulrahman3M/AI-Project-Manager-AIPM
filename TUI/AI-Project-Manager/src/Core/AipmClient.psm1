@@ -29,12 +29,13 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write', 'task-edit', 'task-rename', 'task-clone', 'task-delete')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',
         [string]$Alias = '',
         [string]$TaskId = '',
+        [string]$NewTaskId = '',
         [string]$Title = '',
         [string]$Scope = '',
         [string]$Text = '',
@@ -47,6 +48,7 @@ function Invoke-AipmCore {
         [string]$Destination = '',
         [string]$Source = '',
         [switch]$DeleteFolder,
+        [switch]$DeleteArchive,
         [string]$PythonPath = '',
         [int]$TimeoutSec = 10
     )
@@ -63,6 +65,7 @@ function Invoke-AipmCore {
     if ($ProjectId) { $arguments += @('--project-id', $ProjectId) }
     if ($Alias) { $arguments += @('--alias', $Alias) }
     if ($TaskId) { $arguments += @('--task-id', $TaskId) }
+    if ($NewTaskId) { $arguments += @('--new-task-id', $NewTaskId) }
     if ($Title) { $arguments += @('--title', $Title) }
     if ($Scope) { $arguments += @('--scope', $Scope) }
     if ($Text) { $arguments += @('--text', $Text) }
@@ -75,6 +78,7 @@ function Invoke-AipmCore {
     if ($Destination) { $arguments += @('--destination', [System.IO.Path]::GetFullPath($Destination)) }
     if ($Source) { $arguments += @('--source', [System.IO.Path]::GetFullPath($Source)) }
     if ($DeleteFolder) { $arguments += @('--delete-folder') }
+    if ($DeleteArchive) { $arguments += @('--delete-archive') }
     $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec
     if (-not $process.Started) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_NOT_STARTED'; Data = $null } }
     if ($process.TimedOut) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_TIMED_OUT'; Data = $null } }

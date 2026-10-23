@@ -29,7 +29,7 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
-    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister'}
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister', 'task.edit', 'task.rename'}
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
@@ -66,6 +66,16 @@ class CoreEngine:
             manifest['task_id'] = None
             manifest['task_status'] = 'NOT-STARTED'
             return
+        elif command == 'task.rename':
+            if task_id not in tasks:
+                raise StateError('Task Not Found')
+            new_task_id = payload.get('new_task_id')
+            if not isinstance(new_task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', new_task_id):
+                raise StateError('Invalid Task Identity')
+            if new_task_id in tasks and new_task_id != task_id:
+                raise StateError('Task Identity Already Exists')
+            tasks[new_task_id] = tasks.pop(task_id)
+            task_id = new_task_id
         elif command == 'task.create':
             if task_id in tasks:
                 raise StateError('Task Already Exists')
@@ -122,6 +132,19 @@ class CoreEngine:
                 task['status_override'] = None
                 task['verification'] = None
                 task['report'] = text
+            elif command == 'task.edit':
+                title = payload.get('title')
+                scope = payload.get('scope')
+                if title is None and scope is None:
+                    raise StateError('Invalid Task Edit')
+                if title is not None:
+                    if not isinstance(title, str) or not title.strip():
+                        raise StateError('Invalid Task Title')
+                    task['title'] = title.strip()
+                if scope is not None:
+                    if not isinstance(scope, str) or not scope.strip():
+                        raise StateError('Invalid Task Scope')
+                    task['scope'] = scope.strip()
             else:
                 raise StateError('Unsupported Task Command')
         manifest['task_id'] = task_id

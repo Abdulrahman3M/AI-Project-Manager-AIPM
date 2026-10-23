@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -24,6 +24,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--destination")
     parser.add_argument("--source")
     parser.add_argument("--task-id")
+    parser.add_argument("--new-task-id")
     parser.add_argument("--title")
     parser.add_argument("--scope")
     parser.add_argument("--text")
@@ -37,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--relative-path")
     parser.add_argument("--expected-sha256")
     parser.add_argument("--delete-folder", action="store_true")
+    parser.add_argument("--delete-archive", action="store_true")
     parser.add_argument("--stdin", action="store_true")
     parser.add_argument("--from-file")
     return parser
@@ -105,6 +107,22 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             }
         if args.command == "task-metadata":
             return {"schema_version": "1.0", "status": "PASS", "metadata": operations.read_metadata(task)}
+        if args.command == "task-edit":
+            if not args.title and not args.scope:
+                raise StateError("TASK_TITLE_OR_SCOPE_REQUIRED")
+            operations.edit(task, title=args.title, scope=args.scope)
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
+        if args.command == "task-rename":
+            if not args.new_task_id:
+                raise StateError("NEW_TASK_ID_REQUIRED")
+            new_path = operations.rename_task(task, args.new_task_id)
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(new_path), "task_id": new_path.name, "task_path": str(new_path)}
+        if args.command == "task-clone":
+            new_task = operations.clone_task(task, new_title=args.title)
+            return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(new_task), "task_id": new_task.name, "task_path": str(new_task)}
+        if args.command == "task-delete":
+            result = operations.delete_task(task, delete_archive=args.delete_archive)
+            return {"schema_version": "1.0", "status": "PASS", **result}
         if args.command == "task-plan":
             if not args.text:
                 raise StateError("TASK_PLAN_REQUIRED")

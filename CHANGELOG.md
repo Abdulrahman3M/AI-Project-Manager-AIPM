@@ -1,5 +1,22 @@
 # AIPM Change Log
 
+## [1.5.6] — Comprehensive Task Controls: Edit Details, Rename, Open Explorer, Archive Incomplete Tasks, Clone, And Delete (Repository Update; Not Published)
+
+- Added new Core task lifecycle commands and capabilities:
+  - `task.edit` (`task-edit`): update task title and/or scope description dynamically, automatically resyncing all task state artifacts (`Metadata.json`, `Task-State.md`, etc.).
+  - `task.rename` (`task-rename`): safely rename task folders and update task identity in Core manifest, preserving existing files and checksummed archives.
+  - Incomplete task archiving: relaxed status restrictions on `task-archive`, `task-delete-folder`, and `task-unregister` so that tasks with any status (`IN-PROGRESS`, `BLOCKED`, `COMPLETE`) can be archived into integrity-checked portable ZIPs and cleaned up safely.
+  - `delete_task` (`task-delete`): permanently delete a task folder and unregister it from AIPM state without requiring task completion.
+  - `clone_task` (`task-clone`): duplicate a task, initializing a new task with the source task's scope and plan.
+- Updated PowerShell TUI task management menu (`Manage Task`) with dedicated interactive controls:
+  - `Edit Task Name & Description`: modify title and/or description interactively with input pre-filled with current values.
+  - `Rename Task Folder & Identity`: rename the live task folder and its ID in Core registry.
+  - `Open Task Folder In Explorer`: directly open the live task folder in Windows File Explorer.
+  - `Duplicate Task`: clone a task with custom title while retaining the scope and plan.
+  - `Delete Task`: permanently delete live folder and unregister task with explicit confirmation.
+  - `Archive Task Folder`: archive tasks at any status with optional folder deletion and registry removal.
+- Synchronized the platform and PowerShell TUI versions at `1.5.6`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.5] — Register Existing Task Folders In Place Without Creating Duplicates (Repository Update; Not Published)
 
 - `import_work_folder` (`task-import-work-folder`) now detects when the selected folder is already a direct child of `Shared-Project-State-Manager/Tasks/`: instead of calling `create()` and generating a second `Task-...` folder, it registers the existing folder directly in place (`task.restore`) and infers its title, scope, plan, blockers, and report from existing files (`Metadata.json`, `Task-State.md`, `Task-Plan.md`, `Final-Report.md`, `Blockers.md`, or the folder name).

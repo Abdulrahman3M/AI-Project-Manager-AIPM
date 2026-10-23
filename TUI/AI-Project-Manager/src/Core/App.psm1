@@ -840,12 +840,139 @@ function Show-AipmTaskRecord {
             (New-MenuItem -Label 'Commit Git Changes' -Desc 'Stage Project Changes Excluding AIPM State, Then Create A Local Commit.' -Value 'git-commit' -Icon 'Success'),
             (New-MenuItem -Label 'Attach Plan, Report Or Supporting File' -Desc 'Copy One Selected File Into This Task; The Original File Stays In Place.' -Value 'attach' -Icon 'Item'),
             (New-MenuItem -Label 'View Attached Task Files' -Desc 'List Supporting Files Already Stored In This Task.' -Value 'artifacts' -Icon 'Project'),
+            (New-MenuItem -Label 'Edit Task Name & Description' -Desc 'Update The Title Or Scope In AIPM Task State.' -Value 'edit' -Icon 'Edit'),
+            (New-MenuItem -Label 'Rename Task Folder & Identity' -Desc 'Change The Task Folder Name And Its ID In AIPM State.' -Value 'rename' -Icon 'Item'),
+            (New-MenuItem -Label 'Open Task Folder In Explorer' -Desc 'Open The Live Task Folder In File Explorer.' -Value 'open-folder' -Icon 'Project'),
+            (New-MenuItem -Label 'Duplicate Task' -Desc 'Create A New Task Initialized With This Task Scope And Plan.' -Value 'clone' -Icon 'Task'),
+            (New-MenuItem -Label 'Delete Task' -Desc 'Permanently Delete Live Folder And Unregister Task, Even If Incomplete.' -Value 'delete' -Icon 'Warning'),
             (New-MenuItem -Label 'Back' -Desc 'Return To The Project Task List.' -Value 'back' -Icon 'Exit')
         )
         $action = Show-Menu -Title ('Manage Task: ' + [string]$task.title) -Description ('Status: ' + [string]$task.task_status + ' | Task ID: ' + [string]$TaskRow.task_id) -Items $actions
         if ($action -in @($null, 'back', 'Back', '__QUIT__')) { return }
         if ($action -eq 'view') {
             [void](Show-AipmPage -Title ('Task Status And Details: ' + [string]$task.title) -Lines $lines)
+            continue
+        }
+        if ($action -eq 'edit') {
+            $currentTitle = [string]$task.title
+            $currentScope = [string]$task.scope
+            $editChoice = Show-Menu -Title 'Edit Task Title Or Description' -Description ('Task ID: ' + [string]$TaskRow.task_id) -Items @(
+                (New-MenuItem -Label 'Edit Task Title' -Desc ('Current: ' + $currentTitle) -Value 'title' -Icon 'Edit'),
+                (New-MenuItem -Label 'Edit Task Description / Scope' -Desc ('Current: ' + $currentScope) -Value 'scope' -Icon 'Edit'),
+                (New-MenuItem -Label 'Edit Both Title And Description' -Desc 'Update Both Name And Description In Sequence.' -Value 'both' -Icon 'Edit'),
+                (New-MenuItem -Label 'Cancel' -Desc 'Return Without Changing Task Details.' -Value 'cancel' -Icon 'Exit')
+            )
+            if (-not $editChoice -or $editChoice -eq 'cancel' -or $editChoice -in @('__QUIT__', '__HELP__')) { continue }
+            $newTitle = $null
+            $newScope = $null
+            if ($editChoice -in @('title', 'both')) {
+                $newTitle = Read-ValidatedInput -Prompt 'Edit Task Title' -Help 'Enter The New Display Name For This Task.' -Example $currentTitle -Default $currentTitle -Validate {
+                    param($textVal)
+                    if (-not $textVal.Trim()) { return 'Task Title Cannot Be Empty.' }
+                    if ($textVal -match '[\\/:]') { return 'Task Title Must Be A Name, Not A File Path.' }
+                    return $null
+                }
+                if ($null -eq $newTitle) { continue }
+            }
+            if ($editChoice -in @('scope', 'both')) {
+                $newScope = Read-ValidatedInput -Prompt 'Edit Task Description / Scope' -Help 'Enter The Updated Description Or Scope For This Task.' -Example $currentScope -Default $currentScope -Validate {
+                    param($textVal)
+                    if (-not $textVal.Trim()) { return 'Task Description Cannot Be Empty.' }
+                    return $null
+                }
+                if ($null -eq $newScope) { continue }
+            }
+            $editParams = @{ AppRoot = $Root; Command = 'task-edit'; RegistryPath = $RegistryPath; ProjectId = $ProjectId; TaskId = ([string]$TaskRow.task_id) }
+            if ($newTitle) { $editParams['Title'] = $newTitle.Trim() }
+            if ($newScope) { $editParams['Scope'] = $newScope.Trim() }
+            $updated = Invoke-AipmCore @editParams
+            if ($updated.Status -ne 'PASS') {
+                Show-Notice -Title 'Failed To Update Task Details' -Lines @([string]$updated.Reason) -Kind Error
+            } else {
+                Show-Notice -Title 'Task Details Updated' -Lines @(
+                    ('Title: ' + [string]$updated.Data.task.title),
+                    ('Scope: ' + [string]$updated.Data.task.scope)
+                ) -Kind Success
+            }
+            continue
+        }
+        if ($action -eq 'rename') {
+            $currentId = [string]$TaskRow.task_id
+            $newId = Read-ValidatedInput -Prompt 'New Task Folder & ID' -Help 'Must Start With Task- And Contain Only Letters, Digits, Hyphens, And Underscores.' -Example $currentId -Default $currentId -Validate {
+                param($textVal)
+                $val = $textVal.Trim()
+                if (-not $val) { return 'Task Folder / ID Cannot Be Empty.' }
+                if ($val -notmatch '^Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}$') { return 'Must Start With Task- And Contain Letters, Digits, Hyphens, Or Underscores.' }
+                return $null
+            }
+            if (-not $newId -or $newId.Trim() -eq $currentId) { continue }
+            $confirm = Show-Confirm -Title 'Rename Task Folder & Identity?' -Message ('Old: ' + $currentId + ' -> New: ' + $newId.Trim() + ' | This Renames The Task Folder And Updates Registry State.') -YesLabel 'Rename Folder' -YesDesc 'Apply The New Task Folder Name.' -NoLabel 'Cancel' -NoDesc 'Keep Current Name.' -Default $false
+            if (-not $confirm) { continue }
+            $renamed = Invoke-AipmCore -AppRoot $Root -Command 'task-rename' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId $currentId -NewTaskId $newId.Trim()
+            if ($renamed.Status -ne 'PASS') {
+                Show-Notice -Title 'Failed To Rename Task' -Lines @([string]$renamed.Reason) -Kind Error
+            } else {
+                $TaskRow.task_id = $newId.Trim()
+                Show-Notice -Title 'Task Renamed Successfully' -Lines @(('New Task ID: ' + $newId.Trim()), ('Path: ' + [string]$renamed.Data.task_path)) -Kind Success
+            }
+            continue
+        }
+        if ($action -eq 'open-folder') {
+            $taskFolder = $null
+            if ($ProjectRoot) {
+                $candidate = Join-Path (Join-Path $ProjectRoot 'Shared-Project-State-Manager\Tasks') ([string]$TaskRow.task_id)
+                if (Test-Path -LiteralPath $candidate) { $taskFolder = [System.IO.Path]::GetFullPath($candidate) }
+            }
+            if (-not $taskFolder) {
+                $liveResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
+                if ($liveResult.Status -eq 'PASS' -and $liveResult.Data.task -and $liveResult.Data.task.task_path) {
+                    $taskFolder = [string]$liveResult.Data.task.task_path
+                }
+            }
+            if ($taskFolder -and (Test-Path -LiteralPath $taskFolder)) {
+                try {
+                    [System.Diagnostics.Process]::Start('explorer.exe', ('"' + $taskFolder + '"')) | Out-Null
+                    Show-Notice -Title 'Folder Opened In Explorer' -Lines @(('Task Folder: ' + $taskFolder)) -Kind Success
+                } catch {
+                    Show-Notice -Title 'Could Not Open Explorer' -Lines @(('Path: ' + $taskFolder), [string]$_.Exception.Message) -Kind Warning
+                }
+            } else {
+                Show-Notice -Title 'Task Folder Not Found' -Lines @('The Live Task Folder Does Not Exist On Disk (It May Be Archived).') -Kind Warning
+            }
+            continue
+        }
+        if ($action -eq 'delete') {
+            $deleteConfirm = Show-Confirm -Title 'Permanently Delete Task?' -Message ('Task ID: ' + [string]$TaskRow.task_id + ' (' + [string]$task.title + ') | Status: ' + [string]$task.task_status + ' | This Removes The Live Task Folder And Unregisters It From AIPM Registry. This Action Cannot Be Undone.') -YesLabel 'Delete Task' -YesDesc 'Permanently Delete Live Folder And Unregister Task.' -NoLabel 'Cancel' -NoDesc 'Keep Task Intact.' -Default $false
+            if (-not $deleteConfirm) { continue }
+            $deleted = Invoke-AipmCore -AppRoot $Root -Command 'task-delete' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -DeleteArchive
+            if ($deleted.Status -ne 'PASS') {
+                Show-Notice -Title 'Task Deletion Failed' -Lines @([string]$deleted.Reason) -Kind Error
+                continue
+            }
+            Show-Notice -Title 'Task Deleted Successfully' -Lines @(
+                ('Task ID: ' + [string]$TaskRow.task_id),
+                'Live Task Folder And Registry Record Have Been Removed.'
+            ) -Kind Success
+            return
+        }
+        if ($action -eq 'clone') {
+            $defaultCloneTitle = 'Copy of ' + [string]$task.title
+            $cloneTitle = Read-ValidatedInput -Prompt 'Duplicate Task Title' -Help 'Enter The Title For The New Duplicated Task.' -Example $defaultCloneTitle -Default $defaultCloneTitle -Validate {
+                param($textVal)
+                if (-not $textVal.Trim()) { return 'Title Cannot Be Empty.' }
+                return $null
+            }
+            if (-not $cloneTitle) { continue }
+            $cloned = Invoke-AipmCore -AppRoot $Root -Command 'task-clone' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Title $cloneTitle.Trim()
+            if ($cloned.Status -ne 'PASS') {
+                Show-Notice -Title 'Duplicate Task Failed' -Lines @([string]$cloned.Reason) -Kind Error
+            } else {
+                Show-Notice -Title 'Task Duplicated Successfully' -Lines @(
+                    ('New Task ID: ' + [string]$cloned.Data.task_id),
+                    ('Title: ' + [string]$cloned.Data.task.title),
+                    'The New Task Was Created With The Same Scope And Plan.'
+                ) -Kind Success
+            }
             continue
         }
         if ($action -eq 'git-status') {
@@ -900,7 +1027,7 @@ function Show-AipmTaskRecord {
                 'Attach Plan, Report Or Supporting File Copies One Selected File Into A Task Category And Leaves The Original In Place.',
                 'Project Source Files Stay In Their Original Locations And Are Never Edited By AIPM.',
                 'Verification Records Evidence Supplied By You; AIPM Does Not Execute Project Tests.',
-                'Task Records Are Kept As Project History And Cannot Be Deleted From This Screen.'
+                'Task Records Can Be Renamed, Edited, Archived Or Permanently Deleted Directly From This Action Menu.'
             ))
             continue
         }

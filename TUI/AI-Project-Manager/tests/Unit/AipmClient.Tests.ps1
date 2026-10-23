@@ -78,3 +78,20 @@ $deletedFolder = Invoke-AipmCore -AppRoot $appRoot -Command 'task-delete-folder'
 Assert-Equal 'task live folder can be deleted after verified archive' 'PASS' $deletedFolder.Status
 $metaAfterDelete = Invoke-AipmCore -AppRoot $appRoot -Command 'task-metadata' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
 Assert-True 'task metadata remains readable from archive after folder deletion' ($metaAfterDelete.Status -eq 'PASS' -and $metaAfterDelete.Data.metadata.task_id -eq $taskId)
+
+$importedTaskId = [string]$importedTask.Data.task.task_id
+$editedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-edit' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $importedTaskId -Title 'Edited Imported Title' -Scope 'Edited Scope'
+Assert-Equal 'task edit updates title and scope through Core client' 'PASS' $editedTask.Status
+Assert-Equal 'edited task title is reflected' 'Edited Imported Title' $editedTask.Data.task.title
+
+$clonedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-clone' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $importedTaskId -Title 'Cloned Client Task'
+Assert-Equal 'task clone completes through Core client' 'PASS' $clonedTask.Status
+Assert-Equal 'cloned task has requested title' 'Cloned Client Task' $clonedTask.Data.task.title
+
+$newRenamedId = $importedTaskId.Replace('Task-', 'Task-Renamed-')
+$renamedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-rename' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $importedTaskId -NewTaskId $newRenamedId
+Assert-Equal 'task rename completes through Core client' 'PASS' $renamedTask.Status
+Assert-Equal 'renamed task has new id' $newRenamedId $renamedTask.Data.task_id
+
+$deletedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-delete' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $newRenamedId -DeleteArchive
+Assert-Equal 'task delete completes through Core client' 'PASS' $deletedTask.Status

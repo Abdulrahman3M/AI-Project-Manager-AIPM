@@ -74,6 +74,74 @@ class TaskOperations:
         self._mutate('task.create', task, title=title, scope=scope)
         return task
 
+    def edit(self, task: Path, *, title: str | None = None, scope: str | None = None) -> None:
+        """Update task title and/or scope description, resyncing task artifacts."""
+        if title is None and scope is None:
+            raise StateError('Task Title Or Scope Is Required')
+        payload = {}
+        if title is not None:
+            if not isinstance(title, str) or not title.strip():
+                raise StateError('Task Title Cannot Be Empty')
+            payload['title'] = title.strip()
+        if scope is not None:
+            if not isinstance(scope, str) or not scope.strip():
+                raise StateError('Task Scope Cannot Be Empty')
+            payload['scope'] = scope.strip()
+        self._mutate('task.edit', task, **payload)
+
+    def rename_task(self, task: Path, new_task_id: str) -> Path:
+        """Rename a task folder and its identity in Core manifest, preserving all artifacts and archives."""
+        old_id = self._task_id(task)
+        new_id = new_task_id.strip()
+        if not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', new_id):
+            raise StateError('Invalid Task Identity (Must start with Task- and contain only letters, numbers, hyphens, and underscores)')
+        if old_id == new_id:
+            return self.root / 'Tasks' / new_id
+        new_task_root = self.root / 'Tasks' / new_id
+        if new_task_root.exists():
+            raise StateError('Target Task Folder Already Exists')
+        old_task_root = self.root / 'Tasks' / old_id
+        if old_task_root.exists():
+            old_task_root.rename(new_task_root)
+        old_archive = self.root / 'Archive' / f'{old_id}.zip'
+        old_checksum = old_archive.with_suffix('.zip.sha256')
+        if old_archive.is_file():
+            new_archive = self.root / 'Archive' / f'{new_id}.zip'
+            new_checksum = new_archive.with_suffix('.zip.sha256')
+            old_archive.rename(new_archive)
+            if old_checksum.is_file():
+                old_checksum.rename(new_checksum)
+        state = self._request('state.read', {})
+        self._request('task.rename', {'task_id': old_id, 'new_task_id': new_id}, revision=state['revision'], mutation=True)
+        if new_task_root.exists():
+            self.sync_artifacts(new_task_root)
+        return new_task_root
+
+    def clone_task(self, task: Path, new_title: str | None = None) -> Path:
+        """Create a new task initialized with the scope and plan of an existing task."""
+        record = self.read_task(task)
+        title = new_title.strip() if new_title and new_title.strip() else f"Copy of {record['title']}"
+        scope = record['scope']
+        new_task = self.create(title, scope)
+        if record.get('plan'):
+            self.plan(new_task, record['plan'])
+        return new_task
+
+    def delete_task(self, task: Path, *, delete_archive: bool = False) -> dict[str, Any]:
+        """Permanently delete a live task folder and unregister it from the AIPM registry, even if incomplete."""
+        task_id = self._task_id(task)
+        task_root = self.root / 'Tasks' / task_id
+        if task_root.exists():
+            shutil.rmtree(task_root)
+        if delete_archive:
+            archive_path = self.root / 'Archive' / f'{task_id}.zip'
+            checksum_path = archive_path.with_suffix('.zip.sha256')
+            archive_path.unlink(missing_ok=True)
+            checksum_path.unlink(missing_ok=True)
+        state = self._request('state.read', {})
+        self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
+        return {'task_id': task_id, 'task_deleted': True, 'status': 'PASS'}
+
     def plan(self, task: Path, text: str) -> None:
         self._mutate('task.plan', task, text=text)
 
@@ -408,8 +476,6 @@ class TaskOperations:
         """Create an integrity-checked portable ZIP with Metadata.json while optionally keeping the live task record."""
         task_root = self._task_path(task)
         task_id = task_root.name
-        if self.read_task(task)['task_status'] != 'COMPLETE':
-            raise StateError('Only Completed Tasks Can Be Archived')
         self.sync_artifacts(task)
         self.generate_metadata(task)
         archive_root = self.root / 'Archive'
@@ -450,8 +516,6 @@ class TaskOperations:
         """Safely delete the live task folder after verifying the archive is intact."""
         task_id = self._task_id(task)
         task_root = self.root / 'Tasks' / task_id
-        if self.read_task(task)['task_status'] != 'COMPLETE':
-            raise StateError('Only Completed Tasks Can Have Their Live Folder Deleted')
         archive_path = self.root / 'Archive' / f'{task_id}.zip'
         checksum_path = archive_path.with_suffix('.zip.sha256')
         if not archive_path.is_file() or not checksum_path.is_file():
@@ -498,8 +562,6 @@ class TaskOperations:
         """Remove a completed, archived task from the AIPM registry; the verified archive remains the only copy."""
         task_id = self._task_id(task)
         task_root = self.root / 'Tasks' / task_id
-        if self.read_task(task)['task_status'] != 'COMPLETE':
-            raise StateError('Only Completed Tasks Can Be Removed From The Registry')
         if task_root.exists():
             raise StateError('Delete The Live Task Folder Before Removing The Registry Record')
         archive_path = self.root / 'Archive' / f'{task_id}.zip'

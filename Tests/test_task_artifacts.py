@@ -401,5 +401,62 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertEqual(run("task-list")["tasks"][0]["task_id"], task_id)
 
 
+    def test_incomplete_task_can_be_archived_and_folder_deleted(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Incomplete Archive", "Archive an in-progress task before completion.")
+        operations.write_artifact(task, "Reports/WIP.md", b"Work in progress content.\n")
+        self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
+
+        # Incomplete task can be archived directly
+        archive = operations.archive(task, delete_folder=True)
+        self.assertTrue(archive["verified"])
+        self.assertTrue(archive["folder_deleted"])
+        self.assertFalse(task.exists())
+        self.assertTrue(archive["archive_path"].is_file())
+        self.assertTrue(archive["checksum_path"].is_file())
+
+        meta = operations.read_metadata(task)
+        self.assertEqual(meta["task_id"], task.name)
+        self.assertEqual(meta["task_status"], "IN-PROGRESS")
+
+        # Can be unarchived / reopened
+        operations.reopen(task, "Resume work from archive.")
+        self.assertTrue(task.is_dir())
+        self.assertTrue((task / "Reports" / "WIP.md").is_file())
+
+    def test_task_edit_rename_clone_and_delete_lifecycle(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Original Title", "Original Scope Description")
+        self.assertEqual(operations.read_task(task)["title"], "Original Title")
+
+        # Edit title and scope
+        operations.edit(task, title="Updated Title", scope="Updated Scope Description")
+        read = operations.read_task(task)
+        self.assertEqual(read["title"], "Updated Title")
+        self.assertEqual(read["scope"], "Updated Scope Description")
+        self.assertIn("Updated Title", (task / "Task-State.md").read_text(encoding="utf-8"))
+
+        # Clone task
+        cloned = operations.clone_task(task, "Cloned Task")
+        self.assertEqual(operations.read_task(cloned)["title"], "Cloned Task")
+        self.assertEqual(operations.read_task(cloned)["scope"], "Updated Scope Description")
+        self.assertTrue(cloned.is_dir())
+
+        # Rename task folder and ID
+        new_id = f"Task-{task.name.replace('Task-', 'Renamed-')}"
+        renamed_path = operations.rename_task(task, new_id)
+        self.assertEqual(renamed_path.name, new_id)
+        self.assertTrue(renamed_path.is_dir())
+        self.assertFalse(task.exists())
+        self.assertEqual(operations.read_task(renamed_path)["task_id"], new_id)
+
+        # Permanently delete incomplete task
+        delete_result = operations.delete_task(renamed_path, delete_archive=True)
+        self.assertTrue(delete_result["task_deleted"])
+        self.assertFalse(renamed_path.exists())
+        with self.assertRaises(StateError):
+            operations.read_task(renamed_path)
+
+
 if __name__ == "__main__":
     unittest.main()

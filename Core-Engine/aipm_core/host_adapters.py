@@ -18,7 +18,7 @@ MATRIX_PATH = Path("Plugins/Adapters/Host-Capability-Matrix.json")
 MUTATING_COMMANDS = {
     "task.create", "task.plan", "task.blocker.add", "task.blocker.clear",
     "task.verify", "task.report", "task.checkpoint", "task.artifact.write",
-    "state.set-next-action", "state.record-git-observation",
+    "state.set-next-action", "state.record-git-observation", "task.edit",
 }
 TASK_ARTIFACT_COMMANDS = {"task.artifact.list", "task.artifact.read", "task.artifact.write"}
 
