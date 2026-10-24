@@ -102,6 +102,7 @@ def _atomic_json(path: Path, data: dict) -> None:
             json.dump(data, stream, indent=2, sort_keys=True)
             stream.write("\n")
             stream.flush()
+            os.fsync(stream.fileno())
         temporary.replace(path)
     except PermissionError as error:
         raise StateError(f"access denied: {path}") from error

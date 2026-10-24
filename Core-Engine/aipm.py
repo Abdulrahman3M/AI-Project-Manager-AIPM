@@ -84,8 +84,7 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             state = engine.execute(CommandEnvelope("task-cli-list", "state.read", "aipm-cli", operations.project.project_id, 0, None, {}))
             rows = []
             for task_id, record in sorted(state["state"]["tasks"].items()):
-                task = operations.read_task(operations.root / "Tasks" / task_id)
-                rows.append({"task_id": task_id, "title": record["title"], "status": task["task_status"], "task_path": str(operations.root / "Tasks" / task_id)})
+                rows.append({"task_id": task_id, "title": record["title"], "status": CoreEngine.task_status(record), "task_path": str(operations.root / "Tasks" / task_id)})
             return {"schema_version": "1.0", "status": "PASS", "tasks": rows}
         if args.command == "task-import-archive":
             if not args.source:

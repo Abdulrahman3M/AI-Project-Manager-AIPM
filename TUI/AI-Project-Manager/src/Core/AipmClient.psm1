@@ -14,14 +14,20 @@ function Get-AipmRepositoryRoot {
     throw 'AIPM Core was not found in the application root or its parents.'
 }
 
+$script:CachedPython = $null
+
 function Find-AipmPython {
     param([string]$PythonPath = '')
     if ($PythonPath) {
         if (Test-Path -LiteralPath $PythonPath -PathType Leaf) { return [System.IO.Path]::GetFullPath($PythonPath) }
         return $null
     }
+    if ($script:CachedPython -and (Test-Path -LiteralPath $script:CachedPython -PathType Leaf)) {
+        return $script:CachedPython
+    }
     $python = Find-Executable -Name 'python'
     if (-not $python) { $python = Find-Executable -Name 'python3' }
+    if ($python) { $script:CachedPython = $python }
     return $python
 }
 

@@ -186,8 +186,41 @@ class TaskOperations:
         task_root = self.root / 'Tasks' / task_id
         archive_path = self.root / 'Archive' / f'{task_id}.zip'
         if not task_root.exists() and archive_path.is_file():
+            sidecar = archive_path.with_suffix('.zip.sha256')
+            digest = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            if sidecar.is_file() and not sidecar.read_text(encoding='ascii', errors='ignore').strip().startswith(digest):
+                raise StateError('Task Archive Checksum Mismatch')
             with zipfile.ZipFile(archive_path, 'r') as package:
-                package.extractall(task_root)
+                bad = package.testzip()
+                if bad is not None:
+                    raise StateError(f'Task Archive Corrupted: {bad}')
+                infos = package.infolist()
+                if len(infos) > MAX_IMPORT_ARCHIVE_ENTRIES or sum(info.file_size for info in infos) > MAX_IMPORT_ARCHIVE_BYTES:
+                    raise StateError('Task Archive Exceeds Import Limits')
+                for info in infos:
+                    name = info.filename
+                    parts = name.split('/')
+                    if info.is_dir():
+                        continue
+                    if (not name or name.startswith('/') or '\\' in name or '\x00' in name or ':' in name
+                            or any(part in {'', '.', '..'} for part in parts)):
+                        raise StateError('Task Archive Contains An Unsafe Path')
+                staging: Path | None = Path(tempfile.mkdtemp(prefix='.aipm-reopen-', dir=self.root))
+                try:
+                    for info in infos:
+                        if info.is_dir() or info.filename.startswith('.aipm-') or info.filename.endswith('.tmp'):
+                            continue
+                        destination = staging.joinpath(*info.filename.split('/'))
+                        if not _inside(_canonical(destination), _canonical(staging)):
+                            raise StateError('Task Archive Contains An Unsafe Path')
+                        destination.parent.mkdir(parents=True, exist_ok=True)
+                        destination.write_bytes(package.read(info.filename))
+                    (self.root / 'Tasks').mkdir(parents=True, exist_ok=True)
+                    os.replace(staging, task_root)
+                    staging = None
+                finally:
+                    if staging is not None:
+                        shutil.rmtree(staging, ignore_errors=True)
         self._mutate('task.reopen', task, text=next_work)
 
     @staticmethod
@@ -719,7 +752,16 @@ class TaskOperations:
             stream.seek(0)
             if os.name == 'nt':
                 import msvcrt
-                msvcrt.locking(stream.fileno(), msvcrt.LK_LOCK, 1)
+                import time
+                deadline = time.monotonic() + 10.0
+                while True:
+                    try:
+                        msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                        break
+                    except OSError:
+                        if time.monotonic() >= deadline:
+                            raise StateError('Could not acquire task artifact lock (timeout)')
+                        time.sleep(0.05)
             else:
                 import fcntl
                 fcntl.flock(stream.fileno(), fcntl.LOCK_EX)

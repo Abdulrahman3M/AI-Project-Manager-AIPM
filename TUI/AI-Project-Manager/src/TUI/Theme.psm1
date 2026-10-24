@@ -5,8 +5,27 @@ Set-StrictMode -Version 2.0
 $script:ColorMode = 'Full'
 $script:Accent = 'Cyan'
 $script:Tier = ''   # the tier in use; empty = detect on first use (tests and the settings screen can override it)
+$script:ResolvedTier = ''
 $script:IconTableCache = $null
 $script:ThemeRoles = $null
+$script:ConsoleUtf8Configured = $false
+
+$script:BaseRoleStyles = @{
+    Title    = @{ Ansi = '1;36'; Legacy = 'Cyan' }
+    Heading  = @{ Ansi = '1;37'; Legacy = 'White' }
+    Frame    = @{ Ansi = '38;5;7'; Legacy = 'DarkGray' }
+    Normal   = @{ Ansi = '0';    Legacy = 'Gray' }
+    Dim      = @{ Ansi = '90';   Legacy = 'DarkGray' }
+    Selected = @{ Ansi = '1;97'; Legacy = 'White' }
+    Number   = @{ Ansi = '90';   Legacy = 'DarkGray' }
+    Key      = @{ Ansi = '96';   Legacy = 'Cyan' }
+    Success  = @{ Ansi = '32';   Legacy = 'Green' }
+    Warning  = @{ Ansi = '33';   Legacy = 'Yellow' }
+    Error    = @{ Ansi = '31';   Legacy = 'Red' }
+    Info     = @{ Ansi = '34';   Legacy = 'Blue' }
+}
+$script:AccentCodes = @{ Cyan = '36'; Teal = '36'; Blue = '34'; Green = '32'; Purple = '35'; Yellow = '33'; Gray = '37'; White = '37'; Magenta = '35'; Red = '31' }
+$script:LegacyAccents = @{ Cyan = 'Cyan'; Teal = 'Cyan'; Blue = 'Blue'; Green = 'Green'; Purple = 'Magenta'; Yellow = 'Yellow'; Gray = 'Gray'; White = 'White'; Magenta = 'Magenta'; Red = 'Red' }
 
 function ConvertFrom-CodePoint { param([int]$Code) return [char]::ConvertFromUtf32($Code) }
 function Get-AipmUxRoot {
@@ -87,22 +106,31 @@ function Resolve-IconTier {
 function Set-ConsoleUtf8Output {
     # Windows only: make the console write UTF-8 so the glyphs arrive unchanged. Also needed when output is redirected.
     if (-not (Test-IsWindows)) { return $true }
-    try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false); return $true } catch { return $false }
+    if ($script:ConsoleUtf8Configured) { return $true }
+    try {
+        [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+        $script:ConsoleUtf8Configured = $true
+        return $true
+    } catch { return $false }
 }
 
 function Get-IconTier {
+    if ($script:Tier) { return $script:Tier }
+    if ($script:ResolvedTier) { return $script:ResolvedTier }
     $names = 'AIPM_ICONS', 'AIPM_ASCII', 'LANG', 'LC_ALL', 'WT_SESSION', 'TERM_PROGRAM', 'ConEmuANSI'
     $e = @{}; foreach ($n in $names) { $e[$n] = [Environment]::GetEnvironmentVariable($n) }
     if (-not $e['AIPM_ICONS'] -and $e['AIPM_ASCII'] -ne '1') {
-        $saved = Get-UserSetting 'icons'
-        if ($saved -in @('emoji', 'symbol', 'none')) { $e['AIPM_ICONS'] = $saved }   # the user's remembered choice
+        $saved = Get-UserSetting 'design_icons'
+        if (-not $saved) { $saved = Get-UserSetting 'icons' }
+        if ($saved -and $saved.ToLowerInvariant() -in @('emoji', 'symbol', 'ascii', 'none')) { $e['AIPM_ICONS'] = $saved.ToLowerInvariant() }
     }
     $redirected = $false
     try { $redirected = [Console]::IsOutputRedirected } catch { $redirected = $true }
     $win = Test-IsWindows
     $utf8 = $true
     if ($win) { $utf8 = Set-ConsoleUtf8Output }
-    return (Resolve-IconTier -Env $e -IsWin $win -Redirected $redirected -Utf8Ok $utf8)
+    $script:ResolvedTier = (Resolve-IconTier -Env $e -IsWin $win -Redirected $redirected -Utf8Ok $utf8)
+    return $script:ResolvedTier
 }
 
 function Get-Icon {
@@ -114,8 +142,12 @@ function Get-Icon {
     return $t[$Name][$Tier]
 }
 
-function Set-IconTier { param([ValidateSet('Auto', 'Emoji', 'Symbol', 'Ascii', 'None')][string]$Tier) $script:Tier = $(if ($Tier -eq 'Auto') { '' } else { $Tier }) }
-function Get-IconTierInUse { if ($script:Tier) { return $script:Tier } return (Get-IconTier) }
+function Set-IconTier {
+    param([ValidateSet('Auto', 'Emoji', 'Symbol', 'Ascii', 'None')][string]$Tier)
+    $script:Tier = $(if ($Tier -eq 'Auto') { '' } else { $Tier })
+    $script:ResolvedTier = ''
+}
+function Get-IconTierInUse { if ($script:Tier) { return $script:Tier }; if ($script:ResolvedTier) { return $script:ResolvedTier }; return (Get-IconTier) }
 
 function Set-TuiColorStyle {
     param([ValidateSet('Full','Subtle','None','Auto')][string]$Mode = 'Full',
@@ -125,22 +157,6 @@ function Set-TuiColorStyle {
 # Roles -> ANSI SGR codes and the legacy console color. Add a role here, never a color elsewhere.
 function Get-RoleStyle {
     param([Parameter(Mandatory)][string]$Role)
-    $s = @{
-        Title    = @{ Ansi = '1;36'; Legacy = 'Cyan' }
-        Heading  = @{ Ansi = '1;37'; Legacy = 'White' }
-        Frame    = @{ Ansi = '38;5;7'; Legacy = 'DarkGray' }
-        Normal   = @{ Ansi = '0';    Legacy = 'Gray' }
-        Dim      = @{ Ansi = '90';   Legacy = 'DarkGray' }
-        Selected = @{ Ansi = '1;97'; Legacy = 'White' }
-        Number   = @{ Ansi = '90';   Legacy = 'DarkGray' }
-        Key      = @{ Ansi = '96';   Legacy = 'Cyan' }
-        Success  = @{ Ansi = '32';   Legacy = 'Green' }
-        Warning  = @{ Ansi = '33';   Legacy = 'Yellow' }
-        Error    = @{ Ansi = '31';   Legacy = 'Red' }
-        Info     = @{ Ansi = '34';   Legacy = 'Blue' }
-    }
-    $acc = @{ Cyan = '36'; Teal = '36'; Blue = '34'; Green = '32'; Purple = '35'; Yellow = '33'; Gray = '37'; White = '37'; Magenta = '35'; Red = '31' }
-    $legacy = @{ Cyan = 'Cyan'; Teal = 'Cyan'; Blue = 'Blue'; Green = 'Green'; Purple = 'Magenta'; Yellow = 'Yellow'; Gray = 'Gray'; White = 'White'; Magenta = 'Magenta'; Red = 'Red' }
     if ($Role -eq 'Description') {
         if ($script:ColorMode -eq 'None' -or $env:NO_COLOR) { return @{ Ansi = '2'; Legacy = 'DarkGray' } }
         $theme = Get-ThemeRoles
@@ -153,7 +169,7 @@ function Get-RoleStyle {
     if ($Role -eq 'SelectionMarker') {
         $theme = Get-ThemeRoles
         $index = if ($theme) { Get-ThemeAnsiIndex ([string]$theme.accent) 14 } else { 14 }
-        return @{ Ansi = ('1;38;5;' + $index); Legacy = $legacy[$script:Accent] }
+        return @{ Ansi = ('1;38;5;' + $index); Legacy = $script:LegacyAccents[$script:Accent] }
     }
     if ($Role -eq 'Selected') {
         return @{ Ansi = $(if ($script:ColorMode -eq 'Subtle') { '0;97' } else { '1;97' }); Legacy = 'White' }
@@ -165,20 +181,20 @@ function Get-RoleStyle {
     }
     if ($Role -in @('Title','Key')) {
         $shade = $(if ($script:ColorMode -eq 'Subtle') { '0;' } else { '1;' })
-        return @{ Ansi = ($shade + $acc[$script:Accent]); Legacy = $legacy[$script:Accent] }
+        return @{ Ansi = ($shade + $script:AccentCodes[$script:Accent]); Legacy = $script:LegacyAccents[$script:Accent] }
     }
-    if ($s.ContainsKey($Role)) {
+    if ($script:BaseRoleStyles.ContainsKey($Role)) {
         $theme = Get-ThemeRoles
         if ($theme) {
             $themeKey = switch ($Role) { 'Normal' { 'text' } 'Dim' { 'muted' } 'Frame' { 'muted' } 'Success' { 'success' } 'Warning' { 'warning' } 'Error' { 'error' } 'Info' { 'accent' } default { '' } }
             if ($themeKey -and $theme.PSObject.Properties[$themeKey]) {
                 $index = Get-ThemeAnsiIndex ([string]$theme.$themeKey) 7
-                return @{ Ansi = ('38;5;' + $index); Legacy = $s[$Role].Legacy }
+                return @{ Ansi = ('38;5;' + $index); Legacy = $script:BaseRoleStyles[$Role].Legacy }
             }
         }
-        return $s[$Role]
+        return $script:BaseRoleStyles[$Role]
     }
-    return $s['Normal']
+    return $script:BaseRoleStyles['Normal']
 }
 
 Export-ModuleMember -Function Get-IconTable, Resolve-IconTier, Set-ConsoleUtf8Output, Get-IconTier, Get-Icon, Set-IconTier, Get-IconTierInUse, Set-TuiColorStyle, Get-RoleStyle, Get-ThemeRoles

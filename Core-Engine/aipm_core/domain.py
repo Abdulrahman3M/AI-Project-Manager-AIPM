@@ -63,8 +63,14 @@ class CoreEngine:
             if task_id not in tasks:
                 raise StateError('Task Not Found')
             del tasks[task_id]
-            manifest['task_id'] = None
-            manifest['task_status'] = 'NOT-STARTED'
+            if manifest.get('task_id') == task_id:
+                if tasks:
+                    latest_id = sorted(tasks.keys())[-1]
+                    manifest['task_id'] = latest_id
+                    manifest['task_status'] = cls.task_status(tasks[latest_id])
+                else:
+                    manifest['task_id'] = None
+                    manifest['task_status'] = 'NOT-STARTED'
             return
         elif command == 'task.rename':
             if task_id not in tasks:

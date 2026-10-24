@@ -1,5 +1,23 @@
 # AIPM Change Log
 
+## [1.5.7] — Performance Optimization, Hardening, And Robustness Enhancements (Repository Update; Not Published)
+
+- Performance Optimizations:
+  - TUI Settings & Executable Caching: implemented in-memory write-time caching in `Settings.psm1` (`Get-UserSetting`) and executable discovery caching in `Platform.psm1` (`Find-Executable`) and `AipmClient.psm1` (`Find-AipmPython`), eliminating hundreds of redundant disk reads and PATH scans per session.
+  - TUI Rendering Acceleration: moved base role styles and accent color tables to static script-level hashtables in `Theme.psm1`, eliminating thousands of transient object allocations during frame rendering; added tier resolution caching and guarded UTF-8 console output re-initialization.
+  - Interactive Menu Event Loop: replaced busy 125ms redraw loop in `Menu.psm1` with a dirty-check event pump that redraws only on active input or terminal window resize; optimized layout metrics cache key construction via `StringBuilder`.
+  - Core CLI Task Listing: in `aipm.py` (`task-list`), derive task status directly via `CoreEngine.task_status(record)` in memory rather than invoking `read_task()` with full engine evaluation for every task in a loop.
+- Security Hardening & Durability:
+  - Atomic File Durability: added `os.fsync(stream.fileno())` before atomic replacement in `_atomic_json` (`storage.py`) to guarantee filesystem metadata and buffer synchronization before rename.
+  - Secure Task Reopen Archive Extraction: hardened `TaskOperations.reopen` (`task_ops.py`) with strict Zip-Slip path validation, sidecar checksum verification, entry count and uncompressed byte quotas, and atomic extraction through an isolated staging directory.
+  - Non-Blocking File Locking on Windows: upgraded `_artifact_lock` in `task_ops.py` to use non-blocking `msvcrt.LK_NBLCK` with a retry deadline loop, eliminating blocking deadlock `EDEADLK` exceptions under contention.
+  - Unregister Task State Transition: in `domain.py` (`task.unregister`), only reset active task pointer when the unregistered task matches the current active task, gracefully falling back to the latest remaining task or `NOT-STARTED`.
+- Cross-Platform & TUI Usability Fixes:
+  - Cross-Platform Task Folder Opening: updated `open-folder` in `App.psm1` to support macOS (`open`) and Linux (`xdg-open`) alongside Windows (`explorer.exe`).
+  - Git Commit Hook Isolation: added `--no-verify` to local commit action in `App.psm1` to prevent inadvertent execution of managed project test hooks.
+  - Hybrid Search Navigation: fixed Backspace handling in `Menu.psm1` when slash search (`/`) is activated in Hybrid navigation mode.
+- Synchronized the platform and PowerShell TUI versions at `1.5.7`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.6] — Comprehensive Task Controls: Edit Details, Rename, Open Explorer, Archive Incomplete Tasks, Clone, And Delete (Repository Update; Not Published)
 
 - Added new Core task lifecycle commands and capabilities:

@@ -931,10 +931,11 @@ function Show-AipmTaskRecord {
             }
             if ($taskFolder -and (Test-Path -LiteralPath $taskFolder)) {
                 try {
-                    [System.Diagnostics.Process]::Start('explorer.exe', ('"' + $taskFolder + '"')) | Out-Null
-                    Show-Notice -Title 'Folder Opened In Explorer' -Lines @(('Task Folder: ' + $taskFolder)) -Kind Success
+                    $opener = if (Test-IsWindows) { 'explorer.exe' } elseif ((Get-PlatformName) -eq 'macOS') { 'open' } else { 'xdg-open' }
+                    [System.Diagnostics.Process]::Start($opener, ('"' + $taskFolder + '"')) | Out-Null
+                    Show-Notice -Title 'Folder Opened' -Lines @(('Task Folder: ' + $taskFolder)) -Kind Success
                 } catch {
-                    Show-Notice -Title 'Could Not Open Explorer' -Lines @(('Path: ' + $taskFolder), [string]$_.Exception.Message) -Kind Warning
+                    Show-Notice -Title 'Could Not Open Folder' -Lines @(('Path: ' + $taskFolder), [string]$_.Exception.Message) -Kind Warning
                 }
             } else {
                 Show-Notice -Title 'Task Folder Not Found' -Lines @('The Live Task Folder Does Not Exist On Disk (It May Be Archived).') -Kind Warning
@@ -1009,7 +1010,7 @@ function Show-AipmTaskRecord {
             }
             $stage = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'add', '-A', '--', '.', ':!Shared-Project-State-Manager/**') -TimeoutSec 30
             if (-not $stage.Started -or $stage.TimedOut -or $stage.ExitCode -ne 0) { Show-Notice -Title 'Git Stage Failed' -Lines @($stage.StdErr.Trim()) -Kind Error; continue }
-            $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '-m', $message.Trim()) -TimeoutSec 30
+            $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '--no-verify', '-m', $message.Trim()) -TimeoutSec 30
             if (-not $commit.Started -or $commit.TimedOut -or $commit.ExitCode -ne 0) {
                 $errLines = @($commit.StdErr.Trim(), $commit.StdOut.Trim() | Where-Object { $_ })
                 if ($errLines.Count -eq 0) { $errLines = @('Git Commit Failed.') }

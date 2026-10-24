@@ -32,11 +32,22 @@ function Get-AppDataDirectory {
     return (Join-Path $base $AppName)
 }
 
+$script:ExecutableCache = @{}
+
 function Find-Executable {
     # Returns the full path of a program on PATH (or $null). Never guesses a hard-coded location.
     param([Parameter(Mandatory)][string]$Name)
+    if ($script:ExecutableCache.ContainsKey($Name)) {
+        $cached = $script:ExecutableCache[$Name]
+        if ($cached -and (Test-Path -LiteralPath $cached -PathType Leaf)) { return $cached }
+    }
     $c = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($c) { return [string]$c.Source }
+    if ($c) {
+        $found = [string]$c.Source
+        $script:ExecutableCache[$Name] = $found
+        return $found
+    }
+    $script:ExecutableCache[$Name] = $null
     return $null
 }
 

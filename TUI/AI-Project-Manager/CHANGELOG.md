@@ -1,5 +1,19 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.7] — Performance Optimization, Cross-Platform Support, And Menu Event Pump (Not Published)
+
+- Performance Optimizations:
+  - Added in-memory file write-time caching (`$script:SettingsCache`, `$script:SettingsLastWrite`) in `Settings.psm1` (`Get-UserSetting`), reducing per-session settings disk reads from hundreds to zero when settings are unchanged.
+  - Added executable path caching (`$script:ExecutableCache`) in `Platform.psm1` (`Find-Executable`) and `$script:CachedPython` in `AipmClient.psm1` (`Find-AipmPython`) to prevent redundant PATH evaluations.
+  - Refactored `Theme.psm1` to store style roles (`$script:BaseRoleStyles`) and accent codes (`$script:AccentCodes`) in static script hashtables, eliminating transient allocations on every render cycle. Added icon tier caching (`$script:ResolvedTier`) and UTF-8 console output guard (`$script:ConsoleUtf8Configured`).
+  - Optimized menu layout metric calculation in `Menu.psm1` (`Get-MenuLayoutMetrics`) using `StringBuilder` key generation instead of JSON serialization.
+  - Converted menu event loop in `Menu.psm1` (`Show-Menu`) from a busy 125ms redraw loop to a dirty-checked event pump that re-renders only on active user input or console window dimension changes.
+- Usability & Cross-Platform Enhancements:
+  - Upgraded `open-folder` in `App.psm1` (`Show-AipmTaskRecord`) to resolve system openers cross-platform (`explorer.exe` on Windows, `open` on macOS, and `xdg-open` on Linux).
+  - Added `--no-verify` flag to git commit in `App.psm1` (`Show-AipmTaskRecord`) to prevent external project pre-commit hooks from interrupting local AIPM commits.
+  - Fixed Backspace input handling in `Menu.psm1` when slash search (`/`) is active in Hybrid navigation mode.
+- Synchronized the TUI version with AIPM platform `1.5.7`.
+
 ## [1.5.6] — Comprehensive Task Controls: Edit Details, Rename, Open Explorer, Archive Incomplete Tasks, Clone, And Delete (Not Published)
 
 - Extended the Task Management menu (`Show-AipmTaskRecord`) with comprehensive task controls:
