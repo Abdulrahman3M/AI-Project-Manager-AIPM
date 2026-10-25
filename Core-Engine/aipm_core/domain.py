@@ -238,6 +238,34 @@ class CoreEngine:
         return records
 
     @classmethod
+    def _legacy_task_normalization_matches_history(
+        cls,
+        raw_tasks: Any,
+        normalized_tasks: Any,
+        historical_tasks: Any,
+    ) -> bool:
+        """Allow only documented legacy field normalization to bridge old state and history."""
+        if not all(isinstance(tasks, dict) for tasks in (raw_tasks, normalized_tasks, historical_tasks)):
+            return False
+        if raw_tasks.keys() != normalized_tasks.keys() or raw_tasks.keys() != historical_tasks.keys():
+            return False
+        for task_id, raw_task in raw_tasks.items():
+            normalized_task = normalized_tasks[task_id]
+            historical_task = historical_tasks[task_id]
+            if not all(isinstance(task, dict) for task in (raw_task, normalized_task, historical_task)):
+                return False
+            reconciled = copy.deepcopy(historical_task)
+            verification = raw_task.get('verification')
+            status_override = raw_task.get('status_override')
+            if isinstance(verification, str):
+                reconciled['verification'] = copy.deepcopy(normalized_task.get('verification'))
+            if status_override == 'COMPLETED' or (status_override is not None and status_override != 'COMPLETE'):
+                reconciled['status_override'] = normalized_task.get('status_override')
+            if reconciled != normalized_task:
+                return False
+        return True
+
+    @classmethod
     def _recover(cls, project: ManagedProject) -> None:
         """Finish a durable intent before exposing state or accepting a mutation."""
         pending = project.state_root / "History" / "Pending-Commit.json"
@@ -254,7 +282,8 @@ class CoreEngine:
         if type(revision) is not int or revision < 1 or event["revision"] != revision or manifest["project_id"] != project.project_id or event["project_id"] != project.project_id:
             raise StateError("Invalid Pending Commit")
         manifest_path = project.state_root / "State-Manifest.json"
-        current = json.loads(manifest_path.read_text(encoding="utf-8"))
+        raw_current = json.loads(manifest_path.read_text(encoding="utf-8"))
+        current = copy.deepcopy(raw_current)
         cls._validate_manifest(current, project)
         if current["revision"] not in (revision - 1, revision) or (current["revision"] == revision and current != manifest):
             raise StateError("Pending Commit Conflicts With State")
@@ -283,6 +312,12 @@ class CoreEngine:
             for record in sorted(history, key=lambda record: record['revision']):
                 if record['revision'] < revision and record['command'] in cls.TASK_COMMANDS:
                     cls._apply_task(expected, record['command'], record['input'])
+            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks']:
+                raw_tasks = raw_current.get('tasks') if isinstance(raw_current, dict) else None
+                if cls._legacy_task_normalization_matches_history(raw_tasks, current.get('tasks'), expected['tasks']):
+                    expected['tasks'] = copy.deepcopy(current['tasks'])
+                    expected['task_id'] = current['task_id']
+                    expected['task_status'] = current['task_status']
             if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks']:
                 raise StateError('Task History Conflicts With State')
             cls._apply_task(expected, event['command'], event['input'])

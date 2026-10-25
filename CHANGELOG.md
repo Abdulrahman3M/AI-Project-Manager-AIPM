@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.5.9] — Legacy Task Commit Recovery (Repository Update; Not Published)
+
+- Fixed Core Engine pending-commit recovery after a legacy task record is normalized. A pre-existing string `verification` value or the old `COMPLETED` status spelling no longer makes the next task creation or mutation fail with `STATE_COMMIT_FAILED`.
+- The recovery exception is deliberately narrow: it accepts only the documented legacy normalization fields and continues to reject all other task-history divergence.
+- Added regression coverage that creates a new task after normalizing an existing legacy task record.
+- Refreshed the protected capability registry baseline so its platform version matches the shipped project version. No Skill or Prompt content changed; Plugin versions remain unchanged.
+- Synchronized the platform and PowerShell TUI versions at `1.5.9`. No GitHub Release or tag was created.
+
 ## [1.5.8] — Resilient Task State Normalization And Self-Healing (Repository Update; Not Published)
 
 - Core Engine State Recovery & Defensive Normalization:

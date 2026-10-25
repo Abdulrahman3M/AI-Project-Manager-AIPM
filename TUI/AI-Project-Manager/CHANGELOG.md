@@ -1,5 +1,10 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.9] — Legacy Task Commit Recovery (Not Published)
+
+- Synchronized with AIPM Core 1.5.9. Creating or updating a task now succeeds after the Core normalizes legacy string verification records or the old `COMPLETED` status spelling.
+- Synchronized the TUI version with AIPM platform `1.5.9`.
+
 ## [1.5.8] — Resilient Task State Normalization And Self-Healing (Not Published)
 
 - Synchronized with AIPM Core 1.5.8 resilient state recovery and task record normalization, preventing `INVALID_STATE` notices when inspecting projects containing agent-modified task manifests.

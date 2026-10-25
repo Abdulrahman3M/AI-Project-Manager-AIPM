@@ -177,6 +177,19 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertIsInstance(read_pass["verification"], dict)
         self.assertEqual(read_pass["verification"]["result"], "PASS")
 
+    def test_legacy_verification_normalization_does_not_block_next_task_creation(self) -> None:
+        """A normalized legacy record must not make the next state commit unrecoverable."""
+        operations = TaskOperations(self.engine, self.project)
+        legacy_task = operations.create("Legacy Verification", "Preserve legacy verification evidence.")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["tasks"][legacy_task.name]["verification"] = "PASS: verified by the previous AIPM release."
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        next_task = operations.create("Follow-Up", "Create a task after legacy normalization.")
+
+        self.assertEqual(operations.read_task(next_task)["task_status"], "IN-PROGRESS")
+
     def test_stranded_pending_commit_with_legacy_task_recovers_cleanly(self) -> None:
         operations = TaskOperations(self.engine, self.project)
         first = operations.create("Legacy Task", "Created before status_override existed.")
