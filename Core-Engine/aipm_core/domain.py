@@ -180,8 +180,26 @@ class CoreEngine:
         if any(not isinstance(task.get(key), str) or not task[key].strip() for key in ('title', 'scope', 'plan')) or not isinstance(task.get('report'), str) or not isinstance(task.get('blockers'), list) or any(not isinstance(text, str) or not text.strip() for text in task['blockers']):
             raise StateError('Invalid Task State')
         verification = task.get('verification')
+        if isinstance(verification, str):
+            evidence = verification.strip()
+            if not evidence:
+                task['verification'] = None
+            else:
+                upper = evidence.upper()
+                if upper.startswith('PASS'):
+                    res = 'PASS'
+                elif upper.startswith('FAIL'):
+                    res = 'FAIL'
+                else:
+                    res = 'UNVERIFIED'
+                task['verification'] = {'result': res, 'evidence': evidence}
+        verification = task.get('verification')
         if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
             raise StateError('Invalid Task Evidence')
+        if task.get('status_override') == 'COMPLETED':
+            task['status_override'] = 'COMPLETE'
+        elif task.get('status_override') not in (None, 'COMPLETE'):
+            task['status_override'] = None
         task.setdefault('status_override', None)
         if task['status_override'] not in (None, 'COMPLETE'):
             raise StateError('Invalid Task Status Override')

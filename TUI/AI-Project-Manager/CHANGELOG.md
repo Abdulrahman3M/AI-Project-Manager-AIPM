@@ -1,5 +1,10 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.8] — Resilient Task State Normalization And Self-Healing (Not Published)
+
+- Synchronized with AIPM Core 1.5.8 resilient state recovery and task record normalization, preventing `INVALID_STATE` notices when inspecting projects containing agent-modified task manifests.
+- Synchronized the TUI version with AIPM platform `1.5.8`.
+
 ## [1.5.7] — Performance Optimization, Cross-Platform Support, And Menu Event Pump (Not Published)
 
 - Performance Optimizations:

@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.5.8] — Resilient Task State Normalization And Self-Healing (Repository Update; Not Published)
+
+- Core Engine State Recovery & Defensive Normalization:
+  - Normalized string-based `verification` fields in `CoreEngine._validate_task_record` (`domain.py`) into structured dictionary objects (`{'result': ..., 'evidence': ...}`) with automatic result inference (`PASS`, `FAIL`, or `UNVERIFIED`), preventing `INVALID_STATE` exceptions when reading manifests created or updated by external AI agents or legacy scripts.
+  - Normalized non-standard `status_override` values: converted `'COMPLETED'` to `'COMPLETE'`, and normalized dynamic status overrides (such as `'BLOCKED'` or `'IN-PROGRESS'`) to `None` so the engine calculates runtime status dynamically without raising `Invalid Task Status Override`.
+  - Added unit test coverage in `test_task_artifacts.py` validating that string verification formats and loose status overrides self-heal cleanly during state read.
+- Synchronized the platform and PowerShell TUI versions at `1.5.8`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.7] — Performance Optimization, Hardening, And Robustness Enhancements (Repository Update; Not Published)
 
 - Performance Optimizations:

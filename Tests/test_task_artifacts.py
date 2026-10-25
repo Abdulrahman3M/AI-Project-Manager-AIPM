@@ -154,6 +154,29 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         second_task = operations.create("Post Legacy Task", "Mutate state when an older task lacks status_override.")
         self.assertEqual(operations.read_task(second_task)["task_status"], "IN-PROGRESS")
 
+    def test_task_records_with_string_verification_and_loose_status_override_are_normalized(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("String Verification Task", "Test normalization of string verification.")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        record = manifest["tasks"][task.name]
+        record["verification"] = "Source review completed; git diff --check passed."
+        record["status_override"] = "COMPLETED"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        read = operations.read_task(task)
+        self.assertEqual(read["task_status"], "COMPLETE")
+        self.assertIsInstance(read["verification"], dict)
+        self.assertEqual(read["verification"]["result"], "UNVERIFIED")
+        self.assertEqual(read["verification"]["evidence"], "Source review completed; git diff --check passed.")
+
+        # Test PASS prefix normalization
+        record["verification"] = "PASS: all unit tests passed."
+        record["status_override"] = "BLOCKED"  # Not a valid override, normalizes to None
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        read_pass = operations.read_task(task)
+        self.assertIsInstance(read_pass["verification"], dict)
+        self.assertEqual(read_pass["verification"]["result"], "PASS")
+
     def test_stranded_pending_commit_with_legacy_task_recovers_cleanly(self) -> None:
         operations = TaskOperations(self.engine, self.project)
         first = operations.create("Legacy Task", "Created before status_override existed.")
