@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.10] — Guided Task-State Diagnosis And Repair (Not Published)
+
+- When task state cannot be read or task creation fails, the TUI now asks Core for a diagnosis, explains the cause and safe recovery path, and offers repair only when Core confirms the narrowly supported recovery pattern.
+- The confirmed repair creates a hash-verified state snapshot, records preserved untracked tasks in an explicit event, resumes the pending create, and reports the backup and committed revision. Unsupported conflicts remain blocked with a recovery recommendation.
+- Synchronized the TUI version with AIPM platform `1.5.10`.
+
 ## [1.5.9] — Legacy Task Commit Recovery (Not Published)
 
 - Synchronized with AIPM Core 1.5.9. Creating or updating a task now succeeds after the Core normalizes legacy string verification records or the old `COMPLETED` status spelling.

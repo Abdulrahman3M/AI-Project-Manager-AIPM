@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--expected-sha256")
     parser.add_argument("--delete-folder", action="store_true")
     parser.add_argument("--delete-archive", action="store_true")
+    parser.add_argument("--confirm-repair", action="store_true")
     parser.add_argument("--stdin", action="store_true")
     parser.add_argument("--from-file")
     return parser
@@ -64,6 +65,17 @@ def _task_operations(registry_path: Path, project_id: str) -> tuple[TaskOperatio
         if not task_dir.exists() and not archive_path.is_file():
             operations.sync_artifacts(task_dir)
     return operations, engine
+
+
+def _managed_project(registry_path: Path, project_id: str) -> ManagedProject:
+    if not isinstance(project_id, str) or not project_id.strip():
+        raise StateError("PROJECT_ID_REQUIRED")
+    data = ProjectRegistry(registry_path).read()
+    entry = next((item for item in data["projects"] if item["project_id"] == project_id), None)
+    if entry is None:
+        raise StateError("PROJECT_NOT_REGISTERED")
+    root = _canonical(Path(entry["root_path"]))
+    return ManagedProject(entry["project_id"], entry["alias"], root, _canonical(root / STATE_ROOT_NAME))
 
 
 def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
@@ -361,6 +373,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             reason = str(error) if isinstance(error, StateError) else "REGISTRY_OPERATION_FAILED"
             if reason.startswith("AIPM_PLATFORM_PROTECTED"):
                 reason = "AIPM_PLATFORM_PROTECTED"
+            result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
+        print(json.dumps(result))
+        return 0 if result["status"] == "PASS" else 1
+    if args.command in {"state-diagnose", "state-repair"}:
+        try:
+            project = _managed_project(registry_path, args.project_id)
+            engine = CoreEngine({project.project_id: project})
+            if args.command == "state-diagnose":
+                result = {"schema_version": "1.0", **engine.diagnose_pending_task_commit(project)}
+            elif not args.confirm_repair:
+                result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "REPAIR_CONFIRMATION_REQUIRED"}
+            else:
+                result = engine.repair_pending_task_commit(project)
+        except (OSError, ValueError, TypeError, KeyError) as error:
+            reason = str(error) if isinstance(error, StateError) else "STATE_DIAGNOSIS_FAILED"
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
         print(json.dumps(result))
         return 0 if result["status"] == "PASS" else 1

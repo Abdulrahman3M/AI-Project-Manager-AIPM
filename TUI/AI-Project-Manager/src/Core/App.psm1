@@ -1196,6 +1196,46 @@ function Show-AipmTaskRecord {
     }
 }
 
+function Invoke-AipmStateRecovery {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [string]$FailureReason = 'INVALID_STATE')
+    $diagnosis = Invoke-AipmCore -AppRoot $Root -Command 'state-diagnose' -RegistryPath $RegistryPath -ProjectId $ProjectId
+    if ($diagnosis.Status -eq 'PASS' -and $diagnosis.Data.repairable) {
+        $taskList = @($diagnosis.Data.untracked_tasks) -join ', '
+        Show-Notice -Title 'Task State Problem Diagnosed' -Lines @(
+            ('Cause: ' + [string]$diagnosis.Data.cause),
+            ('Pending Task: ' + [string]$diagnosis.Data.pending_task_id + ' at revision ' + [string]$diagnosis.Data.pending_revision),
+            ('Task Records To Preserve And Reconcile: ' + $taskList),
+            ('Repair: ' + [string]$diagnosis.Data.remedy),
+            'AIPM Has Not Changed The Project State Yet.'
+        ) -Kind Warning
+        $confirmed = Show-Confirm -Title 'Repair The Pending Task State?' -Message 'AIPM Will Save A Hash-Verified Backup First, Preserve The Listed Task Records In An Explicit Core History Event, Then Resume The Pending Task Creation.' -YesLabel 'Back Up And Repair' -YesDesc 'Apply The Validated Repair And Resume The Pending Task.' -NoLabel 'Cancel' -NoDesc 'Leave All State Files Unchanged.' -Default $false
+        if (-not $confirmed) { return $false }
+        $repaired = Invoke-AipmCore -AppRoot $Root -Command 'state-repair' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
+        if ($repaired.Status -eq 'PASS') {
+            Show-Notice -Title 'Task State Repaired' -Lines @(
+                ('Verified Backup: ' + [string]$repaired.Data.backup),
+                ('Recovered Task Records: ' + (@($repaired.Data.recovered_tasks) -join ', ')),
+                ('Pending Task Created: ' + [string]$repaired.Data.created_task_id),
+                ('Committed Revision: ' + [string]$repaired.Data.revision),
+                'AIPM Verified The Event History And State Manifest After Repair.'
+            ) -Kind Success
+            return $true
+        }
+        $repairLines = @('Reason: ' + [string]$repaired.Reason, 'No repair success was reported.')
+        if ($repaired.Data -and $repaired.Data.backup) { $repairLines += 'Safety Backup: ' + [string]$repaired.Data.backup }
+        Show-Notice -Title 'Task State Repair Did Not Complete' -Lines $repairLines -Kind Error
+        return $false
+    }
+    $cause = if ($diagnosis.Data -and $diagnosis.Data.cause) { [string]$diagnosis.Data.cause } else { 'AIPM could not confirm the internal state failure.' }
+    $remedy = if ($diagnosis.Data -and $diagnosis.Data.remedy) { [string]$diagnosis.Data.remedy } else { 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.' }
+    Show-Notice -Title 'Task State Needs Manual Review' -Lines @(
+        ('Error Code: ' + $FailureReason),
+        ('Diagnosis: ' + $cause),
+        ('Recommended Action: ' + $remedy)
+    ) -Kind Error
+    return $false
+}
+
 function Invoke-AipmTaskManagement {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
     $currentPath = [System.IO.Path]::GetFullPath($RegistryPath)
@@ -1227,7 +1267,7 @@ function Invoke-AipmTaskManagement {
         while ($true) {
             $taskResult = Invoke-AipmCore -AppRoot $Root -Command 'task-list' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId)
             if ($taskResult.Status -ne 'PASS') {
-                Show-Notice -Title 'Project Tasks Could Not Be Read' -Lines @([string]$taskResult.Reason) -Kind Error
+                if (Invoke-AipmStateRecovery -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -FailureReason ([string]$taskResult.Reason)) { continue }
                 break
             }
             $taskItems = @(
@@ -1318,7 +1358,9 @@ function Invoke-AipmTaskManagement {
                 if ($created.Status -eq 'PASS') {
                     $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
                     Show-Notice -Title 'Task Created' -Lines @(('Task: ' + $title.Trim()), ('Task ID: ' + $createdId), 'The Task Record Was Saved In AIPM Project State. No Project Files Were Moved Or Edited.') -Kind Success
-                } else { Show-Notice -Title 'Task Creation Failed' -Lines @([string]$created.Reason) -Kind Error }
+                } elseif (-not (Invoke-AipmStateRecovery -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -FailureReason ([string]$created.Reason))) {
+                    Show-Notice -Title 'Task Creation Failed' -Lines @('The requested task was not confirmed as committed.', 'Review the state diagnosis above before retrying.') -Kind Error
+                }
                 continue
             }
             if ($taskChoice -eq 'import') {

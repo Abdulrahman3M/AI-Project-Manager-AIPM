@@ -5,9 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import copy
+import hashlib
 from pathlib import Path
 import re
+import shutil
 from typing import Any
+from uuid import uuid4
 
 from .storage import ManagedProject, StateError, _atomic_json, validate_managed_project
 
@@ -29,7 +32,7 @@ class CoreEngine:
     def __init__(self, projects: dict[str, ManagedProject]) -> None:
         self.projects = projects
 
-    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister', 'task.edit', 'task.rename'}
+    TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister', 'task.edit', 'task.rename', 'task.reconcile-and-create'}
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
@@ -46,6 +49,24 @@ class CoreEngine:
         if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id):
             raise StateError('Invalid Task Identity')
         tasks = manifest.setdefault('tasks', {})
+        if command == 'task.reconcile-and-create':
+            recovered = payload.get('recovered_tasks')
+            if not isinstance(recovered, list) or not recovered or len(recovered) > 100:
+                raise StateError('Invalid Recovered Task Set')
+            for item in recovered:
+                if not isinstance(item, dict):
+                    raise StateError('Invalid Recovered Task')
+                recovered_id, record = item.get('task_id'), item.get('record')
+                if not isinstance(recovered_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', recovered_id) or recovered_id in tasks or not isinstance(record, dict):
+                    raise StateError('Invalid Recovered Task')
+                restored = copy.deepcopy(record)
+                restored.setdefault('blockers', [])
+                restored.setdefault('verification', None)
+                restored.setdefault('report', '')
+                cls._validate_task_record(restored)
+                tasks[recovered_id] = restored
+            cls._apply_task(manifest, 'task.create', {key: payload.get(key) for key in ('task_id', 'title', 'scope')})
+            return
         if command == 'task.restore':
             if task_id in tasks:
                 raise StateError('Task Already Exists')
@@ -312,14 +333,32 @@ class CoreEngine:
             for record in sorted(history, key=lambda record: record['revision']):
                 if record['revision'] < revision and record['command'] in cls.TASK_COMMANDS:
                     cls._apply_task(expected, record['command'], record['input'])
-            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks']:
+            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks'] and event['command'] != 'task.reconcile-and-create':
                 raw_tasks = raw_current.get('tasks') if isinstance(raw_current, dict) else None
                 if cls._legacy_task_normalization_matches_history(raw_tasks, current.get('tasks'), expected['tasks']):
                     expected['tasks'] = copy.deepcopy(current['tasks'])
                     expected['task_id'] = current['task_id']
                     expected['task_status'] = current['task_status']
-            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks']:
+            if current['revision'] == revision - 1 and current.get('tasks', {}) != expected['tasks'] and event['command'] != 'task.reconcile-and-create':
                 raise StateError('Task History Conflicts With State')
+            if event['command'] == 'task.reconcile-and-create' and current['revision'] == revision - 1:
+                current_tasks = current.get('tasks', {})
+                expected_tasks = expected['tasks']
+                if not isinstance(current_tasks, dict) or not set(expected_tasks).issubset(current_tasks):
+                    raise StateError('Task History Conflicts With State')
+                if current.get('task_id') != expected['task_id'] or current.get('task_status') != expected['task_status']:
+                    raise StateError('Active Task Pointer Conflicts With History')
+                extras = {key: current_tasks[key] for key in current_tasks.keys() - expected_tasks.keys()}
+                if any(current_tasks[key] != expected_tasks[key] for key in expected_tasks):
+                    raw_tasks = raw_current.get('tasks') if isinstance(raw_current, dict) else None
+                    if not cls._legacy_task_normalization_matches_history(raw_tasks, current_tasks, expected_tasks):
+                        raise StateError('Task History Conflicts With State')
+                recovered = event['input'].get('recovered_tasks')
+                if not isinstance(recovered, list) or {item.get('task_id'): item.get('record') for item in recovered if isinstance(item, dict)} != extras or len(recovered) != len(extras):
+                    raise StateError('Recovered Task Set Conflicts With State')
+                expected['tasks'] = copy.deepcopy(expected_tasks)
+                expected['task_id'] = current.get('task_id')
+                expected['task_status'] = current.get('task_status')
             cls._apply_task(expected, event['command'], event['input'])
             if any(manifest[key] != expected[key] for key in ('tasks', 'task_id', 'task_status')):
                 raise StateError('Pending Commit Task Mismatch')
@@ -341,6 +380,137 @@ class CoreEngine:
         if current != manifest:
             _atomic_json(manifest_path, manifest)
         pending.unlink()
+
+    @classmethod
+    def diagnose_pending_task_commit(cls, project: ManagedProject) -> dict[str, Any]:
+        """Explain the narrowly repairable case of an interrupted create plus untracked task rows."""
+        try:
+            validate_managed_project(project)
+        except StateError as error:
+            return {'status': 'BLOCKED', 'repairable': False, 'reason': str(error), 'cause': 'The project state path failed AIPM ownership and isolation checks.', 'remedy': 'Correct the registered project path before requesting state repair.'}
+        pending_path = project.state_root / 'History' / 'Pending-Commit.json'
+        if not pending_path.is_file():
+            return {'status': 'PASS', 'repairable': False, 'reason': 'NO_PENDING_COMMIT'}
+        try:
+            pending = json.loads(pending_path.read_text(encoding='utf-8'))
+            manifest_path = project.state_root / 'State-Manifest.json'
+            raw = json.loads(manifest_path.read_text(encoding='utf-8'))
+            current = copy.deepcopy(raw)
+            cls._validate_manifest(current, project)
+            transaction = pending
+            if not isinstance(transaction, dict) or transaction.get('schema_version') != '1.0':
+                raise StateError('Invalid Pending Commit Envelope')
+            event = transaction['event']
+            target = transaction['manifest']
+            cls._validate_event(event, project)
+            cls._validate_manifest(target, project)
+            if event['command'] != 'task.create' or target['revision'] != current['revision'] + 1 or event['revision'] != target['revision'] or target['project_id'] != project.project_id:
+                raise StateError('Repair supports only a pending task creation')
+            history = cls._history(project, current['revision'])
+            expected = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+            for record in sorted(history, key=lambda item: item['revision']):
+                if record['command'] in cls.TASK_COMMANDS:
+                    cls._apply_task(expected, record['command'], record['input'])
+            if current.get('task_id') != expected['task_id'] or current.get('task_status') != expected['task_status']:
+                raise StateError('Active Task Pointer Conflicts With History')
+            tasks = current.get('tasks', {})
+            if not isinstance(tasks, dict) or not set(expected['tasks']).issubset(tasks):
+                raise StateError('Current task set is missing or conflicts with history')
+            if any(tasks[key] != expected['tasks'][key] for key in expected['tasks']):
+                if not cls._legacy_task_normalization_matches_history(raw.get('tasks'), tasks, expected['tasks']):
+                    raise StateError('Existing task records differ from history')
+            extras = {key: copy.deepcopy(tasks[key]) for key in tasks.keys() - expected['tasks'].keys()}
+            for task in extras.values():
+                cls._validate_task_record(task)
+            if not extras:
+                raise StateError('Pending create is not blocked by untracked tasks')
+            candidate = copy.deepcopy(current)
+            cls._apply_task(candidate, 'task.create', event['input'])
+            candidate.update({key: target[key] for key in ('revision', 'schema_version', 'updated_at', 'updated_by')})
+            cls._validate_manifest(candidate, project)
+            if candidate != target:
+                raise StateError('Pending task data conflicts with the recorded intent')
+            return {
+                'status': 'PASS', 'repairable': True, 'reason': 'PENDING_CREATE_WITH_UNTRACKED_TASKS',
+                'pending_task_id': event['input']['task_id'], 'pending_revision': event['revision'],
+                'untracked_tasks': sorted(extras), 'state_root': str(project.state_root),
+                'cause': 'The manifest contains task records that are absent from the committed event history. A pending task creation cannot safely replay until these records are explicitly reconciled.',
+                'remedy': 'Create a verified snapshot, record the preserved task records in one explicit reconciliation event, and resume the pending task creation.'
+            }
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+            return {
+                'status': 'BLOCKED', 'repairable': False,
+                'reason': str(error) if isinstance(error, StateError) else 'STATE_DIAGNOSIS_FAILED',
+                'cause': 'AIPM could not prove that this state matches the supported safe-repair pattern.',
+                'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.'
+            }
+
+    def repair_pending_task_commit(self, project: ManagedProject) -> dict[str, Any]:
+        """Back up and reconcile only validated untracked task rows blocking a pending create."""
+        diagnosis = self.diagnose_pending_task_commit(project)
+        if diagnosis.get('status') != 'PASS' or not diagnosis.get('repairable'):
+            return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': diagnosis.get('reason', 'STATE_NOT_REPAIRABLE'), 'diagnosis': diagnosis}
+        state_root = project.state_root
+        history_root = state_root / 'History'
+        snapshots = history_root / 'Snapshots'
+        backup = snapshots / ('AIPM-State-Repair-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex[:8])
+        backup.mkdir(parents=True, exist_ok=False)
+        files = [state_root / 'State-Manifest.json', history_root / 'Pending-Commit.json']
+        files.extend(sorted((history_root / 'Events').glob('*.json')))
+        checksums: dict[str, str] = {}
+        try:
+            for source in files:
+                relative = source.relative_to(state_root)
+                destination = backup / relative
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                checksums[relative.as_posix()] = hashlib.sha256(destination.read_bytes()).hexdigest()
+            backup_manifest = {'schema_version': '1.0', 'repair': diagnosis['reason'], 'project_id': project.project_id, 'created_at': datetime.now(timezone.utc).isoformat(), 'files': checksums}
+            (backup / 'Backup-Manifest.json').write_text(json.dumps(backup_manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+
+            confirmed_state = self.diagnose_pending_task_commit(project)
+            if confirmed_state.get('status') != 'PASS' or not confirmed_state.get('repairable') or confirmed_state.get('pending_task_id') != diagnosis.get('pending_task_id') or confirmed_state.get('untracked_tasks') != diagnosis.get('untracked_tasks'):
+                raise StateError('State Changed After Diagnosis; No Repair Was Applied')
+
+            pending_path = history_root / 'Pending-Commit.json'
+            pending = json.loads(pending_path.read_text(encoding='utf-8'))
+            raw_current = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+            current = copy.deepcopy(raw_current)
+            self._validate_manifest(current, project)
+            history = self._history(project, current['revision'])
+            expected = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+            for record in sorted(history, key=lambda item: item['revision']):
+                if record['command'] in self.TASK_COMMANDS:
+                    self._apply_task(expected, record['command'], record['input'])
+            recovered = [{'task_id': task_id, 'record': copy.deepcopy(current['tasks'][task_id])} for task_id in diagnosis['untracked_tasks']]
+            original_event = pending['event']
+            event = {**original_event, 'command': 'task.reconcile-and-create', 'input': {
+                'task_id': original_event['input']['task_id'], 'title': original_event['input']['title'],
+                'scope': original_event['input']['scope'], 'recovered_tasks': recovered
+            }}
+            event['revision'] = current['revision'] + 1
+            manifest = copy.deepcopy(current)
+            manifest['tasks'] = copy.deepcopy(expected['tasks'])
+            manifest['task_id'] = expected['task_id']
+            manifest['task_status'] = expected['task_status']
+            self._apply_task(manifest, event['command'], event['input'])
+            manifest.update({key: pending['manifest'][key] for key in ('revision', 'schema_version', 'updated_at', 'updated_by')})
+            if manifest['revision'] != event['revision']:
+                raise StateError('Pending revision changed during repair')
+            self._validate_manifest(manifest, project)
+            self._validate_event(event, project)
+            if manifest != pending['manifest']:
+                raise StateError('Pending task data changed after diagnosis')
+            _atomic_json(pending_path, {'schema_version': '1.0', 'manifest': manifest, 'event': event})
+            self._recover(project)
+            state = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+            self._validate_manifest(state, project)
+            history = self._history(project, state['revision'])
+            if state['revision'] != event['revision'] or state['tasks'].get(event['input']['task_id']) is None or not any(item == event for item in history):
+                raise StateError('Repaired state failed post-commit integrity checks')
+            return {'schema_version': '1.0', 'status': 'PASS', 'revision': state['revision'], 'recovered_tasks': diagnosis['untracked_tasks'], 'created_task_id': event['input']['task_id'], 'backup': str(backup)}
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+            return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': str(error) if isinstance(error, StateError) else 'STATE_REPAIR_FAILED', 'backup': str(backup)}
 
     def _commit(self, project: ManagedProject, manifest: dict[str, Any], event: dict[str, Any]) -> None:
         pending = project.state_root / "History" / "Pending-Commit.json"

@@ -1,5 +1,12 @@
 # AIPM Change Log
 
+## [1.5.10] — Diagnosable And Audited Task-State Recovery (Repository Update; Not Published)
+
+- Added a state diagnosis and repair path for interrupted task creation blocked by valid-but-untracked task records. Repair first creates a SHA-256 verified snapshot of the manifest, pending commit, and event history; it then commits an explicit reconciliation event together with the pending task creation and verifies the resulting revision and event history.
+- Restricted automatic repair to the proven append-only case: all prior task events must replay correctly, existing task records must match their history, the pending transaction must be a task creation, and each additional record must pass task validation. Other state conflicts remain unchanged and now receive a cause and recovery recommendation in the TUI.
+- Added an opt-in `state-diagnose` / `state-repair` Core CLI path; repair requires an explicit confirmation flag. The TUI now explains the cause, lists the affected task IDs and pending task, asks before writing, and reports the verified backup path and result.
+- Updated the platform and PowerShell TUI versions together at `1.5.10`. No Skill or Prompt content changed; Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.9] — Legacy Task Commit Recovery (Repository Update; Not Published)
 
 - Fixed Core Engine pending-commit recovery after a legacy task record is normalized. A pre-existing string `verification` value or the old `COMPLETED` status spelling no longer makes the next task creation or mutation fail with `STATE_COMMIT_FAILED`.
