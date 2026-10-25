@@ -458,3 +458,9 @@ $newProjectRoot = Join-Path (Get-TestWork) 'New Project Fixture'
 $registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}01{Enter}081201{Enter}14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registrationRegistry } $registrationKeys
 Assert-True 'successful project registration shows English refresh instructions and the refreshed Projects section lists it' ($ui.Error -eq '' -and $ui.Output.Contains('Project Folder Added Successfully.') -and $ui.Output.Contains('Please Select') -and $ui.Output.Contains('Refresh From The Home Page.') -and $ui.Output.Contains('New Project')) ($ui.Error + $ui.Output)
+$modeHelpKeys = '1001?14'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } $modeHelpKeys
+Assert-True 'pressing ? in Select View Mode does not save __HELP__ as view_mode' ($ui.Error -eq '' -and (Get-AipmViewMode) -eq 'Task Dashboard' -and (Get-UserSetting -Name 'view_mode') -ne '__HELP__') ($ui.Error + $ui.Output)
+$unregisterHelpKeys = '0903?0814'
+$ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } $unregisterHelpKeys
+Assert-True 'pressing ? in Select Project To Unregister does not crash under StrictMode' ($ui.Error -eq '') ($ui.Error + $ui.Output)

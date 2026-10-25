@@ -1,5 +1,17 @@
 # AIPM Change Log
 
+## [1.5.11] — Resilient State-Commit Recovery And TUI Menu Hardening (Repository Update; Not Published)
+
+- Core Engine State Recovery & Task Lifecycle Hardening:
+  - Fixed `STATE_COMMIT_FAILED` in `CoreEngine._recover` (`domain.py`) when `State-Manifest.json` at `revision - 1` or `revision` contains valid task records whose fields drifted from older `History/Events/` entries. Once `State-Manifest.json` passes full schema validation, `_recover` uses the authoritative manifest baseline to validate the pending task transition while continuing to reject tampered pending commits, unrelated field injections, and non-task smuggling.
+  - Generalized `diagnose_pending_task_commit` and `repair_pending_task_commit` (`domain.py`) to support any pending task command (`task.report`, `task.plan`, `task.create`, etc.) via `task.reconcile` as well as stranded `Pending-Commit.json` files at the same revision as an already-updated `State-Manifest.json`.
+  - Hardened `TaskOperations.rename_task` and `TaskOperations.delete_task` (`task_ops.py`) to commit the Core Engine state transition (`task.rename` / `task.unregister`) before renaming or deleting task directories and archives on disk, preventing orphaned disk changes if a state commit is rejected.
+  - Updated `task-read` CLI output (`aipm.py`) to include `task_path` both at the top level and inside the returned `task` dictionary for direct folder navigation.
+- PowerShell TUI Menu & StrictMode Hardening:
+  - Guarded all `Show-Menu` call sites in `App.psm1` (`Invoke-DesignWizard`, `Resolve-AipmRegistryPath`, `Invoke-AipmRegistryManagement` unregister, `Invoke-AipmTaskManagement`, and `Select View Mode`) against `__HELP__` (`?` / `F1`) and `__QUIT__` (`Q`) sentinel values, preventing invalid UI settings writes and StrictMode null-dereference errors.
+  - Updated `Show-AipmTaskRecord` (`App.psm1`) to refresh `$TaskRow.title` in-place after `task-edit` updates a task's title.
+- Synchronized the platform and PowerShell TUI versions at `1.5.11`. No Skill or Prompt content changed, so Plugin versions remain unchanged. No GitHub Release or tag was created.
+
 ## [1.5.10] — Diagnosable And Audited Task-State Recovery (Repository Update; Not Published)
 
 - Added a state diagnosis and repair path for interrupted task creation blocked by valid-but-untracked task records. Repair first creates a SHA-256 verified snapshot of the manifest, pending commit, and event history; it then commits an explicit reconciliation event together with the pending task creation and verifies the resulting revision and event history.

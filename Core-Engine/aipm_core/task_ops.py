@@ -100,19 +100,21 @@ class TaskOperations:
         new_task_root = self.root / 'Tasks' / new_id
         if new_task_root.exists():
             raise StateError('Target Task Folder Already Exists')
+        old_archive = self.root / 'Archive' / f'{old_id}.zip'
+        new_archive = self.root / 'Archive' / f'{new_id}.zip'
+        if new_archive.exists():
+            raise StateError('Target Task Archive Already Exists')
+        state = self._request('state.read', {})
+        self._request('task.rename', {'task_id': old_id, 'new_task_id': new_id}, revision=state['revision'], mutation=True)
         old_task_root = self.root / 'Tasks' / old_id
         if old_task_root.exists():
             old_task_root.rename(new_task_root)
-        old_archive = self.root / 'Archive' / f'{old_id}.zip'
         old_checksum = old_archive.with_suffix('.zip.sha256')
         if old_archive.is_file():
-            new_archive = self.root / 'Archive' / f'{new_id}.zip'
             new_checksum = new_archive.with_suffix('.zip.sha256')
             old_archive.rename(new_archive)
             if old_checksum.is_file():
                 old_checksum.rename(new_checksum)
-        state = self._request('state.read', {})
-        self._request('task.rename', {'task_id': old_id, 'new_task_id': new_id}, revision=state['revision'], mutation=True)
         if new_task_root.exists():
             self.sync_artifacts(new_task_root)
         return new_task_root
@@ -130,6 +132,8 @@ class TaskOperations:
     def delete_task(self, task: Path, *, delete_archive: bool = False) -> dict[str, Any]:
         """Permanently delete a live task folder and unregister it from the AIPM registry, even if incomplete."""
         task_id = self._task_id(task)
+        state = self._request('state.read', {})
+        self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
         task_root = self.root / 'Tasks' / task_id
         if task_root.exists():
             shutil.rmtree(task_root)
@@ -138,8 +142,6 @@ class TaskOperations:
             checksum_path = archive_path.with_suffix('.zip.sha256')
             archive_path.unlink(missing_ok=True)
             checksum_path.unlink(missing_ok=True)
-        state = self._request('state.read', {})
-        self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
         return {'task_id': task_id, 'task_deleted': True, 'status': 'PASS'}
 
     def plan(self, task: Path, text: str) -> None:

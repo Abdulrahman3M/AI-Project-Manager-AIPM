@@ -108,10 +108,13 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
         task = operations.root / "Tasks" / args.task_id
         if args.command == "task-read":
             archive_path = operations.root / "Archive" / f"{task.name}.zip"
+            task_record = operations.read_task(task)
+            task_record["task_path"] = str(task)
             return {
                 "schema_version": "1.0",
                 "status": "PASS",
-                "task": operations.read_task(task),
+                "task": task_record,
+                "task_path": str(task),
                 "artifacts": operations.list_artifacts(task),
                 "metadata": operations.read_metadata(task),
                 "is_archived": archive_path.is_file(),

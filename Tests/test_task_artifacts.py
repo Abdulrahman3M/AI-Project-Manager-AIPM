@@ -493,6 +493,52 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         with self.assertRaises(StateError):
             operations.read_task(renamed_path)
 
+    def test_manifest_history_drift_does_not_block_mutations_and_supports_repair(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task = operations.create("Drifted History Task", "Original scope recorded in event 1.")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        # Simulate historical field drift in State-Manifest.json relative to History/Events
+        manifest["tasks"][task.name]["scope"] = "Directly edited scope in State-Manifest.json."
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        # Normal mutations (report, plan, checkpoint, verify) must succeed cleanly without STATE_COMMIT_FAILED
+        operations.report(task, "Updated report despite historical scope drift.")
+        read_after_report = operations.read_task(task)
+        self.assertEqual(read_after_report["report"], "Updated report despite historical scope drift.")
+        self.assertEqual(read_after_report["scope"], "Directly edited scope in State-Manifest.json.")
+
+        # Also verify diagnose_pending_task_commit and repair_pending_task_commit for a stranded non-create pending commit
+        current = json.loads(manifest_path.read_text(encoding="utf-8"))
+        current["tasks"][task.name]["scope"] = "Second drifted scope before pending report."
+        manifest_path.write_text(json.dumps(current), encoding="utf-8")
+        pending_manifest = json.loads(json.dumps(current))
+        pending_manifest["tasks"][task.name]["report"] = "Recovered pending report."
+        pending_manifest["revision"] = current["revision"] + 1
+        pending_manifest["updated_by"] = "aipm-task-operations"
+        pending_event = {
+            "schema_version": "1.0",
+            "request_id": "pending-report-repair-test",
+            "command": "task.report",
+            "actor": "aipm-task-operations",
+            "project_id": self.project.project_id,
+            "revision": pending_manifest["revision"],
+            "idempotency_key": "pending-report-repair-test",
+            "input": {"task_id": task.name, "text": "Recovered pending report."},
+        }
+        pending_path = self.project.state_root / "History" / "Pending-Commit.json"
+        pending_path.write_text(json.dumps({"schema_version": "1.0", "manifest": pending_manifest, "event": pending_event}), encoding="utf-8")
+
+        diag = CoreEngine.diagnose_pending_task_commit(self.project)
+        self.assertEqual(diag["status"], "PASS")
+        self.assertTrue(diag["repairable"])
+        self.assertIn(task.name, diag["untracked_tasks"])
+
+        repaired = self.engine.repair_pending_task_commit(self.project)
+        self.assertEqual(repaired["status"], "PASS")
+        self.assertFalse(pending_path.exists())
+        self.assertEqual(operations.read_task(task)["report"], "Recovered pending report.")
+
 
 if __name__ == "__main__":
     unittest.main()

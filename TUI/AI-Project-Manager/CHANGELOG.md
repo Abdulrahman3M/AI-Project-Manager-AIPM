@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.5.11] — Resilient State-Commit Recovery And Menu Sentinel Hardening (Not Published)
+
+- Synchronized with AIPM Core `1.5.11` state-commit recovery and generalized `state-diagnose` / `state-repair` support for all pending task commands (`task.report`, `task.plan`, `task.create`, etc.).
+- Guarded `Show-Menu` handlers in `App.psm1` (`Invoke-DesignWizard`, `Resolve-AipmRegistryPath`, `Select Project To Unregister`, `Select Registered Project`, `Open Existing Task`, and `Select View Mode`) so pressing `?`/`F1` (`__HELP__`) or `Q` (`__QUIT__`) never persists sentinel strings into `settings.json` or triggers a StrictMode null-dereference error.
+- Updated `Show-AipmTaskRecord` (`App.psm1`) to refresh `$TaskRow.title` immediately after editing a task's title and to read `task_path` reliably when opening a task folder in the system file manager.
+- Synchronized the TUI version with AIPM platform `1.5.11`.
+
 ## [1.5.10] — Guided Task-State Diagnosis And Repair (Not Published)
 
 - When task state cannot be read or task creation fails, the TUI now asks Core for a diagnosis, explains the cause and safe recovery path, and offers repair only when Core confirms the narrowly supported recovery pattern.

@@ -242,7 +242,7 @@ function Invoke-DesignWizard {
     $items = @()
     foreach ($p in $catalog) { $items += (New-MenuItem -Label $p.Name -Desc ($p.Layout + ' Layout, ' + $p.Density + ' Spacing.') -Value $p.Id -Icon 'Form') }
     $preset = Show-Menu -Title 'Choose A Layout' -Description '20 Product-Neutral Styles, Including Classic Numbered.' -Items $items -Navigation Search -Preset 'command-palette'
-    if (-not $preset) { return }
+    if (-not $preset -or $preset -in @('__HELP__','__QUIT__')) { return }
     $choices = @(
         (New-MenuItem -Label 'Arrow Keys + Enter' -Desc 'No Numeric Prefixes.' -Value 'Arrows'),
         (New-MenuItem -Label 'Numbered Choices' -Desc 'Type A Menu Item Number.' -Value 'Numbers'),
@@ -250,7 +250,7 @@ function Invoke-DesignWizard {
         (New-MenuItem -Label 'Search Actions' -Desc 'Type Words And Use Arrows Or Enter.' -Value 'Search')
     )
     $navigation = Show-Menu -Title 'Navigation Style' -Items $choices -Navigation Arrows
-    if (-not $navigation) { return }
+    if (-not $navigation -or $navigation -in @('__HELP__','__QUIT__')) { return }
     $choices = @(
         (New-MenuItem -Label 'Automatic Icon Detection' -Desc 'Choose The Safest Icons For The Terminal.' -Value 'Auto'),
         (New-MenuItem -Label 'Emoji' -Desc 'Colorful Icons In Modern Terminals.' -Value 'Emoji'),
@@ -259,7 +259,7 @@ function Invoke-DesignWizard {
         (New-MenuItem -Label 'No Icons' -Desc 'Clean Text-Only Choices.' -Value 'None')
     )
     $icons = Show-Menu -Title 'Icon Style' -Items $choices -Navigation Arrows
-    if (-not $icons) { return }
+    if (-not $icons -or $icons -in @('__HELP__','__QUIT__')) { return }
     $choices = @(
         (New-MenuItem -Label 'Automatic' -Desc 'Adapt To Terminal Support.' -Value 'Auto'),
         (New-MenuItem -Label 'Rich Accents' -Desc 'Strong Accent Headings And Selections.' -Value 'Full'),
@@ -267,7 +267,7 @@ function Invoke-DesignWizard {
         (New-MenuItem -Label 'No Colors' -Desc 'Monochrome Interface.' -Value 'None')
     )
     $colors = Show-Menu -Title 'Color Style' -Items $choices -Navigation Arrows
-    if (-not $colors) { return }
+    if (-not $colors -or $colors -in @('__HELP__','__QUIT__')) { return }
     $choices = @(
         (New-MenuItem -Label 'Muted And Indented' -Desc 'Subdued Explanation Under Each Option.' -Value 'Muted'),
         (New-MenuItem -Label 'Subtle Shading' -Desc 'Indented Explanation With Faint Shading When Supported.' -Value 'Shade'),
@@ -275,7 +275,7 @@ function Invoke-DesignWizard {
         (New-MenuItem -Label 'Details Panel' -Desc 'Explain The Currently Highlighted Option.' -Value 'Panel')
     )
     $descriptions = Show-Menu -Title 'Option Descriptions' -Items $choices -Navigation Arrows
-    if (-not $descriptions) { return }
+    if (-not $descriptions -or $descriptions -in @('__HELP__','__QUIT__')) { return }
     $summary = 'Preset: ' + $preset + '; Navigation: ' + $navigation + '; Icons: ' + $icons + '; Colors: ' + $colors + '; Descriptions: ' + $descriptions
     if (-not (Show-Confirm -Title 'Save This Design?' -Message $summary)) { return }
     foreach ($key in @('preset','navigation','icons','colors','descriptions')) {
@@ -576,6 +576,14 @@ function Resolve-AipmRegistryPath {
         )
         $choice = Show-Menu -Title 'Project Registry Setup' -Description 'Choose A New Registry Location Or Connect A Registry File You Already Have. Project State Remains In Each Project.' -Items $items
         if ($choice -in @($null, 'cancel', 'Exit', '__QUIT__')) { return $null }
+        if ($choice -eq '__HELP__') {
+            [void](Show-AipmPage -Title 'Project Registry Setup Help' -Lines @(
+                'Choose The Default Registry Location, Connect An Existing Registry File, Or Pick A Custom .json File Path.',
+                'The Registry File Must Live Outside The AIPM Installation Folder.',
+                'Project Task State Remains Inside Each Project Shared-Project-State-Manager.'
+            ))
+            continue
+        }
         if ($choice -eq 'existing') {
             $existingPath = Connect-AipmExistingRegistry -Root $Root
             if ($existingPath) { return $existingPath }
@@ -733,8 +741,9 @@ function Invoke-AipmRegistryManagement {
             $projectItems = @($inventory.Projects | ForEach-Object { New-MenuItem -Label ([string]$_.alias) -Desc ([string]$_.root_path) -Value ([string]$_.project_id) -Icon 'Project' })
             $projectItems += New-MenuItem -Label 'Cancel' -Desc 'Return Without Removing A Registry Entry.' -Value 'cancel' -Icon 'Exit'
             $selected = Show-Menu -Title 'Select Project To Unregister' -Items $projectItems
-            if (-not $selected -or $selected -eq 'cancel') { continue }
+            if (-not $selected -or $selected -in @('cancel','__HELP__','__QUIT__')) { continue }
             $entry = @($inventory.Projects | Where-Object { $_.project_id -eq $selected }) | Select-Object -First 1
+            if (-not $entry) { continue }
             $confirm = Show-Confirm -Title 'Remove Registry Pointer?' -Message ('This removes ' + [string]$entry.alias + ' from this registry only. Its project files and Shared-Project-State-Manager remain untouched.') -YesLabel 'Remove Pointer' -YesDesc 'Keep All Project Files And State.' -NoLabel 'Cancel' -NoDesc 'Keep The Registry Entry.' -Default $false
             if ($confirm) {
                 $removed = Invoke-AipmCore -AppRoot $Root -Command 'registry-unregister' -RegistryPath $currentPath -ProjectId ([string]$selected)
@@ -889,6 +898,9 @@ function Show-AipmTaskRecord {
             if ($updated.Status -ne 'PASS') {
                 Show-Notice -Title 'Failed To Update Task Details' -Lines @([string]$updated.Reason) -Kind Error
             } else {
+                if ($updated.Data -and $updated.Data.task -and $updated.Data.task.title) {
+                    $TaskRow.title = [string]$updated.Data.task.title
+                }
                 Show-Notice -Title 'Task Details Updated' -Lines @(
                     ('Title: ' + [string]$updated.Data.task.title),
                     ('Scope: ' + [string]$updated.Data.task.scope)
@@ -1200,7 +1212,12 @@ function Invoke-AipmStateRecovery {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [string]$FailureReason = 'INVALID_STATE')
     $diagnosis = Invoke-AipmCore -AppRoot $Root -Command 'state-diagnose' -RegistryPath $RegistryPath -ProjectId $ProjectId
     if ($diagnosis.Status -eq 'PASS' -and $diagnosis.Data.repairable) {
-        $taskList = @($diagnosis.Data.untracked_tasks) -join ', '
+        $reconciledItems = if ($diagnosis.Data.reconciled_tasks -and @($diagnosis.Data.reconciled_tasks).Count -gt 0) {
+            @($diagnosis.Data.reconciled_tasks)
+        } else {
+            @($diagnosis.Data.untracked_tasks)
+        }
+        $taskList = if ($reconciledItems.Count -gt 0) { $reconciledItems -join ', ' } else { [string]$diagnosis.Data.pending_task_id }
         Show-Notice -Title 'Task State Problem Diagnosed' -Lines @(
             ('Cause: ' + [string]$diagnosis.Data.cause),
             ('Pending Task: ' + [string]$diagnosis.Data.pending_task_id + ' at revision ' + [string]$diagnosis.Data.pending_revision),
@@ -1252,6 +1269,13 @@ function Invoke-AipmTaskManagement {
                 (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
             )
             $emptyChoice = Show-Menu -Title 'No Projects Are Registered' -Description 'Register A Project Before Creating Or Managing Tasks.' -Items $emptyItems
+            if ($emptyChoice -eq '__HELP__') {
+                [void](Show-AipmPage -Title 'Task Management Help' -Lines @(
+                    'Register A Project First Before Creating Or Managing Tasks.',
+                    'New Tasks Are Stored Under The Project Shared-Project-State-Manager.'
+                ))
+                continue
+            }
             if ($emptyChoice -ne 'register') { return $currentPath }
             $currentPath = Invoke-AipmRegistryManagement -Root $Root -RegistryPath $currentPath
             continue
@@ -1262,6 +1286,15 @@ function Invoke-AipmTaskManagement {
         $projectItems += New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit'
         $selectedProjectId = Show-Menu -Title 'Select Registered Project' -Description 'Choose The Project Whose Task State You Want To Manage.' -Items $projectItems
         if (-not $selectedProjectId -or $selectedProjectId -in @('back','__QUIT__')) { return $currentPath }
+        if ($selectedProjectId -eq '__HELP__') {
+            [void](Show-AipmPage -Title 'Task Management Help' -Lines @(
+                'Select A Registered Project Before Managing Its Tasks.',
+                'New Tasks Are Stored Under The Project Shared-Project-State-Manager.',
+                'Add Existing Work Folder Creates Task Context Only; It Does Not Move Or Copy Files.',
+                'Task Names Are Descriptive And Do Not Need Numbered Labels.'
+            ))
+            continue
+        }
         $project = @($inventory.Projects | Where-Object { [string]$_.project_id -eq [string]$selectedProjectId }) | Select-Object -First 1
         if (-not $project) { continue }
         while ($true) {
@@ -1394,6 +1427,13 @@ function Invoke-AipmTaskManagement {
                 $existingItems += New-MenuItem -Label 'Back' -Desc 'Return To Task Management.' -Value 'back' -Icon 'Exit'
                 $selectedTaskId = Show-Menu -Title 'Open Existing Task' -Items $existingItems
                 if (-not $selectedTaskId -or $selectedTaskId -in @('back','__QUIT__')) { continue }
+                if ($selectedTaskId -eq '__HELP__') {
+                    [void](Show-AipmPage -Title 'Open Existing Task Help' -Lines @(
+                        'Choose A Task To Review Its Status, Plan, Reports, Next-Agent Handoff, Or Supporting Files.',
+                        'Task Records Are Stored Under The Project Shared-Project-State-Manager/Tasks/.'
+                    ))
+                    continue
+                }
                 $selectedTask = @($rows | Where-Object { [string]$_.task_id -eq [string]$selectedTaskId }) | Select-Object -First 1
                 if ($selectedTask) { Show-AipmTaskRecord -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -ProjectRoot ([string]$project.root_path) -TaskRow $selectedTask }
             }
@@ -1573,8 +1613,9 @@ function Start-TuiApp {
                     (New-MenuItem -Label 'Assistant Console' -Desc 'Read-Only Evidence View; No AI Session Is Connected.' -Value 'Assistant Console' -Icon 'Agent')
                 )
                 $newMode = Show-Menu -Title 'Select View Mode' -Items $modeItems
-                if ($newMode -and (Set-UserSetting -Name 'view_mode' -Value $newMode)) { continue }
-                if ($newMode) { Show-Notice -Title 'View Mode Was Not Saved' -Lines @('UI Preferences Could Not Be Written. No Project State Was Changed.') -Kind Error }
+                if (-not $newMode -or $newMode -in @('__HELP__','__QUIT__')) { continue }
+                if (Set-UserSetting -Name 'view_mode' -Value $newMode) { continue }
+                Show-Notice -Title 'View Mode Was Not Saved' -Lines @('UI Preferences Could Not Be Written. No Project State Was Changed.') -Kind Error
                 continue
             }
             if ($settingsChoice -eq 'Customize') { Invoke-DesignWizard -Root $Root; continue }
