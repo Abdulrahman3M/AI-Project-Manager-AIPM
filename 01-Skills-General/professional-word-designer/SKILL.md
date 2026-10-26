@@ -3,7 +3,7 @@ name: professional-word-designer
 description: Create professional Microsoft Word research papers, articles, reports, books, theses, educational materials, and long-form publications through an evidence-controlled research-to-Word pipeline with claim/source traceability, academic structures, citation systems, purpose-driven visuals, native Word features, large-document chapter packages, and publication QA.
 ---
 
-# Professional Word Designer — v5.0.0
+# Professional Word Designer — v5.1.0
 
 Professional Word Designer is a **research, editorial, academic-publication, Word-production and release-QA Skill**. It does not merely decorate prose. For research-heavy work it controls the chain from Document Contract and evidence discovery through claim verification, academic synthesis, citation formatting, native Word construction, rendered-page inspection and final release.
 
@@ -14,9 +14,10 @@ For every substantial research/publication document:
 1. Read `references/document-contract-v5.md` and create the Document Contract.
 2. Read `references/research-to-word-pipeline.md`.
 3. Read `references/normative-example-contract.md`; consult `examples/NORMATIVE_EXAMPLES.md` for every applicable requirement.
-4. Read `references/visual-explanation-system.md` before choosing any visual.
-5. Choose one `style-profiles/*.json` profile unless Template Fidelity Mode controls the design.
-6. If the target is **100 pages or more**, or is clearly too large for one stable file, read `references/large-document-architecture.md` and default to Chapter Package Mode unless the owner explicitly requires a single DOCX.
+4. Read `references/visual-explanation-system.md` and `references/enterprise-visual-design.md` before choosing any visual or visual direction.
+5. Select a documented pattern from `references/template-atlas.md`; choose one `style-profiles/*.json` profile unless Template Fidelity Mode controls the design.
+6. For Arabic-first or materially bilingual output, read `references/rtl-hardening.md` and pass its multi-layer structural audit plus rendered-page checks.
+7. If the target is **100 pages or more**, or is clearly too large for one stable file, read `references/large-document-architecture.md` and default to Chapter Package Mode unless the owner explicitly requires a single DOCX.
 
 The 26 illustrated visual examples remain authoritative for visual grammar. v5 adds **124 fine-grained normative examples**, yielding **150 examples total**. Run `python scripts/validate_example_coverage.py`; coverage must be 100%.
 
@@ -70,6 +71,9 @@ A downstream phase must never erase upstream uncertainty.
 - Editorial Consistency Analyzer — `references/editorial-consistency.md`
 
 ### Word production and layout
+- Enterprise Visual Design System — `references/enterprise-visual-design.md`
+- Professional Template Atlas — `references/template-atlas.md`
+- Tool Landscape & Adoption Rules — `references/tool-landscape.md`
 - Existing native Word implementation — `references/word-implementation.md`
 - Advanced Word features — `references/advanced-word-features.md`
 - Long-document layout — `references/long-document-layout.md`
@@ -77,6 +81,7 @@ A downstream phase must never erase upstream uncertainty.
 - Tables & Figures Intelligence — `references/tables-figures-intelligence.md`
 - Visual Explanation System — `references/visual-explanation-system.md`
 - Multilingual/RTL — `references/multilingual-localization.md`
+- RTL Hardening & Bilingual QA — `references/rtl-hardening.md`
 - Accessibility — `references/publishing-accessibility.md`
 
 ### QA and release
@@ -121,6 +126,7 @@ Do not release v5 work with uncovered requirements. `scripts/validate_example_co
 - `scripts/check_document_consistency.py` — baseline exact long-paragraph duplication scan for text exports.
 - `scripts/validate_chapter_manifest.py` — validates chapter IDs/order/files.
 - `scripts/build_chapter_index.py` — creates a Word Index with relative external hyperlinks to chapter DOCX files.
+- `scripts/audit_docx.py --require-rtl` — checks Arabic WordprocessingML direction layers; it supplements, never replaces, Word Desktop and visual verification.
 - Existing `build_document.py`, `audit_docx.py`, `render_and_audit.py`, visual validators, comparison and HTML companion tools remain available.
 
 These scripts are deterministic baseline utilities. They do **not** replace human/source verification, a qualified language editor, real journal instructions, a capable Word field updater, real Zotero/CSL processing, or final visual review.

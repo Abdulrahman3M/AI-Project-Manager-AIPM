@@ -1,6 +1,13 @@
-# Professional Word Designer — v5.0.0
+# Professional Word Designer — v5.1.0
 
-**Professional Word Designer** is now a complete **research-to-Word publication system** for research papers, articles, reports, books, theses, educational materials and other long-form Microsoft Word documents. It combines evidence control, academic structure, citation management rules, native Word production, visuals, multilingual/accessibility handling, long-document chapter packages and strict release QA.
+**Professional Word Designer** is now a complete **research-to-Word publication system** for research papers, articles, reports, books, theses, educational materials and other long-form Microsoft Word documents. It combines evidence control, academic structure, citation management rules, native Word production, enterprise visual direction, reusable template patterns, multilingual/accessibility handling, long-document chapter packages and strict release QA.
+
+## v5.1 enterprise visual and RTL upgrade
+
+- Choose from 36 documented, original template patterns in `references/template-atlas.md`; adapt their hierarchy, spacing, typography, visual roles and guardrails rather than copying third-party template artwork.
+- Use `references/enterprise-visual-design.md` for corporate-grade covers, executive summaries, callouts, icon systems, data displays, source-safe images and print-aware layout.
+- For Arabic-first or mixed Arabic/English work, apply every required OOXML direction layer in `references/rtl-hardening.md`, then run `audit_docx.py --require-rtl` and inspect the rendered document in a capable Word engine.
+- See `references/tool-landscape.md` for research-backed tool selection, security limits and non-fabrication rules.
 
 ## What v5 adds
 

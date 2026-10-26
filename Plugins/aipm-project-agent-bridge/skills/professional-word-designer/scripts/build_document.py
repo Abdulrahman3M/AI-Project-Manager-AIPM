@@ -34,8 +34,43 @@ def run_dir(p,text,is_rtl):
  rr=OxmlElement('w:rtl');rr.set(qn('w:val'),'0' if re.search('[A-Za-z]',text) else '1' if is_rtl else '0');r._r.get_or_add_rPr().append(rr)
  return r
 
+def append_unique(parent,tag,**attrs):
+ for item in parent.findall(qn(tag)):
+  if all(item.get(qn('w:'+key))==value for key,value in attrs.items()): return item
+ item=OxmlElement(tag)
+ for key,value in attrs.items(): item.set(qn('w:'+key),value)
+ parent.append(item);return item
+
+def configure_rtl_document(document,locale='ar-EG'):
+ """Apply the WordprocessingML layers required for Arabic-first delivery."""
+ settings=document.settings.element
+ append_unique(settings,'w:themeFontLang',bidi=locale)
+ styles=document.styles.element
+ defaults=styles.find(qn('w:docDefaults'))
+ rpr=defaults.find(qn('w:rPrDefault'))
+ if rpr is None: rpr=OxmlElement('w:rPrDefault');defaults.append(rpr)
+ rpr_inner=rpr.find(qn('w:rPr'))
+ if rpr_inner is None: rpr_inner=OxmlElement('w:rPr');rpr.append(rpr_inner)
+ append_unique(rpr_inner,'w:lang',bidi=locale,val=locale)
+ ppr=defaults.find(qn('w:pPrDefault'))
+ if ppr is None: ppr=OxmlElement('w:pPrDefault');defaults.append(ppr)
+ ppr_inner=ppr.find(qn('w:pPr'))
+ if ppr_inner is None: ppr_inner=OxmlElement('w:pPr');ppr.append(ppr_inner)
+ append_unique(ppr_inner,'w:bidi',val='1');append_unique(ppr_inner,'w:jc',val='start')
+ for section in document.sections:
+  sect=section._sectPr
+  if sect.find(qn('w:bidi')) is None:
+   node=OxmlElement('w:bidi');node.set(qn('w:val'),'1')
+   doc_grid=sect.find(qn('w:docGrid'))
+   if doc_grid is None: sect.append(node)
+   else: sect.insert(list(sect).index(doc_grid),node)
+
+def rtl_table(table):
+ append_unique(table._tbl.tblPr,'w:bidiVisual',val='1')
+
 def build(payload,out,style,base_dir):
  lang=payload.get('language','en');is_rtl=lang.startswith('ar');d=Document(); sec=d.sections[0];sec.page_height=Cm(29.7);sec.page_width=Cm(21)
+ if is_rtl: configure_rtl_document(d,payload.get('locale','ar-EG'))
  margin=style.get('margin_mm',22)/10;sec.left_margin=sec.right_margin=Cm(margin);sec.top_margin=Cm(2.1);sec.bottom_margin=Cm(2.0)
  normal=d.styles['Normal'];normal.font.name='Noto Sans Arabic' if is_rtl else 'Liberation Sans';normal.font.size=Pt(style.get('body_pt',11));normal.font.color.rgb=color(style['tokens']['ink']);normal.paragraph_format.space_after=Pt(7)
  for i,pt in [('Title',29),('Heading 1',20),('Heading 2',14),('Caption',9.5)]:
@@ -77,7 +112,9 @@ def build(payload,out,style,base_dir):
     p=d.add_paragraph(component['text'],style='Heading 2');
     if is_rtl:rtl(p)
    elif typ=='note':
-    tbl=d.add_table(rows=1,cols=1);tbl.alignment=WD_TABLE_ALIGNMENT.CENTER;c=tbl.cell(0,0);c.vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER
+    tbl=d.add_table(rows=1,cols=1);tbl.alignment=WD_TABLE_ALIGNMENT.CENTER
+    if is_rtl:rtl_table(tbl)
+    c=tbl.cell(0,0);c.vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER
     shade(c,style['tokens']['callout_bg']);stripe(c,'right' if is_rtl else 'left',style['tokens']['warning_stripe'])
     p=c.paragraphs[0];p.add_run(component.get('label','NOTE')+': ').bold=True;run_dir(p,component['text'],is_rtl)
     if is_rtl:rtl(p);p.alignment=WD_ALIGN_PARAGRAPH.RIGHT
@@ -95,6 +132,7 @@ def build(payload,out,style,base_dir):
     if is_rtl:rtl(p)
    elif typ=='table':
     headers=component['headers'];table=d.add_table(rows=1,cols=len(headers));table.style='Light Shading Accent 1';table.autofit=True
+    if is_rtl and component.get('rtl_visual',True):rtl_table(table)
     for j,name in enumerate(headers):table.rows[0].cells[j].text=str(name)
     trpr=table.rows[0]._tr.get_or_add_trPr();rep=OxmlElement('w:tblHeader');rep.set(qn('w:val'),'true');trpr.append(rep)
     for row in component['rows']:

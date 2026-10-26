@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "db3cfb07cf4b3e41a46e56d18132f215d62714e6a257e222bf512b6b30f62982",
+  "changelog_sha256": "5fdf3af06063a5af4af0dda782e1d86af3942429c603467592f2f7caabdf70ad",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.1.1",
-  "previous_plugin_version": "1.1.0",
+  "plugin_version": "1.1.2",
+  "previous_plugin_version": "1.1.1",
   "schema_version": "1.0",
   "skills": [
     {
@@ -183,11 +183,11 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "d6775df36902963a1daaece04146fa3995f0d324a96b28463bb8e378a1420940",
-        "README.md": "65e66118e6433bf37addefea17ffc61db6676cd24de7dca1f3b25c0f2a6b6be7",
-        "SKILL.md": "8691bbd07bc71bd76bca3653eb01c982103d1e0046a925b82d66e8511e00040a",
+        "CHANGELOG.md": "3b297bd3d2d337b9535913d96932f5ad2bfa820cbfd469b26e96429e2b759a61",
+        "README.md": "683042f52c3acd8b217346a2338363049553e099305d17cd2650fddfcb11f485",
+        "SKILL.md": "5f5be1805d7c9413e87f52affa14378feba6c04f32f749dde648760cb15d0e3e",
         "V5_IMPLEMENTATION_REPORT.md": "c8197a7a802f6a473597820bb55e0245772bbcd7c096b15252098b05660aa49e",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+        "VERSION": "6ca2e3356014241331fb2b399428fca23c558e3f3d428edcf4f56eb0fe907069",
         "assets/icons/example.svg": "82634f9345cbc79eb3616f295f6d4bca1bd0e607c703cb3acf0bb9707912ba85",
         "assets/icons/important.svg": "d9c0ede77e08472f07e57f04f3f2409184b96b31a5f2402c4226c26b09dc29be",
         "assets/icons/info.svg": "03128bcd1c9898f2a7fc881de168a715e46a6faac2cdd496763ee58e0a45b7a2",
@@ -277,6 +277,7 @@
         "references/design-system.md": "a11cc0a6213c6e6f4cabcab2b2e36af3aadb3a362fa1924f9945c50647ce752b",
         "references/document-contract-v5.md": "c62e9c6843b3325b90ed825f1e1339d25d58d42063da05dac52746e22ee18cac",
         "references/editorial-consistency.md": "8fcc45a79ab1219f3269c4f30d33c7853017dcfb04ac12499f0fb914a9d635f7",
+        "references/enterprise-visual-design.md": "4fbab2458920db87f20e5e9894531e9a61f2dcca0615dc7f8384c39e7c3460bb",
         "references/execution-contract.md": "407b76250f4714376dffbfb144afb715534b048ec66bc99a9890132af359f839",
         "references/glossary-acronyms-index.md": "4a2f91a89570525d61863d54608466c081c8e659d1ffc688945c20fa4aeef1e1",
         "references/integrations-and-tooling.md": "b83ed2960a474d1c3ff82f79557d496242640c7558246adfc4cb457481e872d5",
@@ -303,10 +304,13 @@
         "references/research-record-schemas.md": "521b48ac5d948f80066e8cc3548a5e6bc1ad460242e3a6eed2bb014b3c1e6677",
         "references/research-to-word-pipeline.md": "256029f82875caf71b7aa23ec37aae22c68f8ec6c1d9643b3c08196af0b8a916",
         "references/review-revision-workflow.md": "92eba442a57d4fa21007a7119235262beb7d8e6e577ccc78ac9dfbd1e3e2bb68",
+        "references/rtl-hardening.md": "894b2511cbfe1a74d94fb9192b98c17d348617a3eb84b8b761d79f51c621c59e",
         "references/source-quality-model.md": "526d2cd4f1aee3c5825d1d41061e3f164f23ba83aa4797b9d1b705f6f8d2e176",
         "references/tables-figures-intelligence.md": "7ac313dffe2c4f9a096c73199fb1549076ac31c2bf1096905edf432972f3d53b",
+        "references/template-atlas.md": "300eab136abd464dd0df65d630cc69044f17be86a34b53eafc5c5cef60189bfc",
         "references/template-fidelity-reviewer-and-consistency.md": "4bf52b44b0abd1f52bdc7cc87f088a5ff672462c6adb5e9d6286f8b99e84e791",
         "references/template-fidelity.md": "83a4e58650d19b6b2f1044871c06a68df32491c12a6ab79290daa7cf15bae623",
+        "references/tool-landscape.md": "eb435753740c584c887c3f66de9dac7ffa62d629edddf9b8743a32d797ed7e80",
         "references/visual-components.md": "91be7017073e371d32c5d4cd05a9b5d8fe07b425125cd237f516f15ddf2b3676",
         "references/visual-explanation-system.md": "a8bd46e17f9d86e91a3d5ec40140bed27028ad789110ef01514f048acf0f7f48",
         "references/word-implementation.md": "5ec6c65cf30e6769678ec6227cf74dd0a2d75e961f3ddf964bbd24a0b4f33850",
@@ -318,9 +322,9 @@
         "schemas/research-plan.schema.json": "499784ed8bc3e1fe4ec5e7d596ba0733395cc9138a945f86205421d82f518b3c",
         "schemas/research-qa.schema.json": "764d49c9d0e93e7c106664892a20682cb088886aae3bb87f8fbb3ae6e8f164a9",
         "schemas/source-ledger.schema.json": "02b472e8849abd2a95cfbe6f3c66f5b81f70a3bca6ba2341b59b708d3ea81790",
-        "scripts/audit_docx.py": "fa79040790e352f05a487969a1f0f31898cc85904b2a0a8113da5e744f5c0360",
+        "scripts/audit_docx.py": "e1628887460553c5daff778d8da932503173497695dae6c8edef3af5f1cd9727",
         "scripts/build_chapter_index.py": "e0550444189954e6d12459c8b1b60c0b7b56658cf7a1919c2e9f4207e5aa06f7",
-        "scripts/build_document.py": "68b6b145235fa3dd8cc7492125f18e4132cc5911144846632f3491d2fc9730fc",
+        "scripts/build_document.py": "0ae314815c7c49f340eeaac9fbd4a09a25b8107e5a96af6d403afd6ed451321d",
         "scripts/check_claim_coverage.py": "39d6cd125bc754edc0fd16c3105ff0be47fd73d4d0accdb859938bdd0369376a",
         "scripts/check_document_consistency.py": "3d12a88dc3d31527e8f040e2c0cd741513971d0f880db44e6d99b63403d12607",
         "scripts/compare_versions.py": "027e90f007495cafa5cf17d9e4e1874a6cf798ba420049a5ce66e042472c5a60",
@@ -342,9 +346,9 @@
         "style-profiles/visual-textbook.json": "9b8c43e3f48adb7bc67e31c91f55443f7c4a3e54e6835058fadd97a946550d28",
         "templates/MASTER_PROMPT.md": "fbc0850b27be01a52794136bea07404722c10701b083160a3958646fe4218866",
         "templates/MASTER_PROMPT_AR.md": "08edbc5c3bb9d3d7a974465267e9e8571154ec6cefadc609b070135d7c1f2cb3",
-        "tests/test_core.py": "d41ca05bacb3ee55968548b569db61cae8f8d90b6966a570f008d2da1ba117c0",
+        "tests/test_core.py": "1a5374fec8c7253f81a063b05e5ec05fae62c952ef15a919f4741a71887eb0be",
         "tests/test_v5_research.py": "55057b0693013b91079de65d9d7f58bf7c09aab88bb32a328c5bcd0514a32fdc",
-        "tests_check.py": "fc5f426521f85bafe52b58d0cbbd3fd7700a0ee166d3192f49c0fd8823819698"
+        "tests_check.py": "d60ccc145d1235bda8042426f044181cddceda437e1c7fbe8006906136e8291b"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -354,8 +358,8 @@
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "professional-word-designer",
-      "source_sha256": "5b2f109e302300d99c161f6002def4a434a94ce58d08d1636c68cfbc465ae949",
-      "version": "1.0.0"
+      "source_sha256": "cd429d0d15ca561dd9c2bbca1e39559c7122ba46962035f33959fb68a5869230",
+      "version": "1.1.0"
     },
     {
       "files": {
@@ -590,7 +594,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
-  "source_project_version": "1.6.13",
+  "source_project_version": "1.7.0",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

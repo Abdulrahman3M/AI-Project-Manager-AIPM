@@ -4,6 +4,14 @@
 
 # Professional Word Designer — Changelog
 
+## [1.1.0] — 2026-10-26
+
+- Added an enterprise visual-design system and a 36-pattern Professional Template Atlas spanning executive, strategy, research, instructional, commercial, operational, editorial and bilingual documents. Each pattern specifies its visual grammar, appropriate components, and failure modes rather than shipping third-party templates or copyrighted assets.
+- Added a documented tooling landscape synthesized from public documentation for `python-docx`, `docx`, `@office-kit/docx`, Docxtemplater, Pandoc, Quarto, LibreOffice/UNO, Mammoth, MarkItDown and Arabic-first DOCX projects. The Skill now routes tools by capability, records their limitations, and requires safe handling of untrusted documents.
+- Added Arabic-first and mixed Arabic/English RTL hardening: Word settings, defaults, sections, visual-table order, paragraph direction, run direction, logical alignment, punctuation/isolation rules, regression strings, structural audit and real-render verification requirements.
+- Upgraded the bundled DOCX baseline builder and auditor to implement and verify the RTL layers, including table visual order, complex-script language, section direction and Word theme language.
+- This is an additive capability release. Research findings are attributed in `references/tool-landscape.md`; no third-party code, templates, images, logos, or proprietary modules were copied into the Skill.
+
 ## 5.0.0 — 2026-10-04
 
 - Expanded the Skill from advanced Word design into a full evidence-controlled Research-to-Word publication workflow while keeping the Professional Word Designer name.

@@ -96,9 +96,9 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `professional-word-designer`
 
-**Description:** Guides evidence-controlled research, editorial planning, Word document production, citation handling, visuals, and publication-quality review.
+**Description:** Guides evidence-controlled research, editorial planning, enterprise-grade Word document production, a 36-pattern template atlas, citation handling, Arabic/English RTL hardening, visuals, and publication-quality review.
 
-**When to Use:** Use it for substantial research papers, reports, books, theses, educational materials, or other long-form publications that need structured evidence and document QA.
+**When to Use:** Use it for substantial research papers, reports, books, theses, educational materials, executive documents, or other long-form publications that need structured evidence, polished visual design, correct multilingual layout, and document QA.
 
 **How to Use:** Example: “Use `professional-word-designer` to plan and produce a cited research report from these approved sources.”
 

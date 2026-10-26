@@ -51,6 +51,8 @@ def test_arabic_word_note_border_is_right(tmp_path):
  path=b.build(data,tmp_path/'ar.docx',st,(ROOT/'examples'))
  with zipfile.ZipFile(path) as z: xml=z.read('word/document.xml').decode('utf-8')
  assert '<w:right' in xml and 'w:bidi' in xml and '<w:rtl' in xml
+ a=load('audit_docx').audit(path,require_rtl=True)
+ assert a['status']=='PASS',a
 
 
 def test_mindmap_edges_never_cross_text_or_cards():

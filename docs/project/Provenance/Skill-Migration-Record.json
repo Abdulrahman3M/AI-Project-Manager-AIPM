@@ -7,7 +7,6 @@
     "find-skills",
     "frontend-design",
     "plugin-creator",
-    "professional-word-designer",
     "project-governance-manager",
     "resume-task",
     "shared-project-state-manager",
@@ -21,6 +20,12 @@
       "approved_date": "2026-10-19",
       "reason": "The project owner explicitly authorized development and maintenance of this Skill for AIPM; original imported source hashes remain preserved below.",
       "historical_source_hashes_retained": true
+    },
+    {
+      "slug": "professional-word-designer",
+      "approved_date": "2026-10-26",
+      "reason": "Correction: Professional Word Designer was authored from scratch by the AIPM owner. It is an original AIPM Skill, not an imported or byte-preserved Skill.",
+      "historical_source_hashes_retained": false
     }
   ],
   "derivative_changed_markdown_files": [

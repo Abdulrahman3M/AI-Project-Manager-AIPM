@@ -5,7 +5,7 @@ from pathlib import Path
 from lxml import etree
 W='{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
 WP='{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}'
-def audit(path,require_toc=False,require_alt=False):
+def audit(path,require_toc=False,require_alt=False,require_rtl=False):
  issues=[];warnings=[];facts={};path=Path(path)
  with zipfile.ZipFile(path) as z:
   if z.testzip():issues.append('ZIP CRC error')
@@ -14,6 +14,21 @@ def audit(path,require_toc=False,require_alt=False):
    if x not in contents:issues.append('Missing '+x)
   if issues:return {'status':'FAIL','critical':issues,'warnings':warnings,'facts':facts}
   root=etree.fromstring(z.read('word/document.xml'));nodes=root.iter()
+  if require_rtl:
+   rtl_paragraphs=[p for p in root.iter(W+'p') if p.find('.//'+W+'bidi') is not None]
+   rtl_runs=[r for r in root.iter(W+'r') if r.find('.//'+W+'rtl') is not None]
+   rtl_tables=[t for t in root.iter(W+'tbl') if t.find('./'+W+'tblPr/'+W+'bidiVisual') is not None]
+   sections=list(root.iter(W+'sectPr'))
+   facts['rtl_paragraphs']=len(rtl_paragraphs);facts['rtl_runs']=len(rtl_runs);facts['rtl_tables']=len(rtl_tables)
+   if not rtl_paragraphs: issues.append('RTL audit: no paragraph w:bidi layer')
+   if not rtl_runs: issues.append('RTL audit: no run w:rtl layer')
+   if sections and not all(s.find('./'+W+'bidi') is not None for s in sections): issues.append('RTL audit: section missing w:bidi')
+   if 'word/settings.xml' not in contents: issues.append('RTL audit: missing word/settings.xml')
+   else:
+    settings=etree.fromstring(z.read('word/settings.xml'))
+    if not settings.xpath('.//w:themeFontLang[@w:bidi]',namespaces={'w':W[1:-1]}): issues.append('RTL audit: missing settings themeFontLang bidi locale')
+   styles=etree.fromstring(z.read('word/styles.xml'))
+   if not styles.xpath('.//w:docDefaults//w:lang[@w:bidi]',namespaces={'w':W[1:-1]}): issues.append('RTL audit: missing default complex-script language')
   fields=[(n.text or '').strip() for n in root.iter(W+'instrText')];joined=' '.join(fields)
   heading_styles={str(e.get(W+'val')) for e in root.iter(W+'pStyle') if (e.get(W+'val') or '').startswith('Heading')}
   facts['headings']=sorted(heading_styles);facts['fields']=fields
@@ -41,8 +56,8 @@ def audit(path,require_toc=False,require_alt=False):
   if any(x in texts for x in ('REPLACE WITH REAL VERIFIED SOURCE','[TODO]')):issues.append('Unresolved editorial placeholder in document text')
  return {'status':'PASS' if not issues else 'FAIL','critical':issues,'warnings':warnings,'facts':facts,'scope':'Only baseline OOXML structure; manual full-page and evidence audits still required'}
 def main():
- p=argparse.ArgumentParser();p.add_argument('docx');p.add_argument('--require-toc',action='store_true');p.add_argument('--require-alt',action='store_true');p.add_argument('--json');args=p.parse_args()
- x=audit(args.docx,args.require_toc,args.require_alt);result=json.dumps(x,indent=2,ensure_ascii=False)
+ p=argparse.ArgumentParser();p.add_argument('docx');p.add_argument('--require-toc',action='store_true');p.add_argument('--require-alt',action='store_true');p.add_argument('--require-rtl',action='store_true');p.add_argument('--json');args=p.parse_args()
+ x=audit(args.docx,args.require_toc,args.require_alt,args.require_rtl);result=json.dumps(x,indent=2,ensure_ascii=False)
  if args.json:Path(args.json).write_text(result+'\n',encoding='utf-8')
  print(result);sys.exit(0 if x['status']=='PASS' else 1)
 if __name__=='__main__':main()

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager v1.6.13</h1>
+  <h1>AI Project Manager v1.7.0</h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
@@ -48,7 +48,7 @@ AIPM is designed to make project context explicit and portable while keeping aut
 
 | [**Explore General Skills →**](docs/guides/General-Skills.md) | [**Explore General Prompts →**](docs/guides/General-Prompts.md) |
 | --- | --- |
-| Browse all 12 General Skills to learn what they do, when to use them, and where to read their full instructions. | Browse the standalone General Prompt index for a concise guide to each prompt and a link to its complete text. |
+| Browse all 13 General Skills to learn what they do, when to use them, and where to read their full instructions. | Browse the standalone General Prompt index for a concise guide to each prompt and a link to its complete text. |
 
 ## Quick Start
 
@@ -109,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current AIPM repository, PowerShell TUI, and latest published release are `v1.6.13`. See the [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
+The current AIPM repository and PowerShell TUI are `v1.7.0`; the latest published GitHub Release remains `v1.6.13`. See the [v1.7.0 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.7.0.md), [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 

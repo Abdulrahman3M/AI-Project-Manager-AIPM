@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.7.0] — Professional Word Designer Enterprise And RTL Upgrade (Repository Update; Not Published)
+
+- Advanced `professional-word-designer` from the AIPM distribution version `1.0.0` to `1.1.0`: added an enterprise visual-design system, 36 original template patterns, a public-source tooling landscape, enhanced quote/inline-code guidance, and Arabic-first/bilingual Word RTL hardening.
+- The bundled builder and structural auditor now implement and check the documented WordprocessingML RTL layers. The Skill’s proof obligations remain explicit: structural PASS is not a substitute for a capable Word render and page inspection.
+- Synchronized platform and PowerShell TUI versions at `1.7.0`; refreshed governed capability metadata and regenerated the legacy Bridge and multi-host local Plugin archives. No Git tag, GitHub Release, publication, or host installation was created.
+
 ## [1.6.13] — Web Design Engineering And Accumulated Platform Improvements (Released 2026-10-26)
 
 - Added the AIPM-owned `web-design-engineering` General Skill at `1.0.2`, covering product-specific art direction, design-system and component contracts, responsive and RTL behavior, accessible interaction, reference-fidelity work, rendered QA, deterministic helper scripts, templates, examples, and unexecuted behavioral evaluation cases.

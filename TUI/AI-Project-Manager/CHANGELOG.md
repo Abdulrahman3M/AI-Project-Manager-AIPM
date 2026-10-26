@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.7.0] — Professional Word Designer Distribution Synchronization (Not Published)
+
+- Synchronized the PowerShell TUI package version with AIPM platform `1.7.0` because the updated distributed Professional Word Designer capability changes the packaged product surface. No TUI runtime behavior, tag, or GitHub Release was created.
+
 ## [1.6.13] — Web Design Engineering Skill Distribution Synchronization (Not Published)
 
 - Synchronized the PowerShell TUI package version with AIPM platform `1.6.13` because the newly shipped `web-design-engineering` General Skill changes the distributed AIPM product capability set.
