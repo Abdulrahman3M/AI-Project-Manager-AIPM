@@ -1,10 +1,14 @@
-## [1.0.0] — AIPM Release Baseline
+## [1.0.6] — 2026-10-26
 
-- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
+- Updated the capability catalog entry for `screenshot-to-code` `1.1.0`.
 
 ## [1.0.5] — 2026-10-26
 
 - Added Screenshot To Code routing and reconciled catalog versions with current Skill masters.
+
+## [1.0.0] — AIPM Release Baseline
+
+- Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
 
 ## [1.0.4] — 2026-10-20
 

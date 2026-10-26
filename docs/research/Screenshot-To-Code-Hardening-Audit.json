@@ -1,0 +1,1158 @@
+{
+  "schema_version": "1.0",
+  "audit_date": "2026-10-26",
+  "purpose": "Evidence record for the AIPM Screenshot To Code hardening review.",
+  "method": {
+    "repositories_attempted": 31,
+    "readable_primary_source_projects": 29,
+    "file_hash_checks": 58,
+    "matched_prior_blob": 56,
+    "unavailable_file_reads": 2,
+    "third_party_code_executed": false,
+    "third_party_content_redistributed": false
+  },
+  "issue_search": {
+    "qualifier": "repo:<owner/name> is:issue",
+    "pull_requests_excluded": true,
+    "issue_results_across_accessible_repositories": 539,
+    "audited_project_results": {
+      "total": 538,
+      "open": 167,
+      "closed": 371
+    },
+    "accessible_search_repositories": 9,
+    "abi_search_partitioned_by_date_and_state": true,
+    "abi_pre_2023_results": 0,
+    "inventory_csv": "Screenshot-To-Code-Issue-Index.csv",
+    "limits": "Snapshot is limited to issues visible to the connected GitHub account at review time; it does not establish that closed issues were fixed."
+  },
+  "excluded_candidates": [
+    {
+      "repository": "Mrxyy/screenshot-to-page",
+      "status": "DISCOVERY_ONLY",
+      "reason": "Repository API was accessible but README and primary Skill evidence were unavailable; one issue was indexed separately as discovery-only."
+    },
+    {
+      "repository": "microsoft/AI-Lab",
+      "status": "UNAVAILABLE",
+      "reason": "Repository API and issue search returned 404/422; no source or issue claims inferred."
+    }
+  ],
+  "repositories": [
+    {
+      "repository": "Ixe1/ui-from-image",
+      "url": "https://github.com/Ixe1/ui-from-image",
+      "default_branch": "master",
+      "reviewed_ref": "87ebe2e9b99ae22ae76deaa2a20aae66b43adb63",
+      "reviewed_ref_url": "https://github.com/Ixe1/ui-from-image/commit/87ebe2e9b99ae22ae76deaa2a20aae66b43adb63",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "4a6eda8501f3dc776c2baf0077b1e4788f21e718",
+          "checked_ref": "87ebe2e9b99ae22ae76deaa2a20aae66b43adb63",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "ae2484d47417b47678adf8eefac53bf5436c539b",
+          "checked_ref": "87ebe2e9b99ae22ae76deaa2a20aae66b43adb63",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "scripts/compare_screenshots.py",
+          "blob_sha": "f178cea733f9f23c20eda8763e491e36cc71922d",
+          "checked_ref": "87ebe2e9b99ae22ae76deaa2a20aae66b43adb63",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "santowilem/skills",
+      "url": "https://github.com/santowilem/skills",
+      "default_branch": "main",
+      "reviewed_ref": "2caf2e1dd0e58d974d8a72d803d7273f9f774ac5",
+      "reviewed_ref_url": "https://github.com/santowilem/skills/commit/2caf2e1dd0e58d974d8a72d803d7273f9f774ac5",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skills/clone-ui/SKILL.md",
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "ad7c4b15d983411c004c3d23e78dc7a56d6c0ff2",
+          "checked_ref": "2caf2e1dd0e58d974d8a72d803d7273f9f774ac5",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skills/clone-ui/SKILL.md",
+          "blob_sha": "f4b7fa0d07b8f0a35f444565fcac8e2433254d89",
+          "checked_ref": "2caf2e1dd0e58d974d8a72d803d7273f9f774ac5",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "sevzq/screenshot-to-html",
+      "url": "https://github.com/sevzq/screenshot-to-html",
+      "default_branch": "main",
+      "reviewed_ref": "7b5469b2c2c95091f4c2e87f125b19f644f9aff0",
+      "reviewed_ref_url": "https://github.com/sevzq/screenshot-to-html/commit/7b5469b2c2c95091f4c2e87f125b19f644f9aff0",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "4cfe5e10f6169b662b898947758714f0699b68ba",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "027ccf7ea3e617b06baad6772bc825269600ed79",
+          "checked_ref": "7b5469b2c2c95091f4c2e87f125b19f644f9aff0",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "3d6a4094e550f6896a8d27e23edcef50d5c96222",
+          "checked_ref": "7b5469b2c2c95091f4c2e87f125b19f644f9aff0",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "scripts/shot.mjs",
+          "blob_sha": "b0767378c7227a6ac995b891a7aa8b59c7e6b2d7",
+          "checked_ref": "7b5469b2c2c95091f4c2e87f125b19f644f9aff0",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "Hoshino-wind/pixel-twin-lab",
+      "url": "https://github.com/Hoshino-wind/pixel-twin-lab",
+      "default_branch": "main",
+      "reviewed_ref": "138f40b9654df9d4f99b40fb383f38d5d64abcbb",
+      "reviewed_ref_url": "https://github.com/Hoshino-wind/pixel-twin-lab/commit/138f40b9654df9d4f99b40fb383f38d5d64abcbb",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "Apache-2.0",
+        "path": "LICENSE",
+        "blob_sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "b7035f96737f41d4181db1e15806550d81a66fbc",
+          "checked_ref": "138f40b9654df9d4f99b40fb383f38d5d64abcbb",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "595e37fd839fa118be4b5cecd7f053d99f4ba470",
+          "checked_ref": "138f40b9654df9d4f99b40fb383f38d5d64abcbb",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "scripts/pixel_twin.py",
+          "blob_sha": "e89b62be0d0050694e7e03aff7b2c5c2522153ff",
+          "checked_ref": "138f40b9654df9d4f99b40fb383f38d5d64abcbb",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "Core-Mate/Pixel-Perfect-Web-Replica",
+      "url": "https://github.com/Core-Mate/Pixel-Perfect-Web-Replica",
+      "default_branch": "main",
+      "reviewed_ref": "4673cf86f895c4371c32eb9e0963aaed1dec4cac",
+      "reviewed_ref_url": "https://github.com/Core-Mate/Pixel-Perfect-Web-Replica/commit/4673cf86f895c4371c32eb9e0963aaed1dec4cac",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "a96022d34512d3f7bdfea37efc03eb911192aea4",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "596e2a48a8998cec673f0752e709e4192f6b09b9",
+          "checked_ref": "4673cf86f895c4371c32eb9e0963aaed1dec4cac",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "c53879d9eaf8a4ce4f88aede814ddc9e70922cc3",
+          "checked_ref": "4673cf86f895c4371c32eb9e0963aaed1dec4cac",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "scripts/mirror_public_page.py",
+          "blob_sha": "e3f262a783fac690bbcf48bebaa9ed8569aa48de",
+          "checked_ref": "4673cf86f895c4371c32eb9e0963aaed1dec4cac",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "fitoe/DesignToCode",
+      "url": "https://github.com/fitoe/DesignToCode",
+      "default_branch": "main",
+      "reviewed_ref": "80070c17f4e3c0ada2c6ad45195fbea663e60e65",
+      "reviewed_ref_url": "https://github.com/fitoe/DesignToCode/commit/80070c17f4e3c0ada2c6ad45195fbea663e60e65",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "8109d2b95c31d64e800318cb0c4eae09aa0f7ac6",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "937760bce11900b9fcfabe95029237a069a58789",
+          "checked_ref": "80070c17f4e3c0ada2c6ad45195fbea663e60e65",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "skills/design-to-code/SKILL.md",
+          "blob_sha": "25a708dd661dc14f6ad890650a3440805081341a",
+          "checked_ref": "80070c17f4e3c0ada2c6ad45195fbea663e60e65",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "oil-oil/draw-ui",
+      "url": "https://github.com/oil-oil/draw-ui",
+      "default_branch": "main",
+      "reviewed_ref": "e4e03662144ae94ed1140811d054f2a3b255e3e4",
+      "reviewed_ref_url": "https://github.com/oil-oil/draw-ui/commit/e4e03662144ae94ed1140811d054f2a3b255e3e4",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "048a290252bb1ca4f5bf8032778ed410e141921c",
+          "checked_ref": "e4e03662144ae94ed1140811d054f2a3b255e3e4",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "3b3792ad2df0148806e6904ef743208217a145c9",
+          "checked_ref": "e4e03662144ae94ed1140811d054f2a3b255e3e4",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "xiaopu-ai/web-clone-prompt",
+      "url": "https://github.com/xiaopu-ai/web-clone-prompt",
+      "default_branch": "main",
+      "reviewed_ref": "e943ee25da8d503354619098d4e8c66c8721913b",
+      "reviewed_ref_url": "https://github.com/xiaopu-ai/web-clone-prompt/commit/e943ee25da8d503354619098d4e8c66c8721913b",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "351f401c32792c4397eeddec491c1f4cb45db792",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "b56c83762839de1b250ede75a3202986be9b92e5",
+          "checked_ref": "e943ee25da8d503354619098d4e8c66c8721913b",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "7f99ba931471c56284c6f3c5ac0ee91731443bc7",
+          "checked_ref": "e943ee25da8d503354619098d4e8c66c8721913b",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "zwq-top/ui-image-to-code-studio",
+      "url": "https://github.com/zwq-top/ui-image-to-code-studio",
+      "default_branch": "main",
+      "reviewed_ref": "3376d299d0c5b475641f067588bbde7704f10a81",
+      "reviewed_ref_url": "https://github.com/zwq-top/ui-image-to-code-studio/commit/3376d299d0c5b475641f067588bbde7704f10a81",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skill/SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "fe4c35889de28e9fff03393d2625a90a0973f894",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "c683637b6e49204997c28bd31c12182f14b14ec1",
+          "checked_ref": "3376d299d0c5b475641f067588bbde7704f10a81",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skill/SKILL.md",
+          "blob_sha": "9c3ce1a52579682b61ddbe2710725c850c98b831",
+          "checked_ref": "3376d299d0c5b475641f067588bbde7704f10a81",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "zhu-guli326/image2_UI",
+      "url": "https://github.com/zhu-guli326/image2_UI",
+      "default_branch": "main",
+      "reviewed_ref": "462d6bd1ea8d9b3b0f1156df8ab7f4432da34d03",
+      "reviewed_ref_url": "https://github.com/zhu-guli326/image2_UI/commit/462d6bd1ea8d9b3b0f1156df8ab7f4432da34d03",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "101e6d9c3a56361d350841eef1e600304c114250",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "a7be571e2ae0265abf4c469112fd37b568c53ff8",
+          "checked_ref": "462d6bd1ea8d9b3b0f1156df8ab7f4432da34d03",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "de53572287e705dd141d119e44d1c4e6c9ee3688",
+          "checked_ref": "462d6bd1ea8d9b3b0f1156df8ab7f4432da34d03",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "abi/screenshot-to-code",
+      "url": "https://github.com/abi/screenshot-to-code",
+      "default_branch": "main",
+      "reviewed_ref": "a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+      "reviewed_ref_url": "https://github.com/abi/screenshot-to-code/commit/a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "bee961c0b14b5bc4eaece2c07adae0eb45624675",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "735c5780a7998f767664b8fd6ed99d53f875223a",
+          "checked_ref": "a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "backend/prompts/__init__.py",
+          "blob_sha": "57f5b7bcbcfd121360a158127b37a2f02cdd9880",
+          "checked_ref": "a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "backend/prompts/system_prompt.py",
+          "blob_sha": "65719c77b136236fcb7f15559efebbdde7cc4297",
+          "checked_ref": "a8139779f7c5ae231b7f2a86fa7f83ddc5f7badc",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 410,
+        "open": 126,
+        "closed": 284
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "uxkin/agent",
+      "url": "https://github.com/uxkin/agent",
+      "default_branch": "main",
+      "reviewed_ref": "6bb351e95de5ddce79bb6bbc5ccd4631eee49eb9",
+      "reviewed_ref_url": "https://github.com/uxkin/agent/commit/6bb351e95de5ddce79bb6bbc5ccd4631eee49eb9",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": ".agents/skills/ui-from-screenshot/SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "fe41dbb11185e4b097699351c4fa96427b3f0ccb",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "681921cfd4d0bbfba3c4656484921fc86798a595",
+          "checked_ref": "6bb351e95de5ddce79bb6bbc5ccd4631eee49eb9",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": ".agents/skills/ui-from-screenshot/SKILL.md",
+          "blob_sha": "b172ad21e68cdb63e702f762feac49a9a39255b2",
+          "checked_ref": "6bb351e95de5ddce79bb6bbc5ccd4631eee49eb9",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "ericshang98/Perfect-Web-Clone",
+      "url": "https://github.com/ericshang98/Perfect-Web-Clone",
+      "default_branch": "main",
+      "reviewed_ref": "c846c37937a70497d37d082c26c85aa1289a9fa5",
+      "reviewed_ref_url": "https://github.com/ericshang98/Perfect-Web-Clone/commit/c846c37937a70497d37d082c26c85aa1289a9fa5",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skill/SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "2f7ab4c2382a3e462d60752ddbd3b92702e18212",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "f0b9c2f4b75a33e161e4f7fa591351a1138f45d7",
+          "checked_ref": "c846c37937a70497d37d082c26c85aa1289a9fa5",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skill/SKILL.md",
+          "blob_sha": "51e6e7bae3117452bbee8228477c8a2a6d48ac3c",
+          "checked_ref": "c846c37937a70497d37d082c26c85aa1289a9fa5",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 6,
+        "open": 6,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "HarKro753/claude-copy",
+      "url": "https://github.com/HarKro753/claude-copy",
+      "default_branch": "main",
+      "reviewed_ref": "4cdf1d09ea1c2571d4a620c1c0742618be829253",
+      "reviewed_ref_url": "https://github.com/HarKro753/claude-copy/commit/4cdf1d09ea1c2571d4a620c1c0742618be829253",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "README.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "792a01def45ddf41604e0c923192a76d332ceb0a",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "PRIMARY",
+          "path": "README.md",
+          "blob_sha": "2b69e034d66faf45fa70d86d208ab395b1b9fbec",
+          "checked_ref": "4cdf1d09ea1c2571d4a620c1c0742618be829253",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "rodrigonask/claude-code-clone-website-skill",
+      "url": "https://github.com/rodrigonask/claude-code-clone-website-skill",
+      "default_branch": "main",
+      "reviewed_ref": "0e7df323e8a241d840f0df475289db14d5439da2",
+      "reviewed_ref_url": "https://github.com/rodrigonask/claude-code-clone-website-skill/commit/0e7df323e8a241d840f0df475289db14d5439da2",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "1c88994f2de02e69d1655b35421c24877dee5148",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "b0b45e34464089028d4fad8e7c33dd859ea1668a",
+          "checked_ref": "0e7df323e8a241d840f0df475289db14d5439da2",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "clone-website/SKILL.md",
+          "blob_sha": "28534f0842b8c2d9a779cecf9bfdedfd2b3b177c",
+          "checked_ref": "0e7df323e8a241d840f0df475289db14d5439da2",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "WCF900905/screenshot-to-design-system",
+      "url": "https://github.com/WCF900905/screenshot-to-design-system",
+      "default_branch": "main",
+      "reviewed_ref": "030e3007a82991113a04b9e0454824b4ad2ef9c7",
+      "reviewed_ref_url": "https://github.com/WCF900905/screenshot-to-design-system/commit/030e3007a82991113a04b9e0454824b4ad2ef9c7",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "09f23a96a7124ea136663e0504f5b757c425e701",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "540d6991dbac2fc8a576516495b88022c96fbfaa",
+          "checked_ref": "030e3007a82991113a04b9e0454824b4ad2ef9c7",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "8c7eea92538fac1424c4e6a8215836670f8dd22a",
+          "checked_ref": "030e3007a82991113a04b9e0454824b4ad2ef9c7",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "openwarehq/calque",
+      "url": "https://github.com/openwarehq/calque",
+      "default_branch": "main",
+      "reviewed_ref": "7749b86c0a7f8b05ce1e1fd7c2e4f57cd14ea382",
+      "reviewed_ref_url": "https://github.com/openwarehq/calque/commit/7749b86c0a7f8b05ce1e1fd7c2e4f57cd14ea382",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "README.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "0d23da16f18ebbe9502ec0223231b218bbd1e281",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "PRIMARY",
+          "path": "README.md",
+          "blob_sha": "efea95f2a7fd384d16bb23a917cba78fa8c0ec60",
+          "checked_ref": "7749b86c0a7f8b05ce1e1fd7c2e4f57cd14ea382",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "max0821/web-design-skill",
+      "url": "https://github.com/max0821/web-design-skill",
+      "default_branch": "main",
+      "reviewed_ref": "34a0470ea0ef5fab329327caf4ffa025bf05e05d",
+      "reviewed_ref_url": "https://github.com/max0821/web-design-skill/commit/34a0470ea0ef5fab329327caf4ffa025bf05e05d",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "cf8389f41ca4df9f8bf147a184f94edcbc1ef58d",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "d1159b77ae166e883af9eabc62d96560ec8dc1b8",
+          "checked_ref": "34a0470ea0ef5fab329327caf4ffa025bf05e05d",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "ADDITIONAL",
+          "path": "web-design/SKILL.md",
+          "blob_sha": "46f42eb1825d8fa342a36f352f2c74c9e937ba6c",
+          "checked_ref": "34a0470ea0ef5fab329327caf4ffa025bf05e05d",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "Huc91/pixel-perfect-skill",
+      "url": "https://github.com/Huc91/pixel-perfect-skill",
+      "default_branch": "main",
+      "reviewed_ref": "2c677882743ebf0fcdc0bedebf055283182a04ce",
+      "reviewed_ref_url": "https://github.com/Huc91/pixel-perfect-skill/commit/2c677882743ebf0fcdc0bedebf055283182a04ce",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "95661439a51073320d8b67f971bb14b20d42e30f",
+          "checked_ref": "2c677882743ebf0fcdc0bedebf055283182a04ce",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "1cb0ceedb8d2f3e9a851bd2dd2747e54cd4fb980",
+          "checked_ref": "2c677882743ebf0fcdc0bedebf055283182a04ce",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "niuniu122/pixel-perfect-website-clone-skill",
+      "url": "https://github.com/niuniu122/pixel-perfect-website-clone-skill",
+      "default_branch": "main",
+      "reviewed_ref": "80847e1ceee7f8ed0ea76ac83609f8233c72e311",
+      "reviewed_ref_url": "https://github.com/niuniu122/pixel-perfect-website-clone-skill/commit/80847e1ceee7f8ed0ea76ac83609f8233c72e311",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "c251cc39a55c7fa678be1e8f8ab34b89e1a7684c",
+          "checked_ref": "80847e1ceee7f8ed0ea76ac83609f8233c72e311",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "52988f84432099afd05f5cf97f15814ac5ff7faa",
+          "checked_ref": "80847e1ceee7f8ed0ea76ac83609f8233c72e311",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "vibeeval/vibecosystem",
+      "url": "https://github.com/vibeeval/vibecosystem",
+      "default_branch": "main",
+      "reviewed_ref": "3b763b1fb288f57bfa3cce76ef18184b96461a78",
+      "reviewed_ref_url": "https://github.com/vibeeval/vibecosystem/commit/3b763b1fb288f57bfa3cce76ef18184b96461a78",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skills/visual-verdict/SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "1a61a47d1dadf8eecccad792fbb5b16e0c99809a",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "fc78f32710384e18cdabd8cddd3bfb0f04b19e5a",
+          "checked_ref": "3b763b1fb288f57bfa3cce76ef18184b96461a78",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skills/visual-verdict/SKILL.md",
+          "blob_sha": "926494ef2b5f156d37b3ff7dfccf508e0213b183",
+          "checked_ref": "3b763b1fb288f57bfa3cce76ef18184b96461a78",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 6,
+        "open": 5,
+        "closed": 1
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "ytvee-dev/webdev-agent-kit",
+      "url": "https://github.com/ytvee-dev/webdev-agent-kit",
+      "default_branch": "main",
+      "reviewed_ref": "ada52938b678507f7ad9ce7c13309594ea5e1e13",
+      "reviewed_ref_url": "https://github.com/ytvee-dev/webdev-agent-kit/commit/ada52938b678507f7ad9ce7c13309594ea5e1e13",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skills/design-screenshot-spec/SKILL.md",
+      "license_observation": {
+        "label": "Apache-2.0",
+        "path": "LICENSE",
+        "blob_sha": "369602e17e3304a0a560f4c6012a18010761e8aa",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "d663bdba586ec9c88f54f2af9dd86f854db71637",
+          "checked_ref": "ada52938b678507f7ad9ce7c13309594ea5e1e13",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skills/design-screenshot-spec/SKILL.md",
+          "blob_sha": "d0ce35b9de3f28f4d14d25a46e37b3a694ef9b6c",
+          "checked_ref": "ada52938b678507f7ad9ce7c13309594ea5e1e13",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 20,
+        "open": 2,
+        "closed": 18
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "Surya17155/Replica",
+      "url": "https://github.com/Surya17155/Replica",
+      "default_branch": "main",
+      "reviewed_ref": "eede9904cd59d6c5612c3a9411a45dca2cb1f14f",
+      "reviewed_ref_url": "https://github.com/Surya17155/Replica/commit/eede9904cd59d6c5612c3a9411a45dca2cb1f14f",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "SKILL.md",
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "a2919636da4daedefac7812d45368d91642723d8",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "b2b822ca82aa5120a2c887e3cebfd6a78e4b70f8",
+          "checked_ref": "eede9904cd59d6c5612c3a9411a45dca2cb1f14f",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "SKILL.md",
+          "blob_sha": "c1a007e84ae2f45717559f7aac4d30fe6495e0af",
+          "checked_ref": "eede9904cd59d6c5612c3a9411a45dca2cb1f14f",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "vishnu-madhavan-git/9designer-skills",
+      "url": "https://github.com/vishnu-madhavan-git/9designer-skills",
+      "default_branch": "main",
+      "reviewed_ref": "b9b9289feec3bdfa42799a136623d163460d2fd8",
+      "reviewed_ref_url": "https://github.com/vishnu-madhavan-git/9designer-skills/commit/b9b9289feec3bdfa42799a136623d163460d2fd8",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": "skills/9designer/SKILL.md",
+      "license_observation": {
+        "label": "Apache-2.0",
+        "path": "LICENSE",
+        "blob_sha": "673224751955af73d641b4f54e8172f38906de29",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "f3781ff30b4ec821e7d87110874b51e005673447",
+          "checked_ref": "b9b9289feec3bdfa42799a136623d163460d2fd8",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        },
+        {
+          "kind": "PRIMARY",
+          "path": "skills/9designer/SKILL.md",
+          "blob_sha": "150e4a54591a0eee80058c6b435c36a69e7fcc57",
+          "checked_ref": "b9b9289feec3bdfa42799a136623d163460d2fd8",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "gojodennis/OpenKombai",
+      "url": "https://github.com/gojodennis/OpenKombai",
+      "default_branch": "main",
+      "reviewed_ref": "515235e2a2c7cf90070f5c5f50e24989c8765496",
+      "reviewed_ref_url": "https://github.com/gojodennis/OpenKombai/commit/515235e2a2c7cf90070f5c5f50e24989c8765496",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "09c60283544b8b3ae322bff4678d7fe0304230d3",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "2f4d6dce183f9e13d37f9cca8e86e90176bf2423",
+          "checked_ref": "515235e2a2c7cf90070f5c5f50e24989c8765496",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 1,
+        "open": 1,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "NoviScl/Design2Code",
+      "url": "https://github.com/NoviScl/Design2Code",
+      "default_branch": "main",
+      "reviewed_ref": "7a575e4c33f417c4be5c64072b8f5798de0d0f99",
+      "reviewed_ref_url": "https://github.com/NoviScl/Design2Code/commit/7a575e4c33f417c4be5c64072b8f5798de0d0f99",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "UNVERIFIED",
+        "path": null,
+        "blob_sha": null,
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "ec78f445edb6871b518ce98c75447333ae8d2271",
+          "checked_ref": "7a575e4c33f417c4be5c64072b8f5798de0d0f99",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 30,
+        "open": 7,
+        "closed": 23
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "tonybeltramelli/pix2code",
+      "url": "https://github.com/tonybeltramelli/pix2code",
+      "default_branch": "master",
+      "reviewed_ref": "eab4816e397e7491b92bdcb78d9d7195afa412b3",
+      "reviewed_ref_url": "https://github.com/tonybeltramelli/pix2code/commit/eab4816e397e7491b92bdcb78d9d7195afa412b3",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "Apache-2.0",
+        "path": "LICENSE",
+        "blob_sha": "8dada3edaf50dbc082c9a125058f25def75e625a",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "101ee2a4f3b4bddb1ad4d97fdfcdc581d099415d",
+          "checked_ref": "eab4816e397e7491b92bdcb78d9d7195afa412b3",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 0,
+        "open": 0,
+        "closed": 0
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "emilwallner/Screenshot-to-code",
+      "url": "https://github.com/emilwallner/Screenshot-to-code",
+      "default_branch": "master",
+      "reviewed_ref": "f7f8ceee38094e990fec5a76e10f50d8b91a5033",
+      "reviewed_ref_url": "https://github.com/emilwallner/Screenshot-to-code/commit/f7f8ceee38094e990fec5a76e10f50d8b91a5033",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "Apache-2.0",
+        "path": "LICENSE",
+        "blob_sha": "1813902b144803055dbe1f6aa0fa6c0741cbb6cd",
+        "scope_note": "Mixed repository notices; assess applicable file scope before any reuse."
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "5fef5fb64bcee036cc3fc76fd66e086ab667b2ca",
+          "checked_ref": "f7f8ceee38094e990fec5a76e10f50d8b91a5033",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 60,
+        "open": 18,
+        "closed": 42
+      },
+      "executed_third_party_code": false
+    },
+    {
+      "repository": "mostafasadeghi97/design2code",
+      "url": "https://github.com/mostafasadeghi97/design2code",
+      "default_branch": "main",
+      "reviewed_ref": "5ffe29b31277c556dcf1da42bd52d186d0bc715e",
+      "reviewed_ref_url": "https://github.com/mostafasadeghi97/design2code/commit/5ffe29b31277c556dcf1da42bd52d186d0bc715e",
+      "repository_status": "ACCESSIBLE",
+      "primary_path": null,
+      "license_observation": {
+        "label": "MIT",
+        "path": "LICENSE",
+        "blob_sha": "e48074434cae3f54db3fe0f5b3682cbe3541115b",
+        "scope_note": null
+      },
+      "inspected_files": [
+        {
+          "kind": "README",
+          "path": "README.md",
+          "blob_sha": "26254bffa304a91bcc43d6f4ee94d4b5254eaae1",
+          "checked_ref": "5ffe29b31277c556dcf1da42bd52d186d0bc715e",
+          "status": "MATCHED_PRIOR_BLOB",
+          "error": null
+        }
+      ],
+      "github_issues": {
+        "total": 5,
+        "open": 2,
+        "closed": 3
+      },
+      "executed_third_party_code": false
+    }
+  ]
+}

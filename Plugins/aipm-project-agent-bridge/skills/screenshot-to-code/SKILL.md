@@ -18,6 +18,24 @@ Build editable, working frontend code that matches the supplied visual evidence.
 - Match the requested visible scope. A cropped screenshot does not authorize inventing a footer, extra sections, hidden pages or unknown interactions. Label any requested extension as inferred.
 - Use the host's supported file, browser, connector and image tools. Do not assume a local browser, image tool, paid model, shell, account session or remote loopback access exists. Respect the host's browser policies.
 
+## Evidence Modes
+
+Use **screenshot-only mode by default**. It uses the supplied image(s) and the target project's own files and tools; it does not navigate to or inspect a reference website. Keep this mode when the user declines browser inspection, no authorized page is available, the host cannot verify its browser capability, or browser access would add little evidence.
+
+**Browser inspection is optional and requires opt-in before the first browser action.** When it would materially improve fidelity, ask this exact question:
+
+> Would you like to use an approved agent-connected browser/extension? It can improve pixel fidelity by reading the page you are authorized to view (DOM, computed styles, layout geometry, loaded assets, and visible states). Screenshot-only reconstruction remains available.
+
+After an affirmative answer, inspect only the exact page the user opened in an approved agent-connected browser or the public URL they explicitly authorized you to navigate to. If the target page or URL is not identified, ask the user to open it in that browser or name the public URL. Keep the inspection to visible, client-side evidence for that page: visible DOM content, computed styles and geometry for visible elements, already loaded asset metadata, and the visible states the user authorized.
+
+- Use only a browser tool/extension whose identity and permission state the host can verify. Never attach to the user's personal browser, reuse its profile or saved session, or infer authorization from an open tab.
+- Do not enter credentials, bypass access controls, inspect cookies/storage, hidden page data, backend source, private APIs, or unrelated pages. Do not copy or download third-party page assets unless separately authorized and permitted.
+- Browser consent is scoped to the identified page and this task. It does not authorize additional origins, account data, or actions with side effects.
+- If consent is declined, ambiguous, the tool identity/permission cannot be verified, or inspection is blocked, stop browser access and continue with screenshot-only mode. Do not repeatedly prompt or claim browser-derived evidence.
+- Keep the supplied screenshot as the visual authority. Record which facts came from the screenshot, which came from authorized browser inspection, and what remains inferred or unknown. A live reference page is not a local implementation render and does not prove that implementation behavior works.
+
+Read [Evidence Modes And Scenarios](references/Evidence-Modes.md) for the operating matrix and screenshot-only examples.
+
 ## 1. Establish The Evidence
 
 Read the target project's rules and inspect its current implementation first. Locate the requested route, reusable components, font files, icons, assets, tokens and verification commands. Keep a concise task record in the target's existing task/evidence location; do not create a second governance system.
@@ -44,6 +62,8 @@ For each region, record bounds and anchors, alignment, container/padding/gaps, t
 
 Map repeated patterns to components and explicit CSS tokens. Reuse project components when faithful; override their visual defaults locally when the reference differs. If project design rules conflict with the requested reference, surface that concrete conflict instead of silently approximating either side.
 
+Before using a CSS custom property, verify it is defined in the project or define it in the owning scope. Never reference an assumed or nonexistent token.
+
 ## 3. Resolve Fonts And Assets
 
 Use supplied originals, then matching project assets, then authorized source assets if available. Record each asset's origin and license/usage status. For missing photos or illustrations, use a clean crop only if it has sufficient resolution and contains no baked-in UI text/controls. Preserve the source crop coordinates and show the limitation.
@@ -68,7 +88,7 @@ Derive responsive layouts from supplied mobile/tablet references first. With a s
 
 ## 5. Render Under Comparable Conditions
 
-Run the project and capture its real rendered output with the host's supported browser capability. Use the reference CSS viewport, DPR, theme, scroll/crop and state; wait for fonts and decoded images. Inspect failed assets, console errors, overflow and font fallback. Use a new capture after each code change; invalidate old evidence.
+Run the project and capture its real rendered output with the host's supported browser capability. This local implementation check is separate from optional browser inspection of a reference page. Use the reference CSS viewport, DPR, theme, scroll/crop and state; wait for fonts and decoded images. Inspect failed assets, console errors, overflow and font fallback. Use a new capture after each code change; invalidate old evidence.
 
 For each reference, record browser/OS, CSS dimensions, raster dimensions, DPR, theme, locale/direction, scroll position, font readiness, source revision and state setup. Capture the full page and regional crops for long-page work; inspect sticky headers, section seams, lazy content and the bottom of the page. Static screenshots do not prove transitions or hidden states.
 
@@ -99,6 +119,7 @@ Use separate statuses for **implementation**, **reference fidelity**, **interact
 ## Supporting Resources
 
 - [Measurement And Reconstruction](references/Measurement-And-Reconstruction.md): precise measurement, typography, assets, responsive and RTL pitfalls.
+- [Evidence Modes And Scenarios](references/Evidence-Modes.md): screenshot-only default, browser opt-in rules, permission boundaries and representative inputs.
 - [Visual Verification](references/Visual-Verification.md): capture, regional comparison, repair triage and evidence gates.
 - [Evaluation Scenarios](references/Evaluation-Scenarios.md): realistic behavioral checks for future agents; distinguish unexecuted scenarios from test results.
 - [Research Synthesis](references/Research-Synthesis.md): original design rationale and primary-source landscape; no external Skill is required or automatically installed.

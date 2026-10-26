@@ -117,8 +117,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "524df5c4b5a296d5142856364a99d710ac20d0fcf192cff6a1fc089f8e1b40a1",
-      "local_version": "1.0.5",
+      "local_sha256": "ecc640f0d6bbdaf950c229767923cd660b351fdd5f85b14e6b7da91f6b4429a8",
+      "local_version": "1.0.6",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],
@@ -149,8 +149,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "3dd2df97d88aa1f64b5a08bcca91ae29d0a25cc6e259f08836c4f6861ddbc885",
-      "local_version": "1.0.0",
+      "local_sha256": "8d642cee9b1a4f3840a3dbce2e25fe35c5e5432ef39d7e369cba1f111da3e101",
+      "local_version": "1.1.0",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],

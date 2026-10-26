@@ -10,6 +10,7 @@
 - [Support Matrix](docs/project/Support-Matrix.md)
 - [Project Completion Record — P00–P10](docs/project/Project-Completion-Record-v1.4.8.md)
 - [Project Completion Archive](AIPM-Project-Completion-Archive-v1.4.8.zip)
+- [Screenshot To Code Hardening Audit](docs/research/Screenshot-To-Code-Hardening-Audit.md)
 
 ## Capability Library
 
@@ -23,6 +24,9 @@
 
 ## Release History
 
+- [Repository Update Notes v1.8.1 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.1.md)
+- [Repository Update Notes v1.8.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.0.md)
+- [Repository Update Notes v1.7.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.7.0.md)
 - [Repository Update Notes v1.5.6 — Not Published](docs/project/Release-Notes/Release-Notes-v1.5.6.md)
 - [Repository Update Notes v1.5.5 — Not Published](docs/project/Release-Notes/Release-Notes-v1.5.5.md)
 - [Repository Update Notes v1.5.4 — Not Published](docs/project/Release-Notes/Release-Notes-v1.5.4.md)

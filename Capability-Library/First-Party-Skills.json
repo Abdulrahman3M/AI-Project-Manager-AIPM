@@ -52,7 +52,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "source_reference": "Original AIPM screenshot reconstruction synthesis; primary sources are attribution only, no third-party redistribution"
     }
   ]

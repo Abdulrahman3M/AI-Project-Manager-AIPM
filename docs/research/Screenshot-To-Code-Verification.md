@@ -2,6 +2,46 @@
 
 **Date:** 2026-10-26. **Baseline:** `2a32807bfa44bc2d2405d83006f04e10c0060571`. **Scope:** original Skill, diagnostic tools, routing/index/registry synchronization, generated distributions and source packaging.
 
+## v1.8.1 Post-Sync Hardening Update
+
+This section records the current task after a safe fast-forward from `2a32807bfa44bc2d2405d83006f04e10c0060571` to `origin/main` at `45c5d0746808a1d7a0250326cdf83e45ac1dc15d`. The earlier sections below preserve historical evidence from the prior repository update; their publication statements do not describe this task. This update remains local and unpublished.
+
+| Check | Current result | Evidence / limits |
+| --- | --- | --- |
+| Evidence modes | PASS: 4 tests | Screenshot-only default, opt-in browser wording, authorization boundaries, and scenario guidance. |
+| Visual helpers | PASS: 7 tests | Bundled Python 3.12.14 with Pillow 12.3. |
+| General Skills documentation | PASS: 3 tests | Inventory, ordering, source links, and navigation. |
+| Project Orchestrator contract | PASS: 3 tests | Catalog versions, handoff routing, and capability-gap behavior. |
+| Plugin distribution regression | PASS: 6 tests | Inventories, hashes, host manifests, exclusions, tamper rejection, and documentation. |
+| P06 Capability Library | PASS: 21 tests | Registry baseline, atomic update, source drift, Bridge/package boundaries, and capability inventory cases. |
+| P10 Release packaging | PASS: 3 tests | Reproducible archive, sensitive-content exclusion, and tamper rejection. |
+| Capability registry and Plugin | PASS | Governed refresh and validation succeeded for 14 Skills and 1 standalone Prompt; local Plugin validation reports not installed and not published. |
+| Legacy Project Agent Bridge | PASS | Generated and validated at `1.2.1`; local only. |
+| Multi-host archives | PASS: local build | v1.8.1 ChatGPT/Codex and Claude archives are format-verified; Antigavity archive inventory/checksum validates, while native host-format/runtime acceptance is UNVERIFIED. All have SHA-256 sidecars and remain uninstalled. |
+| Historical ten failure identities | 7 PASS, 3 SKIP | Current outcomes are listed below. The seven ACL/CLI/process identities no longer reproduce as failures. Three junction-dependent cases could not create a junction because Windows denied `cmd /c mklink /J`. |
+| Browser environment | UNVERIFIED | Status metadata was found; process inspection failed with `PROCESS_INSPECTION_UNAVAILABLE` because Windows denied CIM access. No target URL was provided, so no page or browser evidence was inspected. |
+| Full repository suite and held-out reconstruction | NOT_RUN | No claim is made for either check in this update. |
+| Remote publication | NOT PERFORMED | No push, tag, GitHub Release, Plugin installation, or publication occurred. |
+
+### Current Outcomes For The Ten Prior Failure Identities
+
+| Test identity | Current outcome |
+| --- | --- |
+| `test_acl_denial_leaves_no_partial_state_tree` | PASS |
+| `test_inherited_directory_acl_denial_leaves_no_partial_state_tree` | PASS |
+| `test_registry_acl_denial_preserves_existing_registry` | PASS |
+| `test_rejects_junction_in_existing_state_path` | SKIP / UNVERIFIED: junction creation denied by Windows |
+| `test_rejects_junction_in_project_root_path` | SKIP / UNVERIFIED: junction creation denied by Windows |
+| `test_cli_lists_pointer_only_registry_as_json` | PASS |
+| `test_lock_guard_rejects_reparse_path_before_opening_redirected_target` | SKIP / UNVERIFIED: junction/reparse fixture creation denied by Windows |
+| `test_live_process_identity_blocks_expired_lease_recovery` | PASS |
+| `test_resource_guard_serializes_a_real_child_process` | PASS |
+| `test_terminated_process_allows_expired_lease_recovery` | PASS |
+
+The audit reviewed 29 projects with readable primary evidence and indexed 538 issues (167 open, 371 closed). `Mrxyy/screenshot-to-page` remains discovery-only because its README and primary Skill were unavailable; `microsoft/AI-Lab` could not be read or searched. An additional issue from the discovery-only repository is separately marked in the CSV. No third-party code was executed or redistributed. See the [audit report](Screenshot-To-Code-Hardening-Audit.md), [machine-readable evidence](Screenshot-To-Code-Hardening-Audit.json), and [issue title/status index](Screenshot-To-Code-Issue-Index.csv).
+
+Generated package files were copied from the isolated validation checkout after their paths were checked and key file hashes matched. The completed evidence and tests do not establish native Antigavity acceptance, browser access on this Windows host, an installation in any AI host, or autonomous screenshot reconstruction quality.
+
 ## Results
 
 | Check | Result | Evidence / Limit |

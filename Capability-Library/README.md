@@ -6,7 +6,7 @@ This library records the approved General Skills and Prompt relationships in a d
 
 ## Registered Inventory
 
-- 13 AIPM-owned General Skills, including `project-orchestrator`, `tui-intelligence`, and `web-design-engineering`.
+- 14 AIPM-owned General Skills, including `project-orchestrator`, `tui-intelligence`, and `web-design-engineering`.
 - Skill-owned Prompts remain in their owning Skill folders and are listed in the registry.
 - One owner-added standalone Prompt is registered from `02-Prompt-General`.
 - Personal Skills, `import-memory`, and `morning` are excluded.

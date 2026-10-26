@@ -1,5 +1,5 @@
 {
   "description": "A local AIPM project-to-agent bridge with Core guidance and approved Skills.",
   "name": "aipm-project-agent-bridge",
-  "version": "1.2.0"
+  "version": "1.2.1"
 }

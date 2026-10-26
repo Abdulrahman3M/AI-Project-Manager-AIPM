@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.1] — Screenshot To Code Browser Evidence Modes (Not Published)
+
+- Synchronized TUI metadata with platform `1.8.1` for the updated screenshot capability. No TUI runtime behavior changed.
+
 ## [1.8.0] — Screenshot To Code Distribution Synchronization (Not Published)
 
 - Synchronized TUI metadata with platform `1.8.0` for the new distributed capability. No TUI runtime behavior changed.

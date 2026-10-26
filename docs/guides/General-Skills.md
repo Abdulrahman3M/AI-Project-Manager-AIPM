@@ -129,7 +129,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 **When to Use:** Use it when a request spans several kinds of work or when help is needed choosing which Skill should handle a task. For a clear, single-specialist task, use that specialist directly.
 
-**How to Use:** Example: “Use `project-orchestrator` to identify the right Skills and coordinate this project request.”
+**How to Use:** Example: “Use `project-orchestrator` to select and coordinate the appropriate Skills, including `screenshot-to-code` when a screenshot implementation task is requested.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/project-orchestrator/SKILL.md)
 
@@ -153,11 +153,11 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `screenshot-to-code`
 
-**Description:** Converts screenshots and design images into editable frontend code with measured geometry, font and asset provenance, Arabic RTL support, and regional rendered comparisons.
+**Description:** Converts screenshots and design images into editable frontend code with measured geometry, font and asset provenance, Arabic RTL support, and regional rendered comparisons. Screenshot-only work is the default; visible browser inspection requires explicit opt-in.
 
 **When to Use:** Use it to recreate a supplied website or app screenshot in the existing frontend stack, or repair visual differences while preserving business behavior.
 
-**How to Use:** Example: “Use `screenshot-to-code` to implement this screenshot in the current project, render it at the reference viewport, and repair measured differences.”
+**How to Use:** Example: “Use `screenshot-to-code` to implement this screenshot in the current project, compare local renders at the reference viewport, and ask before inspecting the reference page in an approved browser.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/screenshot-to-code/SKILL.md)
 

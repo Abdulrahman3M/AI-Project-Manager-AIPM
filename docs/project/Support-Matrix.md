@@ -1,5 +1,19 @@
 # AI Project Manager Support Matrix
 
+## v1.8.1 Local Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Screenshot To Code evidence modes | Bundled Python 3.12.14 / Pillow 12.3 | PASS | Four focused mode and permission-boundary tests passed; seven visual helper tests passed. |
+| Skill documentation and routing | Bundled Python | PASS | General Skills index: 3 tests; Project Orchestrator contract: 3 tests. |
+| Capability registry and Bridge | Bundled Python | PASS | P06 capability suite: 21 tests; governed registry validation and Bridge generation/validation passed for 14 Skills. Bridge `1.2.1`. |
+| Multi-host Plugin distribution | Bundled Python / local build | PASS (format verified for ChatGPT and Claude) | Distribution suite: 6 tests. v1.8.1 archives and SHA-256 sidecars built for ChatGPT/Codex, Claude Code, and Antigavity. Antigavity native format/runtime acceptance remains UNVERIFIED. No archive is installed. |
+| Release packaging | Bundled Python | PASS | P10 release suite: 3 tests. |
+| Prior ten failure identities | Windows host | PASS WITH 3 SKIPS | Seven now pass; three junction/reparse-path cases skip because `cmd /c mklink /J` is denied. See the current outcome table in the [Screenshot To Code verification record](../research/Screenshot-To-Code-Verification.md). |
+| Research audit | Connected GitHub source and issue tools | PASS WITH ACCESS LIMITS | 29 readable projects and 538 issues (167 open, 371 closed). Two candidate repositories were unavailable for primary evidence; one extra issue is discovery-only. |
+| Browser inspection preflight | Windows CIM | UNVERIFIED | Registered environment metadata was found; process inspection was denied. No page was supplied or inspected. |
+| Full repository regression / held-out reconstruction | Not run | NOT_RUN | No full suite or autonomous reconstruction evaluation was run for v1.8.1. |
+
 ## v1.8.0 Repository Update
 
 | Component | Environment | Status | Evidence |

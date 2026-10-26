@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "b60d790c05052c31eb7f857e0e72d78835b65793a9ff69bc1af5a71429da9773",
+  "changelog_sha256": "0d4861f76038a79374b696cd12d2a3ae9983b75217873093fe6d0bfd70aec37d",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.2.0",
-  "previous_plugin_version": "1.1.2",
+  "plugin_version": "1.2.1",
+  "previous_plugin_version": "1.2.0",
   "schema_version": "1.0",
   "skills": [
     {
@@ -386,10 +386,10 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "adcb4850fc334b26a0aa581943a6492c2ec8071141e80cd1d71a44ff4e19e3ed",
+        "CHANGELOG.md": "3540edcd9a58bdb4b9bc97ef5332091a869684fc9bae5d6abc658563a7349b3f",
         "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "302b57551e2e23fcf65c9bbe1c6adeba6755f0526a6715840659f1af95cfb119",
-        "VERSION": "8c54bfab7f1ae9bd1a7148eae41e7b0a8f4ad3726e0cac70f823a2d45db9e60c",
+        "SKILL.md": "78b87fe083541a92061823d9e81247513985be5110da655a96415ce568995103",
+        "VERSION": "51c18dc8694861beb47a67894e61044864214435389f6d3a274704d9566ff96c",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
@@ -403,8 +403,8 @@
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "project-orchestrator",
-      "source_sha256": "524df5c4b5a296d5142856364a99d710ac20d0fcf192cff6a1fc089f8e1b40a1",
-      "version": "1.0.5"
+      "source_sha256": "ecc640f0d6bbdaf950c229767923cd660b351fdd5f85b14e6b7da91f6b4429a8",
+      "version": "1.0.6"
     },
     {
       "files": {
@@ -433,22 +433,24 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "d766cfdf0293a9b82d7f95fe967d16039ff4607f49bff1123903c1af9cb8a89f",
-        "SKILL.md": "94b36da30c7eaed2c06ec12998ceaeae47c6bbeb34790b9e7b6eb53a72b50510",
-        "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
-        "agents/openai.yaml": "895ba417d7556dcdb8a201f1fd6b8a428408b6f15118e1a54cf9a3e7387cde4d",
-        "references/Evaluation-Scenarios.md": "f38fc6c3b0b1357d3bfc8029d4100d78613ca7a6adb728e89af8057ce5dad003",
-        "references/Measurement-And-Reconstruction.md": "8350726d99ba07c05a34e5c0dcf56089b631b492a7a467e918749189b196e5fd",
-        "references/Research-Synthesis.md": "9d0e09b534b2a906eaa535fbe6258af39b61b9c918081f27197963749f181f1b",
-        "references/Visual-Verification.md": "3dbf9780ad36702b4ccbb9ff35d8652426c7197cb05e6ddd08c09ba7ef98e4ec",
-        "requirements.txt": "24653aac9a1cb6831a79dc8f2e263c87cd19d57fc2cdf68e39e69002a3b22a9b",
-        "scripts/compare.py": "181a3d0ccb57a1e2856056a4ed01f9bddde4885c0ef6db44b277edd9fd7a3f6d",
-        "scripts/probe.py": "a8d23434c485d5fa04de2f01348faaf506878b229c082c7f169bbbfecc16f091",
-        "templates/Completion-Report.md": "2e2cffc5973f00792a395e482b7de039e860b6ba2989e3ccbf44cd23d5801f8f",
-        "templates/Reconstruction-Record.md": "f68f5b317325405ac74319bd58005c6940725744e603c16a35c9ddc513eced21",
-        "tests/fixtures/lesson.html": "f98f89347a749528208bdd31b33e2f125c28f9681e8afa10efedeaa8b893a7e4",
-        "tests/test_browser.cjs": "1dde6e796db8645e5199afe3c6f3dfd5401873905290d20559354a9c24a07e30",
-        "tests/test_visual_tools.py": "662e2a918971be7646c92cf044df926f8442b109d10062df690164953818447b"
+        "CHANGELOG.md": "8963f2ef171da625ff87792a5f357f3d2eab740e2e440d1e114e2cc2a6291d3e",
+        "SKILL.md": "82b78b54effbf93b558d9cbcb9127b8ec498e99692827f440d5d6fe8bad89f6b",
+        "VERSION": "1575e1af4a95f12f70b4ee6a6adce8160953d93ea17dc2611b90883ccc3ad3b8",
+        "agents/openai.yaml": "9495642e73409c1f042f1e3e7f8bd3d7fbcdd87565a7b7a9d34300d28c61a0b2",
+        "references/Evaluation-Scenarios.md": "67dfe17c921009c98df0e3f837136e448ada33da4a588c0cd152d8c50eec7b97",
+        "references/Evidence-Modes.md": "0d7b47e7f0ab807317fba9c4d6270073f77cc3ff5e671a9f8209452e9a48c3b3",
+        "references/Measurement-And-Reconstruction.md": "5ba74de6ffef47ca53241bf951d37e345f89c48de3124fc3f5943d4c1e15ca76",
+        "references/Research-Synthesis.md": "c233b02efa3fdfdddb73222e30cb89460536ac7d610e90efe20d6fd12695256b",
+        "references/Visual-Verification.md": "8717fc9660759b8735522518d38ff9b78eb95018e7e202283fdacd4c50036c9d",
+        "requirements.txt": "41d0361e93f1cf94ec462fd39fc830300313073c4c477e9a70e0713969527a7c",
+        "scripts/compare.py": "ce29ddd964101d8e91466cf677099e5f625de63e8c42115ec1ecb034445da91c",
+        "scripts/probe.py": "9e1e3e8d6a94f14656e4f49631caa997c75a20d48d81e15babec0fcb449b1651",
+        "templates/Completion-Report.md": "1a3be494aa5808ff540926afa2b4f5f656e46c07c9725f414f236f7f931a1c04",
+        "templates/Reconstruction-Record.md": "39af802a1919bf6761956697b7f6895f2abc42b93084a6195e062b43b5d0c6d6",
+        "tests/fixtures/lesson.html": "4e8a04a5360dd981985a1667a8aa80f868e07b48ffb7c7de1fe9b4b4ad9e3c3d",
+        "tests/test_browser.cjs": "4d6a36a294607e2abdf599f894436e929c30651010da6f13f99c02362a394cd8",
+        "tests/test_evidence_modes.py": "9f6a5e9c5044e38b9e850d65940afd1995d0a23e3091ee66af7a21787230d77e",
+        "tests/test_visual_tools.py": "89710998a0fc29668b09f92f6339e4bd4633eb3f917c921c55b7eba0191338c0"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -458,8 +460,8 @@
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "screenshot-to-code",
-      "source_sha256": "3dd2df97d88aa1f64b5a08bcca91ae29d0a25cc6e259f08836c4f6861ddbc885",
-      "version": "1.0.0"
+      "source_sha256": "8d642cee9b1a4f3840a3dbce2e25fe35c5e5432ef39d7e369cba1f111da3e101",
+      "version": "1.1.0"
     },
     {
       "files": {
@@ -624,7 +626,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
-  "source_project_version": "1.8.0",
+  "source_project_version": "1.8.1",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

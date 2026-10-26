@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.8.1] — Screenshot To Code Evidence Modes (Repository Update; Not Published)
+
+- Updated `screenshot-to-code` to `1.1.0` with screenshot-only default, explicit opt-in for authorized visible browser inspection, privacy/page boundaries, uncertainty examples, and CSS token checks.
+- Re-audited 29 readable primary-source projects and 538 GitHub issues; indexed the full issue titles/statuses/URLs and recorded source findings and verification limits.
+- Advanced `project-orchestrator` to `1.0.6` to synchronize its capability catalog with `screenshot-to-code` `1.1.0`.
+- Synchronized platform and TUI metadata at `1.8.1`; TUI runtime behavior unchanged. The Bridge and three host archives are rebuilt and validated locally; not installed or published.
+- No GitHub push, tag, Release, or external publication.
+
 ## [1.8.0] — Screenshot To Code Capability (Repository Update; Not Published)
 
 - Added the original `screenshot-to-code` Skill at `1.0.0`, research across 29 readable primary-source projects, regional visual diagnostics, RTL and explicit verification gates. Updated Orchestrator routing to `1.0.5`, Skill documentation, capability baselines and affected Plugin distributions. Platform and TUI metadata are synchronized at `1.8.0`; no TUI runtime behavior, Git tag, GitHub Release or host installation changed.
