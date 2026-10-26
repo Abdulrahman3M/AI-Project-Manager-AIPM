@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "1ff06a261a327668912dfbfdee83b382182385cdd9ab5fd927f1b3fd47d43690",
+  "changelog_sha256": "db3cfb07cf4b3e41a46e56d18132f215d62714e6a257e222bf512b6b30f62982",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.0.16",
-  "previous_plugin_version": "1.0.15",
+  "plugin_version": "1.1.1",
+  "previous_plugin_version": "1.1.0",
   "schema_version": "1.0",
   "skills": [
     {
@@ -544,11 +544,53 @@
       "slug": "tui-intelligence",
       "source_sha256": "7c6c8cea3a8fe4defb688afe9a3d0c796c26326c18fdc91231642ee963c00d73",
       "version": "1.0.0"
+    },
+    {
+      "files": {
+        "CHANGELOG.md": "19cd95fbd4586be37ea774e1fdb15f3a2d11ebd64e51c3c214c5771728bd15a1",
+        "README.md": "1e0c5c7efc9671e353214c64872e4d8d8f7c394c68e5542d4d3753317b56738d",
+        "SKILL.md": "76c68a5ae5750a515e8bb99a309683ab7e7321c00be3d54e29776ab95ac5f080",
+        "VERSION": "9fd28642d3aca191e5c7fc2383cfd6fabb2aac8743f029dabb8989ac584e31bc",
+        "agents/openai.yaml": "6dedb779adbc546cab2fc3bcbb3e6e308cacf8474641c4d92db2c4914a7c5353",
+        "evals/evals.json": "3ed1cc7c70c9d854211ea6ef6bdb73cc20d31f013d687d727054f566c51b1fa5",
+        "examples/01-Landing-Page-Design-Brief.md": "32ee0685a1d68ff9815b07e3d7782afcc182aeede71ec41f7234c268321e2064",
+        "examples/02-Operational-Dashboard-Review.md": "78ce1bd78ac8a9686a6fa4ca62d88e174a82fadf38a730dafbeb5ba4567ba739",
+        "examples/03-Form-Workflow-Contract.md": "46ab4de3b3310dadad4fef26fee56dfe46d8c18bd2c66330718641a092d6dcc8",
+        "examples/04-RTL-And-Localization-Case.md": "d661b3d54567f91b2c040e08b167e5221921ba3e093e3255edc486e9c0fb8c05",
+        "examples/05-Reference-Fidelity-Ledger.md": "3b02ac6e7fce9aea7838fc44cd60363900831470d66065ec6c1aa7fda41ceb97",
+        "references/Art-Direction.md": "40e6e534dd94edd6dca0c51dc01a1b54d1410d3a6e4b592bf630719f47c38395",
+        "references/Design-System.md": "fd6ab92bf099659405686802636269902753b00cf7863bda36a4b650ab4257f3",
+        "references/Motion-And-Interaction.md": "b93f4272e647e9f44015e75e294ceb415f5adc355aa58c60a7e310a30dd923d9",
+        "references/Quality-Gates.md": "3492ed9e622147129464754f5eded972f7ddb16a45dcb60e33d462904f355a0e",
+        "references/Reference-Fidelity.md": "ab5fb17ee6b224b5ef555c8148ca54111b23bdb92df1965c79c436e1b614a681",
+        "references/Research-Synthesis.md": "fc8004e558f03d057e81f5d69bf433538ba76d6b0d347df71c2bd39ef6057458",
+        "references/Responsive-Layout.md": "fc3ef0afdd81e88cb758fae111355193aa4ca32d62b3714de2b79d9c5e740ebd",
+        "references/UI-Review.md": "ff4953dab58ca09576198cf545d4e4b897e48f918c535335d93702c00e943bc2",
+        "scripts/build_token_css.py": "fa1a46af3e3c566df3a5466f6f2239c3d6819e4b5adc633e405ebd51a7bc39e2",
+        "scripts/check_html_contract.py": "4e7a34a00ee6e1c738eeae96f057aca9d0ad86bee0be2bef9ec90b9a639d0119",
+        "scripts/validate_design_brief.py": "95124ebf1b0ef70099b23f5caaa94ac32fa3d824fca6e30b59dac8ab9ae09bce",
+        "templates/Component-Contract.md": "f3bcf4c2f4d5234845fad9316d7e520cd8baa936a19ed489378a89d555d5595e",
+        "templates/Design-Brief.md": "b0106d388d91532ef14aa52e7f428c48bfda3192681c2293138b35969a8d8e2d",
+        "templates/Design-Tokens.json": "f5c854d6155de5623a96ade3ec6f2474e9c471fe826ac4a83188639b8b4f28b4",
+        "templates/UI-Verification-Report.md": "a11a35b0d79783b401d1cc6627feb04d2ab9b3c8d52ddb66207d05d725a96309",
+        "templates/Web-Design-Handoff.md": "39f1cda6a6b39ffbd68c3c9cc8922c009812325adfe457f0370fa76d5c63b2d3",
+        "tests/test_helpers.py": "ec5d868395d12c70e497fbafa0c1afbdfe47dda8371951c7d74f4b1e481f28e2"
+      },
+      "license": {
+        "aipm_personal_license_applies": true,
+        "retained_skill_notices": [],
+        "source_license": "Apache License 2.0",
+        "source_license_path": "LICENSE",
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
+      },
+      "slug": "web-design-engineering",
+      "source_sha256": "37fbe1c565a53e67fee87cb9b1f1bb93ebe0335906a419307385efdb79d58fdb",
+      "version": "1.0.2"
     }
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
-  "source_project_version": "1.4.9",
+  "source_project_version": "1.6.13",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

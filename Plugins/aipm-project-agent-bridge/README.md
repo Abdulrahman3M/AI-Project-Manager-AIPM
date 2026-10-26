@@ -1,6 +1,6 @@
 # AIPM Project Agent Bridge
 
-This generated local bridge prepares an AI agent to work with an AI Project Manager project. It supplies the project-agent handoff, AIPM Core guidance, and 12 approved General Skills copied from `01-Skills-General`.
+This generated local bridge prepares an AI agent to work with an AI Project Manager project. It supplies the project-agent handoff, AIPM Core guidance, and 13 approved General Skills copied from `01-Skills-General`.
 
 Read `AIPM-Agent-Bridge.md` before using a Skill. It defines the project boundary, Core authority, and capability limits.
 

@@ -17,5 +17,5 @@
   "name": "aipm-project-agent-bridge",
   "repository": "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/",
   "skills": "./skills/",
-  "version": "1.0.16"
+  "version": "1.1.1"
 }

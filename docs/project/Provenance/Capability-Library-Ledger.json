@@ -194,6 +194,22 @@
       "source_path": "01-Skills-General/tui-intelligence",
       "source_reference": "AI Project Manager",
       "source_repository": "AI Project Manager"
+    },
+    {
+      "customization": "AIPM-owned Skill",
+      "local_sha256": "37fbe1c565a53e67fee87cb9b1f1bb93ebe0335906a419307385efdb79d58fdb",
+      "local_version": "1.0.2",
+      "origin": "AIPM_OWNED",
+      "original_author": "Abdulrahman Elbatrah",
+      "retained_skill_notices": [],
+      "slug": "web-design-engineering",
+      "source_commit_sha": null,
+      "source_license": "Apache License 2.0",
+      "source_license_path": "LICENSE",
+      "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
+      "source_path": "01-Skills-General/web-design-engineering",
+      "source_reference": "AI Project Manager",
+      "source_repository": "AI Project Manager"
     }
   ],
   "source": {

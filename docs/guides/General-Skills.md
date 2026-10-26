@@ -1,6 +1,6 @@
 # General Skills
 
-Browse the 12 Skills maintained in [`01-Skills-General`](../../01-Skills-General/). This educational index summarizes what each Skill does and when it can help; the linked `SKILL.md` file contains its complete instructions.
+Browse the 13 Skills maintained in [`01-Skills-General`](../../01-Skills-General/). This educational index summarizes what each Skill does and when it can help; the linked `SKILL.md` file contains its complete instructions.
 
 Use the Skill's technical name when asking an AI agent to apply it, or load it through the Skill mechanism supported by your AI host. This page is a reference and does not run Skills.
 
@@ -18,6 +18,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 - [Shared Project State Manager](#shared-project-state-manager)
 - [Token Optimization](#token-optimization)
 - [TUI Intelligence](#tui-intelligence)
+- [Web Design Engineering](#web-design-engineering)
 
 ---
 
@@ -186,6 +187,20 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 **How to Use:** Example: “Use `tui-intelligence` to review this terminal screen design for accessibility and verifiable status.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/tui-intelligence/SKILL.md)
+
+---
+
+### Web Design Engineering
+
+`web-design-engineering`
+
+**Description:** Designs, builds, reviews, and verifies distinctive responsive web interfaces with a product-specific visual direction, accessible behavior, purposeful motion, and current rendered evidence.
+
+**When to Use:** Use it for websites, landing pages, web-app screens, components, design-system work, reference-fidelity implementation, or UI quality reviews. It is not for backend-only work.
+
+**How to Use:** Example: “Use `web-design-engineering` to redesign this customer portal while preserving its component library and verifying keyboard, narrow-screen, and reduced-motion behavior.”
+
+**Source:** [View Skill Instructions](../../01-Skills-General/web-design-engineering/SKILL.md)
 
 ---
 

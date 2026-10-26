@@ -27,6 +27,15 @@
       "license_path": "LICENSE",
       "version": "1.0.0",
       "source_reference": "AI-Project-Manager-AIPM-V2/Skill-Blueprints/tui-intelligence"
+    },
+    {
+      "slug": "web-design-engineering",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "1.0.2",
+      "source_reference": "AIPM-authored synthesis of publicly documented web design engineering practices; attribution only, no third-party source redistribution"
     }
   ]
 }

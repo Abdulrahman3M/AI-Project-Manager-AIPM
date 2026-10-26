@@ -109,11 +109,11 @@ class CoreDashboardCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         response = json.loads(result.stdout)
         self.assertEqual(response["status"], "PASS")
-        self.assertEqual(response["catalog"]["skill_count"], 12)
+        self.assertEqual(response["catalog"]["skill_count"], 13)
         self.assertEqual(response["catalog"]["integrity_status"], "UNVERIFIED")
         self.assertEqual(
             response["catalog"]["first_party_skills"],
-            ["browser-environment-manager", "powershell-tui-app-designer", "tui-intelligence"],
+            ["browser-environment-manager", "powershell-tui-app-designer", "tui-intelligence", "web-design-engineering"],
         )
         self.assertEqual(response["catalog"]["plugin_sample"]["status"], "PACKAGE_SAMPLE_ONLY")
         self.assertEqual(response["catalog"]["plugin_sample"]["installation"], "UNVERIFIED")

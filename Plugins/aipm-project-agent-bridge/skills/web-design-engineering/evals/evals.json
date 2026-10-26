@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "execution_status": "UNVERIFIED_MODEL_EVALS_NOT_RUN",
+  "cases": [
+    {"id": "new-product-surface", "prompt": "Design a responsive booking page for an Arabic-first community workshop platform with real registration states.", "must_demonstrate": ["subject-specific direction", "RTL plan", "form states", "rendered verification plan"]},
+    {"id": "narrow-fix", "prompt": "Fix a dashboard filter row that hides controls at narrow widths without restyling unrelated screens.", "must_demonstrate": ["surgical scope", "content-driven responsive strategy", "keyboard evidence"]},
+    {"id": "reference-fidelity", "prompt": "Implement a supplied screenshot without access to its original assets or mobile design.", "must_demonstrate": ["observations versus unknowns", "rights-safe assets", "no unsupported pixel-perfect claim"]}
+  ]
+}

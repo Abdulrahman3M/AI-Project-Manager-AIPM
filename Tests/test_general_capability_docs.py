@@ -48,7 +48,7 @@ class GeneralCapabilityDocumentationTests(unittest.TestCase):
         page_text = SKILLS_PAGE.read_text(encoding="utf-8")
         entries = _entries(SKILLS_PAGE)
 
-        self.assertEqual(len(entries), 12)
+        self.assertEqual(len(entries), 13)
         self.assertEqual(len(entries), len(sources))
         self.assertIn(f"Browse the {len(sources)} Skills", page_text)
         titles = [entry["title"] for entry in entries]

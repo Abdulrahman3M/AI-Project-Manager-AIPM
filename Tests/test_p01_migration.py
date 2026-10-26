@@ -35,11 +35,11 @@ class P01MigrationTests(unittest.TestCase):
         first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
         declared_first_party = {item["slug"] for item in first_party["skills"]}
         self.assertEqual(
-            {"browser-environment-manager", "powershell-tui-app-designer", "tui-intelligence"},
+            {"browser-environment-manager", "powershell-tui-app-designer", "tui-intelligence", "web-design-engineering"},
             declared_first_party,
         )
         self.assertEqual(approved, installed)
-        self.assertEqual(12, len(installed))
+        self.assertEqual(13, len(installed))
         self.assertTrue(declared_first_party <= installed)
         self.assertFalse(installed & EXCLUDED)
         self.assertFalse((ROOT / "02-Skills-Personal").exists())

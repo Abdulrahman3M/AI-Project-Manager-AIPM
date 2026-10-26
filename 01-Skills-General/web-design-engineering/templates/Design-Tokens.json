@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "colors": {
+    "canvas": "#F8FAFC",
+    "surface": "#FFFFFF",
+    "text": "#172033",
+    "muted": "#526176",
+    "border": "#CBD5E1",
+    "primary": "#155EEF",
+    "success": "#067647",
+    "warning": "#B54708",
+    "danger": "#B42318",
+    "focus": "#155EEF"
+  },
+  "space": { "1": "0.25rem", "2": "0.5rem", "3": "0.75rem", "4": "1rem", "6": "1.5rem", "8": "2rem", "12": "3rem" },
+  "type": { "display": "clamp(2rem, 5vw, 4.5rem)", "body": "1rem", "small": "0.875rem", "line_height": "1.5" },
+  "shape": { "control_radius": "0.5rem", "panel_radius": "0.75rem" },
+  "motion": { "feedback_duration": "120ms", "reveal_duration": "220ms", "ease_out": "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+}

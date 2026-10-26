@@ -1,5 +1,10 @@
 # AI Project Manager TUI Change Log
 
+## [1.6.13] — Web Design Engineering Skill Distribution Synchronization (Not Published)
+
+- Synchronized the PowerShell TUI package version with AIPM platform `1.6.13` because the newly shipped `web-design-engineering` General Skill changes the distributed AIPM product capability set.
+- No PowerShell TUI runtime behavior changed. Local multi-host Plugin archives and the legacy Bridge are rebuilt and validated separately; none is installed or published.
+
 ## [1.5.11] — Resilient State-Commit Recovery And Menu Sentinel Hardening (Not Published)
 
 - Synchronized with AIPM Core `1.5.11` state-commit recovery and generalized `state-diagnose` / `state-repair` support for all pending task commands (`task.report`, `task.plan`, `task.create`, etc.).

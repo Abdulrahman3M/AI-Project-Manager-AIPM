@@ -1,0 +1,6 @@
+interface:
+  display_name: Web Design Engineering
+  short_description: Build and verify distinctive, accessible web UI.
+  default_prompt: Design or improve this web interface with a subject-specific direction and rendered quality checks.
+policy:
+  allow_implicit_invocation: true

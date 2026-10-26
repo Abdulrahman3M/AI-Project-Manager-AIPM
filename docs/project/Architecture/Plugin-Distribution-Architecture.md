@@ -23,7 +23,7 @@ Project Owner
     │                                                └── Permission-gated host adapters
     │
     └── Uses approved capabilities ──> Capability Library Registry
-                                       ├── 01-Skills-General/ (12 Skills)
+                                       ├── 01-Skills-General/ (13 Skills)
                                        ├── Skill-owned Prompts
                                        └── 02-Prompt-General/ (standalone Prompts)
                                                │
