@@ -1,5 +1,21 @@
 # AI Project Manager Support Matrix
 
+## v1.6.13 Release Verification
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Web Design Engineering Skill helpers | Python standard library | PASS | Focused helper suite: 3 checks passed. |
+| General Skills documentation index | Python standard library | PASS | Inventory, ordering, source links, and navigation check passed with 13 General Skills. |
+| Core dashboard regression | Python standard library | PASS (focused) | `test_p08_core_dashboard.py`: 5 tests passed after updating the expected first-party Skill count. The full Python suite was not rerun after this correction. |
+| Capability registry and provenance | Python standard library | PASS | Protected capability registry validates 13 General Skills and their source hashes. |
+| Legacy Project Agent Bridge | Local package validation | PASS | Bridge `1.1.1`, generated from the 13-Skill capability baseline; local validation passed. Not installed or published separately. |
+| ChatGPT/Codex Plugin archive | Local package validation | PASS (format verified) | `AIPM-ChatGPT-Plugin-v1.6.13.zip` and SHA-256 sidecar validated; not installed in ChatGPT/Codex. |
+| Claude Code Plugin archive | Local package validation | PASS (format verified) | `AIPM-Claude-Plugin-v1.6.13.zip` and SHA-256 sidecar validated; not installed in Claude Code. |
+| Google Antigravity Plugin archive | Local package validation | PASS (host format unverified) | `AIPM-Antigavity-Plugin-v1.6.13.zip` content and SHA-256 validated; native host format/runtime acceptance remains unverified. |
+| Source release archive | Python standard library | PASS | `AI-Project-Manager-v1.6.13.zip` and `.zip.sha256` rebuilt from the release source and verified against its embedded manifest and checksum. |
+
+Historical verification below records the environment and project version at the time each check ran; it does not claim every older suite was rerun on v1.6.13.
+
 ## Verified In This Repository
 
 | Component | Environment | Status | Evidence |

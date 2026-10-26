@@ -1,6 +1,6 @@
 # AIPM Change Log
 
-## [1.6.13] — Web Design Engineering Skill (Repository Update; Not Published)
+## [1.6.13] — Web Design Engineering And Accumulated Platform Improvements (Released 2026-10-26)
 
 - Added the AIPM-owned `web-design-engineering` General Skill at `1.0.2`, covering product-specific art direction, design-system and component contracts, responsive and RTL behavior, accessible interaction, reference-fidelity work, rendered QA, deterministic helper scripts, templates, examples, and unexecuted behavioral evaluation cases.
 - Skill helper tests explicitly suppress generated Python bytecode, preventing incidental test/runtime caches from entering a Skill hash or a distribution archive.
