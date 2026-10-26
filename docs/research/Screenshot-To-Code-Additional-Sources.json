@@ -1,0 +1,56 @@
+[
+  {
+    "repository": "Ixe1/ui-from-image",
+    "path": "scripts/compare_screenshots.py",
+    "blob_sha": "f178cea733f9f23c20eda8763e491e36cc71922d",
+    "executed": false
+  },
+  {
+    "repository": "sevzq/screenshot-to-html",
+    "path": "scripts/shot.mjs",
+    "blob_sha": "b0767378c7227a6ac995b891a7aa8b59c7e6b2d7",
+    "executed": false
+  },
+  {
+    "repository": "Hoshino-wind/pixel-twin-lab",
+    "path": "scripts/pixel_twin.py",
+    "blob_sha": "e89b62be0d0050694e7e03aff7b2c5c2522153ff",
+    "executed": false
+  },
+  {
+    "repository": "Core-Mate/Pixel-Perfect-Web-Replica",
+    "path": "scripts/mirror_public_page.py",
+    "blob_sha": "e3f262a783fac690bbcf48bebaa9ed8569aa48de",
+    "executed": false
+  },
+  {
+    "repository": "fitoe/DesignToCode",
+    "path": "skills/design-to-code/SKILL.md",
+    "blob_sha": "25a708dd661dc14f6ad890650a3440805081341a",
+    "executed": false
+  },
+  {
+    "repository": "abi/screenshot-to-code",
+    "path": "backend/prompts/__init__.py",
+    "blob_sha": "57f5b7bcbcfd121360a158127b37a2f02cdd9880",
+    "executed": false
+  },
+  {
+    "repository": "abi/screenshot-to-code",
+    "path": "backend/prompts/system_prompt.py",
+    "blob_sha": "65719c77b136236fcb7f15559efebbdde7cc4297",
+    "executed": false
+  },
+  {
+    "repository": "rodrigonask/claude-code-clone-website-skill",
+    "path": "clone-website/SKILL.md",
+    "blob_sha": "28534f0842b8c2d9a779cecf9bfdedfd2b3b177c",
+    "executed": false
+  },
+  {
+    "repository": "max0821/web-design-skill",
+    "path": "web-design/SKILL.md",
+    "blob_sha": "46f42eb1825d8fa342a36f352f2c74c9e937ba6c",
+    "executed": false
+  }
+]

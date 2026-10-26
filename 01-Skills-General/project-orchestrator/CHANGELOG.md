@@ -2,6 +2,10 @@
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.
 
+## [1.0.5] — 2026-10-26
+
+- Added Screenshot To Code routing and reconciled catalog versions with current Skill masters.
+
 ## [1.0.4] — 2026-10-20
 
 - Synchronized the maintained Skill catalog's PowerShell TUI App Designer version with the current active registry.

@@ -1,6 +1,6 @@
 # General Skills
 
-Browse the 13 Skills maintained in [`01-Skills-General`](../../01-Skills-General/). This educational index summarizes what each Skill does and when it can help; the linked `SKILL.md` file contains its complete instructions.
+Browse the 14 Skills maintained in [`01-Skills-General`](../../01-Skills-General/). This educational index summarizes what each Skill does and when it can help; the linked `SKILL.md` file contains its complete instructions.
 
 Use the Skill's technical name when asking an AI agent to apply it, or load it through the Skill mechanism supported by your AI host. This page is a reference and does not run Skills.
 
@@ -15,6 +15,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 - [Project Governance Manager](#project-governance-manager)
 - [Project Orchestrator](#project-orchestrator)
 - [Resume Task](#resume-task)
+- [Screenshot To Code](#screenshot-to-code)
 - [Shared Project State Manager](#shared-project-state-manager)
 - [Token Optimization](#token-optimization)
 - [TUI Intelligence](#tui-intelligence)
@@ -145,6 +146,20 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 **How to Use:** Example: “Use `resume-task` to verify the current state of this interrupted task and complete the remaining requirements.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/resume-task/SKILL.md)
+
+---
+
+### Screenshot To Code
+
+`screenshot-to-code`
+
+**Description:** Converts screenshots and design images into editable frontend code with measured geometry, font and asset provenance, Arabic RTL support, and regional rendered comparisons.
+
+**When to Use:** Use it to recreate a supplied website or app screenshot in the existing frontend stack, or repair visual differences while preserving business behavior.
+
+**How to Use:** Example: “Use `screenshot-to-code` to implement this screenshot in the current project, render it at the reference viewport, and repair measured differences.”
+
+**Source:** [View Skill Instructions](../../01-Skills-General/screenshot-to-code/SKILL.md)
 
 ---
 

@@ -1,0 +1,316 @@
+{
+  "checked_at": "2026-10-26",
+  "method": "Primary GitHub file inspection; blob SHA pins the inspected file content, not a repository commit. No third-party tools were executed. Missing paths are not evidence that a feature is absent.",
+  "sources": [
+    {
+      "repository": "Ixe1/ui-from-image",
+      "url": "https://github.com/Ixe1/ui-from-image",
+      "readme": "READ",
+      "readme_blob_sha": "4a6eda8501f3dc776c2baf0077b1e4788f21e718",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "ae2484d47417b47678adf8eefac53bf5436c539b",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "santowilem/skills",
+      "url": "https://github.com/santowilem/skills",
+      "readme": "READ",
+      "readme_blob_sha": "ad7c4b15d983411c004c3d23e78dc7a56d6c0ff2",
+      "inspected_path": "skills/clone-ui/SKILL.md",
+      "inspected_blob_sha": "f4b7fa0d07b8f0a35f444565fcac8e2433254d89",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "sevzq/screenshot-to-html",
+      "url": "https://github.com/sevzq/screenshot-to-html",
+      "readme": "READ",
+      "readme_blob_sha": "027ccf7ea3e617b06baad6772bc825269600ed79",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "3d6a4094e550f6896a8d27e23edcef50d5c96222",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "Hoshino-wind/pixel-twin-lab",
+      "url": "https://github.com/Hoshino-wind/pixel-twin-lab",
+      "readme": "READ",
+      "readme_blob_sha": "b7035f96737f41d4181db1e15806550d81a66fbc",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "595e37fd839fa118be4b5cecd7f053d99f4ba470",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "Core-Mate/Pixel-Perfect-Web-Replica",
+      "url": "https://github.com/Core-Mate/Pixel-Perfect-Web-Replica",
+      "readme": "READ",
+      "readme_blob_sha": "596e2a48a8998cec673f0752e709e4192f6b09b9",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "c53879d9eaf8a4ce4f88aede814ddc9e70922cc3",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "fitoe/DesignToCode",
+      "url": "https://github.com/fitoe/DesignToCode",
+      "readme": "READ",
+      "readme_blob_sha": "937760bce11900b9fcfabe95029237a069a58789",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "oil-oil/draw-ui",
+      "url": "https://github.com/oil-oil/draw-ui",
+      "readme": "READ",
+      "readme_blob_sha": "048a290252bb1ca4f5bf8032778ed410e141921c",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "3b3792ad2df0148806e6904ef743208217a145c9",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "xiaopu-ai/web-clone-prompt",
+      "url": "https://github.com/xiaopu-ai/web-clone-prompt",
+      "readme": "READ",
+      "readme_blob_sha": "b56c83762839de1b250ede75a3202986be9b92e5",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "7f99ba931471c56284c6f3c5ac0ee91731443bc7",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "zwq-top/ui-image-to-code-studio",
+      "url": "https://github.com/zwq-top/ui-image-to-code-studio",
+      "readme": "READ",
+      "readme_blob_sha": "c683637b6e49204997c28bd31c12182f14b14ec1",
+      "inspected_path": "skill/SKILL.md",
+      "inspected_blob_sha": "9c3ce1a52579682b61ddbe2710725c850c98b831",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "zhu-guli326/image2_UI",
+      "url": "https://github.com/zhu-guli326/image2_UI",
+      "readme": "READ",
+      "readme_blob_sha": "a7be571e2ae0265abf4c469112fd37b568c53ff8",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "de53572287e705dd141d119e44d1c4e6c9ee3688",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "abi/screenshot-to-code",
+      "url": "https://github.com/abi/screenshot-to-code",
+      "readme": "READ",
+      "readme_blob_sha": "735c5780a7998f767664b8fd6ed99d53f875223a",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "uxkin/agent",
+      "url": "https://github.com/uxkin/agent",
+      "readme": "READ",
+      "readme_blob_sha": "681921cfd4d0bbfba3c4656484921fc86798a595",
+      "inspected_path": ".agents/skills/ui-from-screenshot/SKILL.md",
+      "inspected_blob_sha": "b172ad21e68cdb63e702f762feac49a9a39255b2",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "ericshang98/Perfect-Web-Clone",
+      "url": "https://github.com/ericshang98/Perfect-Web-Clone",
+      "readme": "READ",
+      "readme_blob_sha": "f0b9c2f4b75a33e161e4f7fa591351a1138f45d7",
+      "inspected_path": "skill/SKILL.md",
+      "inspected_blob_sha": "51e6e7bae3117452bbee8228477c8a2a6d48ac3c",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "HarKro753/claude-copy",
+      "url": "https://github.com/HarKro753/claude-copy",
+      "readme": "READ",
+      "readme_blob_sha": "2b69e034d66faf45fa70d86d208ab395b1b9fbec",
+      "inspected_path": "README.md",
+      "inspected_blob_sha": "2b69e034d66faf45fa70d86d208ab395b1b9fbec",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "rodrigonask/claude-code-clone-website-skill",
+      "url": "https://github.com/rodrigonask/claude-code-clone-website-skill",
+      "readme": "READ",
+      "readme_blob_sha": "b0b45e34464089028d4fad8e7c33dd859ea1668a",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "WCF900905/screenshot-to-design-system",
+      "url": "https://github.com/WCF900905/screenshot-to-design-system",
+      "readme": "READ",
+      "readme_blob_sha": "540d6991dbac2fc8a576516495b88022c96fbfaa",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "8c7eea92538fac1424c4e6a8215836670f8dd22a",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "openwarehq/calque",
+      "url": "https://github.com/openwarehq/calque",
+      "readme": "READ",
+      "readme_blob_sha": "efea95f2a7fd384d16bb23a917cba78fa8c0ec60",
+      "inspected_path": "README.md",
+      "inspected_blob_sha": "efea95f2a7fd384d16bb23a917cba78fa8c0ec60",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "max0821/web-design-skill",
+      "url": "https://github.com/max0821/web-design-skill",
+      "readme": "READ",
+      "readme_blob_sha": "d1159b77ae166e883af9eabc62d96560ec8dc1b8",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "Huc91/pixel-perfect-skill",
+      "url": "https://github.com/Huc91/pixel-perfect-skill",
+      "readme": "READ",
+      "readme_blob_sha": "95661439a51073320d8b67f971bb14b20d42e30f",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "1cb0ceedb8d2f3e9a851bd2dd2747e54cd4fb980",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "niuniu122/pixel-perfect-website-clone-skill",
+      "url": "https://github.com/niuniu122/pixel-perfect-website-clone-skill",
+      "readme": "READ",
+      "readme_blob_sha": "c251cc39a55c7fa678be1e8f8ab34b89e1a7684c",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "52988f84432099afd05f5cf97f15814ac5ff7faa",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "vibeeval/vibecosystem",
+      "url": "https://github.com/vibeeval/vibecosystem",
+      "readme": "READ",
+      "readme_blob_sha": "fc78f32710384e18cdabd8cddd3bfb0f04b19e5a",
+      "inspected_path": "skills/visual-verdict/SKILL.md",
+      "inspected_blob_sha": "926494ef2b5f156d37b3ff7dfccf508e0213b183",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "ytvee-dev/webdev-agent-kit",
+      "url": "https://github.com/ytvee-dev/webdev-agent-kit",
+      "readme": "READ",
+      "readme_blob_sha": "d663bdba586ec9c88f54f2af9dd86f854db71637",
+      "inspected_path": "skills/design-screenshot-spec/SKILL.md",
+      "inspected_blob_sha": "d0ce35b9de3f28f4d14d25a46e37b3a694ef9b6c",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "Surya17155/Replica",
+      "url": "https://github.com/Surya17155/Replica",
+      "readme": "READ",
+      "readme_blob_sha": "b2b822ca82aa5120a2c887e3cebfd6a78e4b70f8",
+      "inspected_path": "SKILL.md",
+      "inspected_blob_sha": "c1a007e84ae2f45717559f7aac4d30fe6495e0af",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "vishnu-madhavan-git/9designer-skills",
+      "url": "https://github.com/vishnu-madhavan-git/9designer-skills",
+      "readme": "READ",
+      "readme_blob_sha": "f3781ff30b4ec821e7d87110874b51e005673447",
+      "inspected_path": "skills/9designer/SKILL.md",
+      "inspected_blob_sha": "150e4a54591a0eee80058c6b435c36a69e7fcc57",
+      "review_type": "INSTRUCTION_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "gojodennis/OpenKombai",
+      "url": "https://github.com/gojodennis/OpenKombai",
+      "readme": "READ",
+      "readme_blob_sha": "2f4d6dce183f9e13d37f9cca8e86e90176bf2423",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "Mrxyy/screenshot-to-page",
+      "url": "https://github.com/Mrxyy/screenshot-to-page",
+      "readme": "UNAVAILABLE",
+      "readme_blob_sha": null,
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "NoviScl/Design2Code",
+      "url": "https://github.com/NoviScl/Design2Code",
+      "readme": "READ",
+      "readme_blob_sha": "ec78f445edb6871b518ce98c75447333ae8d2271",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "tonybeltramelli/pix2code",
+      "url": "https://github.com/tonybeltramelli/pix2code",
+      "readme": "READ",
+      "readme_blob_sha": "101ee2a4f3b4bddb1ad4d97fdfcdc581d099415d",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "emilwallner/Screenshot-to-code",
+      "url": "https://github.com/emilwallner/Screenshot-to-code",
+      "readme": "READ",
+      "readme_blob_sha": "5fef5fb64bcee036cc3fc76fd66e086ab667b2ca",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "mostafasadeghi97/design2code",
+      "url": "https://github.com/mostafasadeghi97/design2code",
+      "readme": "READ",
+      "readme_blob_sha": "26254bffa304a91bcc43d6f4ee94d4b5254eaae1",
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    },
+    {
+      "repository": "microsoft/AI-Lab",
+      "url": "https://github.com/microsoft/AI-Lab",
+      "readme": "UNAVAILABLE",
+      "readme_blob_sha": null,
+      "inspected_path": null,
+      "inspected_blob_sha": null,
+      "review_type": "README_REVIEW",
+      "executed": false
+    }
+  ]
+}

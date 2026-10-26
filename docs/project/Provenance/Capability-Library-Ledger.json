@@ -117,8 +117,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "842c64c3c0ca5c708c2ba36aad3874e2fe4f706b4a5580b223090601e9057cec",
-      "local_version": "1.0.4",
+      "local_sha256": "524df5c4b5a296d5142856364a99d710ac20d0fcf192cff6a1fc089f8e1b40a1",
+      "local_version": "1.0.5",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],
@@ -144,6 +144,22 @@
       "source_license_path": "LICENSE",
       "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
       "source_path": "01-Skills-General/resume-task",
+      "source_reference": "AI Project Manager",
+      "source_repository": "AI Project Manager"
+    },
+    {
+      "customization": "AIPM-owned Skill",
+      "local_sha256": "3dd2df97d88aa1f64b5a08bcca91ae29d0a25cc6e259f08836c4f6861ddbc885",
+      "local_version": "1.0.0",
+      "origin": "AIPM_OWNED",
+      "original_author": "Abdulrahman Elbatrah",
+      "retained_skill_notices": [],
+      "slug": "screenshot-to-code",
+      "source_commit_sha": null,
+      "source_license": "Apache License 2.0",
+      "source_license_path": "LICENSE",
+      "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
+      "source_path": "01-Skills-General/screenshot-to-code",
       "source_reference": "AI Project Manager",
       "source_repository": "AI Project Manager"
     },

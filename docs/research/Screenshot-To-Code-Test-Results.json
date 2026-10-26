@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-26",
+  "baseline_commit": "2a32807bfa44bc2d2405d83006f04e10c0060571",
+  "core_suite_summary": [
+    "Ran 158 tests in 17.444s",
+    "FAILED (failures=3, errors=7)"
+  ],
+  "failures": [
+    "test_acl_denial_leaves_no_partial_state_tree (test_p02_state_storage.StateStorageTests.test_acl_denial_leaves_no_partial_state_tree)",
+    "test_inherited_directory_acl_denial_leaves_no_partial_state_tree (test_p02_state_storage.StateStorageTests.test_inherited_directory_acl_denial_leaves_no_partial_state_tree)",
+    "test_registry_acl_denial_preserves_existing_registry (test_p02_state_storage.StateStorageTests.test_registry_acl_denial_preserves_existing_registry)",
+    "test_rejects_junction_in_existing_state_path (test_p02_state_storage.StateStorageTests.test_rejects_junction_in_existing_state_path)",
+    "test_rejects_junction_in_project_root_path (test_p02_state_storage.StateStorageTests.test_rejects_junction_in_project_root_path)",
+    "test_cli_lists_pointer_only_registry_as_json (test_p03_engine.CoreEngineTests.test_cli_lists_pointer_only_registry_as_json)",
+    "test_lock_guard_rejects_reparse_path_before_opening_redirected_target (test_p05_hardening.HardeningTests.test_lock_guard_rejects_reparse_path_before_opening_redirected_target)",
+    "test_live_process_identity_blocks_expired_lease_recovery (test_p05_hardening.HardeningTests.test_live_process_identity_blocks_expired_lease_recovery)",
+    "test_resource_guard_serializes_a_real_child_process (test_p05_hardening.HardeningTests.test_resource_guard_serializes_a_real_child_process)",
+    "test_terminated_process_allows_expired_lease_recovery (test_p05_hardening.HardeningTests.test_terminated_process_allows_expired_lease_recovery)"
+  ],
+  "baseline_same_failures": [
+    "test_acl_denial_leaves_no_partial_state_tree (test_p02_state_storage.StateStorageTests.test_acl_denial_leaves_no_partial_state_tree)",
+    "test_inherited_directory_acl_denial_leaves_no_partial_state_tree (test_p02_state_storage.StateStorageTests.test_inherited_directory_acl_denial_leaves_no_partial_state_tree)",
+    "test_registry_acl_denial_preserves_existing_registry (test_p02_state_storage.StateStorageTests.test_registry_acl_denial_preserves_existing_registry)",
+    "test_rejects_junction_in_existing_state_path (test_p02_state_storage.StateStorageTests.test_rejects_junction_in_existing_state_path)",
+    "test_rejects_junction_in_project_root_path (test_p02_state_storage.StateStorageTests.test_rejects_junction_in_project_root_path)",
+    "test_cli_lists_pointer_only_registry_as_json (test_p03_engine.CoreEngineTests.test_cli_lists_pointer_only_registry_as_json)",
+    "test_lock_guard_rejects_reparse_path_before_opening_redirected_target (test_p05_hardening.HardeningTests.test_lock_guard_rejects_reparse_path_before_opening_redirected_target)",
+    "test_live_process_identity_blocks_expired_lease_recovery (test_p05_hardening.HardeningTests.test_live_process_identity_blocks_expired_lease_recovery)",
+    "test_resource_guard_serializes_a_real_child_process (test_p05_hardening.HardeningTests.test_resource_guard_serializes_a_real_child_process)",
+    "test_terminated_process_allows_expired_lease_recovery (test_p05_hardening.HardeningTests.test_terminated_process_allows_expired_lease_recovery)"
+  ],
+  "baseline_summary": [
+    "Ran 158 tests in 22.110s",
+    "FAILED (failures=6, errors=7)"
+  ],
+  "browser_fixture": "UNVERIFIED: Playwright installed but Chromium executable absent",
+  "behavioral_model_evaluations": "NOT_RUN",
+  "third_party_runtime_comparison": "NOT_RUN"
+}

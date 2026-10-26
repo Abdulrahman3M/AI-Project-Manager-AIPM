@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.0] — Screenshot To Code Distribution Synchronization (Not Published)
+
+- Synchronized TUI metadata with platform `1.8.0` for the new distributed capability. No TUI runtime behavior changed.
+
 ## [1.7.0] — Professional Word Designer Distribution Synchronization (Not Published)
 
 - Synchronized the PowerShell TUI package version with AIPM platform `1.7.0` because the updated distributed Professional Word Designer capability changes the packaged product surface. No TUI runtime behavior, tag, or GitHub Release was created.

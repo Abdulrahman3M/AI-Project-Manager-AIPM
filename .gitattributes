@@ -1,0 +1,3 @@
+# Preserve VERSION bytes used by the protected capability hash baseline.
+01-Skills-General/*/VERSION -text whitespace=cr-at-eol
+Plugins/aipm-project-agent-bridge/skills/*/VERSION -text whitespace=cr-at-eol

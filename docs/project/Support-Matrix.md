@@ -1,5 +1,16 @@
 # AI Project Manager Support Matrix
 
+## v1.8.0 Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Screenshot To Code numeric helpers | Python 3.12 / Pillow 12.3 | PASS | Seven helper regressions passed; these do not certify autonomous screenshot reconstruction. |
+| Browser fixture / held-out agent evaluations | Chromium unavailable / not executed | UNVERIFIED / NOT_RUN | Playwright launch failed because the Chromium executable is absent. Behavioral scenarios are supplied for future execution. |
+| Skill indexes, routing and capability distributions | Python | PASS (focused) | Documentation inventory, Orchestrator routing and governed registry/Bridge checks pass for 14 Skills. |
+| Multi-host local archives | Python build engine | PASS (local package validation) | ChatGPT/Codex, Claude and Antigavity v1.8.0 built with inventories/hashes/manifests validated; uninstalled. Native Antigavity acceptance remains unverified. |
+| Full repository regression | Linux host | NOT GREEN | Ten existing environment/Core failures/errors remain; see the named failures and baseline comparison in the [verification record](../research/Screenshot-To-Code-Verification.md). |
+
+
 ## v1.6.13 Release Verification
 
 | Component | Environment | Status | Evidence |

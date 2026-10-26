@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.8.0] — Screenshot To Code Capability (Repository Update; Not Published)
+
+- Added the original `screenshot-to-code` Skill at `1.0.0`, research across 29 readable primary-source projects, regional visual diagnostics, RTL and explicit verification gates. Updated Orchestrator routing to `1.0.5`, Skill documentation, capability baselines and affected Plugin distributions. Platform and TUI metadata are synchronized at `1.8.0`; no TUI runtime behavior, Git tag, GitHub Release or host installation changed.
+- Included Git attributes and research evidence in source packages, with reproducibility/integrity regression coverage.
+- Preserved capability VERSION bytes across Git checkouts with explicit attributes, repairing the existing LF/CRLF hash mismatch without changing unrelated Skill versions. Verification limitations, including absent Chromium and pre-existing Linux/Core suite failures, are recorded in the research verification report.
+
 ## [1.7.0] — Professional Word Designer Enterprise And RTL Upgrade (Repository Update; Not Published)
 
 - Advanced `professional-word-designer` from the AIPM distribution version `1.0.0` to `1.1.0`: added an enterprise visual-design system, 36 original template patterns, a public-source tooling landscape, enhanced quote/inline-code guidance, and Arabic-first/bilingual Word RTL hardening.

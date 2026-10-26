@@ -1,0 +1,6 @@
+interface:
+  display_name: Screenshot To Code
+  short_description: Rebuild reference screenshots with measured visual checks.
+  default_prompt: Use $screenshot-to-code to implement this reference in the existing project, compare real browser captures, and repair visual differences.
+policy:
+  allow_implicit_invocation: true

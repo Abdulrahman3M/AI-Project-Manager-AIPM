@@ -15,7 +15,7 @@ PRIVATE_KEY_RE = re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----
 AWS_KEY_RE = re.compile(rb"\bAKIA[0-9A-Z]{16}\b")
 SENSITIVE_NAMES = {".env", ".env.local", ".env.production", "credentials.json", "secrets.json", "id_rsa", "id_ed25519"}
 SENSITIVE_SUFFIXES = {".pem", ".p12", ".pfx", ".key", ".secret"}
-ROOT_FILES = ("AGENTS.md", "CHANGELOG.md", "Index.md", "LICENSE", "NOTICE", "README.md", "VERSION", ".gitignore")
+ROOT_FILES = ("AGENTS.md", "CHANGELOG.md", "Index.md", "LICENSE", "NOTICE", "README.md", "VERSION", ".gitignore", ".gitattributes")
 PUBLIC_DIRECTORIES = (
     "01-Skills-General",
     "02-Prompt-General",
@@ -33,6 +33,7 @@ PUBLIC_DIRECTORIES = (
     "docs/project/Architecture/Plugin-Distribution-Architecture.md",
     "docs/project/Provenance",
     "docs/guides",
+    "docs/research",
 )
 EXCLUDED_DIRECTORY_NAMES = {".git", ".agents", ".codex", ".migration-staging", ".superpowers", ".test-workspace", "__pycache__", ".pytest_cache"}
 

@@ -66,12 +66,12 @@ class TuiIntelligenceContractTests(unittest.TestCase):
     def test_catalog_registers_the_owner_approved_skill_inventory_under_the_project_license(self) -> None:
         catalog = scan_library(ROOT)
         skills = {item["slug"]: item for item in catalog["skills"]}
-        self.assertEqual(len(skills), 13)
+        self.assertEqual(len(skills), 14)
         self.assertEqual(skills["tui-intelligence"]["license"]["source_license"], "Apache License 2.0")
         self.assertTrue(skills["tui-intelligence"]["license"]["aipm_personal_license_applies"])
         self.assertTrue(skills["audio-timing-author"]["license"]["aipm_personal_license_applies"])
-        self.assertEqual(validate_registry(ROOT)["skill_count"], 13)
-        self.assertEqual(validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")["skill_count"], 13)
+        self.assertEqual(validate_registry(ROOT)["skill_count"], 14)
+        self.assertEqual(validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")["skill_count"], 14)
         self.assertFalse((ROOT / "01-Skills-General" / "import-memory").exists())
         self.assertFalse((ROOT / "01-Skills-General" / "morning").exists())
 

@@ -35,6 +35,8 @@ class ReleasePackagingTests(unittest.TestCase):
             "NOTICE": "Copyright 2026 Abdulrahman Elbatrah\n",
             "README.md": "# AIPM\n",
             "AGENTS.md": "# Rules\n",
+            ".gitattributes": "01-Skills-General/*/VERSION -text\n",
+            "docs/research/Screenshot-To-Code-Verification.md": "# Verification\n",
             "Core-Engine/aipm.py": "print('aipm')\n",
             "TUI/AI-Project-Manager/VERSION": "1.0.2\n",
             "TUI/AI-Project-Manager/CHANGELOG.md": "# TUI\n\n## [1.0.2] — Test Release\n",
@@ -67,6 +69,8 @@ class ReleasePackagingTests(unittest.TestCase):
         with zipfile.ZipFile(first["archive"]) as archive:
             names = archive.namelist()
             self.assertIn("AI-Project-Manager-v1.0.2/Release-Manifest.json", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/.gitattributes", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/docs/research/Screenshot-To-Code-Verification.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/docs/project/Architecture/Plugin-Distribution-Architecture.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Templates/Shared-Project-State-Manager-Example/README.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Plugins/README.md", names)

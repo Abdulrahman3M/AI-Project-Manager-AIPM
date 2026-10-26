@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.7.0",
+  "platform_version": "1.8.0",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -490,10 +490,10 @@
       "customization": "AIPM-owned Skill",
       "description": "Select and coordinate specialist Skills when the user asks for help choosing a Skill, the request spans multiple capabilities or workstreams, or project-level supervision is needed. Analyze the requested outcome and deliverable before routing; send execution instructions or handoff documents for another AI agent to create-strict-implementation-handoff. For a clear single-specialist deliverable, invoke that specialist directly without adding orchestration overhead. Use project-governance-manager and shared-project-state-manager as foundational assistants when applicable to substantial work.",
       "files": {
-        "CHANGELOG.md": "9aa99e8a3ffcc62b3626d5b4e23a3554ca2aee9eecd607cc45da0dcc78a4a598",
+        "CHANGELOG.md": "adcb4850fc334b26a0aa581943a6492c2ec8071141e80cd1d71a44ff4e19e3ed",
         "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "e503d7410db10acddeb5e2e2d1418b2c6485a0149603f5d482c4c7e0f1b7e189",
-        "VERSION": "eb8d72a2c4783965876f89d494d6ecdd3502c814e0229d50cea66eb65169856d",
+        "SKILL.md": "302b57551e2e23fcf65c9bbe1c6adeba6755f0526a6715840659f1af95cfb119",
+        "VERSION": "8c54bfab7f1ae9bd1a7148eae41e7b0a8f4ad3726e0cac70f823a2d45db9e60c",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
@@ -513,10 +513,10 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "842c64c3c0ca5c708c2ba36aad3874e2fe4f706b4a5580b223090601e9057cec",
+      "sha256": "524df5c4b5a296d5142856364a99d710ac20d0fcf192cff6a1fc089f8e1b40a1",
       "skill_owned_prompts": [],
       "slug": "project-orchestrator",
-      "version": "1.0.4"
+      "version": "1.0.5"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -554,6 +554,46 @@
         "prompts/Short-Prompt.md"
       ],
       "slug": "resume-task",
+      "version": "1.0.0"
+    },
+    {
+      "customization": "AIPM-owned Skill",
+      "description": "Use when a user provides website or app screenshots, mockups, Figma exports, or reference images and asks to convert them into HTML/CSS/JavaScript, React, Vue, or another existing frontend stack; recreate the same layout, colors, fonts, sizes, spacing and details; or repair differences between a rendered page and a reference. Covers screenshot to code, image to website, pixel fidelity, and Arabic RTL reconstruction. Not for original design without a visual reference, backend implementation, or prompt-only handoffs unless explicitly requested.",
+      "files": {
+        "CHANGELOG.md": "d766cfdf0293a9b82d7f95fe967d16039ff4607f49bff1123903c1af9cb8a89f",
+        "SKILL.md": "94b36da30c7eaed2c06ec12998ceaeae47c6bbeb34790b9e7b6eb53a72b50510",
+        "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
+        "agents/openai.yaml": "895ba417d7556dcdb8a201f1fd6b8a428408b6f15118e1a54cf9a3e7387cde4d",
+        "references/Evaluation-Scenarios.md": "f38fc6c3b0b1357d3bfc8029d4100d78613ca7a6adb728e89af8057ce5dad003",
+        "references/Measurement-And-Reconstruction.md": "8350726d99ba07c05a34e5c0dcf56089b631b492a7a467e918749189b196e5fd",
+        "references/Research-Synthesis.md": "9d0e09b534b2a906eaa535fbe6258af39b61b9c918081f27197963749f181f1b",
+        "references/Visual-Verification.md": "3dbf9780ad36702b4ccbb9ff35d8652426c7197cb05e6ddd08c09ba7ef98e4ec",
+        "requirements.txt": "24653aac9a1cb6831a79dc8f2e263c87cd19d57fc2cdf68e39e69002a3b22a9b",
+        "scripts/compare.py": "181a3d0ccb57a1e2856056a4ed01f9bddde4885c0ef6db44b277edd9fd7a3f6d",
+        "scripts/probe.py": "a8d23434c485d5fa04de2f01348faaf506878b229c082c7f169bbbfecc16f091",
+        "templates/Completion-Report.md": "2e2cffc5973f00792a395e482b7de039e860b6ba2989e3ccbf44cd23d5801f8f",
+        "templates/Reconstruction-Record.md": "f68f5b317325405ac74319bd58005c6940725744e603c16a35c9ddc513eced21",
+        "tests/fixtures/lesson.html": "f98f89347a749528208bdd31b33e2f125c28f9681e8afa10efedeaa8b893a7e4",
+        "tests/test_browser.cjs": "1dde6e796db8645e5199afe3c6f3dfd5401873905290d20559354a9c24a07e30",
+        "tests/test_visual_tools.py": "662e2a918971be7646c92cf044df926f8442b109d10062df690164953818447b"
+      },
+      "license": {
+        "aipm_personal_license_applies": true,
+        "retained_skill_notices": [],
+        "source_license": "Apache License 2.0",
+        "source_license_path": "LICENSE",
+        "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
+      },
+      "name": "screenshot-to-code",
+      "path": "01-Skills-General/screenshot-to-code",
+      "provenance": {
+        "origin": "AIPM_OWNED",
+        "owner": "Abdulrahman Elbatrah",
+        "source_reference": "AI Project Manager"
+      },
+      "sha256": "3dd2df97d88aa1f64b5a08bcca91ae29d0a25cc6e259f08836c4f6861ddbc885",
+      "skill_owned_prompts": [],
+      "slug": "screenshot-to-code",
       "version": "1.0.0"
     },
     {

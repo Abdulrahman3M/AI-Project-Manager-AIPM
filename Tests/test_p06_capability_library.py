@@ -37,6 +37,7 @@ EXPECTED_SKILLS = {
     "project-governance-manager",
     "project-orchestrator",
     "resume-task",
+    "screenshot-to-code",
     "shared-project-state-manager",
     "token-optimization",
     "tui-intelligence",
@@ -90,7 +91,7 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_inventory_registers_only_approved_skills_and_exact_prompt_relationships(self) -> None:
         catalog = scan_library(ROOT)
         self.assertEqual({item["slug"] for item in catalog["skills"]}, EXPECTED_SKILLS)
-        self.assertEqual(len(catalog["skills"]), 13)
+        self.assertEqual(len(catalog["skills"]), 14)
         self.assertEqual(catalog["skill_owned_prompts"], EXPECTED_OWNED_PROMPTS)
         self.assertEqual([item["name"] for item in catalog["standalone_prompts"]], ["Autonomous Task Execution"])
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
@@ -114,10 +115,10 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")
-        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (13, 1))
+        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (14, 1))
         plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")
         self.assertEqual(plugin["status"], "PASS")
-        self.assertEqual(plugin["skill_count"], 13)
+        self.assertEqual(plugin["skill_count"], 14)
 
     def test_owner_can_remove_a_general_skill_without_a_hardcoded_denylist(self) -> None:
         fixture = copy_library_fixture(self.workspace / "owner-removal", include_registry=False)
@@ -297,13 +298,13 @@ class CapabilityLibraryTests(unittest.TestCase):
         second = build_plugin(ROOT, target)
         self.assertEqual(first["status"], "PASS")
         self.assertEqual(second["status"], "UNCHANGED")
-        self.assertEqual(len(list((target / "skills").iterdir())), 13)
+        self.assertEqual(len(list((target / "skills").iterdir())), 14)
         self.assertFalse((target / "02-Prompt-General").exists())
         self.assertFalse((target / "02-Skills-Personal").exists())
         self.assertFalse((target / "skills" / "import-memory").exists())
         self.assertFalse((target / "skills" / "morning").exists())
         manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(manifest["skills"]), 13)
+        self.assertEqual(len(manifest["skills"]), 14)
         self.assertNotIn("license", json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")))
         self.assertTrue((target / "licenses" / "Apache-2.0.txt").is_file())
 
