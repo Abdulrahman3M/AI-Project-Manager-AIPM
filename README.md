@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager v1.8.1</h1>
+  <h1>AI Project Manager v1.8.2</h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
@@ -109,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current AIPM repository and PowerShell TUI are `v1.8.1`; the latest published GitHub Release remains `v1.6.13`. See the [v1.8.1 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.1.md), [v1.8.0 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.0.md), [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
+The current AIPM repository and PowerShell TUI are `v1.8.2`; the latest published GitHub Release remains `v1.6.13`. See the [v1.8.2 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.2.md), [v1.8.1 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.1.md), [v1.8.0 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.0.md), [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 

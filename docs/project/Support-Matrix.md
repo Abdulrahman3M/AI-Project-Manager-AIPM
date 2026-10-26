@@ -1,5 +1,14 @@
 # AI Project Manager Support Matrix
 
+## v1.8.2 Local Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Windows junction and reparse-path protection | Windows, outside the restricted execution sandbox | PASS | All three previously skipped tests passed with real junctions in an isolated checkout. See the [junction recheck](../research/Screenshot-To-Code-Verification.md#2026-10-27-junction-recheck). |
+| Capability documentation and release packaging | Bundled Python 3.12.14 | PASS | General capability documentation: 3 tests; P10 release packaging: 3 tests. Registry and Bridge validation also passed. |
+| Full repository regression | Not run | NOT_RUN | The focused recheck does not establish a full-suite result. |
+| Browser and host-native Plugin acceptance | Not run | UNVERIFIED | No target-page browser inspection or host-native Plugin installation was performed. |
+
 ## v1.8.1 Local Repository Update
 
 | Component | Environment | Status | Evidence |

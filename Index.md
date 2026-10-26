@@ -24,6 +24,7 @@
 
 ## Release History
 
+- [Repository Update Notes v1.8.2 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.2.md)
 - [Repository Update Notes v1.8.1 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.1.md)
 - [Repository Update Notes v1.8.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.0.md)
 - [Repository Update Notes v1.7.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.7.0.md)

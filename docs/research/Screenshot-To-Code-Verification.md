@@ -2,6 +2,16 @@
 
 **Date:** 2026-10-26. **Baseline:** `2a32807bfa44bc2d2405d83006f04e10c0060571`. **Scope:** original Skill, diagnostic tools, routing/index/registry synchronization, generated distributions and source packaging.
 
+## 2026-10-27 Junction Recheck
+
+All three junction-dependent tests listed below passed against real Windows junctions in an isolated checkout of commit `82d178835288b008de2c935ea2e07a5634d2aad1`. They had previously skipped because the restricted execution sandbox denied junction creation. The successful recheck ran outside that sandbox; no Core code changes were required. The previous seven passing identities were not rerun in this recheck, and the full repository suite was not rerun.
+
+- `test_rejects_junction_in_existing_state_path`: PASS.
+- `test_rejects_junction_in_project_root_path`: PASS.
+- `test_lock_guard_rejects_reparse_path_before_opening_redirected_target`: PASS; the test checks the redirect target was not opened or modified.
+
+The browser environment and host-native Plugin installation limitations recorded below remain unchanged.
+
 ## v1.8.1 Post-Sync Hardening Update
 
 This section records the current task after a safe fast-forward from `2a32807bfa44bc2d2405d83006f04e10c0060571` to `origin/main` at `45c5d0746808a1d7a0250326cdf83e45ac1dc15d`. The earlier sections below preserve historical evidence from the prior repository update; their publication statements do not describe this task. This update remains local and unpublished.

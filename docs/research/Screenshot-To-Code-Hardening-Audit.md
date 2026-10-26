@@ -4,6 +4,8 @@
 **Status:** Source, issue and instruction review completed; browser use and three junction-dependent checks remain unverified.
 **Remote publication:** None. The local checkout was fast-forwarded to `origin/main` before editing; current changes remain local.
 
+**2026-10-27 follow-up:** The three junction-dependent checks subsequently passed outside the restricted execution sandbox. See the [junction recheck](Screenshot-To-Code-Verification.md#2026-10-27-junction-recheck). The status and publication statements above record the original audit on 2026-10-26.
+
 ## Synchronization And Scope
 
 - Remote: `origin` (AIPM GitHub repository).

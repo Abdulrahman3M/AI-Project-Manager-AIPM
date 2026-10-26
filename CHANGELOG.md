@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.8.2] — Windows Junction Verification (Repository Update)
+
+- Re-ran the three previously skipped Windows junction security tests outside the restricted execution sandbox; all three passed against real junctions in an isolated checkout.
+- Updated the verification evidence and synchronized platform and TUI metadata. No Core or TUI runtime behavior changed.
+- Refreshed the capability registry's platform metadata; retained the independently versioned Bridge and host Plugins because their content did not change.
+
 ## [1.8.1] — Screenshot To Code Evidence Modes (Repository Update; Not Published)
 
 - Updated `screenshot-to-code` to `1.1.0` with screenshot-only default, explicit opt-in for authorized visible browser inspection, privacy/page boundaries, uncertainty examples, and CSS token checks.
