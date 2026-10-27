@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.3] — StrictMode State Recovery Hardening (Not Published)
+
+- Hardened `Invoke-AipmStateRecovery` in `src/Core/App.psm1` using `Get-AipmField` to safely read all diagnosis and repair fields, preventing `PropertyNotFoundException` when `cause` or `remedy` are omitted under `Set-StrictMode -Version 2.0`.
+- Exported `Get-AipmField` and `Invoke-AipmStateRecovery` from `App.psm1` and added automated unit tests in `tests/Unit/App.Tests.ps1`.
+- Synchronized TUI version with platform `1.8.3`.
+
 ## [1.8.2] — Junction Verification Synchronization
 
 - Synchronized TUI metadata with platform `1.8.2` after Windows junction verification. No TUI runtime behavior changed.

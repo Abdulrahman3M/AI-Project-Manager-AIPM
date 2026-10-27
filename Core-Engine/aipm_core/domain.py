@@ -68,6 +68,19 @@ class CoreEngine:
                 cls._apply_task(manifest, 'task.create', {key: payload.get(key) for key in ('task_id', 'title', 'scope')})
                 return
             next_command = payload.get('next_command')
+            if next_command is None:
+                active_id = payload.get('task_id')
+                if active_id in tasks:
+                    manifest['task_id'] = active_id
+                    manifest['task_status'] = cls.task_status(tasks[active_id])
+                elif tasks:
+                    latest_id = sorted(tasks.keys())[-1]
+                    manifest['task_id'] = latest_id
+                    manifest['task_status'] = cls.task_status(tasks[latest_id])
+                else:
+                    manifest['task_id'] = None
+                    manifest['task_status'] = 'NOT-STARTED'
+                return
             next_input = payload.get('next_input')
             if not isinstance(next_command, str) or next_command not in (cls.TASK_COMMANDS - {'task.reconcile', 'task.reconcile-and-create'}) or not isinstance(next_input, dict):
                 raise StateError('Invalid Reconciled Task Command')
@@ -190,13 +203,7 @@ class CoreEngine:
     def _validate_manifest(manifest: Any, project: ManagedProject) -> None:
         if not isinstance(manifest, dict) or manifest.get("schema_version") not in ("1.0", "1.1") or type(manifest.get("revision")) is not int or manifest["revision"] < 0 or manifest.get("project_id") != project.project_id:
             raise StateError("Invalid State Manifest")
-        required = ("task_status", "state_health", "last_verified_action", "updated_at", "updated_by")
-        if any(not isinstance(manifest.get(key), str) or not manifest[key].strip() for key in required):
-            raise StateError("Invalid State Manifest Fields")
-        nullable = ("task_id", "active_phase", "next_action", "branch", "head_sha")
-        if any(key not in manifest or (manifest[key] is not None and not isinstance(manifest[key], str)) for key in nullable):
-            raise StateError("Invalid State Manifest Fields")
-        if manifest["schema_version"] == "1.1" and ("tasks" not in manifest or "diff_fingerprint" not in manifest):
+        if manifest.get("schema_version") == "1.1" and ("tasks" not in manifest or "diff_fingerprint" not in manifest):
             raise StateError("Missing State Manifest Fields")
         if not isinstance(manifest.get("tasks", {}), dict) or (manifest.get("diff_fingerprint") is not None and not isinstance(manifest["diff_fingerprint"], str)):
             raise StateError("Invalid State Manifest Fields")
@@ -204,9 +211,31 @@ class CoreEngine:
             if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id) or not isinstance(task, dict):
                 raise StateError('Invalid Task State')
             CoreEngine._validate_task_record(task)
+        if manifest.get('task_status') not in ('NOT-STARTED', 'IN-PROGRESS', 'BLOCKED', 'COMPLETE') and isinstance(manifest.get('tasks'), dict):
+            active_id = manifest.get('task_id')
+            if active_id and active_id in manifest['tasks']:
+                manifest['task_status'] = CoreEngine.task_status(manifest['tasks'][active_id])
+            elif manifest.get('tasks'):
+                latest_id = sorted(manifest['tasks'].keys())[-1]
+                manifest['task_status'] = CoreEngine.task_status(manifest['tasks'][latest_id])
+            else:
+                manifest['task_status'] = 'NOT-STARTED'
+        required = ("task_status", "state_health", "last_verified_action", "updated_at", "updated_by")
+        if any(not isinstance(manifest.get(key), str) or not manifest[key].strip() for key in required):
+            raise StateError("Invalid State Manifest Fields")
+        nullable = ("task_id", "active_phase", "next_action", "branch", "head_sha")
+        if any(key not in manifest or (manifest[key] is not None and not isinstance(manifest[key], str)) for key in nullable):
+            raise StateError("Invalid State Manifest Fields")
 
     @staticmethod
     def _validate_task_record(task: dict[str, Any]) -> None:
+        if isinstance(task.get('title'), str) and task['title'].strip() and isinstance(task.get('scope'), str) and task['scope'].strip():
+            if not isinstance(task.get('plan'), str) or not task['plan'].strip():
+                task['plan'] = f"# {task['title'].strip()}\n\n{task['scope'].strip()}\n"
+        if task.get('report') is None:
+            task['report'] = ''
+        if task.get('blockers') is None:
+            task['blockers'] = []
         if any(not isinstance(task.get(key), str) or not task[key].strip() for key in ('title', 'scope', 'plan')) or not isinstance(task.get('report'), str) or not isinstance(task.get('blockers'), list) or any(not isinstance(text, str) or not text.strip() for text in task['blockers']):
             raise StateError('Invalid Task State')
         verification = task.get('verification')
@@ -224,6 +253,14 @@ class CoreEngine:
                     res = 'UNVERIFIED'
                 task['verification'] = {'result': res, 'evidence': evidence}
         verification = task.get('verification')
+        if isinstance(verification, dict):
+            evidence = verification.get('evidence')
+            if isinstance(evidence, str) and evidence.strip() and verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED'):
+                raw_res = str(verification.get('result', '')).strip().upper()
+                new_res = 'PASS' if raw_res in ('PASSED', 'COMPLETE', 'COMPLETED') else ('FAIL' if raw_res in ('FAILED', 'ERROR', 'BLOCKED') else 'UNVERIFIED')
+                if raw_res and not evidence.strip().startswith(f"[{raw_res}]"):
+                    verification['evidence'] = f"[{raw_res}] {evidence.strip()}"
+                verification['result'] = new_res
         if 'verification' not in task or (verification is not None and (not isinstance(verification, dict) or verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(verification.get('evidence'), str) or not verification['evidence'].strip())):
             raise StateError('Invalid Task Evidence')
         if task.get('status_override') == 'COMPLETED':
@@ -289,8 +326,16 @@ class CoreEngine:
             status_override = raw_task.get('status_override')
             if isinstance(verification, str):
                 reconciled['verification'] = copy.deepcopy(normalized_task.get('verification'))
+            elif isinstance(verification, dict) and verification.get('result') not in ('PASS', 'FAIL', 'UNVERIFIED'):
+                reconciled['verification'] = copy.deepcopy(normalized_task.get('verification'))
             if status_override == 'COMPLETED' or (status_override is not None and status_override != 'COMPLETE'):
                 reconciled['status_override'] = normalized_task.get('status_override')
+            if (raw_task.get('plan') is None or not str(raw_task.get('plan', '')).strip()) and normalized_task.get('plan'):
+                reconciled['plan'] = normalized_task.get('plan')
+            if raw_task.get('report') is None:
+                reconciled['report'] = ''
+            if raw_task.get('blockers') is None:
+                reconciled['blockers'] = []
             if reconciled != normalized_task:
                 return False
         return True
@@ -409,7 +454,84 @@ class CoreEngine:
             return {'status': 'BLOCKED', 'repairable': False, 'reason': str(error), 'cause': 'The project state path failed AIPM ownership and isolation checks.', 'remedy': 'Correct the registered project path before requesting state repair.'}
         pending_path = project.state_root / 'History' / 'Pending-Commit.json'
         if not pending_path.is_file():
-            return {'status': 'PASS', 'repairable': False, 'reason': 'NO_PENDING_COMMIT'}
+            try:
+                manifest_path = project.state_root / 'State-Manifest.json'
+                if not manifest_path.is_file():
+                    return {
+                        'status': 'PASS', 'repairable': False, 'reason': 'NO_PENDING_COMMIT',
+                        'cause': 'There is no pending commit and State-Manifest.json is missing.',
+                        'remedy': 'Restore or reinitialize the project state.'
+                    }
+                raw = json.loads(manifest_path.read_text(encoding='utf-8'))
+                current = copy.deepcopy(raw)
+                cls._validate_manifest(current, project)
+
+                events_dir = project.state_root / 'History' / 'Events'
+                committed_events: dict[int, dict[str, Any]] = {}
+                if events_dir.is_dir():
+                    for p in events_dir.glob('*.json'):
+                        ev = json.loads(p.read_text(encoding='utf-8'))
+                        cls._validate_event(ev, project)
+                        rev = ev['revision']
+                        if rev in committed_events:
+                            raise StateError('Duplicate History Revision')
+                        committed_events[rev] = ev
+
+                K = 0
+                while (K + 1) in committed_events:
+                    K += 1
+
+                if len(committed_events) != K:
+                    raise StateError('Non-contiguous history revisions detected')
+
+                expected = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+                for rev in range(1, K + 1):
+                    rec = committed_events[rev]
+                    if rec['command'] in cls.TASK_COMMANDS:
+                        cls._apply_task(expected, rec['command'], rec['input'])
+
+                tasks = current.get('tasks', {})
+                if not isinstance(tasks, dict):
+                    raise StateError('Invalid Task State')
+
+                drifted_ids: set[str] = set(tasks.keys() - expected['tasks'].keys())
+                for key in expected['tasks']:
+                    if key not in tasks:
+                        raise StateError(f'Historical task {key} is missing from manifest')
+                    if tasks[key] != expected['tasks'][key]:
+                        if not cls._legacy_task_normalization_matches_history({key: (raw.get('tasks') or {}).get(key)}, {key: tasks[key]}, {key: expected['tasks'][key]}):
+                            drifted_ids.add(key)
+
+                for key in tasks:
+                    cls._validate_task_record(tasks[key])
+
+                if current['revision'] != K or drifted_ids:
+                    return {
+                        'status': 'PASS',
+                        'repairable': True,
+                        'reason': 'MANIFEST_HISTORY_DRIFT_RECONCILABLE',
+                        'pending_command': 'task.reconcile',
+                        'pending_task_id': current.get('task_id'),
+                        'pending_revision': K + 1,
+                        'untracked_tasks': sorted(drifted_ids),
+                        'reconciled_tasks': sorted(drifted_ids),
+                        'state_root': str(project.state_root),
+                        'cause': f"State-Manifest.json is at revision {current['revision']} while History/Events contains {K} committed event(s), or task records were edited directly in State-Manifest.json.",
+                        'remedy': f"Create a verified backup snapshot and record an explicit reconciliation event at revision {K + 1} preserving all current validated task records."
+                    }
+
+                return {
+                    'status': 'PASS', 'repairable': False, 'reason': 'NO_PENDING_COMMIT',
+                    'cause': 'There is no pending commit and the state manifest matches event history.',
+                    'remedy': 'No state repair is needed.'
+                }
+            except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+                return {
+                    'status': 'BLOCKED', 'repairable': False,
+                    'reason': str(error) if isinstance(error, StateError) else 'STATE_DIAGNOSIS_FAILED',
+                    'cause': 'AIPM could not prove that this state matches the supported safe-repair pattern.',
+                    'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.'
+                }
         try:
             pending = json.loads(pending_path.read_text(encoding='utf-8'))
             manifest_path = project.state_root / 'State-Manifest.json'
@@ -498,7 +620,10 @@ class CoreEngine:
         snapshots = history_root / 'Snapshots'
         backup = snapshots / ('AIPM-State-Repair-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex[:8])
         backup.mkdir(parents=True, exist_ok=False)
-        files = [state_root / 'State-Manifest.json', history_root / 'Pending-Commit.json']
+        files = [state_root / 'State-Manifest.json']
+        pending_path = history_root / 'Pending-Commit.json'
+        if pending_path.is_file():
+            files.append(pending_path)
         files.extend(sorted((history_root / 'Events').glob('*.json')))
         checksums: dict[str, str] = {}
         try:
@@ -514,6 +639,65 @@ class CoreEngine:
             confirmed_state = self.diagnose_pending_task_commit(project)
             if confirmed_state.get('status') != 'PASS' or not confirmed_state.get('repairable') or confirmed_state.get('pending_task_id') != diagnosis.get('pending_task_id') or confirmed_state.get('untracked_tasks') != diagnosis.get('untracked_tasks'):
                 raise StateError('State Changed After Diagnosis; No Repair Was Applied')
+
+            if diagnosis['reason'] == 'MANIFEST_HISTORY_DRIFT_RECONCILABLE':
+                raw_current = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+                current = copy.deepcopy(raw_current)
+                self._validate_manifest(current, project)
+                recovered = [{'task_id': task_id, 'record': copy.deepcopy(current['tasks'][task_id])} for task_id in diagnosis['untracked_tasks']]
+                new_rev = diagnosis['pending_revision']
+                event = {
+                    'schema_version': '1.0',
+                    'project_id': project.project_id,
+                    'revision': new_rev,
+                    'request_id': f"req-reconcile-{uuid4().hex[:12]}",
+                    'command': 'task.reconcile',
+                    'actor': 'aipm-state-repair',
+                    'idempotency_key': None,
+                    'input': {
+                        'task_id': current.get('task_id'),
+                        'next_command': None,
+                        'next_input': None,
+                        'recovered_tasks': recovered,
+                    }
+                }
+                self._validate_event(event, project)
+                K = new_rev - 1
+                history_records = self._history(project, K)
+                manifest = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+                for rec in sorted(history_records, key=lambda item: item['revision']):
+                    if rec['command'] in self.TASK_COMMANDS:
+                        self._apply_task(manifest, rec['command'], rec['input'])
+                self._apply_task(manifest, event['command'], event['input'])
+                manifest['schema_version'] = '1.1'
+                manifest['revision'] = new_rev
+                manifest['project_id'] = project.project_id
+                manifest['state_health'] = current.get('state_health', 'HEALTHY')
+                manifest['last_verified_action'] = current.get('last_verified_action', 'State Reconciled')
+                manifest['updated_by'] = event['actor']
+                manifest['updated_at'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+                for opt_field in ('active_phase', 'next_action', 'branch', 'head_sha', 'diff_fingerprint'):
+                    manifest[opt_field] = current.get(opt_field)
+                manifest.setdefault('diff_fingerprint', None)
+                self._validate_manifest(manifest, project)
+
+                event_path = history_root / 'Events' / f"{new_rev:020d}.json"
+                _atomic_json(event_path, event)
+                _atomic_json(state_root / 'State-Manifest.json', manifest)
+
+                state = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+                self._validate_manifest(state, project)
+                history = self._history(project, state['revision'])
+                if state['revision'] != new_rev or not any(item == event for item in history):
+                    raise StateError('Repaired state failed post-commit integrity checks')
+                return {
+                    'schema_version': '1.0',
+                    'status': 'PASS',
+                    'revision': state['revision'],
+                    'recovered_tasks': diagnosis['untracked_tasks'],
+                    'created_task_id': current.get('task_id'),
+                    'backup': str(backup)
+                }
 
             pending_path = history_root / 'Pending-Commit.json'
             pending = json.loads(pending_path.read_text(encoding='utf-8'))

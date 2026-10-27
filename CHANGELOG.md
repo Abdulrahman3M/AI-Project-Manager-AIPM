@@ -1,5 +1,14 @@
 # AIPM Change Log
 
+## [1.8.3] — Resilient Task Normalization And Manifest Drift Repair (Repository Update; Not Published)
+
+- Hardened `Invoke-AipmStateRecovery` in `TUI/AI-Project-Manager/src/Core/App.psm1` using `Get-AipmField` to prevent `PropertyNotFoundException` crashes under `Set-StrictMode -Version 2.0` when `state-diagnose` returns results lacking `cause` or `remedy`.
+- Enhanced `CoreEngine._validate_task_record` in `Core-Engine/aipm_core/domain.py` to auto-normalize agent-authored task entries: populates default plans when missing or empty for valid titles/scopes, defaults `report` and `blockers`, normalizes non-canonical verification results (e.g. `PASS_WITH_LIMITATIONS` to `UNVERIFIED` while preserving evidence prefixes), and normalizes `status_override` alongside recomputing top-level `manifest.task_status`.
+- Extended `diagnose_pending_task_commit` and `repair_pending_task_commit` (`state-diagnose` / `state-repair`) to diagnose and self-heal direct `State-Manifest.json` and `History/Events` revision drift without a `Pending-Commit.json`, recording a verified snapshot and explicit `task.reconcile` event at revision `K + 1`. Guaranteed `cause` and `remedy` across all return branches.
+- Repaired Language Learning Hub (LLH) project state and imported in-place task folders (`Task-2026-10-26-Breadcrumb-Route-Standardization` and `Task-2026-10-26-Top-Bar-System-Unification`); verified all 11 tasks in `task-list` and `dashboard`.
+- Added automated regression tests in `Tests/test_task_artifacts.py` and `TUI/AI-Project-Manager/tests/Unit/App.Tests.ps1`.
+- Synchronized platform and TUI versions at `1.8.3`; no Skill or standalone Prompt content changed. No GitHub Release or tag was created.
+
 ## [1.8.2] — Windows Junction Verification (Repository Update)
 
 - Re-ran the three previously skipped Windows junction security tests outside the restricted execution sandbox; all three passed against real junctions in an isolated checkout.

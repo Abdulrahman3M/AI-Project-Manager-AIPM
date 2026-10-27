@@ -158,3 +158,23 @@ $registerExistingTaskUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -Registr
 Assert-True 'Add Existing Work Folder registers an existing task folder in place without prompting for a new name or creating a second folder' ($registerExistingTaskUi.Error -eq '' -and $registerExistingTaskUi.Output.Contains('Existing Task Folder Registered')) ($registerExistingTaskUi.Error + $registerExistingTaskUi.Output)
 $afterTaskFolderList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId
 Assert-True 'existing task folder is officially registered under its own Task ID' ($afterTaskFolderList.Status -eq 'PASS' -and @($afterTaskFolderList.Data.tasks | Where-Object { $_.task_id -eq 'Task-2026-10-23-Manual-Task-Folder-abcdef123456' -and $_.title -eq 'Manual Task Folder' }).Count -eq 1)
+
+# StrictMode and State Recovery Regression
+$strictRecoveryBlock = {
+    Set-StrictMode -Version 2.0
+    $bareDiagnosis = [pscustomobject]@{
+        Status = 'PASS'
+        Data = [pscustomobject]@{
+            repairable = $false
+            reason = 'NO_PENDING_COMMIT'
+        }
+    }
+    $cause = [string](Get-AipmField $bareDiagnosis.Data 'cause' 'Default Cause')
+    $remedy = [string](Get-AipmField $bareDiagnosis.Data 'remedy' 'Default Remedy')
+    return ($cause -eq 'Default Cause' -and $remedy -eq 'Default Remedy')
+}
+Assert-True 'Get-AipmField safely handles objects lacking cause and remedy under strict mode' (& $strictRecoveryBlock)
+
+$recoveryUi = Invoke-Ui { Invoke-AipmStateRecovery -Root (Get-TestRoot) -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId } '{Enter}'
+Assert-True 'Invoke-AipmStateRecovery completes under strict mode without PropertyNotFoundException' ($recoveryUi.Error -eq '') ($recoveryUi.Error + $recoveryUi.Output)
+Assert-Equal 'Invoke-AipmStateRecovery returns false when state has no pending repair' $false $recoveryUi.Value

@@ -1211,40 +1211,60 @@ function Show-AipmTaskRecord {
 function Invoke-AipmStateRecovery {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId, [string]$FailureReason = 'INVALID_STATE')
     $diagnosis = Invoke-AipmCore -AppRoot $Root -Command 'state-diagnose' -RegistryPath $RegistryPath -ProjectId $ProjectId
-    if ($diagnosis.Status -eq 'PASS' -and $diagnosis.Data.repairable) {
-        $reconciledItems = if ($diagnosis.Data.reconciled_tasks -and @($diagnosis.Data.reconciled_tasks).Count -gt 0) {
-            @($diagnosis.Data.reconciled_tasks)
+    $isRepairable = [bool](Get-AipmField $diagnosis.Data 'repairable' $false)
+    if ($diagnosis.Status -eq 'PASS' -and $isRepairable) {
+        $diagReconciled = Get-AipmField $diagnosis.Data 'reconciled_tasks' @()
+        $diagUntracked = Get-AipmField $diagnosis.Data 'untracked_tasks' @()
+        $reconciledItems = if ($diagReconciled -and @($diagReconciled).Count -gt 0) {
+            @($diagReconciled)
         } else {
-            @($diagnosis.Data.untracked_tasks)
+            @($diagUntracked)
         }
-        $taskList = if ($reconciledItems.Count -gt 0) { $reconciledItems -join ', ' } else { [string]$diagnosis.Data.pending_task_id }
+        $pendingTaskId = [string](Get-AipmField $diagnosis.Data 'pending_task_id' '')
+        $pendingRevision = [string](Get-AipmField $diagnosis.Data 'pending_revision' '')
+        $taskList = if ($reconciledItems.Count -gt 0) { $reconciledItems -join ', ' } else { $pendingTaskId }
+        $diagCause = [string](Get-AipmField $diagnosis.Data 'cause' '')
+        $diagRemedy = [string](Get-AipmField $diagnosis.Data 'remedy' '')
+        $pendingLine = if ($pendingTaskId) {
+            'Pending Task: ' + $pendingTaskId + ' at revision ' + $pendingRevision
+        } else {
+            'Pending Task: None (Direct Manifest Reconciliation)'
+        }
         Show-Notice -Title 'Task State Problem Diagnosed' -Lines @(
-            ('Cause: ' + [string]$diagnosis.Data.cause),
-            ('Pending Task: ' + [string]$diagnosis.Data.pending_task_id + ' at revision ' + [string]$diagnosis.Data.pending_revision),
+            ('Cause: ' + $diagCause),
+            $pendingLine,
             ('Task Records To Preserve And Reconcile: ' + $taskList),
-            ('Repair: ' + [string]$diagnosis.Data.remedy),
+            ('Repair: ' + $diagRemedy),
             'AIPM Has Not Changed The Project State Yet.'
         ) -Kind Warning
         $confirmed = Show-Confirm -Title 'Repair The Pending Task State?' -Message 'AIPM Will Save A Hash-Verified Backup First, Preserve The Listed Task Records In An Explicit Core History Event, Then Resume The Pending Task Creation.' -YesLabel 'Back Up And Repair' -YesDesc 'Apply The Validated Repair And Resume The Pending Task.' -NoLabel 'Cancel' -NoDesc 'Leave All State Files Unchanged.' -Default $false
         if (-not $confirmed) { return $false }
         $repaired = Invoke-AipmCore -AppRoot $Root -Command 'state-repair' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
         if ($repaired.Status -eq 'PASS') {
+            $repBackup = [string](Get-AipmField $repaired.Data 'backup' '')
+            $repTasks = @(Get-AipmField $repaired.Data 'recovered_tasks' @())
+            $repCreatedId = [string](Get-AipmField $repaired.Data 'created_task_id' '')
+            $repRevision = [string](Get-AipmField $repaired.Data 'revision' '')
+            $createdLine = if ($repCreatedId) { $repCreatedId } else { 'None (Direct Manifest Reconciliation)' }
             Show-Notice -Title 'Task State Repaired' -Lines @(
-                ('Verified Backup: ' + [string]$repaired.Data.backup),
-                ('Recovered Task Records: ' + (@($repaired.Data.recovered_tasks) -join ', ')),
-                ('Pending Task Created: ' + [string]$repaired.Data.created_task_id),
-                ('Committed Revision: ' + [string]$repaired.Data.revision),
+                ('Verified Backup: ' + $repBackup),
+                ('Recovered Task Records: ' + ($repTasks -join ', ')),
+                ('Pending Task Created: ' + $createdLine),
+                ('Committed Revision: ' + $repRevision),
                 'AIPM Verified The Event History And State Manifest After Repair.'
             ) -Kind Success
             return $true
         }
         $repairLines = @('Reason: ' + [string]$repaired.Reason, 'No repair success was reported.')
-        if ($repaired.Data -and $repaired.Data.backup) { $repairLines += 'Safety Backup: ' + [string]$repaired.Data.backup }
+        $repBackup = [string](Get-AipmField $repaired.Data 'backup' '')
+        if ($repBackup) { $repairLines += 'Safety Backup: ' + $repBackup }
         Show-Notice -Title 'Task State Repair Did Not Complete' -Lines $repairLines -Kind Error
         return $false
     }
-    $cause = if ($diagnosis.Data -and $diagnosis.Data.cause) { [string]$diagnosis.Data.cause } else { 'AIPM could not confirm the internal state failure.' }
-    $remedy = if ($diagnosis.Data -and $diagnosis.Data.remedy) { [string]$diagnosis.Data.remedy } else { 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.' }
+    $cause = [string](Get-AipmField $diagnosis.Data 'cause' 'AIPM could not confirm the internal state failure.')
+    if (-not $cause) { $cause = 'AIPM could not confirm the internal state failure.' }
+    $remedy = [string](Get-AipmField $diagnosis.Data 'remedy' 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.')
+    if (-not $remedy) { $remedy = 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.' }
     Show-Notice -Title 'Task State Needs Manual Review' -Lines @(
         ('Error Code: ' + $FailureReason),
         ('Diagnosis: ' + $cause),
@@ -1643,4 +1663,4 @@ function Start-TuiApp {
     }
 }
 
-Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage
+Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage, Get-AipmField, Invoke-AipmStateRecovery

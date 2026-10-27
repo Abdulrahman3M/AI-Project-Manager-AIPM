@@ -540,5 +540,110 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertEqual(operations.read_task(task)["report"], "Recovered pending report.")
 
 
+
+    def test_task_record_normalization_missing_plan_and_pass_with_limitations(self) -> None:
+        raw_task = {
+            "title": "Normalized Task Title",
+            "scope": "Normalized Task Scope",
+            "plan": None,
+            "report": None,
+            "blockers": None,
+            "verification": {
+                "result": "PASS_WITH_LIMITATIONS",
+                "evidence": "Verification performed with environmental constraints.",
+            },
+            "status_override": "COMPLETED_WITH_COMMIT_BLOCKED",
+        }
+        CoreEngine._validate_task_record(raw_task)
+        self.assertEqual(raw_task["plan"], "# Normalized Task Title\n\nNormalized Task Scope\n")
+        self.assertEqual(raw_task["report"], "")
+        self.assertEqual(raw_task["blockers"], [])
+        self.assertEqual(raw_task["verification"]["result"], "UNVERIFIED")
+        self.assertTrue(raw_task["verification"]["evidence"].startswith("[PASS_WITH_LIMITATIONS]"))
+        self.assertIsNone(raw_task["status_override"])
+
+        # Also verify top-level manifest task_status normalization
+        manifest = {
+            "schema_version": "1.1",
+            "revision": 1,
+            "project_id": self.project.project_id,
+            "state_health": "HEALTHY",
+            "last_verified_action": "Initial State",
+            "updated_at": "2026-10-27T12:00:00Z",
+            "updated_by": "tester",
+            "task_id": "Task-2026-10-27-Normalized-Fixture",
+            "task_status": "COMPLETED_WITH_COMMIT_BLOCKED",
+            "active_phase": None,
+            "next_action": None,
+            "branch": None,
+            "head_sha": None,
+            "diff_fingerprint": None,
+            "tasks": {
+                "Task-2026-10-27-Normalized-Fixture": raw_task
+            }
+        }
+        CoreEngine._validate_manifest(manifest, self.project)
+        self.assertEqual(manifest["task_status"], "IN-PROGRESS")
+
+    def test_diagnose_and_repair_manifest_history_drift_without_pending_commit(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task1 = operations.create("Committed Task 1", "Scope 1")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        # Confirm clean NO_PENDING_COMMIT includes cause and remedy
+        clean_diag = CoreEngine.diagnose_pending_task_commit(self.project)
+        self.assertEqual(clean_diag["status"], "PASS")
+        self.assertFalse(clean_diag["repairable"])
+        self.assertIn("cause", clean_diag)
+        self.assertIn("remedy", clean_diag)
+
+        # Simulate manifest revision jump and directly added task without writing events
+        untracked_id = "Task-2026-10-27-Directly-Added-Task"
+        manifest["revision"] = 25
+        manifest["tasks"][untracked_id] = {
+            "title": "Directly Added Task",
+            "scope": "Directly Added Scope",
+            "plan": "# Directly Added Task\n\nDirectly Added Scope\n",
+            "report": "",
+            "blockers": [],
+            "verification": None,
+            "status_override": None,
+        }
+        manifest["task_id"] = untracked_id
+        manifest["task_status"] = "IN-PROGRESS"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        # Diagnosis must detect drift, cause, remedy, and be repairable without Pending-Commit.json
+        pending_path = self.project.state_root / "History" / "Pending-Commit.json"
+        self.assertFalse(pending_path.exists())
+        diag = CoreEngine.diagnose_pending_task_commit(self.project)
+        self.assertEqual(diag["status"], "PASS")
+        self.assertTrue(diag["repairable"])
+        self.assertEqual(diag["reason"], "MANIFEST_HISTORY_DRIFT_RECONCILABLE")
+        self.assertIn(untracked_id, diag["untracked_tasks"])
+        self.assertIn("cause", diag)
+        self.assertIn("remedy", diag)
+        self.assertEqual(diag["pending_revision"], 2)
+
+        # Repair must create backup, record reconcile event 2, and align manifest
+        repaired = self.engine.repair_pending_task_commit(self.project)
+        self.assertEqual(repaired["status"], "PASS")
+        self.assertEqual(repaired["revision"], 2)
+        self.assertIn(untracked_id, repaired["recovered_tasks"])
+        self.assertTrue(Path(repaired["backup"]).is_dir())
+        self.assertTrue((Path(repaired["backup"]) / "Backup-Manifest.json").exists())
+
+        # Post-repair state must be consistent and readable
+        repaired_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(repaired_manifest["revision"], 2)
+        self.assertIn(untracked_id, repaired_manifest["tasks"])
+        post_diag = CoreEngine.diagnose_pending_task_commit(self.project)
+        self.assertEqual(post_diag["status"], "PASS")
+        self.assertFalse(post_diag["repairable"])
+        self.assertIn("cause", post_diag)
+        self.assertIn("remedy", post_diag)
+
+
 if __name__ == "__main__":
     unittest.main()
