@@ -1,10 +1,10 @@
 {
-  "changelog_sha256": "0d4861f76038a79374b696cd12d2a3ae9983b75217873093fe6d0bfd70aec37d",
+  "changelog_sha256": "d1b83bac71ca85f2b45224f2b8ea9399d54c8d64d1bbf3aed4cae07d08e5e14e",
   "generated_by": "AIPM Capability Library",
   "personal_skills_included": false,
   "plugin_name": "aipm-project-agent-bridge",
-  "plugin_version": "1.2.1",
-  "previous_plugin_version": "1.2.0",
+  "plugin_version": "1.2.3",
+  "previous_plugin_version": "1.2.2",
   "schema_version": "1.0",
   "skills": [
     {
@@ -35,19 +35,19 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "44678303ca4cfd7486aad4014af4b035dfc57c6e42485be88249d255be19c63c",
-        "PROMPT.md": "eb59815544d684c9ddcaf54596bc9e5143b47974d8a9a86223773165c8cd3ace",
-        "SKILL.md": "7eb954b705706af240ddfc379c58c8e85ff1951a299574b9f7d3f4465c471050",
-        "VERSION": "6ca2e3356014241331fb2b399428fca23c558e3f3d428edcf4f56eb0fe907069",
+        "CHANGELOG.md": "eee9d63e7677535c4eaf55b4cec58939a67071c830437f6ce39e9dfb20895b47",
+        "PROMPT.md": "ff23094cf936862e9cec5362f637c414b891613dba135658ae6ff5da72948290",
+        "SKILL.md": "2b1236765fac2c51ae6471e992be470cbcba4f1614b324243fe798d4f314b800",
+        "VERSION": "8456accd9a842531ca2aa6832c731ed07597335b35bbdb470044c5365e8fdc82",
         "examples/Usage.md": "e775ca15dbf17b5cf69c08a955ee84d869677a70f13b7ce91c8028dda1693de0",
         "references/Browser-Compatibility.md": "5b65afe12aefd2d7f29e4bbe351bf395cd3be1b34dcdb2aa68f70de96c31ec8e",
-        "scripts/Browser-Environment.ps1": "751573376b5011b4880636fa801258302c513696b11d5cd57cfd5a00662404f8",
+        "scripts/Browser-Environment.ps1": "271491a7a3d91881330264d38e3bb4002ae2c495fb09a58cc5e62f835007e20c",
         "scripts/Connect-Environment.ps1": "5a82708ac5e115bda16347a185b5eb4f8a00e743e327520e912d6b54b983adc3",
         "scripts/Create-Environment.ps1": "a73190ab7f2c0830e65f1e0c1e401035cd4d8a83a5f4556f2aada7798bdbafdb",
         "scripts/Maintain-Environment.ps1": "f5d6448a7783556a892bc389cf6368d44bcc9c59151c1b70ce5e2529580b4af3",
-        "tests/Test-Static.py": "52e1f7ef2e40a8cb3eead745a5267d95efdb8a897d7624a0ac300f0ca85dba11",
+        "tests/Test-Static.py": "96ee217fd2bdf76fa13c97dc2ae1f68e4b68f918c79a14635e633a9a698fd269",
         "tests/Test-Windows.ps1": "b8ab316d09678ef62791f490f45ad98fb6cfe6dde8d92b0049c6330d2fe2ccb8",
-        "troubleshooting/Common-Issues.md": "4b2426d26811de013214b218c2dec829c48227baf0750162e2558c039bcc27ea"
+        "troubleshooting/Common-Issues.md": "71053aa996d84bb66273ba31fe77b7a1eac2cf7e84a4fdcbc0a95bf89a5bd926"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -57,8 +57,8 @@
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "browser-environment-manager",
-      "source_sha256": "6b578770a5d452a9a400cb8704f10d16248efa6ecde2a92ec234d226dfa8dc55",
-      "version": "1.1.0"
+      "source_sha256": "52586b075b091776e6ec709c649176a50d38470dc6739c3349d709b8cfb088a3",
+      "version": "1.1.2"
     },
     {
       "files": {
@@ -386,10 +386,10 @@
     },
     {
       "files": {
-        "CHANGELOG.md": "3540edcd9a58bdb4b9bc97ef5332091a869684fc9bae5d6abc658563a7349b3f",
+        "CHANGELOG.md": "7de8a8660e04a955eee119292f8ddb7249e464bc016a4b03402681f1c3691319",
         "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "78b87fe083541a92061823d9e81247513985be5110da655a96415ce568995103",
-        "VERSION": "51c18dc8694861beb47a67894e61044864214435389f6d3a274704d9566ff96c",
+        "SKILL.md": "eae6dd03995d00b99f4423924b13a9e8416fc0a1fc84d19fc23fbdea662a4350",
+        "VERSION": "326dd5d8641f399990de42def50ac29eb4c9222601c0a0a3fc3c947dd3bec65d",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
@@ -403,8 +403,8 @@
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
       "slug": "project-orchestrator",
-      "source_sha256": "ecc640f0d6bbdaf950c229767923cd660b351fdd5f85b14e6b7da91f6b4429a8",
-      "version": "1.0.6"
+      "source_sha256": "50d433aa655d5efd4cffc75459d791e94c7b8f1f4fe687c35f702b51130445b6",
+      "version": "1.0.8"
     },
     {
       "files": {
@@ -626,7 +626,7 @@
   ],
   "source_commit_sha": "162dcdcac08d36967c00a6b4cadaf3ce8bddb4f2",
   "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a",
-  "source_project_version": "1.8.1",
+  "source_project_version": "1.8.5",
   "standalone_prompts_included": false,
   "status": "LOCAL_SAMPLE_NOT_PUBLISHED"
 }

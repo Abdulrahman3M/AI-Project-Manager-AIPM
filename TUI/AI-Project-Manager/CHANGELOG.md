@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.5] — Browser Environment Distribution Synchronization
+
+- Synchronized TUI metadata with platform `1.8.5` for the Browser Environment Manager preflight update. No TUI runtime behavior changed.
+
 ## [1.8.3] — StrictMode State Recovery Hardening (Not Published)
 
 - Hardened `Invoke-AipmStateRecovery` in `src/Core/App.psm1` using `Get-AipmField` to safely read all diagnosis and repair fields, preventing `PropertyNotFoundException` when `cause` or `remedy` are omitted under `Set-StrictMode -Version 2.0`.

@@ -188,7 +188,7 @@ The catalog must remain synchronized whenever any Skill is added, removed, renam
 | Skill | Current Version | Primary Function | Choose It When |
 |---|---:|---|---|
 | `audio-timing-author` | `1.0.0` | Produce transcript-aligned SRT and structured timing JSON from audio. | Accurate sentence/word synchronization is required. |
-| `browser-environment-manager` | `1.1.0` | Create, diagnose and maintain isolated Edge/Chrome environments for agents. | Dedicated browser profiles, CDP/MCP connections, or browser-session troubleshooting are in scope. |
+| `browser-environment-manager` | `1.1.2` | Discover, prepare and verify isolated Edge/Chrome environments, agent integration and project-local browser access. | Dedicated browser profiles, CDP/MCP connections, or browser-session troubleshooting are in scope. |
 | `create-strict-implementation-handoff` | `1.0.0` | Author a strict execution-ready handoff without executing its underlying implementation. | The requested deliverable is a handoff, implementation task file, execution prompt, or instructions/brief for another AI agent to implement/change/repair. A generic README or explanatory Markdown is not enough. |
 | `doc-to-md` | `1.0.0` | Convert user-supplied files into evidence-audited Markdown. | Extracting or analyzing supplied document contents is the task. |
 | `powershell-tui-app-designer` | `1.2.1` | Design, build, update and test interactive PowerShell terminal applications. | A new or existing PowerShell TUI, wizard, menu, or input/render lifecycle is in scope. |

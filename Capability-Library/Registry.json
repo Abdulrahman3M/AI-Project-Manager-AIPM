@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.8.3",
+  "platform_version": "1.8.5",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -70,21 +70,21 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "description": "Create, launch, diagnose, maintain, repair, and verify isolated Windows browser environments for AI agents. Use for dedicated Microsoft Edge or Chrome profiles, CDP ports, browser screenshot workflows, MCP browser connections, avoiding personal profiles, and recovery from browser session/port issues.",
+      "description": "Prepare with user consent, launch with approval, diagnose, maintain, and verify isolated Windows browser environments for AI agents. Use to discover or create dedicated Edge/Chrome profiles, recover closed browsers and CDP sessions, verify agent browser extensions/tools, and check access to project-local web servers before browser workflows.",
       "files": {
-        "CHANGELOG.md": "44678303ca4cfd7486aad4014af4b035dfc57c6e42485be88249d255be19c63c",
-        "PROMPT.md": "eb59815544d684c9ddcaf54596bc9e5143b47974d8a9a86223773165c8cd3ace",
-        "SKILL.md": "7eb954b705706af240ddfc379c58c8e85ff1951a299574b9f7d3f4465c471050",
-        "VERSION": "6ca2e3356014241331fb2b399428fca23c558e3f3d428edcf4f56eb0fe907069",
+        "CHANGELOG.md": "eee9d63e7677535c4eaf55b4cec58939a67071c830437f6ce39e9dfb20895b47",
+        "PROMPT.md": "ff23094cf936862e9cec5362f637c414b891613dba135658ae6ff5da72948290",
+        "SKILL.md": "2b1236765fac2c51ae6471e992be470cbcba4f1614b324243fe798d4f314b800",
+        "VERSION": "8456accd9a842531ca2aa6832c731ed07597335b35bbdb470044c5365e8fdc82",
         "examples/Usage.md": "e775ca15dbf17b5cf69c08a955ee84d869677a70f13b7ce91c8028dda1693de0",
         "references/Browser-Compatibility.md": "5b65afe12aefd2d7f29e4bbe351bf395cd3be1b34dcdb2aa68f70de96c31ec8e",
-        "scripts/Browser-Environment.ps1": "751573376b5011b4880636fa801258302c513696b11d5cd57cfd5a00662404f8",
+        "scripts/Browser-Environment.ps1": "271491a7a3d91881330264d38e3bb4002ae2c495fb09a58cc5e62f835007e20c",
         "scripts/Connect-Environment.ps1": "5a82708ac5e115bda16347a185b5eb4f8a00e743e327520e912d6b54b983adc3",
         "scripts/Create-Environment.ps1": "a73190ab7f2c0830e65f1e0c1e401035cd4d8a83a5f4556f2aada7798bdbafdb",
         "scripts/Maintain-Environment.ps1": "f5d6448a7783556a892bc389cf6368d44bcc9c59151c1b70ce5e2529580b4af3",
-        "tests/Test-Static.py": "52e1f7ef2e40a8cb3eead745a5267d95efdb8a897d7624a0ac300f0ca85dba11",
+        "tests/Test-Static.py": "96ee217fd2bdf76fa13c97dc2ae1f68e4b68f918c79a14635e633a9a698fd269",
         "tests/Test-Windows.ps1": "b8ab316d09678ef62791f490f45ad98fb6cfe6dde8d92b0049c6330d2fe2ccb8",
-        "troubleshooting/Common-Issues.md": "4b2426d26811de013214b218c2dec829c48227baf0750162e2558c039bcc27ea"
+        "troubleshooting/Common-Issues.md": "71053aa996d84bb66273ba31fe77b7a1eac2cf7e84a4fdcbc0a95bf89a5bd926"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -100,12 +100,12 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "6b578770a5d452a9a400cb8704f10d16248efa6ecde2a92ec234d226dfa8dc55",
+      "sha256": "52586b075b091776e6ec709c649176a50d38470dc6739c3349d709b8cfb088a3",
       "skill_owned_prompts": [
         "PROMPT.md"
       ],
       "slug": "browser-environment-manager",
-      "version": "1.1.0"
+      "version": "1.1.2"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -490,10 +490,10 @@
       "customization": "AIPM-owned Skill",
       "description": "Select and coordinate specialist Skills when the user asks for help choosing a Skill, the request spans multiple capabilities or workstreams, or project-level supervision is needed. Analyze the requested outcome and deliverable before routing; send execution instructions or handoff documents for another AI agent to create-strict-implementation-handoff. For a clear single-specialist deliverable, invoke that specialist directly without adding orchestration overhead. Use project-governance-manager and shared-project-state-manager as foundational assistants when applicable to substantial work.",
       "files": {
-        "CHANGELOG.md": "3540edcd9a58bdb4b9bc97ef5332091a869684fc9bae5d6abc658563a7349b3f",
+        "CHANGELOG.md": "7de8a8660e04a955eee119292f8ddb7249e464bc016a4b03402681f1c3691319",
         "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "78b87fe083541a92061823d9e81247513985be5110da655a96415ce568995103",
-        "VERSION": "51c18dc8694861beb47a67894e61044864214435389f6d3a274704d9566ff96c",
+        "SKILL.md": "eae6dd03995d00b99f4423924b13a9e8416fc0a1fc84d19fc23fbdea662a4350",
+        "VERSION": "326dd5d8641f399990de42def50ac29eb4c9222601c0a0a3fc3c947dd3bec65d",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
@@ -513,10 +513,10 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "ecc640f0d6bbdaf950c229767923cd660b351fdd5f85b14e6b7da91f6b4429a8",
+      "sha256": "50d433aa655d5efd4cffc75459d791e94c7b8f1f4fe687c35f702b51130445b6",
       "skill_owned_prompts": [],
       "slug": "project-orchestrator",
-      "version": "1.0.6"
+      "version": "1.0.8"
     },
     {
       "customization": "AIPM-owned Skill",

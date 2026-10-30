@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.8.5] — Browser Environment Preflight And Recovery (Repository Update; Not Published)
+
+- Updated `browser-environment-manager` to `1.1.2` with a consent-based environment discovery flow, browser-closed recovery, `edge://version` diagnostics, agent-extension checks, and project-local server reachability gates.
+- Changed `Connect` to remain diagnostic and require explicit `Start` for browser launch; clarified that local `Admin.py` services are started only by the user through project instructions.
+- Updated the `project-orchestrator` catalog to Browser Environment Manager `1.1.2` (`project-orchestrator` `1.0.8`) and synchronized the General Skills index.
+- Synchronized platform and TUI metadata at `1.8.5`; no TUI runtime behavior changed. Rebuilt affected local distributions after validation; not installed or published.
+- No GitHub push, tag, Release, or external publication.
+
 ## [1.8.3] — Resilient Task Normalization And Manifest Drift Repair (Repository Update; Not Published)
 
 - Hardened `Invoke-AipmStateRecovery` in `TUI/AI-Project-Manager/src/Core/App.psm1` using `Get-AipmField` to prevent `PropertyNotFoundException` crashes under `Set-StrictMode -Version 2.0` when `state-diagnose` returns results lacking `cause` or `remedy`.

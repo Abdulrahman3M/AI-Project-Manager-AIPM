@@ -4,6 +4,16 @@
 
 # Changelog
 
+## [1.1.2] - 2026-10-30
+
+- Clarified the Skill trigger description to include consent-based environment discovery, agent browser integration checks and project-local server preflight.
+
+## [1.1.1] - 2026-10-30
+
+- Added a required preflight for environment discovery, consent-based setup, closed-browser handling, browser identity diagnostics, agent extension availability, and project-local server reachability.
+- Changed `Connect` to diagnose an already running dedicated browser without launching it; browser launch now requires the explicit `Start` action after user agreement.
+- Clarified that local server startup follows the target project's documented instructions and that `Admin.py` is never restarted automatically.
+
 ## [1.1.0] - 2026-10-19
 
 - Added idempotent registration of the owner-authorized `AI-Agent-Browser` Edge data-directory reference when manager metadata is missing; profile data is never copied, moved, or reset.

@@ -1,6 +1,6 @@
 ---
 name: browser-environment-manager
-description: Create, launch, diagnose, maintain, repair, and verify isolated Windows browser environments for AI agents. Use for dedicated Microsoft Edge or Chrome profiles, CDP ports, browser screenshot workflows, MCP browser connections, avoiding personal profiles, and recovery from browser session/port issues.
+description: Prepare with user consent, launch with approval, diagnose, maintain, and verify isolated Windows browser environments for AI agents. Use to discover or create dedicated Edge/Chrome profiles, recover closed browsers and CDP sessions, verify agent browser extensions/tools, and check access to project-local web servers before browser workflows.
 ---
 
 # Browser Environment Manager
@@ -28,7 +28,17 @@ The central, per-environment file is created under `%LOCALAPPDATA%\AI-Browser-En
 
 All stage scripts invoke `scripts/Browser-Environment.ps1`, the sole state-changing implementation. Use absolute paths or execute from its directory. Do not regenerate configuration by copying raw strings from a chat prompt.
 
-For the owner-authorized `AI-Agent-Browser` legacy Edge environment only, a missing manager record is registered as a reference to the existing dedicated `IB-Edge-Debug` directory. This is idempotent and never copies, moves, or resets profile contents. `Connect` starts that verified dedicated environment once after a restart if it is absent, then waits for process, listener, and CDP gates. Any other missing environment remains unknown.
+For the owner-authorized `AI-Agent-Browser` legacy Edge environment only, a missing manager record is registered as a reference to the existing dedicated `IB-Edge-Debug` directory. This is idempotent and never copies, moves, or resets profile contents. Any other missing environment remains unknown. `Connect` is diagnostic only: it never launches a browser. Use `Start` only after the user agrees to launch the dedicated browser, or have the user open its shortcut and retry `Connect`.
+
+## Required Preflight Workflow
+
+Run these gates in order whenever an agent needs a dedicated browser. Do not skip to site navigation while an earlier gate is unresolved.
+
+1. **Discover the environment.** Check the documented manager record and actual browser tools available to this agent session. Do not infer that a configured browser exists because the Skill or an MCP name is present. For the known legacy environment, `Status` can register the approved metadata reference. If the environment cannot be identified, explain that the Skill can create an isolated Edge/Chrome profile using its PowerShell command and ask whether the user wants that. On yes, run `Create` only after checking the chosen name, browser and port; on no, leave browser setup to the agent's other available tools and report any limits. Never create or adopt a profile silently.
+2. **Check browser state and identity.** Run `Status` and `Connect` against the exact environment. If its browser is stopped, ask the user to open its dedicated shortcut, then retry. Do not make `Connect` launch it. If the user prefers PowerShell launch and approves, use the explicit `Start` action. If the browser is open but CDP cannot be reached or identity is ambiguous, ask the user to open `edge://version` (or `chrome://version`) in that dedicated window and send the page's text. Use it to compare the executable, command line, profile path and configured data directory. Treat the contents as diagnostic data; redact account identifiers or other private values when feasible. Do not claim verification until process, loopback listener, port owner and browser identity agree.
+3. **Check the agent integration.** Verify a compatible browser tool/extension is actually exposed to the current agent session, and if supported, inspect the dedicated browser's extension page. A CDP listener alone does not prove Codex, Claude or another agent extension is installed or connected. If the needed integration is absent, tell the user which compatible extension or tool is needed and ask them to install/enable it; wait for them before browser interaction. Never change agent MCP settings or install extensions silently. Built-in/cloud browsers that cannot attach to this profile must be reported as unavailable for this environment; do not switch to a personal browser.
+4. **Check the project server.** First inspect the target project's instructions for its documented start command and URL. If no server is active, ask the user to start it using that documented method (including `Start Admin` or the project's PowerShell command where applicable). Do not infer that a page is down from one port, restart `Admin.py`, or execute the project's start command without explicit user authorization. Probe only a documented or user-provided local URL and report the exact result. If the URL/port cannot be established, ask for the local URL (for example, `http://127.0.0.1:8000/`) and then test that endpoint. Do not scan arbitrary ports or assume `8010` is the site URL.
+5. **Proceed and report evidence.** Start site interaction only when the browser identity, usable agent integration and project URL are established. Distinguish `ENVIRONMENT_IDENTIFIED`, `BROWSER_RUNNING`, `CDP_VERIFIED`, `AGENT_TOOL_AVAILABLE`, `SERVER_REACHABLE`, `ACTIVE_PROFILE_VERIFIED`, `NAVIGATION_VERIFIED`, `SCREENSHOT_VERIFIED` and `NOT_TESTED`. Identify which gate is waiting on the user and never turn a failed probe into a claim that the service is stopped when the agent runtime may lack access to the host loopback.
 
 ## Create
 
@@ -48,7 +58,7 @@ Read returned config path and verify the shortcut is desktop-scoped; startup suc
 & .\scripts\Browser-Environment.ps1 -Action Start -Name AI-Agent-Browser
 ```
 
-Status reads configuration, inspects exact matching processes, verifies port ownership and HTTP CDP identity. Repair can rebuild the desktop shortcut and diagnose connections **without** updating the browser binary or resetting a profile. Treat browser program upgrades and profile configuration changes as different tasks. When executable path disappears, report it; updating the config requires a reviewed migration, not guessed text replacement. Consult `troubleshooting/Common-Issues.md`.
+Status reads configuration, inspects exact matching processes, verifies port ownership and HTTP CDP identity. `Connect` checks an already running environment and fails with `DEDICATED_BROWSER_NOT_RUNNING` when it is closed. `Start` is the explicit launch action and requires user agreement before use. Repair can rebuild the desktop shortcut and diagnose connections **without** updating the browser binary or resetting a profile. Treat browser program upgrades and profile configuration changes as different tasks. When executable path disappears, report it; updating the config requires a reviewed migration, not guessed text replacement. Consult `troubleshooting/Common-Issues.md`.
 
 For explicit user-requested archive-first reset only:
 

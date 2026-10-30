@@ -173,7 +173,9 @@ switch ($Action) {
     }
     'Connect' {
         $config = Get-Config
-        if (@(Get-BrowserProcesses $config).Count -eq 0) { Start-DedicatedBrowser $config }
+        if (@(Get-BrowserProcesses $config).Count -eq 0) {
+            throw "DEDICATED_BROWSER_NOT_RUNNING: open the dedicated browser or its desktop shortcut, then retry Connect. To launch it from PowerShell, obtain the user's approval and run the explicit Start action."
+        }
         $result = Wait-DedicatedCDP $config
         $result | Format-List
         if ($NavigateTest) {

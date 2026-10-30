@@ -41,11 +41,11 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `browser-environment-manager`
 
-**Description:** Sets up and troubleshoots isolated Windows browser environments for AI-agent workflows, including dedicated Edge or Chrome profiles and CDP connections.
+**Description:** Discovers, creates with consent, diagnoses, and verifies isolated Windows browser environments for AI agents, including browser identity, agent extensions, and project-local server reachability.
 
-**When to Use:** Use it for browser automation, screenshot workflows, MCP browser connections, or recovery from profile, port, and session problems where personal browser data should stay separate.
+**When to Use:** Use it before browser automation or screenshots that require a dedicated profile, to recover closed or unreachable browser sessions, verify the agent's browser integration, or connect to a local project server without assuming its port or restarting it.
 
-**How to Use:** Example: “Use `browser-environment-manager` to diagnose why my dedicated Edge profile is not connecting on its configured CDP port.”
+**How to Use:** Example: “Use `browser-environment-manager` to verify my dedicated Edge profile and Codex extension, then check the project at `http://127.0.0.1:8000/` without restarting its server.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/browser-environment-manager/SKILL.md)
 

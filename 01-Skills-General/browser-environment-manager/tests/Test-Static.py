@@ -18,6 +18,7 @@ class BrowserEnvironmentSkillTests(unittest.TestCase):
                      '--remote-debugging-address=127.0.0.1','Get-NetTCPConnection',
                      'OwningProcess', 'userDataDirectory', 'CreateShortcut', '/json/version']:
             self.assertIn(name,code)
+        self.assertIn('DEDICATED_BROWSER_NOT_RUNNING', code)
         for unsafe in ('Stop-Process -Name msedge','taskkill /IM msedge','Remove-Item -Recurse -Force'):
             self.assertNotIn(unsafe,code)
 
@@ -41,12 +42,21 @@ class BrowserEnvironmentSkillTests(unittest.TestCase):
 
     def test_prompt_alignment(self):
         p=(ROOT/'PROMPT.md').read_text()
-        for s in ('Profile 1','user data directory','example.com','screenshot','personal'):
+        for s in ('Profile 1','user data directory','example.com','screenshot','personal',
+                  'edge://version','Start Admin','Codex','Claude','127.0.0.1:8000'):
             self.assertIn(s.lower(),p.lower())
+    def test_preflight_and_no_implicit_launch(self):
+        skill=(ROOT/'SKILL.md').read_text().lower()
+        for s in ('ask whether the user wants','edge://version','start admin',
+                  'codex','claude','local url','never launches'):
+            self.assertIn(s,skill)
+        code=(ROOT/'scripts/Browser-Environment.ps1').read_text()
+        connect=code.split("    'Connect' {",1)[1].split("    'Repair' {",1)[0]
+        self.assertNotIn('Start-DedicatedBrowser', connect)
 
     def test_skill_frontmatter(self):
         skill=(ROOT/'SKILL.md').read_text()
         self.assertRegex(skill,r'(?s)^---\nname: browser-environment-manager\ndescription: .+?\n---')
-        self.assertEqual((ROOT/'VERSION').read_text().strip(),'1.1.0')
+        self.assertEqual((ROOT/'VERSION').read_text().strip(),'1.1.2')
 
 if __name__ == '__main__': unittest.main()

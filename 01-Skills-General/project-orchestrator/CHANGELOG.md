@@ -1,3 +1,7 @@
+## [1.0.8] — 2026-10-30
+
+- Updated the Browser Environment Manager catalog entry to v1.1.2 and clarified its browser, agent-integration and local-server preflight coverage.
+
 ## [1.0.6] — 2026-10-26
 
 - Updated the capability catalog entry for `screenshot-to-code` `1.1.0`.
