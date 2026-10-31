@@ -1265,8 +1265,97 @@ function Invoke-AipmStateRecovery {
     if (-not $cause) { $cause = 'AIPM could not confirm the internal state failure.' }
     $remedy = [string](Get-AipmField $diagnosis.Data 'remedy' 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.')
     if (-not $remedy) { $remedy = 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.' }
+
+    $validation = Invoke-AipmCore -AppRoot $Root -Command 'state-validate' -RegistryPath $RegistryPath -ProjectId $ProjectId
+    $findings = @()
+    $canNormalize = $false
+    if ($validation.Status -in @('PASS', 'BLOCKED') -and $validation.Data) {
+        $findings = @(Get-AipmField $validation.Data 'findings' @())
+        $canNormalize = [bool]($findings | Where-Object { [string]$_.repairable_by -eq 'state-normalize' })
+    }
+
+    $techReason = [string]$diagnosis.Reason
+    if (-not $techReason) { $techReason = $FailureReason }
+
+    $lines = @(
+        ('Error Code: ' + $FailureReason),
+        ('Technical Reason: ' + $techReason)
+    )
+    if ($findings.Count -gt 0) {
+        $lines += 'Specific Findings:'
+        $displayed = 0
+        foreach ($f in $findings) {
+            if ($displayed -ge 4) {
+                $lines += ('... and ' + ($findings.Count - $displayed) + ' more finding(s).')
+                break
+            }
+            $target = if ($f.task_id) { [string]$f.task_id } else { 'Manifest' }
+            if ($f.field) { $target += ' › ' + [string]$f.field }
+            $lines += (' - ' + $target + ': ' + [string]$f.message)
+            $displayed += 1
+        }
+    } else {
+        $lines += ('Diagnosis: ' + $cause)
+    }
+    $lines += 'AIPM Has Not Changed Any File.'
+    $lines += ('CLI: aipm state-validate --project-id ' + $ProjectId)
+
+    if ($canNormalize) {
+        $lines += 'Recommended Action: Preview or apply guided record normalization, or review manually.'
+        Show-Notice -Title 'Task State Needs Review' -Lines $lines -Kind Warning
+
+        $normItems = @(
+            (New-MenuItem -Label 'Preview Repair (Dry Run)' -Desc 'Inspect The Derived Fields Before Making Changes.' -Value 'preview' -Icon 'Settings'),
+            (New-MenuItem -Label 'Back Up And Normalize' -Desc 'Save A Hash-Verified Backup First, Then Normalize Task Records.' -Value 'normalize' -Icon 'Yes'),
+            (New-MenuItem -Label 'Leave Unchanged' -Desc 'Keep All State Files Unchanged.' -Value 'cancel' -Icon 'Exit')
+        )
+        $normChoice = Show-Menu -Title 'Normalize Task Records?' -Description 'AIPM Can Normalize Malformed Task Records From Project Metadata.' -Items $normItems
+        if ($normChoice -eq 'preview') {
+            $dryRun = Invoke-AipmCore -AppRoot $Root -Command 'state-normalize' -RegistryPath $RegistryPath -ProjectId $ProjectId
+            $diffLines = @('Proposed Task Record Normalization (Dry Run):', '')
+            if ($dryRun.Data -and $dryRun.Data.changes) {
+                foreach ($prop in $dryRun.Data.changes.PSObject.Properties) {
+                    $diffLines += ('Task: ' + $prop.Name)
+                    foreach ($change in @($prop.Value)) {
+                        $diffLines += ('  [' + [string]$change.field + ']: ' + [string]$change.source)
+                        $diffLines += ('    Old: ' + [string]$change.old)
+                        $diffLines += ('    New: ' + [string]$change.new)
+                    }
+                }
+            } else {
+                $diffLines += 'No automatic changes could be planned.'
+            }
+            [void](Show-AipmPage -Title 'Normalization Preview' -Lines $diffLines)
+            return (Invoke-AipmStateRecovery -Root $Root -RegistryPath $RegistryPath -ProjectId $ProjectId -FailureReason $FailureReason)
+        }
+        if ($normChoice -eq 'normalize') {
+            $confirmed = Show-Confirm -Title 'Apply Guided Task Normalization?' -Message 'AIPM Will Create A Hash-Verified Backup First In History/Snapshots, Preserving All Valid Data. Project Source Files Are Not Changed.' -YesLabel 'Back Up And Normalize' -YesDesc 'Apply Validated Task Fields And Record A Reconcile Event.' -NoLabel 'Cancel' -NoDesc 'Leave All State Files Unchanged.' -Default $false
+            if (-not $confirmed) { return $false }
+            $normalized = Invoke-AipmCore -AppRoot $Root -Command 'state-normalize' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
+            if ($normalized.Status -eq 'PASS' -and $normalized.Data -and $normalized.Data.applied) {
+                $normBackup = [string](Get-AipmField $normalized.Data 'backup' '')
+                $normTasks = @(Get-AipmField $normalized.Data 'normalized_tasks' @())
+                $normRev = [string](Get-AipmField $normalized.Data 'revision' '')
+                Show-Notice -Title 'Task State Normalized' -Lines @(
+                    ('Verified Backup: ' + $normBackup),
+                    ('Normalized Tasks: ' + ($normTasks -join ', ')),
+                    ('Committed Revision: ' + $normRev),
+                    'AIPM Verified The State Manifest And History After Normalization.'
+                ) -Kind Success
+                return $true
+            }
+            $failLines = @('Reason: ' + [string]$normalized.Reason)
+            if ($normalized.Data -and $normalized.Data.detail) { $failLines += ('Detail: ' + [string]$normalized.Data.detail) }
+            Show-Notice -Title 'Normalization Did Not Complete' -Lines $failLines -Kind Error
+            return $false
+        }
+        return $false
+    }
+
+    $lines += ('Recommended Action: ' + $remedy)
     Show-Notice -Title 'Task State Needs Manual Review' -Lines @(
         ('Error Code: ' + $FailureReason),
+        ('Technical Reason: ' + $techReason),
         ('Diagnosis: ' + $cause),
         ('Recommended Action: ' + $remedy)
     ) -Kind Error

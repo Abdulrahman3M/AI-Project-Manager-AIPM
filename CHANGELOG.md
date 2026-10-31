@@ -1,5 +1,17 @@
 # AIPM Change Log
 
+## [1.8.6] — State Recovery Diagnostics, Guided Task Normalization, And Transient Routing (Repository Update; Not Published)
+
+- Added read-only `state-validate` command (`CoreEngine.inspect_state`) providing detailed, non-destructive field-level findings and source hints when project state cannot be loaded.
+- Added guided `state-normalize` command (`CoreEngine.normalize_task_records`) supporting dry-run diff preview and `--confirm-repair` application with hash-verified safety snapshots and explicit `task.reconcile` history events at revision `K + 1`.
+- Enhanced `CoreEngine.execute` and `diagnose_pending_task_commit` with sanitized `detail` and actionable `next_step` messages, eliminating opaque `INVALID_STATE` dead ends.
+- Updated TUI (`AipmClient.psm1`, `App.psm1`) with technical failure reasons, specific task/field findings, and an interactive recovery menu (`Preview Repair`, `Back Up And Normalize`, `Leave Unchanged`).
+- Added `Route-Transient-State` tool (`scripts/route_transient_state.py`, `Route-Transient-State.ps1`) to `shared-project-state-manager` and target project state roots to enforce Section 7 transient storage routing (`Cache/`, `Temporary-Files/`, `Test-Workspace/`) with `--env`, `--run`, `--sweep`, `--status`, and `--clean`.
+- Clarified `shared-project-state-manager` Section 11.3 handoff instructions to mandate updating `State-Manifest.json` strictly via official Core/sps commands and never through direct file editing; bumped skill version to `1.0.1`.
+- Created comprehensive operator runbook `docs/guides/State-Recovery-Guide.md`.
+- Repaired Info Bank project state (`Project-afa0941b1fc0`) via guided normalization with a verified backup at revision 43; verified all 3 tasks cleanly in `state-diagnose`, `state-validate`, and `task-list`.
+- Synchronized platform and TUI versions at `1.8.6`. Rebuilt local plugin distributions; not installed or published. No GitHub push, tag, or release.
+
 ## [1.8.5] — Browser Environment Preflight And Recovery (Repository Update; Not Published)
 
 - Updated `browser-environment-manager` to `1.1.2` with a consent-based environment discovery flow, browser-closed recovery, `edge://version` diagnostics, agent-extension checks, and project-local server reachability gates.

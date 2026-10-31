@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.8.5",
+  "platform_version": "1.8.6",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -602,11 +602,11 @@
       "customization": "AIPM-owned Skill",
       "description": "Manage long-running work across any compatible AI agents with a persistent Shared-Project-State protocol, restartable phases, verified checkpoints/handoffs, optional Node.js and Python automation, quarantine-first file operations, permission/lock diagnostics, templates, schemas, and worked examples. Use when work may cross sessions, usage limits, crashes, models, or agents; when interrupted work must resume safely; or when temporary/cache/test/tool state needs controlled project-local handling.",
       "files": {
-        "CHANGELOG.md": "fc1da14da7be1d9d916c6a1080598b96f9c0dd3fcaed4a011cf4ea4b3d7439d9",
-        "PROMPT.md": "b8e7261d85ec01f4faa9c4e204adc8a5c6263d6267a5a5060bda3215f0bc7813",
+        "CHANGELOG.md": "b1031b23f9cb6fa68853d15fb5ceba13c93b5e28ef2bc2536e301065819ad598",
+        "PROMPT.md": "fd4c59f717d43cbf435ae5a3c1c613b243264b522424863a0a9d8b0ad0412386",
         "README.md": "e7b327e2b1bf173ab0b08d7000a5a849e209e99ac5c18ad2ac030b6abec64b9f",
-        "SKILL.md": "bfe4e32ed6ccca0237a580f26bd35a6a8aae2bd213a31801f5a1d520c62def88",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+        "SKILL.md": "ebf5a26edcb267b5f5bca7e4547a78778635d25231ab36797724683763e9cd1a",
+        "VERSION": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066",
         "examples/01-Claude-To-Codex-Handoff.md": "2f2d9076d514b638788c9fb8885026514d7913fc73c2960995ed16a32f4575b0",
         "examples/02-Codex-To-Claude-Handoff.md": "0205ddd435d330561f5629401fd04edf7c7c92831df044f80f773d4b145f8aa8",
         "examples/03-Session-Limit-During-Tests.md": "522d7beb61743d421bebe9ff8b1533ebd3ef8fd7a08aa6d29d675f542922d9b9",
@@ -636,12 +636,14 @@
         "references/File-Operations-Safety.md": "d1e27bb53bfa683f866c2960702ce689ae4ad4e9969ae12cdd15bce1c5ead828",
         "references/Permission-And-Lock-Recovery.md": "55f381b2d61ddfb56fd8e752cc093d58e92592794d76373afdf9414f757ca110",
         "references/Shared-Project-State-Schema.md": "58f4c01559453c1b6a4775b37def4c77dd264e7d3a4cc11acba0bc9cb036c1de",
-        "references/Tool-State-And-Cache-Routing.md": "bed580028ee73a46f284b7a0803638b588eb0a5f41ea913a90807ba32a0d0ea2",
+        "references/Tool-State-And-Cache-Routing.md": "2b34453647942689e37b7ab337fa48a064c24b77d74599b487808a6caac9a312",
         "schemas/quarantine-record.schema.json": "81fad76e3d2796bef5e899b5c2148ec77e1fc31379091843fe8883460b083223",
         "schemas/state-manifest.schema.json": "f51badd011ec3e993d48045b82e277ba742309a4ccd6cac0a71475f60bd1aecf",
         "scripts/Install-Prerequisites.ps1": "0b56d771e81fcc546c008afa0d13d1d72ec255eaaef42acca59555f9be255d20",
+        "scripts/Route-Transient-State.ps1": "695dfc12a0e2cf61a876117f39be0a0831fc26b77f67e194cb3f34d9df57cc9a",
+        "scripts/route_transient_state.py": "da824f648293ed40ba33c54459d55292a46259bc65439325795c8a86ffdcf262",
         "scripts/safe_file_ops.py": "a9f72f9743bbdff075c03751e248eda999a1291e297a646d19c019a5c3cd3a93",
-        "scripts/sps.mjs": "0e9add9cb75f21f0f950ac330fc857dda681ab857686c8dcba2acbccc9af386e",
+        "scripts/sps.mjs": "635f8fd104dabe2f436fa2035a5e5d31030b5e8c8e04983b502ad62a49ee7545",
         "scripts/sps.ps1": "b12ee30a141ae5b882876ae783315271fdd2823acae0f957a711590ea09ffbf0",
         "scripts/validate_state.py": "20742ffa35fa97272c5127ad272a1ff3a5ed93e0af01d2d78b066659fcc2d974",
         "templates/Blockers.md": "08034ea7ce6b539d6b3568dfa0f4024d3b36b64e509b8aa4291ddd6b99cb4b99",
@@ -652,6 +654,8 @@
         "templates/Handoff.md": "023d69c2303faaccd0ed98c8db9ab04634b5a2cf7d6df06e0386eb1a5857b8b8",
         "templates/Project-State.md": "e9d62515e1c8f3e143fe59be71fbbedf8d8503eb375c5d4036fa09b94bb79afa",
         "templates/Root-Exceptions.md": "1a641b0bb995851e102e7f7cdbb688d6231ee49058f6b3d0e3b300b304ab92dc",
+        "templates/Route-Transient-State.ps1": "695dfc12a0e2cf61a876117f39be0a0831fc26b77f67e194cb3f34d9df57cc9a",
+        "templates/Route-Transient-State.py": "da824f648293ed40ba33c54459d55292a46259bc65439325795c8a86ffdcf262",
         "templates/State-Manifest.json": "5c5ebf4870e59fcb3138840c8ccf10559244a6e8021298568cf576b58d7c4b0f",
         "templates/Task-State.md": "1647f4fbc5ffbb425d2e1d730db99daf83d11ce229e4b9217c53b575bce4ae46",
         "templates/Verification.md": "71994b006373a1906da23de3ef87656883baf7438f98bd6464384c70ef34b23a",
@@ -673,13 +677,13 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "0f8ca4db71e04db18c369702fa3d8160443a2ec08350f54127a1e7d5459ad3bf",
+      "sha256": "cfc876a03d24029eb7dc12a8c0a48fda9751c5e2862e3d424597a007bb075c94",
       "skill_owned_prompts": [
         "PROMPT.md",
         "prompts/RichViz.md"
       ],
       "slug": "shared-project-state-manager",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "customization": "AIPM-owned Skill",

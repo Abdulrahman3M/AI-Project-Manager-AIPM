@@ -181,6 +181,17 @@ function commandInit(flags) {
     created += 1;
   }
 
+  const routePy = path.join(SCRIPT_DIR, 'route_transient_state.py');
+  const routePs1 = path.join(SCRIPT_DIR, 'Route-Transient-State.ps1');
+  if (fs.existsSync(routePy)) {
+    fs.copyFileSync(routePy, path.join(shared, 'Route-Transient-State.py'));
+    created += 1;
+  }
+  if (fs.existsSync(routePs1)) {
+    fs.copyFileSync(routePs1, path.join(shared, 'Route-Transient-State.ps1'));
+    created += 1;
+  }
+
   info(`Initialized ${shared}`);
   info(`Task: ${taskId}`);
   info(`Created ${created} new state file(s); existing files were preserved.`);
@@ -325,8 +336,16 @@ function commandFiles(argv) {
   process.exit(result.status ?? 1);
 }
 
+function commandRoute(argv) {
+  const python = process.platform === 'win32' ? 'python' : 'python3';
+  const script = path.join(SCRIPT_DIR, 'route_transient_state.py');
+  const result = spawnSync(python, [script, ...argv], { stdio: 'inherit' });
+  if (result.error) fail(`Unable to run ${python}: ${result.error.message}`);
+  process.exit(result.status ?? 1);
+}
+
 function usage() {
-  console.log(`Shared Project State Manager CLI\n\nUsage:\n  node scripts/sps.mjs init --project-root <path> --task-id <id> --title <title> --agent <name>\n  node scripts/sps.mjs status --project-root <path>\n  node scripts/sps.mjs doctor --project-root <path>\n  node scripts/sps.mjs checkpoint --project-root <path> --last-verified <text> --next-action <text>\n  node scripts/sps.mjs handoff --project-root <path> --from-agent <name> --to-agent <name> --next-action <text>\n  node scripts/sps.mjs files <safe_file_ops.py arguments>\n\nFile operations example:\n  node scripts/sps.mjs files diagnose .\\temp --project-root .\n`);
+  console.log(`Shared Project State Manager CLI\n\nUsage:\n  node scripts/sps.mjs init --project-root <path> --task-id <id> --title <title> --agent <name>\n  node scripts/sps.mjs status --project-root <path>\n  node scripts/sps.mjs doctor --project-root <path>\n  node scripts/sps.mjs checkpoint --project-root <path> --last-verified <text> --next-action <text>\n  node scripts/sps.mjs handoff --project-root <path> --from-agent <name> --to-agent <name> --next-action <text>\n  node scripts/sps.mjs files <safe_file_ops.py arguments>\n  node scripts/sps.mjs route [--sweep|--env|--status|--clean|--run <cmd>]\n\nFile operations example:\n  node scripts/sps.mjs files diagnose .\\temp --project-root .\n`);
 }
 
 const rawArgs = process.argv.slice(2);
@@ -344,5 +363,6 @@ switch (command) {
   case 'checkpoint': commandCheckpoint(flags); break;
   case 'handoff': commandHandoff(flags); break;
   case 'files': commandFiles(rawArgs.slice(1)); break;
+  case 'route': commandRoute(rawArgs.slice(1)); break;
   default: fail(`Unknown command '${command}'. Run with 'help'.`);
 }

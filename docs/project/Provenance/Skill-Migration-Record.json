@@ -9,7 +9,6 @@
     "plugin-creator",
     "project-governance-manager",
     "resume-task",
-    "shared-project-state-manager",
     "skill-creator",
     "teach",
     "token-optimization"
@@ -26,6 +25,12 @@
       "approved_date": "2026-10-26",
       "reason": "Correction: Professional Word Designer was authored from scratch by the AIPM owner. It is an original AIPM Skill, not an imported or byte-preserved Skill.",
       "historical_source_hashes_retained": false
+    },
+    {
+      "slug": "shared-project-state-manager",
+      "approved_date": "2026-10-31",
+      "reason": "The project owner explicitly authorized development and maintenance of this Skill for AIPM; added Route-Transient-State and tightened handoff direct manifest edit prohibition.",
+      "historical_source_hashes_retained": true
     }
   ],
   "derivative_changed_markdown_files": [
@@ -44,7 +49,7 @@
   "migrated_skill_count": 17,
   "migration_mode": "Owner-Approved Controlled Exception",
   "personal_skills_imported": false,
-  "source": "D:\\Test\\02 \u2502 Assistance Projects\\AI Project Manager (AIPM) \u2502 Archive\\AI-Project-Manager-AIPM-V2\\Source-Skills\\01-Skills-General",
+  "source": "D:\\Test\\02 │ Assistance Projects\\AI Project Manager (AIPM) │ Archive\\AI-Project-Manager-AIPM-V2\\Source-Skills\\01-Skills-General",
   "source_hashes": {
     "audio-timing-author": {
       "CHANGELOG.md": "65e3ce6c227fdafab9554c030ab446f0bdb225d600482d7e6a4087b4f04b7e85",

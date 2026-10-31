@@ -16,7 +16,7 @@ from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
+    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "state-validate", "state-normalize", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -379,12 +379,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
         print(json.dumps(result))
         return 0 if result["status"] == "PASS" else 1
-    if args.command in {"state-diagnose", "state-repair"}:
+    if args.command in {"state-diagnose", "state-repair", "state-validate", "state-normalize"}:
         try:
             project = _managed_project(registry_path, args.project_id)
             engine = CoreEngine({project.project_id: project})
             if args.command == "state-diagnose":
                 result = {"schema_version": "1.0", **engine.diagnose_pending_task_commit(project)}
+            elif args.command == "state-validate":
+                result = engine.inspect_state(project)
+            elif args.command == "state-normalize":
+                result = engine.normalize_task_records(project, confirm=bool(args.confirm_repair), title_override=args.title)
             elif not args.confirm_repair:
                 result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "REPAIR_CONFIRMATION_REQUIRED"}
             else:

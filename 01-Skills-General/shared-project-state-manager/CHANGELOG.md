@@ -1,3 +1,9 @@
+## [1.0.1] — 2026-10-31
+
+- Added `Route-Transient-State` programmatic CLI (`scripts/route_transient_state.py`, `Route-Transient-State.ps1`) and `sps route` command to automate Section 7 routing of Cache, Temporary Files, and Test Workspaces under `Shared-Project-State-Manager`.
+- Added automatic copy of `Route-Transient-State.py` and `Route-Transient-State.ps1` to the state manager root upon initialization.
+- Clarified Section 11.3 handoff instructions to mandate updating `State-Manifest.json` strictly through official Core or `sps` commands and never through direct manual file edits.
+
 ## [1.0.0] — AIPM Release Baseline
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.

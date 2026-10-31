@@ -90,7 +90,16 @@ See `File-Operations-Safety.md` and `Permission-And-Lock-Recovery.md`.
 
 ## Shared Project State Helper Tooling
 
-The dependency-free Node.js CLI can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, and delegate safe-file operations. Python validation/file helpers are optional. Their absence must not invalidate the manual protocol.
+The dependency-free Node.js CLI can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, delegate safe-file operations, and route transient state (`node scripts/sps.mjs route`).
+
+Additionally, `scripts/route_transient_state.py` (and the PowerShell wrapper `scripts/Route-Transient-State.ps1`) provides:
+- `--env`: prints environment variable exports (`PYTHONPYCACHEPREFIX`, `TEMP`, `TMP`, `PYTEST_ADDOPTS`, etc.) for PowerShell, bash, or cmd;
+- `--run <command>`: executes a command with all transient routing environment variables pre-configured;
+- `--sweep`: scans the project tree and automatically moves stray `__pycache__`, `.pytest_cache`, scratch files, and temporary test directories into their designated state subfolders;
+- `--status`: displays storage size and file counts across Cache, Temporary-Files, and Test-Workspace;
+- `--clean`: safely cleans disposable temporary and test files.
+
+These tools are also copied to the root of `Shared-Project-State-Manager/` as `Route-Transient-State.py` and `Route-Transient-State.ps1` upon initialization for direct execution.
 
 ## Cleanup
 

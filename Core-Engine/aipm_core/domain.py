@@ -12,7 +12,7 @@ import shutil
 from typing import Any
 from uuid import uuid4
 
-from .storage import ManagedProject, StateError, _atomic_json, validate_managed_project
+from .storage import ManagedProject, StateError, _atomic_json, _canonical, _inside, validate_managed_project
 
 
 @dataclass(frozen=True)
@@ -33,6 +33,14 @@ class CoreEngine:
         self.projects = projects
 
     TASK_COMMANDS = {'task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report', 'task.checkpoint', 'task.close', 'task.reopen', 'task.restore', 'task.unregister', 'task.edit', 'task.rename', 'task.reconcile-and-create', 'task.reconcile'}
+
+    DIAGNOSIS_NEXT_STEP = 'Run state-validate for the exact location, then state-normalize (dry run first).'
+
+    @classmethod
+    def _diagnosis_cause(cls, error: BaseException, project: ManagedProject) -> str:
+        if isinstance(error, StateError):
+            return f'The state failed validation: {cls._error_detail(error, project)}.'
+        return 'AIPM could not prove that this state matches the supported safe-repair pattern.'
 
     @staticmethod
     def task_status(task: dict[str, Any]) -> str:
@@ -529,8 +537,9 @@ class CoreEngine:
                 return {
                     'status': 'BLOCKED', 'repairable': False,
                     'reason': str(error) if isinstance(error, StateError) else 'STATE_DIAGNOSIS_FAILED',
-                    'cause': 'AIPM could not prove that this state matches the supported safe-repair pattern.',
-                    'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.'
+                    'cause': cls._diagnosis_cause(error, project),
+                    'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.',
+                    'next_step': cls.DIAGNOSIS_NEXT_STEP
                 }
         try:
             pending = json.loads(pending_path.read_text(encoding='utf-8'))
@@ -606,8 +615,9 @@ class CoreEngine:
             return {
                 'status': 'BLOCKED', 'repairable': False,
                 'reason': str(error) if isinstance(error, StateError) else 'STATE_DIAGNOSIS_FAILED',
-                'cause': 'AIPM could not prove that this state matches the supported safe-repair pattern.',
-                'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.'
+                'cause': cls._diagnosis_cause(error, project),
+                'remedy': 'Keep the state unchanged and restore a verified Shared Project State backup or request a manual integrity review.',
+                'next_step': cls.DIAGNOSIS_NEXT_STEP
             }
 
     def repair_pending_task_commit(self, project: ManagedProject) -> dict[str, Any]:
@@ -646,50 +656,8 @@ class CoreEngine:
                 self._validate_manifest(current, project)
                 recovered = [{'task_id': task_id, 'record': copy.deepcopy(current['tasks'][task_id])} for task_id in diagnosis['untracked_tasks']]
                 new_rev = diagnosis['pending_revision']
-                event = {
-                    'schema_version': '1.0',
-                    'project_id': project.project_id,
-                    'revision': new_rev,
-                    'request_id': f"req-reconcile-{uuid4().hex[:12]}",
-                    'command': 'task.reconcile',
-                    'actor': 'aipm-state-repair',
-                    'idempotency_key': None,
-                    'input': {
-                        'task_id': current.get('task_id'),
-                        'next_command': None,
-                        'next_input': None,
-                        'recovered_tasks': recovered,
-                    }
-                }
-                self._validate_event(event, project)
-                K = new_rev - 1
-                history_records = self._history(project, K)
-                manifest = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
-                for rec in sorted(history_records, key=lambda item: item['revision']):
-                    if rec['command'] in self.TASK_COMMANDS:
-                        self._apply_task(manifest, rec['command'], rec['input'])
-                self._apply_task(manifest, event['command'], event['input'])
-                manifest['schema_version'] = '1.1'
-                manifest['revision'] = new_rev
-                manifest['project_id'] = project.project_id
-                manifest['state_health'] = current.get('state_health', 'HEALTHY')
-                manifest['last_verified_action'] = current.get('last_verified_action', 'State Reconciled')
-                manifest['updated_by'] = event['actor']
-                manifest['updated_at'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
-                for opt_field in ('active_phase', 'next_action', 'branch', 'head_sha', 'diff_fingerprint'):
-                    manifest[opt_field] = current.get(opt_field)
-                manifest.setdefault('diff_fingerprint', None)
-                self._validate_manifest(manifest, project)
-
-                event_path = history_root / 'Events' / f"{new_rev:020d}.json"
-                _atomic_json(event_path, event)
-                _atomic_json(state_root / 'State-Manifest.json', manifest)
-
-                state = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
-                self._validate_manifest(state, project)
-                history = self._history(project, state['revision'])
-                if state['revision'] != new_rev or not any(item == event for item in history):
-                    raise StateError('Repaired state failed post-commit integrity checks')
+                event, manifest = self._build_reconcile(project, current, recovered, new_rev)
+                state = self._publish_reconcile(project, event, manifest, new_rev)
                 return {
                     'schema_version': '1.0',
                     'status': 'PASS',
@@ -777,6 +745,495 @@ class CoreEngine:
         except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
             return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': str(error) if isinstance(error, StateError) else 'STATE_REPAIR_FAILED', 'backup': str(backup)}
 
+    # ------------------------------------------------------------------
+    # Reconcile helpers shared by state-repair and state-normalize.
+    # ------------------------------------------------------------------
+    def _build_reconcile(self, project: ManagedProject, current: dict[str, Any], recovered: list[dict[str, Any]], new_rev: int) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Build the explicit task.reconcile event and the manifest it produces from history."""
+        event = {
+            'schema_version': '1.0',
+            'project_id': project.project_id,
+            'revision': new_rev,
+            'request_id': f"req-reconcile-{uuid4().hex[:12]}",
+            'command': 'task.reconcile',
+            'actor': 'aipm-state-repair',
+            'idempotency_key': None,
+            'input': {
+                'task_id': current.get('task_id'),
+                'next_command': None,
+                'next_input': None,
+                'recovered_tasks': recovered,
+            }
+        }
+        self._validate_event(event, project)
+        history_records = self._history(project, new_rev - 1)
+        manifest = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+        for rec in sorted(history_records, key=lambda item: item['revision']):
+            if rec['command'] in self.TASK_COMMANDS:
+                self._apply_task(manifest, rec['command'], rec['input'])
+        self._apply_task(manifest, event['command'], event['input'])
+        manifest['schema_version'] = '1.1'
+        manifest['revision'] = new_rev
+        manifest['project_id'] = project.project_id
+        manifest['state_health'] = current.get('state_health', 'HEALTHY')
+        manifest['last_verified_action'] = current.get('last_verified_action', 'State Reconciled')
+        manifest['updated_by'] = event['actor']
+        manifest['updated_at'] = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+        for opt_field in ('active_phase', 'next_action', 'branch', 'head_sha', 'diff_fingerprint'):
+            manifest[opt_field] = current.get(opt_field)
+        manifest.setdefault('diff_fingerprint', None)
+        self._validate_manifest(manifest, project)
+        return event, manifest
+
+    def _publish_reconcile(self, project: ManagedProject, event: dict[str, Any], manifest: dict[str, Any], new_rev: int) -> dict[str, Any]:
+        """Publish a reconcile event and manifest, then verify both from disk."""
+        state_root = project.state_root
+        event_path = state_root / 'History' / 'Events' / f"{new_rev:020d}.json"
+        _atomic_json(event_path, event)
+        _atomic_json(state_root / 'State-Manifest.json', manifest)
+        state = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+        self._validate_manifest(state, project)
+        history = self._history(project, state['revision'])
+        if state['revision'] != new_rev or not any(item == event for item in history):
+            raise StateError('Repaired state failed post-commit integrity checks')
+        return state
+
+    @staticmethod
+    def _create_state_backup(project: ManagedProject, reason: str) -> tuple[Path, dict[str, str]]:
+        """Create a hash-verified backup of the manifest, pending commit and event files."""
+        state_root = project.state_root
+        history_root = state_root / 'History'
+        backup = history_root / 'Snapshots' / ('AIPM-State-Repair-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex[:8])
+        backup.mkdir(parents=True, exist_ok=False)
+        files = [state_root / 'State-Manifest.json']
+        pending_path = history_root / 'Pending-Commit.json'
+        if pending_path.is_file():
+            files.append(pending_path)
+        files.extend(sorted((history_root / 'Events').glob('*.json')))
+        checksums: dict[str, str] = {}
+        for source in files:
+            relative = source.relative_to(state_root)
+            destination = backup / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+            checksums[relative.as_posix()] = hashlib.sha256(destination.read_bytes()).hexdigest()
+        backup_manifest = {'schema_version': '1.0', 'repair': reason, 'project_id': project.project_id, 'created_at': datetime.now(timezone.utc).isoformat(), 'files': checksums}
+        (backup / 'Backup-Manifest.json').write_text(json.dumps(backup_manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+        return backup, checksums
+
+    @staticmethod
+    def _error_detail(error: BaseException, project: ManagedProject) -> str:
+        """Return a short, path-sanitized explanation of a validation failure."""
+        if isinstance(error, StateError):
+            text = str(error)
+            for root in (project.state_root, project.root):
+                text = text.replace(str(root), '<project>')
+            return text[:200]
+        if isinstance(error, OSError):
+            return 'A state file could not be read.'
+        if isinstance(error, json.JSONDecodeError):
+            return 'A state file contains invalid JSON.'
+        return error.__class__.__name__
+
+    # ------------------------------------------------------------------
+    # Read-only inspection (state-validate).
+    # ------------------------------------------------------------------
+    _TASK_ID_PATTERN = re.compile(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}')
+    _TEXT_LIMIT_BYTES = 1024 * 1024
+
+    @staticmethod
+    def _metadata_hint(field: str) -> str:
+        return f"Tasks/<task-id>/Metadata.json -> task_record.{field} (or {field}); otherwise supply it manually"
+
+    @classmethod
+    def _task_record_findings(cls, task_id: str, task: Any) -> list[dict[str, Any]]:
+        """Return field-level findings that mirror _validate_task_record without mutating the input."""
+        findings: list[dict[str, Any]] = []
+
+        def add(severity: str, code: str, field: str, message: str, by: str = 'state-normalize', hint: str | None = None) -> None:
+            findings.append({'severity': severity, 'code': code, 'task_id': task_id, 'field': field, 'message': message, 'repairable_by': by, 'source_hint': hint})
+
+        if not isinstance(task, dict):
+            add('ERROR', 'TASK_FIELD_INVALID', '*', 'Task record is not an object.', by='manual')
+            return findings
+        override = task.get('status_override')
+        if override not in (None, 'COMPLETE'):
+            add('WARNING', 'TASK_STATUS_OVERRIDE_INVALID', 'status_override', f"Value {str(override)[:60]!r} is not allowed; Core normalizes it when the record is read.")
+        probe = copy.deepcopy(task)
+        try:
+            cls._validate_task_record(probe)
+        except StateError as error:
+            for field in ('title', 'scope'):
+                if field not in task:
+                    add('ERROR', 'TASK_FIELD_MISSING', field, f'Task record has no {field}.', hint=cls._metadata_hint(field))
+                elif not isinstance(task[field], str) or not task[field].strip():
+                    add('ERROR', 'TASK_FIELD_INVALID', field, f'Task {field} must be a non-empty string.', hint=cls._metadata_hint(field))
+            title_ok = isinstance(task.get('title'), str) and task['title'].strip() and isinstance(task.get('scope'), str) and task['scope'].strip()
+            if not title_ok and (not isinstance(task.get('plan'), str) or not task['plan'].strip()):
+                add('ERROR', 'TASK_FIELD_INVALID', 'plan', 'Task plan is missing or empty and cannot be generated without a title and scope.')
+            if task.get('report') is not None and not isinstance(task.get('report'), str):
+                add('ERROR', 'TASK_FIELD_INVALID', 'report', 'Task report must be text.')
+            blockers = task.get('blockers')
+            if blockers is not None and (not isinstance(blockers, list) or any(not isinstance(text, str) or not text.strip() for text in blockers)):
+                add('ERROR', 'TASK_FIELD_INVALID', 'blockers', 'Task blockers must be a list of non-empty text values.')
+            if 'verification' not in task:
+                add('ERROR', 'TASK_FIELD_MISSING', 'verification', 'Task record has no verification key (use null when nothing was verified).', hint='Tasks/<task-id>/Metadata.json -> task_record.verification; otherwise null')
+            else:
+                verification = task['verification']
+                valid = verification is None or isinstance(verification, str) or (isinstance(verification, dict) and isinstance(verification.get('evidence'), str) and bool(verification['evidence'].strip()))
+                if not valid:
+                    add('ERROR', 'TASK_VERIFICATION_INVALID', 'verification', 'Verification must be null, text, or an object with a result and non-empty evidence.')
+            for field in ('last_verified_action', 'next_action'):
+                if field in task and (not isinstance(task[field], str) or not task[field].strip()):
+                    add('ERROR', 'TASK_CHECKPOINT_INVALID', field, f'{field} must be non-empty text when present.', by='manual')
+            for field in ('completed_work', 'changed_files', 'test_results'):
+                if field in task and (not isinstance(task[field], list) or len(task[field]) > 100 or any(not isinstance(value, str) or not value.strip() for value in task[field])):
+                    add('ERROR', 'TASK_CHECKPOINT_INVALID', field, f'{field} must be a list of at most 100 non-empty text values.', by='manual')
+            if not any(item['severity'] == 'ERROR' for item in findings):
+                add('ERROR', 'TASK_FIELD_INVALID', '*', f'The task record failed validation: {error}.', by='manual')
+        else:
+            for field in sorted(set(probe) | set(task)):
+                if field != 'status_override' and probe.get(field) != task.get(field):
+                    add('WARNING', 'TASK_FIELD_NORMALIZED', field, f'{field} is stored in a legacy shape; Core normalizes it when the record is read.')
+        return findings
+
+    @classmethod
+    def _read_event_files(cls, project: ManagedProject) -> tuple[dict[int, dict[str, Any]], list[tuple[str, str]]]:
+        events: dict[int, dict[str, Any]] = {}
+        problems: list[tuple[str, str]] = []
+        directory = project.state_root / 'History' / 'Events'
+        if directory.is_dir():
+            for path in sorted(directory.glob('*.json')):
+                try:
+                    event = json.loads(path.read_text(encoding='utf-8'))
+                    cls._validate_event(event, project)
+                except (OSError, UnicodeError, ValueError) as error:
+                    problems.append((path.name, cls._error_detail(error, project)))
+                    continue
+                if event['revision'] in events:
+                    problems.append((path.name, 'Duplicate History Revision'))
+                    continue
+                events[event['revision']] = event
+        return events, problems
+
+    @classmethod
+    def inspect_state(cls, project: ManagedProject) -> dict[str, Any]:
+        """Read-only, field-level state report; never writes, backs up, or normalizes files."""
+        findings: list[dict[str, Any]] = []
+        result: dict[str, Any] = {'schema_version': '1.0', 'status': 'BLOCKED', 'project_id': project.project_id, 'manifest_revision': None, 'max_event_revision': None, 'missing_event_revisions': [], 'pending_commit_present': False, 'findings': findings, 'summary': ''}
+
+        def add(severity: str, code: str, message: str, *, task_id: str | None = None, field: str | None = None, by: str = 'manual', hint: str | None = None) -> None:
+            findings.append({'severity': severity, 'code': code, 'task_id': task_id, 'field': field, 'message': message, 'repairable_by': by, 'source_hint': hint})
+
+        def finish() -> dict[str, Any]:
+            errors = [item for item in findings if item['severity'] == 'ERROR']
+            result['status'] = 'BLOCKED' if errors else 'PASS'
+            if errors:
+                result['summary'] = f"{len(errors)} blocking problem(s) found; first: {errors[0]['message']}"
+            elif findings:
+                result['summary'] = f"No blocking problem; {len(findings)} advisory finding(s)."
+            else:
+                result['summary'] = 'State is valid and matches event history.'
+            return result
+
+        try:
+            validate_managed_project(project)
+        except StateError as error:
+            add('ERROR', 'PROJECT_STATE_PATH_INVALID', cls._error_detail(error, project))
+            return finish()
+        state_root = project.state_root
+        result['pending_commit_present'] = (state_root / 'History' / 'Pending-Commit.json').is_file()
+        if result['pending_commit_present']:
+            add('WARNING', 'PENDING_COMMIT_PRESENT', 'An interrupted Pending-Commit.json exists; use state-diagnose and state-repair first.', by='state-repair')
+        try:
+            raw = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, ValueError) as error:
+            add('ERROR', 'MANIFEST_UNREADABLE', 'State-Manifest.json cannot be read: ' + cls._error_detail(error, project))
+            return finish()
+        if not isinstance(raw, dict):
+            add('ERROR', 'MANIFEST_SCHEMA_INVALID', 'State-Manifest.json is not a JSON object.')
+            return finish()
+        if type(raw.get('revision')) is int:
+            result['manifest_revision'] = raw['revision']
+        shell = copy.deepcopy(raw)
+        shell['tasks'] = {}
+        try:
+            cls._validate_manifest(shell, project)
+        except StateError as error:
+            add('ERROR', 'MANIFEST_SCHEMA_INVALID', f'The manifest header failed validation: {error}.')
+        tasks = raw.get('tasks', {})
+        if not isinstance(tasks, dict):
+            add('ERROR', 'MANIFEST_SCHEMA_INVALID', 'The manifest tasks value is not an object.')
+            tasks = {}
+        task_errors: set[str] = set()
+        for task_id, task in sorted(tasks.items()):
+            if not isinstance(task_id, str) or not cls._TASK_ID_PATTERN.fullmatch(task_id):
+                add('ERROR', 'TASK_ID_INVALID', f'Task identity {str(task_id)[:80]!r} is not valid.', task_id=str(task_id))
+                task_errors.add(task_id)
+            task_findings = cls._task_record_findings(str(task_id), task)
+            if any(item['severity'] == 'ERROR' for item in task_findings):
+                task_errors.add(task_id)
+            findings.extend(task_findings)
+        events, problems = cls._read_event_files(project)
+        for name, message in problems:
+            add('ERROR', 'HISTORY_EVENT_INVALID', f'{name}: {message}')
+        maximum = max(events) if events else 0
+        result['max_event_revision'] = maximum
+        missing = sorted(set(range(1, maximum + 1)) - set(events))
+        result['missing_event_revisions'] = missing
+        if missing:
+            add('ERROR', 'HISTORY_NON_CONTIGUOUS', f'History events are missing revision(s): {missing[:10]}.')
+        if not problems and not missing:
+            manifest_revision = raw.get('revision')
+            if type(manifest_revision) is int and manifest_revision > maximum:
+                add('WARNING', 'MANIFEST_AHEAD_OF_HISTORY', f'State-Manifest.json is at revision {manifest_revision} but History/Events ends at {maximum}; it was probably edited without Core.', by='state-normalize' if task_errors else 'state-repair')
+            elif type(manifest_revision) is int and manifest_revision < maximum:
+                add('WARNING', 'MANIFEST_BEHIND_HISTORY', f'State-Manifest.json is at revision {manifest_revision} but History/Events ends at {maximum}.', by='state-repair')
+            expected: dict[str, Any] = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+            try:
+                for revision in range(1, maximum + 1):
+                    record = events[revision]
+                    if record['command'] in cls.TASK_COMMANDS:
+                        cls._apply_task(expected, record['command'], record['input'])
+            except (StateError, TypeError, KeyError) as error:
+                add('ERROR', 'HISTORY_REPLAY_FAILED', 'Event history cannot be replayed: ' + cls._error_detail(error, project))
+            else:
+                for task_id in sorted(expected['tasks']):
+                    if task_id not in tasks:
+                        add('ERROR', 'TASK_MISSING_FROM_MANIFEST', f'Task {task_id} exists in history but not in the manifest.', task_id=task_id)
+                for task_id in sorted(tasks):
+                    if task_id in task_errors or not isinstance(task_id, str):
+                        continue
+                    if task_id not in expected['tasks']:
+                        add('WARNING', 'TASK_NOT_IN_HISTORY', 'Task is in the manifest but has no creating event.', task_id=task_id, by='state-repair')
+                        continue
+                    probe = copy.deepcopy(tasks[task_id])
+                    try:
+                        cls._validate_task_record(probe)
+                    except StateError:
+                        continue
+                    if probe != expected['tasks'][task_id] and not cls._legacy_task_normalization_matches_history({task_id: tasks[task_id]}, {task_id: probe}, {task_id: expected['tasks'][task_id]}):
+                        add('WARNING', 'TASK_DRIFTED_FROM_HISTORY', 'Task record differs from the state rebuilt from event history.', task_id=task_id, by='state-repair')
+        active = raw.get('task_id')
+        if isinstance(active, str) and active and active not in tasks:
+            add('WARNING', 'ACTIVE_TASK_POINTER_INVALID', f'The active task {active} is not in the manifest.')
+        return finish()
+
+    # ------------------------------------------------------------------
+    # Guided repair of malformed task records (state-normalize).
+    # ------------------------------------------------------------------
+    @classmethod
+    def _read_task_metadata(cls, project: ManagedProject, task_id: str) -> tuple[dict[str, Any] | None, str | None]:
+        task_dir = project.state_root / 'Tasks' / task_id
+        path = task_dir / 'Metadata.json'
+        try:
+            canonical_dir = _canonical(task_dir)
+            if not _inside(canonical_dir, _canonical(project.state_root)):
+                return None, 'Task folder is outside the project state root.'
+            if not path.is_file() or path.is_symlink():
+                return None, 'Metadata.json was not found.'
+            if path.stat().st_size > cls._TEXT_LIMIT_BYTES:
+                return None, 'Metadata.json is larger than 1 MiB.'
+            metadata = json.loads(path.read_text(encoding='utf-8'))
+        except (StateError, OSError, UnicodeError, ValueError):
+            return None, 'Metadata.json could not be read safely.'
+        if not isinstance(metadata, dict) or metadata.get('task_id') != task_id:
+            return None, 'Metadata.json does not belong to this task.'
+        owner = metadata.get('project')
+        if isinstance(owner, dict) and owner.get('project_id') not in (None, project.project_id):
+            return None, 'Metadata.json belongs to a different project.'
+        return metadata, None
+
+    @classmethod
+    def _resolve_task_text(cls, project: ManagedProject, task_id: str, value: Any) -> str | None:
+        """Return text from a task-folder file referenced by a path-like value; never follow unsafe paths."""
+        if not isinstance(value, str) or not value.strip() or len(value) > 260 or '\n' in value or '\x00' in value:
+            return None
+        reference = value.strip().replace('\\', '/')
+        if not reference.lower().endswith(('.md', '.txt')) or reference.startswith('/') or re.match(r'^[A-Za-z]:', reference) or '..' in reference.split('/'):
+            return None
+        task_dir = project.state_root / 'Tasks' / task_id
+        for base in (project.state_root, task_dir):
+            candidate = base / reference
+            try:
+                if not candidate.is_file():
+                    continue
+                canonical = _canonical(candidate)
+                if not _inside(canonical, _canonical(task_dir)) or canonical.stat().st_size > cls._TEXT_LIMIT_BYTES:
+                    continue
+                text = canonical.read_text(encoding='utf-8')
+            except (StateError, OSError, UnicodeError):
+                continue
+            if text.strip():
+                return text
+        return None
+
+    @classmethod
+    def _normalize_task_record(cls, project: ManagedProject, task_id: str, record: dict[str, Any], title_override: str | None) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, str]]]:
+        """Derive a valid record using only the record itself and the task's own Metadata.json and files."""
+        candidate = copy.deepcopy(record)
+        changes: list[dict[str, Any]] = []
+        manual: list[dict[str, str]] = []
+        metadata, metadata_note = cls._read_task_metadata(project, task_id)
+        task_record = metadata.get('task_record') if isinstance(metadata, dict) and isinstance(metadata.get('task_record'), dict) else {}
+        metadata_source = f'Tasks/{task_id}/Metadata.json'
+        missing = object()
+
+        def meta_text(field: str) -> str | None:
+            for container in (task_record, metadata or {}):
+                value = container.get(field)
+                if isinstance(value, str) and value.strip():
+                    return value
+            return None
+
+        def put(field: str, value: Any, source: str) -> None:
+            old = candidate.get(field, missing)
+            candidate[field] = value
+            changes.append({'field': field, 'old': None if old is missing else old, 'old_present': old is not missing, 'new': value, 'source': source})
+
+        def valid_text(field: str) -> bool:
+            return isinstance(candidate.get(field), str) and bool(candidate[field].strip())
+
+        if not valid_text('title'):
+            if meta_text('title'):
+                put('title', meta_text('title'), metadata_source)
+            elif title_override and title_override.strip():
+                put('title', title_override.strip(), 'command line --title')
+            else:
+                manual.append({'field': 'title', 'message': 'No title is recorded; add Metadata.json for this task or supply --title.' + (f' ({metadata_note})' if metadata_note else '')})
+        if not valid_text('scope'):
+            if meta_text('scope'):
+                put('scope', meta_text('scope'), metadata_source)
+            else:
+                manual.append({'field': 'scope', 'message': 'No scope is recorded; add Metadata.json for this task.' + (f' ({metadata_note})' if metadata_note else '')})
+        for field in ('plan', 'report'):
+            text = cls._resolve_task_text(project, task_id, candidate.get(field))
+            if text is not None:
+                put(field, text, f'file referenced by {field}')
+        if 'verification' not in candidate:
+            recorded = task_record.get('verification') if isinstance(task_record.get('verification'), str) and task_record['verification'].strip() else None
+            put('verification', recorded, metadata_source if recorded else 'default (nothing recorded)')
+        override = candidate.get('status_override')
+        if isinstance(override, str) and override.strip().upper() in {'COMPLETE', 'COMPLETED', 'COMPLETE & VERIFIED', 'COMPLETED & VERIFIED'} and override != 'COMPLETE':
+            put('status_override', 'COMPLETE', 'Core status vocabulary')
+        if manual:
+            return candidate, changes, manual
+        probe = copy.deepcopy(candidate)
+        try:
+            cls._validate_task_record(probe)
+        except StateError as error:
+            manual.append({'field': '*', 'message': f'The record still fails validation: {error}.'})
+        else:
+            for field in sorted(set(probe) | set(candidate)):
+                if probe.get(field, missing) != candidate.get(field, missing):
+                    old = candidate.get(field, missing)
+                    changes.append({'field': field, 'old': None if old is missing else old, 'old_present': old is not missing, 'new': probe.get(field), 'source': 'Core normalization'})
+            candidate = probe
+        return candidate, changes, manual
+
+    @classmethod
+    def _plan_normalization(cls, project: ManagedProject, title_override: str | None) -> dict[str, Any]:
+        validate_managed_project(project)
+        state_root = project.state_root
+        if (state_root / 'History' / 'Pending-Commit.json').exists():
+            raise StateError('PENDING_COMMIT_PRESENT')
+        raw = json.loads((state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+        shell = copy.deepcopy(raw)
+        if not isinstance(shell, dict) or not isinstance(shell.get('tasks', {}), dict):
+            raise StateError('Invalid State Manifest')
+        tasks = raw.get('tasks', {})
+        shell['tasks'] = {}
+        cls._validate_manifest(shell, project)
+        events, problems = cls._read_event_files(project)
+        if problems:
+            raise StateError(problems[0][1])
+        maximum = max(events) if events else 0
+        if set(events) != set(range(1, maximum + 1)):
+            raise StateError('Non-contiguous history revisions detected')
+        expected: dict[str, Any] = {'tasks': {}, 'task_id': None, 'task_status': 'NOT-STARTED'}
+        for revision in range(1, maximum + 1):
+            if events[revision]['command'] in cls.TASK_COMMANDS:
+                cls._apply_task(expected, events[revision]['command'], events[revision]['input'])
+        for task_id in expected['tasks']:
+            if task_id not in tasks:
+                raise StateError(f'Historical task {task_id} is missing from manifest')
+        malformed: list[str] = []
+        for task_id, task in sorted(tasks.items()):
+            if not isinstance(task_id, str) or not cls._TASK_ID_PATTERN.fullmatch(task_id) or not isinstance(task, dict):
+                raise StateError('Invalid Task State')
+            try:
+                cls._validate_task_record(copy.deepcopy(task))
+            except StateError:
+                malformed.append(task_id)
+        lacking_title = [task_id for task_id in malformed if not (isinstance(tasks[task_id].get('title'), str) and tasks[task_id]['title'].strip())]
+        override = title_override if len(lacking_title) == 1 else None
+        candidates: dict[str, dict[str, Any]] = {}
+        changes: dict[str, list[dict[str, Any]]] = {}
+        manual: dict[str, list[dict[str, str]]] = {}
+        for task_id in malformed:
+            candidate, task_changes, task_manual = cls._normalize_task_record(project, task_id, tasks[task_id], override)
+            candidates[task_id] = candidate
+            changes[task_id] = task_changes
+            if task_manual:
+                manual[task_id] = task_manual
+        recovered: list[dict[str, Any]] = []
+        for task_id in sorted(tasks):
+            if task_id in malformed:
+                recovered.append({'task_id': task_id, 'record': copy.deepcopy(candidates[task_id])})
+                continue
+            normalized = copy.deepcopy(tasks[task_id])
+            cls._validate_task_record(normalized)
+            if task_id not in expected['tasks'] or (normalized != expected['tasks'][task_id] and not cls._legacy_task_normalization_matches_history({task_id: tasks[task_id]}, {task_id: normalized}, {task_id: expected['tasks'][task_id]})):
+                recovered.append({'task_id': task_id, 'record': normalized})
+        return {'raw': raw, 'malformed': malformed, 'candidates': candidates, 'changes': changes, 'manual': manual, 'recovered': recovered, 'committed_events': maximum, 'pending_revision': maximum + 1}
+
+    @staticmethod
+    def _plan_signature(plan: dict[str, Any]) -> str:
+        return hashlib.sha256(json.dumps({'k': plan['committed_events'], 'revision': plan['raw'].get('revision'), 'malformed': plan['malformed'], 'recovered': plan['recovered']}, sort_keys=True, default=str).encode('utf-8')).hexdigest()
+
+    def normalize_task_records(self, project: ManagedProject, *, confirm: bool = False, title_override: str | None = None) -> dict[str, Any]:
+        """Preview (default) or apply a backed-up reconcile event that repairs malformed task records."""
+        try:
+            plan = self._plan_normalization(project, title_override)
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+            return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': str(error) if isinstance(error, StateError) else 'STATE_NORMALIZATION_FAILED', 'detail': self._error_detail(error, project)}
+        report: dict[str, Any] = {
+            'schema_version': '1.0', 'status': 'PASS', 'applied': False,
+            'normalized_tasks': list(plan['malformed']),
+            'recovered_tasks': [item['task_id'] for item in plan['recovered']],
+            'pending_revision': plan['pending_revision'],
+            'changes': {task_id: [{'field': item['field'], 'old': self._shorten(item['old']), 'new': self._shorten(item['new']), 'source': item['source']} for item in items] for task_id, items in plan['changes'].items()},
+            'manual_fields_required': plan['manual'],
+        }
+        if plan['manual']:
+            return {**report, 'status': 'BLOCKED', 'reason': 'MANUAL_FIELDS_REQUIRED'}
+        if not plan['malformed']:
+            return {**report, 'reason': 'NO_MALFORMED_TASKS'}
+        if not confirm:
+            return {**report, 'reason': 'DRY_RUN'}
+        try:
+            backup, _checksums = self._create_state_backup(project, 'TASK_RECORD_NORMALIZATION')
+        except (OSError, UnicodeError, ValueError) as error:
+            return {**report, 'status': 'BLOCKED', 'reason': 'STATE_BACKUP_FAILED', 'detail': self._error_detail(error, project)}
+        try:
+            confirmed = self._plan_normalization(project, title_override)
+            if confirmed['manual'] or self._plan_signature(confirmed) != self._plan_signature(plan):
+                raise StateError('State Changed After Diagnosis; No Repair Was Applied')
+            event, manifest = self._build_reconcile(project, plan['raw'], plan['recovered'], plan['pending_revision'])
+            state = self._publish_reconcile(project, event, manifest, plan['pending_revision'])
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError) as error:
+            return {**report, 'status': 'BLOCKED', 'reason': str(error) if isinstance(error, StateError) else 'STATE_REPAIR_FAILED', 'backup': str(backup)}
+        return {**report, 'applied': True, 'reason': 'NORMALIZED', 'revision': state['revision'], 'backup': str(backup)}
+
+    @staticmethod
+    def _shorten(value: Any) -> Any:
+        if isinstance(value, str) and len(value) > 160:
+            return value[:157] + '...'
+        if isinstance(value, (list, dict)):
+            text = json.dumps(value, ensure_ascii=False)
+            return text if len(text) <= 160 else text[:157] + '...'
+        return value
+
     def _commit(self, project: ManagedProject, manifest: dict[str, Any], event: dict[str, Any]) -> None:
         pending = project.state_root / "History" / "Pending-Commit.json"
         _atomic_json(pending, {"schema_version": "1.0", "manifest": manifest, "event": event})
@@ -806,12 +1263,12 @@ class CoreEngine:
             manifest.setdefault("diff_fingerprint", None)
             if not isinstance(manifest["tasks"], dict):
                 raise StateError("Invalid Task State")
-        except (OSError, ValueError, KeyError, TypeError):
-            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_STATE"}
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_STATE", "detail": self._error_detail(error, project)}
         try:
             history = self._history(project, manifest["revision"])
-        except (OSError, ValueError, KeyError, TypeError):
-            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_HISTORY"}
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_HISTORY", "detail": self._error_detail(error, project)}
         if command.command == "state.read":
             return {"schema_version": "1.0", "status": "PASS", "state": manifest, "revision": manifest["revision"]}
         if command.command == 'task.read':

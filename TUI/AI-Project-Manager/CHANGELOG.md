@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.6] — State Recovery Diagnostics And Guided Normalization
+
+- Added support for `state-validate` and `state-normalize` Core commands in `AipmClient.psm1`.
+- Enhanced `Invoke-AipmStateRecovery` in `App.psm1` to display exact technical reasons and specific task/field findings when project state cannot be repaired by standard event replay.
+- Added interactive guided normalization menu (`Preview Repair`, `Back Up And Normalize`, `Leave Unchanged`) allowing direct in-TUI recovery of malformed task records with verified safety backups.
+- Synchronized TUI version with platform `1.8.6`.
+
 ## [1.8.5] — Browser Environment Distribution Synchronization
 
 - Synchronized TUI metadata with platform `1.8.5` for the Browser Environment Manager preflight update. No TUI runtime behavior changed.
