@@ -1,5 +1,13 @@
 # AI Project Manager Support Matrix
 
+## v1.8.7 Local Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Multi-host package distribution | Bundled Python / local build | PASS | Six distribution tests passed. ChatGPT/Codex, Claude and Antigravity archives v1.8.7 passed inventory, manifest and SHA-256 validation. Antigravity Skills are under `.agents/skills/`; native installer/runtime remains unverified. Packages are not installed. |
+| Capability registry | Bundled Python | PASS | Registry and provenance validation passed for 14 Skills and 1 standalone Prompt. |
+| Full repository regression | Not run | NOT_RUN | Only the focused plugin distribution suite was run. |
+
 ## v1.8.2 Local Repository Update
 
 | Component | Environment | Status | Evidence |

@@ -1,5 +1,12 @@
 # AIPM Change Log
 
+## [1.8.7] — Antigravity Skills Bundle Layout (Repository Update; Not Published)
+
+- Replaced the unrecognized Antigravity manifest with the documented `.agents/skills/` discovery layout and marked the Skills folder layout verified; native installation and runtime remain unverified.
+- Updated the multi-host builder and archive validator for the Antigravity-specific Skills root, including extraction guidance.
+- Rebuilt and validated the ChatGPT/Codex, Claude, and Antigravity local archives at `1.8.7`; not installed or published.
+- No GitHub push, tag, or Release was created.
+
 ## [1.8.6] — State Recovery Diagnostics, Guided Task Normalization, And Transient Routing (Repository Update; Not Published)
 
 - Added read-only `state-validate` command (`CoreEngine.inspect_state`) providing detailed, non-destructive field-level findings and source hints when project state cannot be loaded.

@@ -34,13 +34,14 @@ class PluginDistributionTests(unittest.TestCase):
         self.assertEqual(profiles["antigavity"]["archive_prefix"], "AIPM-Antigavity-Plugin")
         self.assertEqual(profiles["chatgpt"]["format_status"], "FORMAT_VERIFIED")
         self.assertEqual(profiles["claude"]["format_status"], "FORMAT_VERIFIED")
-        self.assertEqual(profiles["antigavity"]["format_status"], "FORMAT_UNVERIFIED")
+        self.assertEqual(profiles["antigavity"]["format_status"], "FORMAT_VERIFIED")
         self.assertEqual(
             profiles["chatgpt"]["manifest_paths"],
             ["plugin.json", ".codex-plugin/plugin.json"],
         )
         self.assertEqual(profiles["claude"]["manifest_paths"], [".claude-plugin/plugin.json"])
-        self.assertEqual(profiles["antigavity"]["manifest_paths"], ["antigavity-plugin.json"])
+        self.assertEqual(profiles["antigavity"]["manifest_paths"], [])
+        self.assertEqual(profiles["antigavity"]["skill_root"], ".agents/skills")
 
     def test_builds_all_profiles_with_full_inventory(self) -> None:
         builder = load_builder()
@@ -64,7 +65,8 @@ class PluginDistributionTests(unittest.TestCase):
                     self.assertNotIn("skills/import-memory/SKILL.md", names)
                     self.assertNotIn("skills/morning/SKILL.md", names)
                     for skill in catalog["skills"]:
-                        self.assertIn(f"skills/{skill['slug']}/SKILL.md", names)
+                        prefix = ".agents/skills" if result["platform"] == "antigavity" else "skills"
+                        self.assertIn(f"{prefix}/{skill['slug']}/SKILL.md", names)
 
     def test_chatgpt_archive_has_uploadable_manifests_and_skill_front_matter(self) -> None:
         builder = load_builder()

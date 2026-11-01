@@ -215,7 +215,8 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
         source_root = root / _safe_relative(skill["path"])
         for relative, digest in skill["files"].items():
             source = source_root / _safe_relative(relative)
-            _copy_file(source, stage / "skills" / slug / _safe_relative(relative), digest, _distribution_skill_bytes(profile, skill, relative, source))
+            skill_root = Path(profile.get("skill_root", "skills"))
+            _copy_file(source, stage / skill_root / slug / _safe_relative(relative), digest, _distribution_skill_bytes(profile, skill, relative, source))
     prompt_root = root / "02-Prompt-General"
     for prompt in catalog["standalone_prompts"]:
         source = root / _safe_relative(prompt["path"])
@@ -232,10 +233,14 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
         icon.parent.mkdir(parents=True, exist_ok=True)
         icon.write_bytes(CHATGPT_ICON.encode("utf-8"))
     (stage / "VERSION").write_text(catalog["platform_version"] + "\n", encoding="utf-8")
+    placement = "" if not profile.get("skill_root") else (
+        f"\nFor Antigravity, extract `.agents/skills/` into the workspace root so the agent discovers each Skill. "
+        "This bundle has no native Plugin installer; runtime discovery must be checked in Antigravity.\n"
+    )
     (stage / "README.md").write_text(
         f"# AI Project Manager {profile['display_name']}\n\n"
         "This local archive contains approved AIPM Skills and Prompts. It is not installed or published and does not grant automatic access to local AIPM projects.\n\n"
-        f"Project Website: [{PROJECT_URL}]({PROJECT_URL})\n",
+        f"Project Website: [{PROJECT_URL}]({PROJECT_URL})\n" + placement,
         encoding="utf-8",
     )
 
@@ -251,7 +256,8 @@ def _expected_files(catalog: dict[str, Any], profile: dict[str, Any]) -> set[str
     for skill in catalog["skills"]:
         if skill["slug"] in EXCLUDED_SKILLS:
             raise PluginBuildError("Registry contains an excluded Skill")
-        expected.update(f"skills/{skill['slug']}/{relative}" for relative in skill["files"])
+        skill_root = Path(profile.get("skill_root", "skills"))
+        expected.update((skill_root / skill["slug"] / relative).as_posix() for relative in skill["files"])
     for prompt in catalog["standalone_prompts"]:
         relative = Path(prompt["path"]).relative_to("02-Prompt-General").as_posix()
         expected.add(f"prompts/{relative}")
@@ -276,7 +282,8 @@ def _validate_stage(root: Path, stage: Path, profile: dict[str, Any], catalog: d
         for relative, digest in skill["files"].items():
             source = root / _safe_relative(skill["path"]) / _safe_relative(relative)
             expected_bytes = _distribution_skill_bytes(profile, skill, relative, source)
-            actual = (stage / "skills" / skill["slug"] / relative).read_bytes()
+            skill_root = Path(profile.get("skill_root", "skills"))
+            actual = (stage / skill_root / skill["slug"] / relative).read_bytes()
             if actual != (source.read_bytes() if expected_bytes is None else expected_bytes):
                 raise PluginBuildError(f"Generated Skill bytes drifted: {skill['slug']}")
     for prompt in catalog["standalone_prompts"]:
@@ -373,7 +380,8 @@ def validate_archive(root: Path | str, archive: Path | str, platform: str) -> di
             for relative, digest in skill["files"].items():
                 source = project_root / _safe_relative(skill["path"]) / _safe_relative(relative)
                 expected_bytes = _distribution_skill_bytes(profile, skill, relative, source)
-                actual = package.read(f"skills/{skill['slug']}/{relative}")
+                skill_root = Path(profile.get("skill_root", "skills"))
+                actual = package.read((skill_root / skill['slug'] / relative).as_posix())
                 if actual != (source.read_bytes() if expected_bytes is None else expected_bytes):
                     raise PluginBuildError(f"Plugin archive Skill hash mismatch: {skill['slug']}")
         for prompt in catalog["standalone_prompts"]:

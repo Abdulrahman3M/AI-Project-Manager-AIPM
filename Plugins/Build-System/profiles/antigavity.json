@@ -1,9 +1,10 @@
 {
   "id": "antigavity",
-  "display_name": "Antigavity Host Profile",
+  "display_name": "Antigravity Agent Skills Bundle",
   "archive_prefix": "AIPM-Antigavity-Plugin",
-  "format_status": "FORMAT_UNVERIFIED",
+  "format_status": "FORMAT_VERIFIED",
   "runtime_status": "UNVERIFIED",
-  "manifest_paths": ["antigavity-plugin.json"],
-  "host_notes": "A complete AIPM transport profile. It is not a verified native Antigavity format until an authoritative platform specification and host test are available."
+  "manifest_paths": [],
+  "skill_root": ".agents/skills",
+  "host_notes": "Contains Skills under the documented Antigravity .agents/skills discovery path. This ZIP is a transport bundle, not a native Plugin or installer; extract it at the workspace root and verify discovery in Antigravity."
 }

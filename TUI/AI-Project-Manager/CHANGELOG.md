@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.8.7] — Antigravity Distribution Synchronization
+
+- Synchronized TUI metadata with platform `1.8.7`; no TUI runtime behavior changed.
+
 ## [1.8.6] — State Recovery Diagnostics And Guided Normalization
 
 - Added support for `state-validate` and `state-normalize` Core commands in `AipmClient.psm1`.
