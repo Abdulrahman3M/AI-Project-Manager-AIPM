@@ -47,7 +47,7 @@ class TaskOperations:
 
     def _task_id(self, task: Path) -> str:
         validate_managed_project(self.project)
-        tasks_root = _canonical(self.root / 'Tasks')
+        tasks_root = _canonical(self.root / 'Operations' / 'Tasks')
         canonical = _canonical(task)
         if canonical.parent != tasks_root:
             raise StateError('Task Must Be Inside Project Tasks')
@@ -58,7 +58,7 @@ class TaskOperations:
     def _task_path(self, task: Path) -> Path:
         task_id = self._task_id(task)
         self._request('task.read', {'task_id': task_id})
-        return self.root / 'Tasks' / task_id
+        return self.root / 'Operations' / 'Tasks' / task_id
 
     def _mutate(self, command: str, task: Path, **payload: Any) -> None:
         task_id = self._task_id(task)
@@ -70,7 +70,7 @@ class TaskOperations:
         if not isinstance(title, str) or not title.strip() or not isinstance(scope, str) or not scope.strip():
             raise StateError('Task Title And Scope Are Required')
         slug = re.sub(r'[^A-Za-z0-9_-]+', '-', title).strip('-')[:100] or 'Task'
-        task = self.root / 'Tasks' / f'Task-{date.today():%Y-%m-%d}-{slug}-{uuid4().hex[:12]}'
+        task = self.root / 'Operations' / 'Tasks' / f'Task-{date.today():%Y-%m-%d}-{slug}-{uuid4().hex[:12]}'
         self._mutate('task.create', task, title=title, scope=scope)
         return task
 
@@ -96,8 +96,8 @@ class TaskOperations:
         if not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', new_id):
             raise StateError('Invalid Task Identity (Must start with Task- and contain only letters, numbers, hyphens, and underscores)')
         if old_id == new_id:
-            return self.root / 'Tasks' / new_id
-        new_task_root = self.root / 'Tasks' / new_id
+            return self.root / 'Operations' / 'Tasks' / new_id
+        new_task_root = self.root / 'Operations' / 'Tasks' / new_id
         if new_task_root.exists():
             raise StateError('Target Task Folder Already Exists')
         old_archive = self.root / 'Archive' / f'{old_id}.zip'
@@ -106,7 +106,7 @@ class TaskOperations:
             raise StateError('Target Task Archive Already Exists')
         state = self._request('state.read', {})
         self._request('task.rename', {'task_id': old_id, 'new_task_id': new_id}, revision=state['revision'], mutation=True)
-        old_task_root = self.root / 'Tasks' / old_id
+        old_task_root = self.root / 'Operations' / 'Tasks' / old_id
         if old_task_root.exists():
             old_task_root.rename(new_task_root)
         old_checksum = old_archive.with_suffix('.zip.sha256')
@@ -134,7 +134,7 @@ class TaskOperations:
         task_id = self._task_id(task)
         state = self._request('state.read', {})
         self._request('task.unregister', {'task_id': task_id}, revision=state['revision'], mutation=True)
-        task_root = self.root / 'Tasks' / task_id
+        task_root = self.root / 'Operations' / 'Tasks' / task_id
         if task_root.exists():
             shutil.rmtree(task_root)
         if delete_archive:
@@ -185,7 +185,7 @@ class TaskOperations:
     def reopen(self, task: Path, next_work: str) -> None:
         """Return a closed task to active work without losing its history, restoring live folder if archived."""
         task_id = self._task_id(task)
-        task_root = self.root / 'Tasks' / task_id
+        task_root = self.root / 'Operations' / 'Tasks' / task_id
         archive_path = self.root / 'Archive' / f'{task_id}.zip'
         if not task_root.exists() and archive_path.is_file():
             sidecar = archive_path.with_suffix('.zip.sha256')
@@ -217,7 +217,7 @@ class TaskOperations:
                             raise StateError('Task Archive Contains An Unsafe Path')
                         destination.parent.mkdir(parents=True, exist_ok=True)
                         destination.write_bytes(package.read(info.filename))
-                    (self.root / 'Tasks').mkdir(parents=True, exist_ok=True)
+                    (self.root / 'Operations' / 'Tasks').mkdir(parents=True, exist_ok=True)
                     os.replace(staging, task_root)
                     staging = None
                 finally:
@@ -323,11 +323,11 @@ class TaskOperations:
         folder = _canonical(work_folder)
         project_root = _canonical(self.project.root)
         state_root = _canonical(self.root)
-        tasks_root = _canonical(state_root / 'Tasks')
+        tasks_root = _canonical(state_root / 'Operations' / 'Tasks')
         if not folder.is_dir() or not _inside(folder, project_root) or folder in {state_root, tasks_root}:
             raise StateError('Existing Work Folder Must Be Inside The Managed Project')
 
-        # Case 1: The folder is already a direct child of Shared-Project-State-Manager/Tasks/
+        # Case 1: The folder is already a direct child of Shared-Project-State-Manager/Operations/Tasks/
         if folder.parent == tasks_root:
             if not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', folder.name):
                 slug = re.sub(r'[^A-Za-z0-9_-]+', '-', folder.name).strip('-')[:100] or 'Task'
@@ -373,7 +373,7 @@ class TaskOperations:
 
     def generate_metadata(self, task: Path, *, archive_sha256: str | None = None) -> dict[str, Any]:
         """Compile complete task state, steps, and file metadata into Metadata.json and Metadat.json."""
-        task_root = self.root / 'Tasks' / self._task_id(task)
+        task_root = self.root / 'Operations' / 'Tasks' / self._task_id(task)
         record = self.read_task(task)
         task_id = record['task_id']
 
@@ -459,7 +459,7 @@ class TaskOperations:
     def read_metadata(self, task: Path) -> dict[str, Any]:
         """Read task metadata from live task folder, archived ZIP, or authoritative Core state."""
         task_id = self._task_id(task)
-        task_root = self.root / 'Tasks' / task_id
+        task_root = self.root / 'Operations' / 'Tasks' / task_id
         for candidate in (task_root / 'Metadata.json', task_root / 'Metadat.json'):
             if candidate.is_file():
                 try:
@@ -550,7 +550,7 @@ class TaskOperations:
     def delete_task_folder(self, task: Path) -> dict[str, Any]:
         """Safely delete the live task folder after verifying the archive is intact."""
         task_id = self._task_id(task)
-        task_root = self.root / 'Tasks' / task_id
+        task_root = self.root / 'Operations' / 'Tasks' / task_id
         archive_path = self.root / 'Archive' / f'{task_id}.zip'
         checksum_path = archive_path.with_suffix('.zip.sha256')
         if not archive_path.is_file() or not checksum_path.is_file():
@@ -596,7 +596,7 @@ class TaskOperations:
     def unregister_task(self, task: Path) -> dict[str, Any]:
         """Remove a completed, archived task from the AIPM registry; the verified archive remains the only copy."""
         task_id = self._task_id(task)
-        task_root = self.root / 'Tasks' / task_id
+        task_root = self.root / 'Operations' / 'Tasks' / task_id
         if task_root.exists():
             raise StateError('Delete The Live Task Folder Before Removing The Registry Record')
         archive_path = self.root / 'Archive' / f'{task_id}.zip'
@@ -660,7 +660,7 @@ class TaskOperations:
             state = self._request('state.read', {})
             if task_id in state['state'].get('tasks', {}):
                 raise StateError('Task Already Registered; Use Reopen Task Instead')
-            task_root = self.root / 'Tasks' / task_id
+            task_root = self.root / 'Operations' / 'Tasks' / task_id
             if task_root.exists():
                 raise StateError('Live Task Folder Already Exists')
 
@@ -686,7 +686,7 @@ class TaskOperations:
                         raise StateError('Task Archive Contains An Unsafe Path')
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(package.read(info.filename))
-                (self.root / 'Tasks').mkdir(parents=True, exist_ok=True)
+                (self.root / 'Operations' / 'Tasks').mkdir(parents=True, exist_ok=True)
                 self._request('task.restore', {'task_id': task_id, 'record': record}, revision=state['revision'], mutation=True)
                 try:
                     os.replace(staging, task_root)
@@ -745,7 +745,7 @@ class TaskOperations:
     @contextmanager
     def _artifact_lock(self, task_id: str) -> Iterator[None]:
         lock_name = hashlib.sha256(task_id.encode('utf-8')).hexdigest() + '.lock'
-        lock_path = _canonical(self.root / 'Locks' / ('task-artifacts-' + lock_name))
+        lock_path = _canonical(self.root / 'Operations' / 'Locks' / ('task-artifacts-' + lock_name))
         lock_path.parent.mkdir(parents=True, exist_ok=True)
         with lock_path.open('a+b') as stream:
             if stream.seek(0, os.SEEK_END) == 0:
@@ -902,7 +902,7 @@ class TaskOperations:
 
     def sync_artifacts(self, task: Path) -> None:
         record = self.read_task(task)
-        task_root = self.root / 'Tasks' / record['task_id']
+        task_root = self.root / 'Operations' / 'Tasks' / record['task_id']
         task_root.mkdir(parents=True, exist_ok=True)
         folder_guidance = {
             'Instructions': 'Task-specific instructions only. Keep project source files at their original project paths.',

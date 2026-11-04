@@ -24,7 +24,7 @@ from aipm_core.storage import initialize_project_state  # noqa: E402
 
 class HostAdapterContractTests(unittest.TestCase):
     def setUp(self) -> None:
-        workspace = ROOT / ".test-workspace"
+        workspace = ROOT / "Shared-Project-State-Manager/Test-Workspace"
         workspace.mkdir(exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix="p07-host-", dir=workspace)
         self.project = initialize_project_state(Path(self.temp.name) / "Managed-Project", "P07-Fixture", "P07 Fixture")

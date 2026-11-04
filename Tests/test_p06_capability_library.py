@@ -80,7 +80,7 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
 
 class CapabilityLibraryTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp_root = ROOT / ".test-workspace"
+        self.temp_root = ROOT / "Shared-Project-State-Manager/Test-Workspace"
         self.temp_root.mkdir(exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix="p06-", dir=self.temp_root)
         self.workspace = Path(self.temp.name)
@@ -332,7 +332,7 @@ class CapabilityLibraryTests(unittest.TestCase):
             with mock.patch.object(capabilities.os, "replace", side_effect=fail_install_and_restore):
                 with self.assertRaisesRegex(CapabilityError, "preserved at"):
                     build_plugin(ROOT, target, replace_generated=True)
-        preserved = list((ROOT / ".test-workspace").glob("p06-plugin-backup-*/previous"))
+        preserved = list((ROOT / "Shared-Project-State-Manager/Test-Workspace").glob("p06-plugin-backup-*/previous"))
         self.assertEqual(len(preserved), 1)
         self.assertTrue((preserved[0] / "AIPM-Distribution-Manifest.json").is_file())
         self.assertFalse(target.exists())
@@ -343,8 +343,8 @@ class CapabilityLibraryTests(unittest.TestCase):
         with mock.patch.object(capabilities, "validate_plugin", side_effect=report_stale_once):
             rebuilt = build_plugin(ROOT, target, replace_generated=True)
         self.assertEqual(rebuilt["status"], "PASS")
-        self.assertEqual(list((ROOT / ".test-workspace").glob("p06-plugin-backup-*")), [])
-        self.assertEqual(list((ROOT / ".test-workspace").glob("p06-plugin-stage-*")), [])
+        self.assertEqual(list((ROOT / "Shared-Project-State-Manager/Test-Workspace").glob("p06-plugin-backup-*")), [])
+        self.assertEqual(list((ROOT / "Shared-Project-State-Manager/Test-Workspace").glob("p06-plugin-stage-*")), [])
 
     def test_explicit_rebuild_upgrades_only_known_website_metadata_drift(self) -> None:
         target = self.workspace / "Website-Metadata-Upgrade"

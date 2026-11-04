@@ -10,7 +10,7 @@ from aipm_core.domain import CoreEngine, CommandEnvelope
 
 class HardeningTests(unittest.TestCase):
  def setUp(self):
-  self.temp=tempfile.TemporaryDirectory(dir=ROOT/'.test-workspace'); self.addCleanup(self.temp.cleanup)
+  self.temp=tempfile.TemporaryDirectory(dir=ROOT/'Shared-Project-State-Manager/Test-Workspace'); self.addCleanup(self.temp.cleanup)
   self.project=initialize_project_state(Path(self.temp.name)/'Managed','managed','Managed'); self.manager=ContinuityManager(self.project)
  def git(self,*args): return subprocess.check_output(['git','-C',str(self.project.root),*args],stderr=subprocess.STDOUT).decode().strip()
  def repository(self):
@@ -37,7 +37,7 @@ class HardeningTests(unittest.TestCase):
  def test_git_observation_excludes_own_unignored_operational_state(self):
   self.repository(); (self.project.root/'.gitignore').write_text(''); self.git('commit','-am','Remove Ignore'); manager=ContinuityManager(self.project,CoreEngine({'managed':self.project})); self.assertEqual(manager.record_git_status('actor')['status'],'PASS'); self.assertFalse(manager.reconcile_git()['drift'])
  def payload(self):
-  source=self.project.state_root/'Tasks'/'Payload'; source.mkdir(); (source/'data.txt').write_bytes(b'preserve\x00\xff'); (source/'Empty').mkdir(); return source
+  source=self.project.state_root/'Operations'/'Tasks'/'Payload'; source.mkdir(); (source/'data.txt').write_bytes(b'preserve\x00\xff'); (source/'Empty').mkdir(); return source
  def test_quarantine_writes_audit_metadata_and_can_restore(self):
   source=self.payload(); record=self.manager.quarantine(source,'Unsafe Input'); audit=record.read_bytes(); self.assertFalse(source.exists()); data=json.loads(audit); self.assertEqual(data['reason'],'Unsafe Input'); self.assertTrue(data['hashes']); self.assertEqual(self.manager.restore_quarantined(record),source); self.assertEqual(record.read_bytes(),audit); self.assertEqual((source/'data.txt').read_bytes(),b'preserve\x00\xff')
  def test_archive_collision_does_not_overwrite(self):
@@ -74,7 +74,7 @@ class HardeningTests(unittest.TestCase):
   code="import sys,time; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from aipm_core.storage import ManagedProject; from aipm_core.continuity import ContinuityManager; root=Path(sys.argv[2]); p=ManagedProject('managed','Managed',root,root/'Shared-Project-State-Manager'); print(ContinuityManager(p).acquire_lock('task','child'),flush=True); time.sleep(60)"
   process=subprocess.Popen([sys.executable,'-c',code,str(CORE_ROOT),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertTrue(process.stdout.readline().strip()); self.expire_lock(); return process
  def expire_lock(self):
-  path=self.project.state_root/'Locks'/'task.json'; data=json.loads(path.read_text()); data['expires_at']='2000-01-01T00:00:00+00:00'; path.write_text(json.dumps(data))
+  path=self.project.state_root/'Operations'/'Locks'/'task.json'; data=json.loads(path.read_text()); data['expires_at']='2000-01-01T00:00:00+00:00'; path.write_text(json.dumps(data))
  @staticmethod
  def stop(process):
   if process.poll() is None: process.terminate()
@@ -82,18 +82,18 @@ class HardeningTests(unittest.TestCase):
  def test_live_process_identity_blocks_expired_lease_recovery(self):
   process=self.spawn_owner()
   with self.assertRaises(LockError): self.manager.recover_expired_lock('task')
-  self.assertIsNone(process.poll()); data=json.loads((self.project.state_root/'Locks'/'task.json').read_text()); self.assertIn('creation',data['process_identity']); self.assertIn('session',data['process_identity'])
+  self.assertIsNone(process.poll()); data=json.loads((self.project.state_root/'Operations'/'Locks'/'task.json').read_text()); self.assertIn('creation',data['process_identity']); self.assertIn('session',data['process_identity'])
  def test_terminated_process_allows_expired_lease_recovery(self):
-  process=self.spawn_owner(); process.terminate(); process.wait(timeout=10); self.manager.recover_expired_lock('task'); self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+  process=self.spawn_owner(); process.terminate(); process.wait(timeout=10); self.manager.recover_expired_lock('task'); self.assertFalse((self.project.state_root/'Operations'/'Locks'/'task.json').exists())
  def test_pid_reuse_does_not_mistake_new_process_for_lease_owner(self):
   self.manager.acquire_lock('task','actor'); self.expire_lock()
   with patch('aipm_core.continuity._process_identity',return_value={'status':'live','creation':'different','session':'different'}): self.manager.recover_expired_lock('task')
-  self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+  self.assertFalse((self.project.state_root/'Operations'/'Locks'/'task.json').exists())
  def test_unknown_process_identity_fails_closed(self):
   self.manager.acquire_lock('task','actor'); self.expire_lock()
   with patch('aipm_core.continuity._process_identity',return_value={'status':'unknown'}):
    with self.assertRaises(LockError): self.manager.recover_expired_lock('task')
-  self.assertTrue((self.project.state_root/'Locks'/'task.json').exists())
+  self.assertTrue((self.project.state_root/'Operations'/'Locks'/'task.json').exists())
  def test_lock_rejects_invalid_resource_and_nonpositive_lease(self):
   for resource in ('../escape','a/b','a\\b'):
    with self.assertRaises(LockError): self.manager.acquire_lock(resource,'actor')
@@ -103,7 +103,7 @@ class HardeningTests(unittest.TestCase):
   # A real junction exercises canonical rejection; the narrow open shim models
   # a file redirect because this Windows token cannot create file symlinks.
   external=Path(self.temp.name)/'External'; external.mkdir(); target=external/'Guard.bin'; target.write_bytes(b'')
-  guard=self.project.state_root/'Locks'/'task.guard'
+  guard=self.project.state_root/'Operations'/'Locks'/'task.guard'
   result=subprocess.run(['cmd','/c','mklink','/J',str(guard),str(external)],capture_output=True,text=True)
   if result.returncode != 0:
    self.skipTest(f'UNVERIFIED: Windows junction creation is denied by this host: {result.stdout} {result.stderr}')
@@ -117,12 +117,12 @@ class HardeningTests(unittest.TestCase):
     with self.assertRaises(LockError): self.manager.acquire_lock('task','actor')
    self.assertEqual(opened,[],'Guard Was Opened Before Reparse Validation')
    self.assertEqual(target.read_bytes(),b'')
-   self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+   self.assertFalse((self.project.state_root/'Operations'/'Locks'/'task.json').exists())
   finally: guard.rmdir()
  def test_competing_stale_lock_cleanup_cannot_remove_new_lease(self):
   for operation in ('release','recover'):
    with self.subTest(operation=operation):
-    nonce=self.manager.acquire_lock('task','actor'); self.expire_lock(); path=self.project.state_root/'Locks'/'task.json'
+    nonce=self.manager.acquire_lock('task','actor'); self.expire_lock(); path=self.project.state_root/'Operations'/'Locks'/'task.json'
     paused, started, replaced=threading.Event(),threading.Event(),threading.Event(); original=Path.unlink
     def pause_unlink(candidate,*args,**kwargs):
      if candidate==path and threading.current_thread().name.startswith('Stale'):
@@ -141,7 +141,7 @@ class HardeningTests(unittest.TestCase):
       old=first.submit(stale); new=second.submit(replace); old.result(timeout=10); new_nonce=new.result(timeout=10)
     self.assertTrue(path.exists(),'Stale Cleanup Deleted A Newly Acquired Lease'); self.assertEqual(json.loads(path.read_text())['nonce'],new_nonce); self.manager.release_lock('task',new_nonce)
  def test_restore_destination_race_preserves_existing_file_and_payload(self):
-  source=self.project.state_root/'Tasks'/'Single.txt'; source.write_bytes(b'archive payload'); record=self.manager.archive(source,'Release'); original=Path.mkdir
+  source=self.project.state_root/'Operations'/'Tasks'/'Single.txt'; source.write_bytes(b'archive payload'); record=self.manager.archive(source,'Release'); original=Path.mkdir
   def create_destination(candidate,*args,**kwargs):
    result=original(candidate,*args,**kwargs)
    if candidate==source.parent: source.write_bytes(b'concurrent owner')
@@ -157,7 +157,7 @@ class HardeningTests(unittest.TestCase):
   with self.manager._lock_guard('task'):
    process=subprocess.Popen([sys.executable,'-c',code,str(CORE_ROOT),str(self.project.root)],cwd=self.project.root,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True); self.addCleanup(lambda:self.stop(process)); self.assertEqual(process.stdout.readline().strip(),'Ready')
    with self.assertRaises(subprocess.TimeoutExpired): process.wait(timeout=.3)
-   self.assertFalse((self.project.state_root/'Locks'/'task.json').exists())
+   self.assertFalse((self.project.state_root/'Operations'/'Locks'/'task.json').exists())
   output,error=process.communicate(timeout=10); self.assertEqual(process.returncode,0,error); nonce=output.strip(); self.assertTrue(nonce); self.manager.release_lock('task',nonce)
  def test_malformed_records_and_lock_shapes_fail_with_domain_errors(self):
   source=self.payload(); record=self.manager.archive(source,'Release'); original=record.read_bytes()
@@ -167,6 +167,6 @@ class HardeningTests(unittest.TestCase):
   record.write_bytes(original); intent=record.parent/'Restore-Intent.json'; intent.write_text('[]')
   with self.assertRaises(StateError): self.manager.restore_archive(record)
   for malformed in ('[]','null','{"nonce":"x"}','{'):
-   path=self.project.state_root/'Locks'/'task.json'; path.write_text(malformed)
+   path=self.project.state_root/'Operations'/'Locks'/'task.json'; path.write_text(malformed)
    with self.subTest(lock=malformed),self.assertRaises(LockError): self.manager.recover_expired_lock('task')
    with self.subTest(release=malformed),self.assertRaises(LockError): self.manager.release_lock('task','x')

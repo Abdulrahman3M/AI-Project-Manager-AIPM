@@ -34,12 +34,12 @@ Do not repeat completed work unless current evidence shows it is stale or incorr
 
 ## Known Modified Files
 
-See `Tasks/Task-Example-Initial-Review/File-Change-Map.md`.
+See `Operations/Tasks/Task-Example-Initial-Review/File-Change-Map.md`.
 
 ## Blocking Issues
 
-See `Tasks/Task-Example-Initial-Review/Blockers.md`.
+See `Operations/Tasks/Task-Example-Initial-Review/Blockers.md`.
 
 ## Owner Decisions
 
-See `Tasks/Task-Example-Initial-Review/Decision-Log.md`.
+See `Operations/Tasks/Task-Example-Initial-Review/Decision-Log.md`.

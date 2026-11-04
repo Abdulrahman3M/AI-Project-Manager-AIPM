@@ -18,7 +18,7 @@ from aipm_core.release import ReleaseError, build_release, verify_release  # noq
 
 class ReleasePackagingTests(unittest.TestCase):
     def setUp(self) -> None:
-        workspace = ROOT / ".test-workspace"
+        workspace = ROOT / "Shared-Project-State-Manager" / "Test-Workspace"
         workspace.mkdir(exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix="p10-", dir=workspace)
         self.root = Path(self.temp.name) / "AIPM"

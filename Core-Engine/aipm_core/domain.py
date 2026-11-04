@@ -846,7 +846,7 @@ class CoreEngine:
 
     @staticmethod
     def _metadata_hint(field: str) -> str:
-        return f"Tasks/<task-id>/Metadata.json -> task_record.{field} (or {field}); otherwise supply it manually"
+        return f"Operations/Tasks/<task-id>/Metadata.json -> task_record.{field} (or {field}); otherwise supply it manually"
 
     @classmethod
     def _task_record_findings(cls, task_id: str, task: Any) -> list[dict[str, Any]]:
@@ -880,7 +880,7 @@ class CoreEngine:
             if blockers is not None and (not isinstance(blockers, list) or any(not isinstance(text, str) or not text.strip() for text in blockers)):
                 add('ERROR', 'TASK_FIELD_INVALID', 'blockers', 'Task blockers must be a list of non-empty text values.')
             if 'verification' not in task:
-                add('ERROR', 'TASK_FIELD_MISSING', 'verification', 'Task record has no verification key (use null when nothing was verified).', hint='Tasks/<task-id>/Metadata.json -> task_record.verification; otherwise null')
+                add('ERROR', 'TASK_FIELD_MISSING', 'verification', 'Task record has no verification key (use null when nothing was verified).', hint='Operations/Tasks/<task-id>/Metadata.json -> task_record.verification; otherwise null')
             else:
                 verification = task['verification']
                 valid = verification is None or isinstance(verification, str) or (isinstance(verification, dict) and isinstance(verification.get('evidence'), str) and bool(verification['evidence'].strip()))
@@ -1027,7 +1027,7 @@ class CoreEngine:
     # ------------------------------------------------------------------
     @classmethod
     def _read_task_metadata(cls, project: ManagedProject, task_id: str) -> tuple[dict[str, Any] | None, str | None]:
-        task_dir = project.state_root / 'Tasks' / task_id
+        task_dir = project.state_root / 'Operations' / 'Tasks' / task_id
         path = task_dir / 'Metadata.json'
         try:
             canonical_dir = _canonical(task_dir)
@@ -1055,7 +1055,7 @@ class CoreEngine:
         reference = value.strip().replace('\\', '/')
         if not reference.lower().endswith(('.md', '.txt')) or reference.startswith('/') or re.match(r'^[A-Za-z]:', reference) or '..' in reference.split('/'):
             return None
-        task_dir = project.state_root / 'Tasks' / task_id
+        task_dir = project.state_root / 'Operations' / 'Tasks' / task_id
         for base in (project.state_root, task_dir):
             candidate = base / reference
             try:
@@ -1079,7 +1079,7 @@ class CoreEngine:
         manual: list[dict[str, str]] = []
         metadata, metadata_note = cls._read_task_metadata(project, task_id)
         task_record = metadata.get('task_record') if isinstance(metadata, dict) and isinstance(metadata.get('task_record'), dict) else {}
-        metadata_source = f'Tasks/{task_id}/Metadata.json'
+        metadata_source = f'Operations/Tasks/{task_id}/Metadata.json'
         missing = object()
 
         def meta_text(field: str) -> str | None:

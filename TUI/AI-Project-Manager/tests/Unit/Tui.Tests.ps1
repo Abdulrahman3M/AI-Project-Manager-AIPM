@@ -404,7 +404,7 @@ if (Test-Path -LiteralPath $archiveShaToDelete) { Remove-Item -LiteralPath $arch
 $closeDeleteArchiveKeys = '08Close and remove folder{Enter}{Enter}100101{Enter}{Esc}{Esc}'
 $delUi = Invoke-Ui { & $appModule { param($root,$registryPath,$projectId,$row) Show-AipmTaskRecord -Root $root -RegistryPath $registryPath -ProjectId $projectId -TaskRow $row } (Get-TestRoot) $taskEditRegistry $taskEditProjectId $taskRow } $closeDeleteArchiveKeys
 $afterDeleteTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
-$liveTaskDir = Join-Path (Join-Path $taskEditRoot 'Shared-Project-State-Manager/Tasks') $taskEditId
+$liveTaskDir = Join-Path (Join-Path $taskEditRoot 'Shared-Project-State-Manager/Operations/Tasks') $taskEditId
 Assert-True 'TUI archives and removes live folder when requested' ($delUi.Error -eq '' -and $delUi.Output.Contains('Task Archived & Folder Removed') -and -not (Test-Path -LiteralPath $liveTaskDir) -and $afterDeleteTask.Data.is_archived) ($delUi.Error + $delUi.Output)
 $reopenForUnregister = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-reopen' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId -Text 'Reopen to test registry removal'
 Assert-True 'Core restores the deleted live folder when reopening an archived task' ($reopenForUnregister.Status -eq 'PASS' -and (Test-Path -LiteralPath $liveTaskDir)) ([string]$reopenForUnregister.Reason)
@@ -460,7 +460,7 @@ Assert-True 'evidence view shows bounded coverage and does not infer test execut
 $registrationRegistry = Join-Path (Get-TestWork) 'registration-message-registry.json'
 $newProjectRoot = Join-Path (Get-TestWork) 'New Project Fixture'
 [void](New-Item -ItemType Directory -Path $newProjectRoot -Force)
-$registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}0201{Enter}081201{Enter}14'
+$registrationKeys = '0902' + $newProjectRoot + '{Enter}New Project{Enter}010101{Enter}081201{Enter}14'
 $oldGitCeiling = $env:GIT_CEILING_DIRECTORIES
 try {
     $env:GIT_CEILING_DIRECTORIES = Get-TestWork
@@ -469,25 +469,15 @@ try {
 Assert-True 'successful project registration shows English refresh instructions and the refreshed Projects section lists it' ($ui.Error -eq '' -and $ui.Output.Contains('Project Folder Added Successfully.') -and $ui.Output.Contains('Please Select') -and $ui.Output.Contains('Refresh From The Home Page.') -and $ui.Output.Contains('New Project')) ($ui.Error + $ui.Output)
 $declinedPrefsPath = Join-Path (Join-Path $newProjectRoot 'Shared-Project-State-Manager') 'Component-Preferences.json'
 $declinedPrefs = if (Test-Path -LiteralPath $declinedPrefsPath) { Get-Content -LiteralPath $declinedPrefsPath -Raw | ConvertFrom-Json } else { $null }
-Assert-True 'declining Git registers shared state without installing FIRG or inventing a FIRG refusal' ($null -ne $declinedPrefs -and $declinedPrefs.git -eq $false -and $null -eq $declinedPrefs.firg -and -not (Test-Path -LiteralPath (Join-Path $newProjectRoot '.git')) -and -not (Test-Path -LiteralPath (Join-Path $newProjectRoot 'FIRG')))
+Assert-True 'registration requires Git and installs FIRG inside the shared state manager' ($null -ne $declinedPrefs -and $declinedPrefs.git -eq $true -and $declinedPrefs.firg -eq $true -and (Test-Path -LiteralPath (Join-Path $newProjectRoot '.git')) -and (Test-Path -LiteralPath (Join-Path $newProjectRoot 'Shared-Project-State-Manager/FIRG/tools/firg.py')) -and (Test-Path -LiteralPath (Join-Path $newProjectRoot 'Shared-Project-State-Manager/AGENT.md')) -and -not (Test-Path -LiteralPath (Join-Path $newProjectRoot 'FIRG')))
 $updateKeys = '0909010101{Enter}070814'
 try {
     $env:GIT_CEILING_DIRECTORIES = Get-TestWork
     $updateUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registrationRegistry } $updateKeys
 } finally { $env:GIT_CEILING_DIRECTORIES = $oldGitCeiling }
 $updatedPrefs = if (Test-Path -LiteralPath $declinedPrefsPath) { Get-Content -LiteralPath $declinedPrefsPath -Raw | ConvertFrom-Json } else { $null }
-Assert-True 'Update Project adds Git to a registered project without changing its FIRG choice' ($updateUi.Error -eq '' -and (Test-Path -LiteralPath (Join-Path $newProjectRoot '.git')) -and $null -ne $updatedPrefs -and $updatedPrefs.git -eq $true -and $null -eq $updatedPrefs.firg -and -not (Test-Path -LiteralPath (Join-Path $newProjectRoot 'FIRG'))) ($updateUi.Error + $updateUi.Output)
-$optionalRoot = Join-Path (Get-TestWork) 'Optional Components Fixture'
-[void](New-Item -ItemType Directory -Path $optionalRoot -Force)
-$optionalRegistry = Join-Path (Get-TestWork) 'optional-components-registry.json'
-$optionalKeys = '0902' + $optionalRoot + '{Enter}Optional Project{Enter}0101020814'
-try {
-    $env:GIT_CEILING_DIRECTORIES = Get-TestWork
-    $optionalUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $optionalRegistry } $optionalKeys
-} finally { $env:GIT_CEILING_DIRECTORIES = $oldGitCeiling }
-$optionalList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'list' -RegistryPath $optionalRegistry
-Assert-True 'declining shared state preserves chosen Git and FIRG without registering the project' ($optionalUi.Error -eq '' -and (Test-Path -LiteralPath (Join-Path $optionalRoot '.git')) -and (Test-Path -LiteralPath (Join-Path $optionalRoot 'FIRG/tools/firg.py')) -and -not (Test-Path -LiteralPath (Join-Path $optionalRoot 'Shared-Project-State-Manager')) -and @($optionalList.Data.projects).Count -eq 0) ($optionalUi.Error + $optionalUi.Output)
-foreach ($firgSelection in @('01','02')) {
+Assert-True 'Update Project applies the shared state layout while preserving component choices' ($updateUi.Error -eq '' -and (Test-Path -LiteralPath (Join-Path $newProjectRoot '.git')) -and $null -ne $updatedPrefs -and $updatedPrefs.git -eq $true -and $updatedPrefs.firg -eq $true -and (Test-Path -LiteralPath (Join-Path $newProjectRoot 'Shared-Project-State-Manager/Temporary-Files/Cache')) -and -not (Test-Path -LiteralPath (Join-Path $newProjectRoot 'FIRG'))) ($updateUi.Error + $updateUi.Output)
+foreach ($firgSelection in @('01')) {
     $caseRoot = Join-Path (Get-TestWork) ('Registered Setup ' + $firgSelection)
     [void](New-Item -ItemType Directory -Path $caseRoot -Force)
     $caseRegistry = Join-Path (Get-TestWork) ('setup-registry-' + $firgSelection + '.json')
@@ -500,7 +490,7 @@ foreach ($firgSelection in @('01','02')) {
     $prefsPath = Join-Path (Join-Path $caseRoot 'Shared-Project-State-Manager') 'Component-Preferences.json'
     $prefs = if (Test-Path -LiteralPath $prefsPath) { Get-Content -LiteralPath $prefsPath -Raw | ConvertFrom-Json } else { $null }
     $expectedFirg = ($firgSelection -eq '01')
-    $caseOk = $caseUi.Error -eq '' -and @($caseList.Data.projects).Count -eq 1 -and (Test-Path -LiteralPath (Join-Path $caseRoot '.git')) -and $null -ne $prefs -and $prefs.git -eq $true -and $prefs.firg -eq $expectedFirg -and ((Test-Path -LiteralPath (Join-Path $caseRoot 'FIRG')) -eq $expectedFirg)
+    $caseOk = $caseUi.Error -eq '' -and @($caseList.Data.projects).Count -eq 1 -and (Test-Path -LiteralPath (Join-Path $caseRoot '.git')) -and $null -ne $prefs -and $prefs.git -eq $true -and $prefs.firg -eq $expectedFirg -and ((Test-Path -LiteralPath (Join-Path $caseRoot 'Shared-Project-State-Manager/FIRG/tools/firg.py')) -eq $expectedFirg) -and -not (Test-Path -LiteralPath (Join-Path $caseRoot 'FIRG'))
     Assert-True ('registration preserves selected FIRG choice ' + $firgSelection) $caseOk ($caseUi.Error + $caseUi.Output)
     if ($expectedFirg) { $firgCaseRoot = $caseRoot; $firgCaseRegistry = $caseRegistry; $firgCaseId = [string]$caseList.Data.projects[0].project_id }
 }
@@ -510,10 +500,10 @@ foreach ($firgSelection in @('01','02')) {
 $firgTask = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-create' -RegistryPath $firgCaseRegistry -ProjectId $firgCaseId -Title 'FIRG Commit Flow' -Scope 'Verify The Commit Report Flow'
 $commitKeys = '0201030112' + 'Fixture Commit{Enter}' + '01{Enter}01' + 'Problem{Enter}Unknown{Enter}Expected{Enter}Correction{Enter}Reason{Enter}No Notes{Enter}' + '{Enter}20050214'
 $commitUi = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $firgCaseRegistry } $commitKeys
-$firgRecords = @(Get-ChildItem -LiteralPath (Join-Path $firgCaseRoot 'FIRG/registry') -Filter '*.json' -File -ErrorAction SilentlyContinue)
+$firgRecords = @(Get-ChildItem -LiteralPath (Join-Path $firgCaseRoot 'Shared-Project-State-Manager/FIRG/registry') -Filter '*.json' -File -ErrorAction SilentlyContinue)
 $firgRecord = if ($firgRecords.Count -eq 1) { Get-Content -LiteralPath $firgRecords[0].FullName -Raw | ConvertFrom-Json } else { $null }
 $head = (& git -C $firgCaseRoot rev-parse HEAD).Trim()
-Assert-True 'AIPM commit flow creates a FIRG report linked to the actual Git commit' ($firgTask.Status -eq 'PASS' -and $commitUi.Error -eq '' -and $null -ne $firgRecord -and $firgRecord.commits[0] -eq $head -and (Test-Path -LiteralPath (Join-Path $firgCaseRoot ('FIRG/' + $firgRecord.report_reference)))) ($commitUi.Error + $commitUi.Output)
+Assert-True 'AIPM commit flow creates a FIRG report linked to the actual Git commit' ($firgTask.Status -eq 'PASS' -and $commitUi.Error -eq '' -and $null -ne $firgRecord -and $firgRecord.commits[0] -eq $head -and (Test-Path -LiteralPath (Join-Path $firgCaseRoot ('Shared-Project-State-Manager/FIRG/' + $firgRecord.report_reference)))) ($commitUi.Error + $commitUi.Output)
 $modeHelpKeys = '1001?14'
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } $modeHelpKeys
 Assert-True 'pressing ? in Select View Mode does not save __HELP__ as view_mode' ($ui.Error -eq '' -and (Get-AipmViewMode) -eq 'Task Dashboard' -and (Get-UserSetting -Name 'view_mode') -ne '__HELP__') ($ui.Error + $ui.Output)

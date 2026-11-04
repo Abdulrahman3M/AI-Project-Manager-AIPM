@@ -10,31 +10,38 @@ import subprocess
 import tempfile
 import stat
 
-from .storage import STATE_ROOT_NAME, StateError, _protect_platform_path
+from .storage import STATE_ROOT_NAME, StateError, _protect_platform_path, _state_agent_instructions
 
-VERSION = 2
+VERSION = 3
 PREFERENCES_VERSION = 1
 MIN_GIT_VERSION = (2, 20, 0)
 TEMPLATE = Path(__file__).resolve().parents[2] / "Templates" / "FIRG"
 PREFERENCES = "Component-Preferences.json"
 RULE = ("\n\n## Mandatory FIRG Pre-Read And External-Change Safeguard\n\n"
         "Before material work, read root and applicable scoped agent instructions. Before fixes or external integrations, "
-        "read FIRG/AGENTS.md, FIRG/README.md and relevant FIRG/FIX-HISTORY.md entries. "
+        "read Shared-Project-State-Manager/AGENT.md, Shared-Project-State-Manager/FIRG/README.md and relevant "
+        "Shared-Project-State-Manager/FIRG/FIX-HISTORY.md entries. "
         "Review external functional changes with FIRG before accepting, applying, merging, rebasing or cherry-picking them; "
         "use a non-destructive review and relevant tests. If FIRG is missing or incomplete, repair it without overwriting "
         "unknown material before treating incoming changes as reviewed. Never infer safety from a clean merge or AI analysis alone. "
         "When documentation is selected, record fixes with verified provenance and test evidence in the canonical registry and regenerate the ledger. "
+        "Route caches to Shared-Project-State-Manager/Temporary-Files/Cache and disposable tests to "
+        "Shared-Project-State-Manager/Temporary-Files/Test-Workspace. "
         "Do not bypass checks or fabricate results; preserve existing rules and pending work and report unresolved risks.\n")
 HOOK = b'''#!/bin/sh
 # AIPM FIRG Post-Commit Prompt; Local And Bypassable.
 if [ ! -t 1 ] || [ ! -r /dev/tty ]; then exit 0; fi
 root=$(git rev-parse --show-toplevel) || exit 0
 sha=$(git rev-parse --verify HEAD^{commit}) || exit 0
+cache="$root/Shared-Project-State-Manager/Temporary-Files/Cache"
+if [ -d "$cache" ]; then export PYTHONPYCACHEPREFIX="$cache"; fi
+tool="$root/Shared-Project-State-Manager/FIRG/tools/firg.py"
+if [ ! -f "$tool" ]; then tool="$root/FIRG/tools/firg.py"; fi
 if command -v python3 >/dev/null 2>&1; then py=python3
 elif command -v python >/dev/null 2>&1; then py=python
 else printf '%s\\n' 'FIRG: Python unavailable; commit remains undocumented.'; exit 0
 fi
-"$py" "$root/FIRG/tools/firg.py" prompt-commit --commit "$sha" </dev/tty >/dev/tty 2>&1 || printf '%s\\n' 'FIRG: Documentation did not complete; the commit is preserved.'
+"$py" "$tool" prompt-commit --commit "$sha" </dev/tty >/dev/tty 2>&1 || printf '%s\\n' 'FIRG: Documentation did not complete; the commit is preserved.'
 exit 0
 '''
 
@@ -109,6 +116,13 @@ def _root(path: Path) -> Path:
     return root
 
 
+def _firg_path(root: Path) -> Path:
+    """Prefer the canonical state location while recognizing legacy installs."""
+    canonical = root / STATE_ROOT_NAME / 'FIRG'
+    legacy = root / 'FIRG'
+    return canonical if canonical.exists() or not legacy.exists() else legacy
+
+
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(["git", "-C", str(root), *args], capture_output=True,
@@ -167,7 +181,7 @@ def hook_status(root: Path) -> tuple[str, Path | None]:
             return 'EXISTING_HOOK', None
         existing = candidate.read_bytes()
         if existing != HOOK:
-            marker = root / 'FIRG' / 'aipm-install.json'
+            marker = _firg_path(root) / 'aipm-install.json'
             try:
                 data = json.loads(marker.read_text(encoding='utf-8'))
                 if data.get('hook_sha256') == hashlib.sha256(existing).hexdigest():
@@ -181,7 +195,7 @@ def hook_status(root: Path) -> tuple[str, Path | None]:
 
 def install_firg_hook(path: Path) -> str:
     root = _root(path)
-    firg = root / 'FIRG'
+    firg = _firg_path(root)
     tool = firg / 'tools' / 'firg.py'
     marker = firg / 'aipm-install.json'
     if git_status(root) != 'READY' or not tool.is_file():
@@ -260,7 +274,7 @@ def inspect_project(path: Path) -> dict:
                 raise ValueError("invalid preferences")
         except (OSError, ValueError) as exc:
             raise StateError("INVALID_COMPONENT_PREFERENCES") from exc
-    firg = root / "FIRG"
+    firg = _firg_path(root)
     marker = firg / "aipm-install.json"
     if firg.is_symlink() or not firg.resolve().is_relative_to(root):
         firg_state = 'INVALID'
@@ -268,7 +282,7 @@ def inspect_project(path: Path) -> dict:
         firg_state = 'INVALID'
     elif (firg / 'aipm-install.pending.json').is_file():
         firg_state = 'INSTALL_INTERRUPTED'
-    elif not firg.exists():
+    elif not firg.exists() or (firg.is_dir() and not any(firg.iterdir())):
         firg_state = ("DECLINED" if preferences.get("firg") is False else
                       "MISSING" if git == "READY" else "GIT_REQUIRED")
     elif not marker.is_file():
@@ -278,7 +292,7 @@ def inspect_project(path: Path) -> dict:
             data = json.loads(marker.read_text(encoding="utf-8"))
             version = data["version"]
             hashes = data["files"]
-            required = {'AGENTS.md', 'README.md', 'tools/firg.py', 'schemas/fix-record.schema.json', 'policies/INTEGRATION.md', 'tests/test_firg.py'}
+            required = {'README.md', 'tools/firg.py', 'schemas/fix-record.schema.json', 'policies/INTEGRATION.md', 'tests/test_firg.py'}
             if type(version) is not int or not isinstance(hashes, dict) or not required.issubset(hashes):
                 raise ValueError("invalid marker")
             for name, digest in hashes.items():
@@ -313,7 +327,7 @@ def inspect_project(path: Path) -> dict:
             firg_state = "INVALID"
     if git != "READY" and firg_state in ("READY", "MODIFIED", "UPDATE_AVAILABLE", "EXISTING_UNMANAGED"):
         firg_state = "GIT_REQUIRED"
-    if (state / 'Tool-State' / 'FIRG-Update.json').is_file():
+    if (state / 'Operations' / 'Tool-State' / 'FIRG-Update.json').is_file():
         firg_state = 'UPDATE_INTERRUPTED'
     state_status = "MISSING"
     if state.exists():
@@ -354,23 +368,149 @@ def initialize_git(path: Path) -> None:
         raise StateError("GIT_INITIALIZATION_FAILED")
 
 
+def update_project_layout(path: Path) -> dict:
+    """Safely migrate legacy FIRG and transient directories into the canonical layout."""
+    root = _root(path)
+    state = root / STATE_ROOT_NAME
+    if not state.is_dir() or not (state / 'Project-Manifest.json').is_file():
+        raise StateError('PROJECT_STATE_REQUIRED')
+    moves = []
+    candidates = ((root / 'FIRG', state / 'FIRG'),
+                 (state / 'Cache', state / 'Temporary-Files' / 'Cache'),
+                 (state / 'Test-Workspace', state / 'Temporary-Files' / 'Test-Workspace'),
+                 (state / 'Tasks', state / 'Operations' / 'Tasks'),
+                 (state / 'Tool-State', state / 'Operations' / 'Tool-State'),
+                 (state / 'Logs', state / 'Operations' / 'Logs'),
+                 (state / 'Quarantine', state / 'Operations' / 'Quarantine'),
+                 (state / 'Locks', state / 'Operations' / 'Locks'))
+    for source, target in candidates:
+        if not source.exists():
+            continue
+        if source.is_symlink() or not source.resolve().is_relative_to(root):
+            raise StateError('PROJECT_LAYOUT_SOURCE_UNSAFE: ' + str(source))
+        if target.is_symlink() or (target.exists() and not target.resolve().is_relative_to(state)):
+            raise StateError('PROJECT_LAYOUT_TARGET_UNSAFE: ' + str(target))
+        if target.exists() and (not target.is_dir() or any(target.iterdir())):
+            if source.is_dir() and not any(source.iterdir()):
+                source.rmdir()
+                continue
+            raise StateError('PROJECT_LAYOUT_CONFLICT: ' + str(target))
+        moves.append((source, target))
+    legacy_agent = root / 'FIRG' / 'AGENTS.md'
+    legacy_agent_bytes = None
+    if legacy_agent.is_file():
+        marker_path = root / 'FIRG' / 'aipm-install.json'
+        if legacy_agent.is_symlink() or marker_path.is_symlink() or not marker_path.resolve().is_relative_to(root):
+            raise StateError('PROJECT_LAYOUT_FIRG_AGENT_REVIEW_REQUIRED')
+        try:
+            metadata = json.loads(marker_path.read_text(encoding='utf-8'))
+            expected = metadata.get('files', {}).get('AGENTS.md')
+            actual = hashlib.sha256(legacy_agent.read_bytes()).hexdigest()
+            if expected != actual:
+                raise StateError('PROJECT_LAYOUT_FIRG_AGENT_MODIFIED')
+            legacy_agent.read_bytes().decode('utf-8')
+        except (OSError, ValueError, AttributeError) as exc:
+            raise StateError('PROJECT_LAYOUT_FIRG_AGENT_REVIEW_REQUIRED') from exc
+        legacy_agent_bytes = legacy_agent.read_bytes()
+    existing_agent = state / 'AGENT.md'
+    if existing_agent.exists():
+        if existing_agent.is_symlink() or not existing_agent.is_file() or not existing_agent.resolve().is_relative_to(state) or getattr(existing_agent.stat(), 'st_nlink', 1) > 1:
+            raise StateError('PROJECT_LAYOUT_AGENT_REVIEW_REQUIRED')
+        try:
+            existing_agent.read_bytes().decode('utf-8')
+        except UnicodeError as exc:
+            raise StateError('PROJECT_LAYOUT_AGENT_REVIEW_REQUIRED') from exc
+    completed = []
+    try:
+        for source, target in moves:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.exists():
+                target.rmdir()
+            source.rename(target)
+            completed.append((source, target))
+        (state / 'FIRG').mkdir(parents=True, exist_ok=True)
+        (state / 'Temporary-Files' / 'Cache').mkdir(parents=True, exist_ok=True)
+        (state / 'Temporary-Files' / 'Test-Workspace').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Tasks').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Tool-State').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Logs').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Quarantine' / 'Items').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Quarantine' / 'Records').mkdir(parents=True, exist_ok=True)
+        (state / 'Operations' / 'Locks').mkdir(parents=True, exist_ok=True)
+        agent = state / 'AGENT.md'
+        if agent.is_symlink() or (agent.exists() and not agent.resolve().is_relative_to(state)):
+            raise StateError('PROJECT_LAYOUT_AGENT_UNSAFE')
+        if agent.exists() and (not agent.is_file() or getattr(agent.stat(), 'st_nlink', 1) > 1):
+            raise StateError('PROJECT_LAYOUT_AGENT_REVIEW_REQUIRED')
+        if not agent.exists():
+            with agent.open('x', encoding='utf-8', newline='\n') as stream:
+                stream.write(_state_agent_instructions())
+        if legacy_agent_bytes is not None:
+            moved_agent = state / 'FIRG' / 'AGENTS.md'
+            marker_path = state / 'FIRG' / 'aipm-install.json'
+            if (moved_agent.is_symlink() or not moved_agent.resolve().is_relative_to(state)
+                    or marker_path.is_symlink() or not marker_path.resolve().is_relative_to(state)):
+                raise StateError('PROJECT_LAYOUT_FIRG_AGENT_REVIEW_REQUIRED')
+            current_agent = agent.read_text(encoding='utf-8')
+            section = '\n\n## FIRG Instructions (Migrated)\n\n' + legacy_agent_bytes.decode('utf-8')
+            if '## FIRG Instructions (Migrated)' not in current_agent:
+                original_agent = agent.read_bytes()
+                temporary = None
+                try:
+                    with tempfile.NamedTemporaryFile(dir=state / 'Temporary-Files' / 'Cache', delete=False) as out:
+                        temporary = Path(out.name)
+                        out.write((current_agent.rstrip() + section + '\n').encode('utf-8'))
+                        out.flush(); os.fsync(out.fileno())
+                    if agent.read_bytes() != original_agent:
+                        raise StateError('PROJECT_LAYOUT_AGENT_CHANGED_DURING_UPDATE')
+                    _replace_preserving_permissions(temporary, agent)
+                finally:
+                    if temporary is not None:
+                        temporary.unlink(missing_ok=True)
+            marker_original = marker_path.read_bytes()
+            metadata = json.loads(marker_path.read_text(encoding='utf-8'))
+            metadata.get('files', {}).pop('AGENTS.md', None)
+            _write_json_safely(marker_path, metadata, marker_original)
+            moved_agent.unlink()
+    except (OSError, PermissionError) as exc:
+        for source, target in reversed(completed):
+            if target.exists() and not source.exists():
+                source.parent.mkdir(parents=True, exist_ok=True)
+                target.rename(source)
+        raise StateError('PROJECT_LAYOUT_UPDATE_FAILED: ' + str(exc)) from exc
+    status = inspect_project(root)['firg']
+    if status == 'UPDATE_AVAILABLE':
+        update_firg(root)
+        hook_result = install_firg_hook(root)
+        if hook_result not in ('READY', 'EXISTING_HOOK', 'CUSTOM_HOOKS_PATH'):
+            raise StateError('FIRG_HOOK_' + hook_result)
+    elif status == 'READY':
+        hook_result = install_firg_hook(root)
+        if hook_result not in ('READY', 'EXISTING_HOOK', 'CUSTOM_HOOKS_PATH'):
+            raise StateError('FIRG_HOOK_' + hook_result)
+    return {'migrated': len(completed), 'layout': '1.0'}
+
+
 def install_firg(path: Path) -> None:
     root = _root(path)
     if git_status(root) != "READY":
         raise StateError("FIRG_REQUIRES_GIT")
-    destination = root / "FIRG"
+    state = root / STATE_ROOT_NAME
+    destination = (state / 'FIRG') if state.is_dir() else (root / 'FIRG')
     instructions = root / "AGENTS.md"
     if instructions.is_symlink() or (instructions.exists() and not instructions.resolve().is_relative_to(root)):
         raise StateError("ROOT_AGENTS_UNSAFE")
     if any(root.glob("AGENTS.*.md")):
         raise StateError("TRANSLATED_AGENTS_REVIEW_REQUIRED")
-    files = sorted(p for p in TEMPLATE.rglob("*") if p.is_file() and "__pycache__" not in p.parts)
+    files = sorted(p for p in TEMPLATE.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.name != 'AGENTS.md')
     if not files:
         raise StateError("FIRG_TEMPLATE_MISSING")
     payloads = {p.relative_to(TEMPLATE).as_posix(): p.read_bytes() for p in files}
     all_hashes = {name: hashlib.sha256(data).hexdigest() for name, data in payloads.items()}
     pending = destination / 'aipm-install.pending.json'
     current = instructions.read_bytes() if instructions.exists() else None
+    if destination.is_dir() and not pending.exists() and not any(destination.iterdir()):
+        destination.rmdir()
     if destination.exists():
         if not destination.resolve().is_relative_to(root) or pending.is_symlink() or not pending.is_file():
             raise StateError("FIRG_ALREADY_EXISTS")
@@ -399,7 +539,7 @@ def install_firg(path: Path) -> None:
         final = (current + RULE.encode('utf-8')) if current is not None else ('# Project Agent Instructions\n' + RULE).encode('utf-8')
         after_hash = hashlib.sha256(final).hexdigest()
         intent = {'version': VERSION, 'files': all_hashes, 'before': before_hash, 'after': after_hash}
-        destination.mkdir()
+        destination.mkdir(parents=True, exist_ok=True)
         with pending.open('x', encoding='utf-8', newline='\n') as out:
             json.dump(intent, out, indent=2); out.flush(); os.fsync(out.fileno())
     current_hash = hashlib.sha256(current).hexdigest() if current is not None else None
@@ -439,6 +579,10 @@ def install_firg(path: Path) -> None:
         with marker.open('x', encoding='utf-8', newline='\n') as out:
             json.dump(expected, out, indent=2); out.flush(); os.fsync(out.fileno())
     pending.unlink()
+    if state.is_dir():
+        agent_file = state / 'AGENT.md'
+        if not agent_file.exists():
+            agent_file.write_text(_state_agent_instructions(), encoding='utf-8')
     try:
         install_firg_hook(root)
     except (OSError, StateError):
@@ -479,7 +623,7 @@ def repair_firg_rule(path: Path) -> None:
         raise StateError('ROOT_RULE_REPAIR_NOT_APPLICABLE')
     if any(root.glob('AGENTS.*.md')):
         raise StateError('TRANSLATED_AGENTS_REVIEW_REQUIRED')
-    marker = json.loads((root / 'FIRG' / 'aipm-install.json').read_text(encoding='utf-8'))
+    marker = json.loads((_firg_path(root) / 'aipm-install.json').read_text(encoding='utf-8'))
     if marker.get('version') != VERSION or marker.get('rule') != RULE:
         raise StateError('ROOT_AGENTS_REVIEW_REQUIRED')
     instructions = root / 'AGENTS.md'
@@ -507,7 +651,7 @@ def repair_firg_files(path: Path) -> None:
     root = _root(path)
     if git_status(root) != 'READY':
         raise StateError('FIRG_REQUIRES_GIT')
-    firg = root / 'FIRG'
+    firg = _firg_path(root)
     marker = firg / 'aipm-install.json'
     if (not firg.is_dir() or firg.is_symlink() or not firg.resolve().is_relative_to(root)
             or marker.is_symlink() or not marker.is_file()):
@@ -562,7 +706,7 @@ def update_firg(path: Path) -> None:
     root = _root(path)
     if git_status(root) != "READY":
         raise StateError("FIRG_REQUIRES_GIT")
-    firg = root / "FIRG"
+    firg = _firg_path(root)
     marker = firg / "aipm-install.json"
     state = root / STATE_ROOT_NAME
     scratch = state / "Temporary-Files"
@@ -578,9 +722,9 @@ def update_firg(path: Path) -> None:
             raise ValueError("invalid marker")
         sources = {p.relative_to(TEMPLATE).as_posix(): p for p in TEMPLATE.rglob('*')
                    if p.is_file() and '__pycache__' not in p.parts
-                   and p.relative_to(TEMPLATE).as_posix() not in ('FIX-HISTORY.md', 'config.json')}
+                   and p.relative_to(TEMPLATE).as_posix() not in ('AGENTS.md', 'FIX-HISTORY.md', 'config.json')}
         desired = {name: hashlib.sha256(source.read_bytes()).hexdigest() for name, source in sources.items()}
-        journal = state / 'Tool-State' / 'FIRG-Update.json'
+        journal = state / 'Operations' / 'Tool-State' / 'FIRG-Update.json'
         if not journal.resolve().is_relative_to(state.resolve()) or journal.is_symlink():
             raise StateError('FIRG_UPDATE_JOURNAL_UNSAFE')
         intent = json.loads(journal.read_text(encoding='utf-8')) if journal.exists() else None

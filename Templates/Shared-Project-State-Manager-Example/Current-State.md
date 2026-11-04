@@ -36,5 +36,5 @@
 ## Key Paths
 
 - `State-Manifest.json` — generated and maintained by AIPM Core.
-- `Tasks/Task-<id>/` — task-specific notes and evidence.
+- `Operations/Tasks/Task-<id>/` — task-specific notes and evidence.
 - `Next-Agent-Handoff.md` — concise continuation instructions.

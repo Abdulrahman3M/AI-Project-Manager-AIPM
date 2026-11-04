@@ -24,7 +24,7 @@ from aipm_core.task_ops import TaskOperations  # noqa: E402
 
 class TaskArtifactLifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
-        workspace = ROOT / ".test-workspace"
+        workspace = ROOT / "Shared-Project-State-Manager/Test-Workspace"
         workspace.mkdir(exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(prefix="task-artifacts-", dir=workspace)
         self.project_root = Path(self.temp.name) / "Example-Project"
@@ -224,7 +224,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         }
         pending_path = self.project.state_root / "History" / "Pending-Commit.json"
         pending_path.write_text(json.dumps({"schema_version": "1.0", "manifest": pending_manifest, "event": pending_event}), encoding="utf-8")
-        recovered = operations.read_task(self.project.state_root / "Tasks" / pending_task_id)
+        recovered = operations.read_task(self.project.state_root / "Operations" / "Tasks" / pending_task_id)
         self.assertEqual(recovered["title"], "Recovered Task")
         self.assertFalse(pending_path.exists())
 
@@ -357,7 +357,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
             package.writestr("Metadat.json", json.dumps(legacy))
         result = operations.import_archive(legacy_zip)
         self.assertEqual(result["task_status"], "COMPLETE")
-        self.assertTrue((self.project.state_root / "Tasks" / task_id / "Task-Plan.md").is_file())
+        self.assertTrue((self.project.state_root / "Operations" / "Tasks" / task_id / "Task-Plan.md").is_file())
 
     def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:
         operations = TaskOperations(self.engine, self.project)
@@ -373,7 +373,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
 
     def test_existing_task_folder_under_tasks_is_registered_in_place_without_creating_new_folder(self) -> None:
         operations = TaskOperations(self.engine, self.project)
-        tasks_root = self.project.state_root / "Tasks"
+        tasks_root = self.project.state_root / "Operations" / "Tasks"
         tasks_root.mkdir(parents=True, exist_ok=True)
         existing_task = tasks_root / "Task-2026-10-23-Agent-Created-1234567890ab"
         existing_task.mkdir()

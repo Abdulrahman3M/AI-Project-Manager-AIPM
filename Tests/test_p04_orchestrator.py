@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class TaskLifecycleTests(unittest.TestCase):
     def setUp(self):
-        self.workspace = tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace')
+        self.workspace = tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace')
         self.addCleanup(self.workspace.cleanup)
         self.project = initialize_project_state(Path(self.workspace.name) / 'Managed', 'managed', 'Managed')
         self.engine = CoreEngine({'managed': self.project})
@@ -224,7 +224,7 @@ class TaskLifecycleTests(unittest.TestCase):
 class OrchestratorTests(unittest.TestCase):
     def test_task_operations_create_plan_status_verify_report_and_blockers(self) -> None:
         import tempfile
-        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1] / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[1] / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             ops = TaskOperations(CoreEngine({'managed': project}), project)
             task = ops.create("Demo", "Scope")

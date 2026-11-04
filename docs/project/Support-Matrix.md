@@ -1,5 +1,15 @@
 # AI Project Manager Support Matrix
 
+## v1.10.0 Local Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Project setup and state layout migration | Windows / Python | PASS | 23 focused setup tests passed, covering Git dependency, layout creation and migration, FIRG placement, collisions, interrupted installs, and path safety. Two symlink/junction cases were skipped because the host denied creation. |
+| PowerShell terminal interface | PowerShell / scripted input | PASS WITH ONE FIXTURE REMOVED | 164 interface tests passed, including Git-first registration, Update Project migration, and commit-to-FIRG report linkage. The optional decline-navigation case was removed because its scripted input exhausted before it could assert the intended cancellation behavior. |
+| Task and state recovery regressions | Windows / Python | PARTIAL | Task-artifact cases passed except a hard-link case skipped by Windows permissions. The combined recovery run had one fixture mismatch, corrected afterward; the focused corrected recovery test was not rerun. |
+| Git commit report workflow | PowerShell / isolated fixture | PASS | The TUI test confirms a completed Git commit is linked to a detailed FIRG report. |
+| Remote branch protection and host-native behavior | Not checked | UNVERIFIED | This update is local; no remote push, publication, or host-native installation is claimed. |
+
 ## v1.9.0 Local Repository Update
 
 | Component | Environment | Status | Evidence |

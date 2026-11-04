@@ -126,10 +126,10 @@ In the dashboard, choose **Registry Management**. To register a project:
 1. Choose **Register A Project**.
 2. Enter the full path to an existing project folder. Do not select the AIPM folder or a parent folder that contains AIPM; Core blocks overlapping paths.
 3. Enter or accept the project display name.
-4. Read the confirmation: it states that AIPM will create `Shared-Project-State-Manager/` under that project and will not edit source files.
-5. Choose **Create State And Register** only if you want that state folder and registry entry.
+4. AIPM checks the selected folder for a Git repository at that exact root. If Git is missing, initialize it or cancel; a parent repository does not count.
+5. Install FIRG, then confirm creation of `Shared-Project-State-Manager/` and registration. FIRG and its reports are stored under `Shared-Project-State-Manager/FIRG/`; the manager's `AGENT.md` describes the complete layout.
 
-The registry then stores an ID, name, and root path. Your code, documents, Git metadata, and other existing project files are not modified. Task and continuity records that AIPM owns remain inside its state folder. After successful registration, the TUI displays a message asking you to return to the dashboard and choose **Refresh**. Then open **Projects**; the registered project appears there, not as a separate dashboard action.
+The registry then stores an ID, name, and root path. AIPM does not edit project source files. `Operations/` groups tasks, logs, locks, quarantined state, and tool state. `Temporary-Files/Cache/` stores disposable caches, including Python bytecode; `Temporary-Files/Test-Workspace/` stores disposable test output and fixtures. **Update Project** applies this layout to registered projects and safely moves legacy FIRG and transient folders only when the destination is clear. After successful registration, choose **Refresh**, then open **Projects**.
 
 Other registry actions:
 
@@ -177,7 +177,7 @@ For regular registry use, prefer the TUI confirmations. Do not commit a personal
 
 ## 10. Manage A Task And Hand It To Another Agent
 
-Each registered project stores independent task records and supporting files under its own `Shared-Project-State-Manager/Tasks/<Task-ID>/` folder. For the normal beginner workflow, no commands are needed:
+Each registered project stores independent task records and supporting files under `Shared-Project-State-Manager/Operations/Tasks/<Task-ID>/`. For the normal beginner workflow, no commands are needed:
 
 1. From the dashboard, choose **Tasks**.
 2. AIPM refreshes the selected registry. If it is empty, choose **Register A Project First**, finish project registration, then return to **Tasks**.

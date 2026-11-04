@@ -48,7 +48,7 @@ Example Output:
       "field": "title",
       "message": "Task record has no title.",
       "repairable_by": "state-normalize",
-      "source_hint": "Tasks/<task-id>/Metadata.json -> task_record.title (or title); otherwise supply it manually"
+      "source_hint": "Operations/Tasks/<task-id>/Metadata.json -> task_record.title (or title); otherwise supply it manually"
     }
   ],
   "summary": "1 blocking problem(s) found; first: Task record has no title."
@@ -56,7 +56,7 @@ Example Output:
 ```
 
 ### 2.3 Guided Task Normalization (`state-normalize`)
-Repairs malformed task records by deriving missing fields from authoritative task files (`Tasks/<task-id>/Metadata.json`, `Task-Plan.md`, `Reports/*.md`):
+Repairs malformed task records by deriving missing fields from authoritative task files (`Operations/Tasks/<task-id>/Metadata.json`, `Task-Plan.md`, `Reports/*.md`):
 
 #### Step 1: Preview (Dry Run)
 Inspect planned field derivations and diffs without modifying any files:

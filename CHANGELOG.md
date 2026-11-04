@@ -1,5 +1,14 @@
 # AIPM Change Log
 
+## [1.10.0] — Git-First Registration And Unified Project State (Repository Update; Not Published)
+
+- Required a Git repository at the selected project root before registration; **Update Project** initializes Git when the owner confirms.
+- Moved FIRG under `Shared-Project-State-Manager/FIRG/` and placed project agent policy in `Shared-Project-State-Manager/AGENT.md`.
+- Grouped task, tool, log, quarantine, and lock data under `Operations/`; routed caches and disposable tests beneath `Temporary-Files/`.
+- Added a guarded layout migration for existing projects that preserves data and stops on destination or managed-file conflicts.
+- Updated Core, TUI, project guides, and state templates to the new layout. Platform and TUI versions are synchronized; no Skill or Plugin content changed.
+- This repository update is local and unpublished.
+
 ## [1.9.0] — Project Setup, FIRG, And Maintenance (Repository Update; Not Published)
 
 - Added consent-based Git, FIRG, and Shared Project State setup, preserving previous project data and optional-component choices.

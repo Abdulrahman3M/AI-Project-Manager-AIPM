@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-WORKSPACE = ROOT / ".test-workspace"
+WORKSPACE = ROOT / "Shared-Project-State-Manager/Test-Workspace"
 from test_support import CORE_ROOT, CORE_SCRIPT, RUNTIME_ROOT
 sys.path.insert(0, str(CORE_ROOT))
 

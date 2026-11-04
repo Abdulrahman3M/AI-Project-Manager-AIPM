@@ -85,7 +85,7 @@ function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('project-components', 'project-git-init', 'project-firg-install', 'project-firg-update', 'project-firg-hook', 'project-firg-repair', 'project-firg-repair-rule', 'project-save-preferences', 'health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize', 'state-upgrade', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write', 'task-edit', 'task-rename', 'task-clone', 'task-delete')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('project-components', 'project-update-layout', 'project-git-init', 'project-firg-install', 'project-firg-update', 'project-firg-hook', 'project-firg-repair', 'project-firg-repair-rule', 'project-save-preferences', 'health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize', 'state-upgrade', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write', 'task-edit', 'task-rename', 'task-clone', 'task-delete')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',
@@ -141,7 +141,9 @@ function Invoke-AipmCore {
     if ($DeleteFolder) { $arguments += @('--delete-folder') }
     if ($DeleteArchive) { $arguments += @('--delete-archive') }
     if ($ConfirmRepair) { $arguments += @('--confirm-repair') }
-    $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec
+    $cachePath = Join-Path (Join-Path (Join-Path $root 'Shared-Project-State-Manager') 'Temporary-Files') 'Cache'
+    if (-not (Test-Path -LiteralPath $cachePath -PathType Container)) { [void](New-Item -ItemType Directory -Path $cachePath -Force) }
+    $process = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec $TimeoutSec -Environment @{ PYTHONPYCACHEPREFIX = $cachePath }
     if (-not $process.Started) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_NOT_STARTED'; Data = $null } }
     if ($process.TimedOut) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'CORE_TIMED_OUT'; Data = $null } }
     try { $data = $process.StdOut | ConvertFrom-Json -ErrorAction Stop }

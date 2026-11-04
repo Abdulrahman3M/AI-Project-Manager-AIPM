@@ -674,6 +674,21 @@ function Start-AipmGitUpdater {
 
 function Invoke-AipmProjectUpdate {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId)
+    $layout = Invoke-AipmCore -AppRoot $Root -Command 'project-update-layout' -ProjectRoot $ProjectRoot
+    if ($layout.Status -ne 'PASS') {
+        Show-Notice -Title 'Project Layout Needs Review' -Lines @([string]$layout.Reason, 'No Conflicting Files Were Replaced. Resolve The Conflict And Run Update Project Again.') -Kind Warning
+        return
+    }
+    $preflight = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $ProjectRoot
+    if ($preflight.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$preflight.Reason) -Kind Error; return }
+    if ([string]$preflight.Data.components.git -in @('MISSING','DECLINED')) {
+        if (-not (Show-Confirm -Title 'Initialize Git For This Project?' -Message 'Git Is Required To Track Project Changes And Document FIRG Fixes.' -YesLabel 'Initialize Git' -NoLabel 'Cancel Update' -Default $true)) { return }
+        $gitInit = Invoke-AipmCore -AppRoot $Root -Command 'project-git-init' -ProjectRoot $ProjectRoot
+        if ($gitInit.Status -ne 'PASS') { Show-Notice -Title 'Git Initialization Failed' -Lines @([string]$gitInit.Reason) -Kind Error; return }
+    } elseif ([string]$preflight.Data.components.git -ne 'READY') {
+        Show-Notice -Title 'Git Needs Review' -Lines @('Git Status: ' + [string]$preflight.Data.components.git, 'Resolve Git At The Project Root Before Updating Its Managed Layout.') -Kind Warning
+        return
+    }
     while ($true) {
         $inspection = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $ProjectRoot
         if ($inspection.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$inspection.Reason) -Kind Error; return }
@@ -813,26 +828,25 @@ function Invoke-AipmRegistryManagement {
             $firgChoice = 'unknown'
             $gitState = [string]$components.Data.components.git
             if ($gitState -eq 'READY') { $gitChoice = 'yes' }
-            elseif ($gitState -eq 'MISSING') {
-                if (Show-Confirm -Title 'Initialize Git?' -Message 'Git Is Optional. FIRG Requires A Git Repository At The Project Root.' -YesLabel 'Initialize Git' -NoLabel 'Skip Git' -Default $false) {
+            elseif ($gitState -in @('MISSING','DECLINED')) {
+                if (Show-Confirm -Title 'Initialize Git?' -Message 'AIPM Requires A Git Repository At The Project Root To Track Project Changes. Registration Cannot Continue Without Git.' -YesLabel 'Initialize Git' -NoLabel 'Cancel Registration' -Default $true) {
                     $initialized = Invoke-AipmCore -AppRoot $Root -Command 'project-git-init' -ProjectRoot $projectPath
                     if ($initialized.Status -ne 'PASS') { Show-Notice -Title 'Git Initialization Failed' -Lines @([string]$initialized.Reason) -Kind Error; continue }
                     $gitChoice = 'yes'
-                } else { $gitChoice = 'no' }
-            } elseif ($gitState -eq 'UNAVAILABLE') { Show-Notice -Title 'Git Is Unavailable' -Lines @('Git And FIRG Will Be Skipped. Install Git To Enable Them Later.') -Kind Info }
-            elseif ($gitState -eq 'PARENT_REPOSITORY') { Show-Notice -Title 'Parent Git Repository Detected' -Lines @('This Folder Is Not The Repository Root. Git And FIRG Setup Will Be Skipped; Shared State Registration Can Continue.') -Kind Info }
+                } else { continue }
+            } elseif ($gitState -eq 'UNAVAILABLE') { Show-Notice -Title 'Git Is Unavailable' -Lines @('Install Git And Add It To PATH Before Registering This Project.') -Kind Info; continue }
+            elseif ($gitState -eq 'PARENT_REPOSITORY') { Show-Notice -Title 'Parent Git Repository Detected' -Lines @('This Folder Is Not The Repository Root. Register The Git Repository Root Or Initialize A Repository Here.') -Kind Info; continue }
             else { Show-Notice -Title 'Git Needs Review' -Lines @('Git Status: ' + $gitState, 'Resolve The Repository State Before Registration.') -Kind Error; continue }
             $components = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $projectPath
             if ($components.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$components.Reason) -Kind Error; continue }
             $firgState = [string]$components.Data.components.firg
             if ($firgState -in @('READY','EXISTING_UNMANAGED','MODIFIED','UPDATE_AVAILABLE')) { $firgChoice = 'yes' }
-            elseif ($gitChoice -eq 'yes' -and $firgState -in @('MISSING','INSTALL_INTERRUPTED')) {
-                if (Show-Confirm -Title 'Add FIRG?' -Message 'Install FIRG To Document Fixes And Review Incoming Changes.' -YesLabel 'Add FIRG' -NoLabel 'Skip FIRG' -Default $false) {
+            elseif ($gitChoice -eq 'yes' -and $firgState -in @('MISSING','DECLINED','INSTALL_INTERRUPTED')) {
+                if (Show-Confirm -Title 'Add FIRG?' -Message 'FIRG Is Part Of The Required Project Tracking Setup. Registration Cannot Continue Without It.' -YesLabel 'Install FIRG' -NoLabel 'Cancel Registration' -Default $true) {
                     $installed = Invoke-AipmCore -AppRoot $Root -Command 'project-firg-install' -ProjectRoot $projectPath
                     if ($installed.Status -ne 'PASS') { Show-Notice -Title 'FIRG Installation Failed' -Lines @([string]$installed.Reason) -Kind Error; continue }
-                    if ([string]$installed.Data.components.commit_prompt -ne 'READY') { Show-Notice -Title 'Commit Prompt Needs Review' -Lines @('FIRG Was Installed. Commit Prompt Status: ' + [string]$installed.Data.components.commit_prompt, 'Existing Hooks And Custom Hook Paths Are Preserved. Use FIRG Commit Status To Find Undocumented Commits.') -Kind Warning }
                     $firgChoice = 'yes'
-                } else { $firgChoice = 'no' }
+                } else { continue }
             }
             $confirm = Show-Confirm -Title 'Add Shared Project State Manager?' -Message ('AIPM Will Create Or Validate Shared-Project-State-Manager Under ' + $projectPath + '. This Is Required For Registration.') -YesLabel 'Create State And Register' -YesDesc 'Write AIPM-Owned State Metadata, Then Add The Registry Entry.' -NoLabel 'Skip Registration' -NoDesc 'Do Not Add The Project To The Registry.' -Default $false
             if (-not $confirm) { continue }
@@ -848,6 +862,10 @@ function Invoke-AipmRegistryManagement {
             }
             $registered = Invoke-AipmCore -AppRoot $Root -Command 'registry-register' -RegistryPath $currentPath -ProjectRoot $projectPath -ProjectId $projectId -Alias $alias.Trim()
             if ($registered.Status -eq 'PASS') {
+                $layoutUpdate = Invoke-AipmCore -AppRoot $Root -Command 'project-update-layout' -ProjectRoot $projectPath
+                if ($layoutUpdate.Status -ne 'PASS') { Show-Notice -Title 'Project Registered; Layout Needs Review' -Lines @([string]$layoutUpdate.Reason, 'The Project Is Registered. Use Update Project After Resolving This Conflict.') -Kind Warning; continue }
+                $componentCheck = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $projectPath
+                if ($componentCheck.Status -eq 'PASS' -and [string]$componentCheck.Data.components.commit_prompt -ne 'READY') { Show-Notice -Title 'Commit Prompt Needs Review' -Lines @('FIRG Was Installed. Commit Prompt Status: ' + [string]$componentCheck.Data.components.commit_prompt, 'Existing Hooks And Custom Hook Paths Are Preserved. Use FIRG Commit Status To Find Undocumented Commits.') -Kind Warning }
                 $preferenceFile = Join-Path (Join-Path $projectPath 'Shared-Project-State-Manager') 'Component-Preferences.json'
                 if (-not (Test-Path -LiteralPath $preferenceFile)) {
                     $saved = Invoke-AipmCore -AppRoot $Root -Command 'project-save-preferences' -ProjectRoot $projectPath -GitChoice $gitChoice -FirgChoice $firgChoice
@@ -1157,7 +1175,8 @@ function Show-AipmTaskRecord {
             }
             $commitRef = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'rev-parse', '--verify', 'HEAD^{commit}') -TimeoutSec 10
             Show-Notice -Title 'Git Commit Created' -Lines @($commit.StdOut.Trim()) -Kind Success
-            $firgTool = Join-Path (Join-Path (Join-Path $projectRoot 'FIRG') 'tools') 'firg.py'
+            $firgTool = Join-Path (Join-Path (Join-Path (Join-Path $projectRoot 'Shared-Project-State-Manager') 'FIRG') 'tools') 'firg.py'
+            if (-not (Test-Path -LiteralPath $firgTool -PathType Leaf)) { $firgTool = Join-Path (Join-Path (Join-Path $projectRoot 'FIRG') 'tools') 'firg.py' }
             if ((Test-Path -LiteralPath $firgTool -PathType Leaf) -and (Show-Confirm -Title 'Document This Commit In FIRG?' -Message 'Create A FIRG Record And Markdown Report Linked To This Commit.' -YesLabel 'Document Commit' -NoLabel 'Skip Documentation' -Default $false)) {
                 if (-not $commitRef.Started -or $commitRef.TimedOut -or $commitRef.ExitCode -ne 0) { Show-Notice -Title 'Commit Reference Unavailable' -Lines @('The Git Commit Was Kept. Document It Later After Verifying Its Reference.') -Kind Error; continue }
                 $fields = @(
@@ -1178,7 +1197,9 @@ function Show-AipmTaskRecord {
                 if ($cancelled) { Show-Notice -Title 'FIRG Documentation Deferred' -Lines @('The Commit Was Kept. No FIRG Report Was Created.') -Kind Info; continue }
                 $python = Find-AipmPython
                 if (-not $python) { Show-Notice -Title 'FIRG Documentation Failed' -Lines @('Python Is Unavailable. The Git Commit Was Kept.') -Kind Error; continue }
-                $documented = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec 30
+                $cachePath = Join-Path (Join-Path (Join-Path $projectRoot 'Shared-Project-State-Manager') 'Temporary-Files') 'Cache'
+                if (-not (Test-Path -LiteralPath $cachePath -PathType Container)) { [void](New-Item -ItemType Directory -Path $cachePath -Force) }
+                $documented = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec 30 -Environment @{ PYTHONPYCACHEPREFIX = $cachePath }
                 if (-not $documented.Started -or $documented.TimedOut -or $documented.ExitCode -ne 0) { Show-Notice -Title 'FIRG Documentation Failed' -Lines @('The Git Commit Was Kept.', $documented.StdErr.Trim()) -Kind Error }
                 else { Show-Notice -Title 'FIRG Report Created' -Lines @($documented.StdOut.Trim(), 'The Report Has Unverified Test Evidence Until You Record Actual Results.') -Kind Success }
             }
@@ -1697,7 +1718,7 @@ function Invoke-AipmTaskManagement {
                 if ($selectedTaskId -eq '__HELP__') {
                     [void](Show-AipmPage -Title 'Open Existing Task Help' -Lines @(
                         'Choose A Task To Review Its Status, Plan, Reports, Next-Agent Handoff, Or Supporting Files.',
-                        'Task Records Are Stored Under The Project Shared-Project-State-Manager/Tasks/.'
+            'Task Records Are Stored Under Shared-Project-State-Manager/Operations/Tasks/.'
                     ))
                     continue
                 }

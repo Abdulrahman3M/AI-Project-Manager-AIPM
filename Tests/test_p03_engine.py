@@ -30,7 +30,7 @@ class CoreEngineTests(unittest.TestCase):
                  ('request_id', ''), ('request_id', 7), ('request_id', []),
                  ('idempotency_key', 7), ('idempotency_key', []), ('idempotency_key', {})]
         for field, value in cases:
-            with self.subTest(field=field, value=value), tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+            with self.subTest(field=field, value=value), tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
                 project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
                 engine = CoreEngine({'managed': project})
                 before = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
@@ -47,7 +47,7 @@ class CoreEngineTests(unittest.TestCase):
                 self.assertEqual((changed['status'], changed['revision']), ('PASS', 1))
 
     def test_missing_history_revision_blocks_mutation_without_writes(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             engine = CoreEngine({'managed': project})
             engine.execute(CommandEnvelope('first', 'state.set-next-action', 'tester', 'managed', 0, None, {'next_action': 'Existing'}))
@@ -60,7 +60,7 @@ class CoreEngineTests(unittest.TestCase):
                 self.assertEqual(result['reason'], 'INVALID_HISTORY')
             self.assertEqual({p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}, before)
     def test_invalid_pending_commit_preserves_state_history_and_evidence(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             engine = CoreEngine({'managed': project})
             engine.execute(CommandEnvelope('first', 'state.set-next-action', 'tester', 'managed', 0, 'first-key', {'next_action': 'Existing'}))
@@ -77,7 +77,7 @@ class CoreEngineTests(unittest.TestCase):
 
     def test_corrupt_history_blocks_idempotency_without_writes(self):
         for content in ('{truncated', '[]'):
-            with self.subTest(content=content), tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+            with self.subTest(content=content), tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
                 project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
                 event = project.state_root / 'History/Events/00000000000000000001.json'
                 event.write_text(content)
@@ -88,7 +88,7 @@ class CoreEngineTests(unittest.TestCase):
                 after = {p.relative_to(project.state_root): p.read_bytes() for p in project.state_root.rglob('*') if p.is_file()}
                 self.assertEqual(after, before)
     def test_git_observation_write_conflict_and_replay(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             engine = CoreEngine({'managed': project})
             payload = {'branch': 'feature', 'head_sha': 'a' * 40, 'diff_fingerprint': 'b' * 64}
@@ -102,7 +102,7 @@ class CoreEngineTests(unittest.TestCase):
                 self.assertEqual(state[key], value)
             self.assertEqual(len(list((project.state_root / 'History/Events').glob('*.json'))), 1)
     def test_atomic_json_replace_failure_preserves_previous_file(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             path = Path(temporary) / 'State.json'
             _atomic_json(path, {'revision': 7})
             previous = path.read_bytes()
@@ -113,7 +113,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(list(path.parent.iterdir()), [path])
 
     def test_event_replace_failure_recovers_before_read(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             original_replace = Path.replace
             def fail_event(source, target):
@@ -129,7 +129,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(len(list((project.state_root / 'History/Events').glob('*.json'))), 1)
 
     def test_malformed_manifest_shape_is_blocked(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             path = project.state_root / 'State-Manifest.json'
             path.write_text(json.dumps({'schema_version': [], 'revision': 0, 'project_id': 'managed'}))
@@ -137,7 +137,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(result['reason'], 'INVALID_STATE')
 
     def test_failed_state_event_commit_recovers_consistent_revision(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             original_replace = Path.replace
             def fail_manifest(source, target):
@@ -173,21 +173,21 @@ class CoreEngineTests(unittest.TestCase):
         self.assertEqual(result.stdout, '')
 
     def test_cli_inspect_returns_project_json(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             result = self.cli('inspect', '--registry', str(self.registry(temporary, project)), '--project-id', 'managed')
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['project']['project_id'], 'managed')
 
     def test_cli_state_read_returns_manifest_json(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             result = self.cli('state-read', '--registry', str(self.registry(temporary, project)), '--project-id', 'managed')
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['revision'], 0)
 
     def test_cli_invalid_registry_returns_json_error(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             registry = Path(temporary) / 'registry.json'
             registry.write_text('{broken')
             result = self.cli('list', '--registry', str(registry))
@@ -196,7 +196,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assert_cli_stderr_clean(result)
 
     def test_cli_malformed_state_returns_json_error(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             (project.state_root / 'State-Manifest.json').write_text('{broken')
             result = self.cli('state-read', '--registry', str(self.registry(temporary, project)), '--project-id', 'managed')
@@ -205,7 +205,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assert_cli_stderr_clean(result)
 
     def test_cli_unknown_project_returns_json_error(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             result = self.cli('inspect', '--registry', str(self.registry(temporary, project)), '--project-id', 'unknown')
             self.assertEqual(result.returncode, 1)
@@ -220,7 +220,7 @@ class CoreEngineTests(unittest.TestCase):
         return path
 
     def test_legacy_state_read_adds_defaults_without_writing(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             path = self.legacy(project)
             previous = path.read_bytes()
@@ -230,20 +230,20 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), previous)
 
     def test_legacy_state_mutation_upgrades_schema_version(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             path = self.legacy(project)
             result = CoreEngine({'managed': project}).execute(CommandEnvelope('write', 'state.set-next-action', 'tester', 'managed', 0, None, {'next_action': 'Run Tests'}))
             self.assertEqual(result['status'], 'PASS')
             self.assertEqual(json.loads(path.read_text())['schema_version'], '1.1')
     def test_cli_lists_pointer_only_registry_as_json(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             registry = Path(temporary) / "registry.json"
             registry.write_text(json.dumps({"schema_version":"1.0","projects":[{"project_id":"one","root_path":"C:/One","alias":"One"}],"preferences":{}}))
             result = subprocess.run([sys.executable, str(CORE_SCRIPT), "list", "--registry", str(registry)], capture_output=True, text=True, check=True)
             self.assertEqual(json.loads(result.stdout)["projects"][0]["project_id"], "one")
     def test_state_read_and_revisioned_event_write_are_idempotent(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             project = initialize_project_state(Path(temporary) / "Managed", "managed", "Managed")
             engine = CoreEngine({"managed": project})
             initial = engine.execute(CommandEnvelope("request-001", "state.read", "tester", "managed", 0, None, {}))
@@ -258,7 +258,7 @@ class CoreEngineTests(unittest.TestCase):
             self.assertEqual(len(list((project.state_root / "History" / "Events").glob("*.json"))), 1)
 
     def test_revision_conflict_is_blocked_without_state_overwrite(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             project = initialize_project_state(Path(temporary) / "Managed", "managed", "Managed")
             engine = CoreEngine({"managed": project})
             result = engine.execute(CommandEnvelope("request-003", "state.set-next-action", "tester", "managed", 4, None, {"next_action": "Unsafe"}))

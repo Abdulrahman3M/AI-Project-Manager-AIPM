@@ -200,7 +200,7 @@ class ContinuityManager:
             raise StateError('Existing Source And Reason Are Required')
         # Do not relocate manager roots, protocol records, or active manifests.
         relative = source.relative_to(self.project.state_root)
-        if relative.parts[0] not in {'Tasks', 'Tool-State', 'Temporary-Files', 'Cache', 'Test-Workspace', 'Logs'} or len(relative.parts) < 2:
+        if relative.parts[0] not in {'Operations', 'Temporary-Files'} or len(relative.parts) < 2:
             raise StateError('Source Is Protected Operational State')
         hashes = self._hashes(source)
         identifier = uuid4().hex
@@ -216,7 +216,7 @@ class ContinuityManager:
         return record
 
     def quarantine(self, source: Path, reason: str) -> Path:
-        return self._move_to_store(source, 'Quarantine', reason)
+        return self._move_to_store(source, 'Operations/Quarantine', reason)
 
     def archive(self, source: Path, label: str) -> Path:
         return self._move_to_store(source, 'Archive', label)
@@ -231,7 +231,7 @@ class ContinuityManager:
         stored = self._bounded(self.project.state_root / data['stored_path'])
         target = self._bounded(self.project.state_root / data['source_path'])
         relative = target.relative_to(self.project.state_root)
-        if stored != record.parent / 'Payload' or len(relative.parts) < 2 or relative.parts[0] not in {'Tasks', 'Tool-State', 'Temporary-Files', 'Cache', 'Test-Workspace', 'Logs'}:
+        if stored != record.parent / 'Payload' or len(relative.parts) < 2 or relative.parts[0] not in {'Operations', 'Temporary-Files'}:
             raise StateError('Invalid Recovery Destination')
         intent, receipt = record.parent / 'Restore-Intent.json', record.parent / 'Restored.json'
         if intent.exists():
@@ -260,7 +260,7 @@ class ContinuityManager:
         return target
 
     def restore_quarantined(self, record: Path) -> Path:
-        return self._restore_record(record, 'Quarantine')
+        return self._restore_record(record, 'Operations/Quarantine')
 
     def restore_archive(self, record: Path) -> Path:
         return self._restore_record(record, 'Archive')
@@ -268,7 +268,7 @@ class ContinuityManager:
     def _lock_path(self, resource: str) -> Path:
         if not isinstance(resource, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,159}', resource):
             raise LockError('INVALID_LOCK_RESOURCE')
-        return self._bounded(self.project.state_root / 'Locks' / f'{resource}.json')
+        return self._bounded(self.project.state_root / 'Operations' / 'Locks' / f'{resource}.json')
 
     @contextmanager
     def _lock_guard(self, resource: str):

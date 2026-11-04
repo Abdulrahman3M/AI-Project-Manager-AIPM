@@ -10,12 +10,13 @@ To start safely, register your real project through AIPM's **Registry Management
 
 ## What The Files Demonstrate
 
+- `AGENT.md`: required layout, folder roles, and cache/test artifact routing rules for every agent working in the managed project.
 - `Project-Overview.md`: what belongs in a concise project context note.
 - `Current-State.md`: how to distinguish verified facts from unverified details.
 - `Next-Agent-Handoff.md`: a restartable handoff with an exact next action.
 - `File-Operations-Policy.md`: safe, reversible handling of project files.
 - `Root-Exceptions.md`: how to record justified root-level files.
 - `State-Manifest.example.json`: illustrative state metadata only; Core generates the real manifest.
-- `Tasks/Task-Example/`: sample scope, plan, blockers, decisions, changed-file map, and verification report.
+- `Operations/Tasks/Task-Example/`: sample scope, plan, blockers, decisions, changed-file map, and verification report.
 
 The real runtime layout is documented in [Plugin Distribution And Project Architecture](../../docs/project/Architecture/Plugin-Distribution-Architecture.md) and the beginner guides under `docs/guides/`.

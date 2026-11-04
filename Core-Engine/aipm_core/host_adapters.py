@@ -124,7 +124,7 @@ class HostAdapter:
         if command == 'task.artifact.write' and expected_revision != revision:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "STATE_CONFLICT", "revision": revision}
         operations = TaskOperations(self.engine, project)
-        task = project.state_root / 'Tasks' / task_id
+        task = project.state_root / 'Operations' / 'Tasks' / task_id
         try:
             if command == 'task.artifact.list':
                 return {"schema_version": "1.0", "status": "PASS", "revision": revision, "artifacts": operations.list_artifacts(task)}

@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.10.0] — Git-First Registration And State Layout Migration
+
+- Required Git at the selected project root during registration and added a confirmed Git initialization step to **Update Project**.
+- Moved existing projects to FIRG under Shared Project State and grouped operational folders under `Operations/`.
+- Routed Python bytecode to `Temporary-Files/Cache/` and disposable tests to `Temporary-Files/Test-Workspace/`.
+- Synchronized the TUI version with platform `1.10.0`.
+
 ## [1.9.0] — Project Setup And Maintenance
 
 - Added ordered optional Git and FIRG setup followed by required shared-state registration.

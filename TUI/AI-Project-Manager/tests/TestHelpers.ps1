@@ -30,7 +30,7 @@ function Initialize-TestEnvironment {
     [void](New-Item -ItemType Directory -Path $script:Work -Force)
     $script:RuntimeRoot = Join-Path $testRoot ('aipm-tui-runtime-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
     [void](New-Item -ItemType Directory -Path $script:RuntimeRoot -Force)
-    foreach ($name in @('Core-Engine', 'Capability-Library', 'TUI/AI-Project-Manager', 'Plugins/aipm-project-agent-bridge', 'Plugins/Adapters', 'Templates/FIRG')) {
+    foreach ($name in @('Core-Engine', 'Capability-Library', 'TUI/AI-Project-Manager', 'Plugins/aipm-project-agent-bridge', 'Plugins/Adapters', 'Templates/FIRG', 'Templates/Shared-Project-State-Manager-Example')) {
         $source = Join-Path $script:SourceRoot $name
         if (Test-Path -LiteralPath $source -PathType Container) {
             $destination = Join-Path $script:RuntimeRoot $name

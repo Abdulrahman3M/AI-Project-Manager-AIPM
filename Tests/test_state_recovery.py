@@ -20,7 +20,7 @@ from aipm_core.storage import initialize_project_state, _atomic_json, ManagedPro
 
 class StateRecoveryTests(unittest.TestCase):
     def test_reproduction_invalid_task_record_reports_detail(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             manifest_path = project.state_root / 'State-Manifest.json'
             raw = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -48,13 +48,13 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertIn('state-validate', diag['next_step'])
 
     def test_inspect_state_finds_exact_missing_fields_and_is_read_only(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             manifest_path = project.state_root / 'State-Manifest.json'
             raw = json.loads(manifest_path.read_text(encoding='utf-8'))
             raw['tasks']['Task-2026-10-30-Sample-01'] = {
                 'scope': 'Sample scope',
-                'plan': 'Tasks/Task-2026-10-30-Sample-01/Task-Plan.md',
+                'plan': 'Operations/Tasks/Task-2026-10-30-Sample-01/Task-Plan.md',
                 'blockers': [],
                 'report': '',
                 'status_override': 'COMPLETED & VERIFIED'
@@ -80,14 +80,14 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertEqual(before_hashes, after_hashes)
 
     def test_state_normalize_dry_run_and_apply(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             state_root = project.state_root
             manifest_path = state_root / 'State-Manifest.json'
             raw = json.loads(manifest_path.read_text(encoding='utf-8'))
 
             task_id = 'Task-2026-10-30-Sample-01'
-            task_dir = state_root / 'Tasks' / task_id
+            task_dir = state_root / 'Operations' / 'Tasks' / task_id
             task_dir.mkdir(parents=True)
             (task_dir / 'Task-Plan.md').write_text('# My Task Plan\n\nFull plan details.\n', encoding='utf-8')
             (task_dir / 'Metadata.json').write_text(json.dumps({
@@ -103,7 +103,7 @@ class StateRecoveryTests(unittest.TestCase):
 
             raw['tasks'][task_id] = {
                 'scope': 'Sample scope',
-                'plan': f'Tasks/{task_id}/Task-Plan.md',
+                'plan': f'Operations/Tasks/{task_id}/Task-Plan.md',
                 'blockers': [],
                 'report': '',
                 'status_override': 'COMPLETED & VERIFIED'
@@ -148,7 +148,7 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertIn('Full plan details', task_read['task']['plan'])
 
     def test_state_normalize_missing_title_demands_manual_or_override(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             manifest_path = project.state_root / 'State-Manifest.json'
             raw = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -174,7 +174,7 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertEqual(res_override['reason'], 'DRY_RUN')
 
     def test_state_normalize_rejects_path_traversal(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             manifest_path = project.state_root / 'State-Manifest.json'
             raw = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -197,7 +197,7 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertEqual(change, [])
 
     def test_state_normalize_blocks_when_pending_commit_exists(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             pending = project.state_root / 'History/Pending-Commit.json'
             pending.write_text('{"schema_version": "1.0"}', encoding='utf-8')
@@ -207,7 +207,7 @@ class StateRecoveryTests(unittest.TestCase):
             self.assertEqual(res['reason'], 'PENDING_COMMIT_PRESENT')
 
     def test_idempotent_when_healthy(self):
-        with tempfile.TemporaryDirectory(dir=ROOT / '.test-workspace') as temporary:
+        with tempfile.TemporaryDirectory(dir=ROOT / 'Shared-Project-State-Manager/Test-Workspace') as temporary:
             project = initialize_project_state(Path(temporary) / 'Managed', 'managed', 'Managed')
             engine = CoreEngine({'managed': project})
             res = engine.normalize_task_records(project, confirm=True)

@@ -45,7 +45,7 @@ class PluginDistributionTests(unittest.TestCase):
 
     def test_builds_all_profiles_with_full_inventory(self) -> None:
         builder = load_builder()
-        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             output = Path(temporary) / "dist"
             results = builder.build_archives(ROOT, ["chatgpt", "claude", "antigavity"], output)
             catalog = json.loads((ROOT / "Capability-Library" / "Registry.json").read_text(encoding="utf-8"))
@@ -70,7 +70,7 @@ class PluginDistributionTests(unittest.TestCase):
 
     def test_chatgpt_archive_has_uploadable_manifests_and_skill_front_matter(self) -> None:
         builder = load_builder()
-        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             archive = builder.build_archives(ROOT, ["chatgpt"], Path(temporary) / "dist")[0]["archive"]
             with zipfile.ZipFile(archive) as package:
                 portable = json.loads(package.read("plugin.json"))
@@ -93,7 +93,7 @@ class PluginDistributionTests(unittest.TestCase):
     def test_every_host_archive_documents_the_project_website(self) -> None:
         builder = load_builder()
         project_url = "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/"
-        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             results = builder.build_archives(ROOT, ["chatgpt", "claude", "antigavity"], Path(temporary) / "dist")
             for result in results:
                 with zipfile.ZipFile(result["archive"]) as package:
@@ -102,7 +102,7 @@ class PluginDistributionTests(unittest.TestCase):
 
     def test_archive_tampering_and_policy_gates_fail_closed(self) -> None:
         builder = load_builder()
-        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / ".test-workspace") as temporary:
+        with tempfile.TemporaryDirectory(prefix="plugin-dist-", dir=ROOT / "Shared-Project-State-Manager/Test-Workspace") as temporary:
             output = Path(temporary) / "dist"
             archive = builder.build_archives(ROOT, ["chatgpt"], output)[0]["archive"]
             with zipfile.ZipFile(archive, "a") as package:

@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-TEST_WORKSPACE = REPOSITORY_ROOT / ".test-workspace"
+TEST_WORKSPACE = REPOSITORY_ROOT / "Shared-Project-State-Manager/Test-Workspace"
 # A test runner can be interrupted while a child process still has a copied
 # runtime file open. Per-process paths prevent a later test process from
 # deleting or reusing that live runtime.

@@ -92,6 +92,14 @@ def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _state_agent_instructions() -> str:
+    template = Path(__file__).resolve().parent / "STATE-AGENT.md"
+    try:
+        return template.read_text(encoding="utf-8")
+    except OSError as error:
+        raise StateError("STATE_AGENT_TEMPLATE_MISSING") from error
+
+
 def _atomic_json(path: Path, data: dict) -> None:
     temporary = None
     try:
@@ -169,12 +177,13 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
         candidate.mkdir()
         staging = candidate
         _probe_access(staging)
-        for relative in ("Tasks", "Tool-State", "Temporary-Files", "Cache", "Test-Workspace", "Logs", "Quarantine/Items", "Quarantine/Records", "History/Snapshots", "History/Events", "Locks", "Archive"):
+        for relative in ("FIRG", "Operations/Tasks", "Operations/Tool-State", "Temporary-Files/Cache", "Temporary-Files/Test-Workspace", "Operations/Logs", "Operations/Quarantine/Items", "Operations/Quarantine/Records", "History/Snapshots", "History/Events", "Operations/Locks", "Archive"):
             (staging / relative).mkdir(parents=True, exist_ok=True)
         now = _timestamp()
         _atomic_json(staging / "Project-Manifest.json", {"schema_version": "1.0", "project_id": project_id, "project_alias": alias, "state_root_name": STATE_ROOT_NAME, "created_at": now, "source_root_fingerprint": None, "active_task_id": None})
         _atomic_json(staging / "State-Manifest.json", {"schema_version": "1.1", "tasks": {}, "diff_fingerprint": None, "revision": 0, "project_id": project_id, "task_id": None, "task_status": "NOT-STARTED", "active_phase": None, "state_health": "CONSISTENT", "last_verified_action": "P02 initialization", "next_action": None, "branch": None, "head_sha": None, "updated_at": now, "updated_by": "aipm-core"})
-        (staging / "README.md").write_text("# Shared Project State Manager\n\nManaged operational state for this project.\n", encoding="utf-8")
+        (staging / "README.md").write_text("# Shared Project State Manager\n\nManaged operational state for this project. Read `AGENT.md` before creating or routing files here.\n", encoding="utf-8")
+        (staging / "AGENT.md").write_text(_state_agent_instructions(), encoding="utf-8")
         if state_root.exists():
             raise StateError("managed state root already exists; initialization never overwrites")
         staging.rename(state_root)

@@ -12,12 +12,12 @@ from aipm_core.domain import CommandEnvelope, CoreEngine
 from aipm_core.host_adapters import load_capability_matrix
 from aipm_core.storage import ManagedProject, ProjectRegistry, STATE_ROOT_NAME, StateError, _canonical, _protect_platform_path, default_registry_path, initialize_project_state
 from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
-from aipm_core.project_setup import inspect_project, initialize_git, install_firg, install_firg_hook, repair_firg_files, repair_firg_rule, save_preferences, update_firg
+from aipm_core.project_setup import inspect_project, initialize_git, install_firg, install_firg_hook, repair_firg_files, repair_firg_rule, save_preferences, update_firg, update_project_layout
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["project-components", "project-git-init", "project-firg-install", "project-firg-update", "project-firg-hook", "project-firg-repair", "project-firg-repair-rule", "project-save-preferences", "health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "state-validate", "state-normalize", "state-upgrade", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
+    parser.add_argument("command", choices=["project-components", "project-update-layout", "project-git-init", "project-firg-install", "project-firg-update", "project-firg-hook", "project-firg-repair", "project-firg-repair-rule", "project-save-preferences", "health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "state-validate", "state-normalize", "state-upgrade", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -63,7 +63,7 @@ def _task_operations(registry_path: Path, project_id: str) -> tuple[TaskOperatio
         raise StateError(state.get("reason", "INVALID_STATE"))
     operations = TaskOperations(engine, project)
     for task_id in state["state"].get("tasks", {}):
-        task_dir = operations.root / "Tasks" / task_id
+        task_dir = operations.root / "Operations" / "Tasks" / task_id
         archive_path = operations.root / "Archive" / f"{task_id}.zip"
         if not task_dir.exists() and not archive_path.is_file():
             operations.sync_artifacts(task_dir)
@@ -99,7 +99,7 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             state = engine.execute(CommandEnvelope("task-cli-list", "state.read", "aipm-cli", operations.project.project_id, 0, None, {}))
             rows = []
             for task_id, record in sorted(state["state"]["tasks"].items()):
-                rows.append({"task_id": task_id, "title": record["title"], "status": CoreEngine.task_status(record), "task_path": str(operations.root / "Tasks" / task_id)})
+                rows.append({"task_id": task_id, "title": record["title"], "status": CoreEngine.task_status(record), "task_path": str(operations.root / "Operations" / "Tasks" / task_id)})
             return {"schema_version": "1.0", "status": "PASS", "tasks": rows}
         if args.command == "task-import-archive":
             if not args.source:
@@ -108,7 +108,7 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
             return {"schema_version": "1.0", **{key: (str(value) if isinstance(value, Path) else value) for key, value in result.items()}}
         if not args.task_id:
             raise StateError("TASK_ID_REQUIRED")
-        task = operations.root / "Tasks" / args.task_id
+        task = operations.root / "Operations" / "Tasks" / args.task_id
         if args.command == "task-read":
             archive_path = operations.root / "Archive" / f"{task.name}.zip"
             task_record = operations.read_task(task)
@@ -339,6 +339,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             root = Path(args.project_root)
             if args.command == "project-git-init":
                 initialize_git(root)
+            elif args.command == "project-update-layout":
+                layout = update_project_layout(root)
             elif args.command == "project-firg-install":
                 install_firg(root)
             elif args.command == "project-firg-update":
@@ -357,6 +359,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 choices = {"yes": True, "no": False, "unknown": None}
                 save_preferences(root, git=choices[args.git_choice], firg=choices[args.firg_choice])
             result = {"schema_version": "1.0", "status": "PASS", "components": inspect_project(root)}
+            if args.command == "project-update-layout":
+                result["layout"] = layout
         except (StateError, OSError, ValueError) as error:
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": str(error)}
         print(json.dumps(result, ensure_ascii=False))

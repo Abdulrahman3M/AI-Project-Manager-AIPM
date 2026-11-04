@@ -70,6 +70,35 @@ class ProjectSetupTests(unittest.TestCase):
         (self.root / "FIRG" / "README.md").write_text("Local edit", encoding="utf-8")
         self.assertEqual(setup.inspect_project(self.root)["firg"], "MODIFIED")
 
+    def test_project_layout_migrates_firg_and_routes_transient_directories(self):
+        setup.initialize_git(self.root)
+        setup.install_firg(self.root)
+        (self.root / 'Shared-Project-State-Manager').mkdir()
+        state = self.root / 'Shared-Project-State-Manager'
+        (state / 'Temporary-Files').mkdir()
+        (state / 'Cache').mkdir()
+        (state / 'Cache' / 'old.pyc').write_bytes(b'cache')
+        (state / 'Test-Workspace').mkdir()
+        (state / 'Test-Workspace' / 'fixture.tmp').write_text('fixture', encoding='utf-8')
+        (state / 'Archive').mkdir()
+        (state / 'History').mkdir()
+        (state / 'Tasks').mkdir()
+        (state / 'Tool-State').mkdir()
+        (state / 'Logs').mkdir()
+        (state / 'Quarantine').mkdir()
+        (state / 'Locks').mkdir()
+        (state / 'Project-Manifest.json').write_text(json.dumps({'schema_version':'1.0','project_id':'layout-test','project_alias':'Layout Test','state_root_name':'Shared-Project-State-Manager'}), encoding='utf-8')
+        (state / 'State-Manifest.json').write_text(json.dumps({'schema_version':'1.1','project_id':'layout-test'}), encoding='utf-8')
+        result = setup.update_project_layout(self.root)
+        self.assertEqual(result['migrated'], 8)
+        self.assertTrue((state / 'FIRG' / 'tools' / 'firg.py').is_file())
+        self.assertFalse((self.root / 'FIRG').exists())
+        self.assertTrue((state / 'AGENT.md').is_file())
+        self.assertFalse((state / 'FIRG' / 'AGENTS.md').exists())
+        self.assertTrue((state / 'Operations' / 'Tasks').is_dir())
+        self.assertEqual((state / 'Temporary-Files' / 'Cache' / 'old.pyc').read_bytes(), b'cache')
+        self.assertEqual((state / 'Temporary-Files' / 'Test-Workspace' / 'fixture.tmp').read_text(encoding='utf-8'), 'fixture')
+
     def test_git_version_baseline_reports_unknown_and_old_without_guessing_latest(self):
         cases = [('git version 2.19.9', ('2.19.9', 'BELOW_BASELINE', 'OTHER_OR_UNKNOWN')),
                  ('git version 2.20.0.windows.1', ('2.20.0', 'MEETS_BASELINE', 'GIT_FOR_WINDOWS')),
@@ -187,14 +216,15 @@ class ProjectSetupTests(unittest.TestCase):
         rules.write_text('Owner rules', encoding='utf-8')
         original_open = Path.open
         def interrupted(path, *args, **kwargs):
-            if path.name == 'README.md' and path.parent.name == 'FIRG' and args and args[0] == 'xb':
+            if path.name == 'test_firg.py' and path.parent.name == 'tests' and args and args[0] == 'xb':
                 raise OSError('simulated interruption')
             return original_open(path, *args, **kwargs)
         with patch.object(Path, 'open', interrupted):
             with self.assertRaisesRegex(OSError, 'simulated interruption'):
                 setup.install_firg(self.root)
         self.assertEqual(setup.inspect_project(self.root)['firg'], 'INSTALL_INTERRUPTED')
-        scoped = self.root / 'FIRG' / 'AGENTS.md'
+        self.assertFalse((self.root / 'FIRG' / 'AGENTS.md').exists())
+        scoped = self.root / 'FIRG' / 'README.md'
         prior = scoped.read_bytes()
         scoped.write_bytes(b'Local change')
         with self.assertRaisesRegex(StateError, 'FIRG_INSTALL_LOCAL_MODIFICATION'):
@@ -422,7 +452,7 @@ class ProjectSetupTests(unittest.TestCase):
         target.write_bytes(b'Previous version')
         setup.update_firg(self.root)
         self.assertEqual(setup.inspect_project(self.root)['firg'], 'READY')
-        self.assertFalse((state / 'Tool-State' / 'FIRG-Update.json').exists())
+        self.assertFalse((state / 'Operations' / 'Tool-State' / 'FIRG-Update.json').exists())
 
     def test_future_update_changes_only_unmodified_managed_rule(self):
         setup.initialize_git(self.root)

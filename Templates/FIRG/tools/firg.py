@@ -13,8 +13,10 @@ import sys
 from zoneinfo import ZoneInfo
 from uuid import uuid4
 
-ROOT = Path(__file__).resolve().parents[2]
-FIRG = ROOT / 'FIRG'
+_FIRG_PARENT = Path(__file__).resolve().parents[2]
+ROOT = _FIRG_PARENT.parent if _FIRG_PARENT.name == 'Shared-Project-State-Manager' else _FIRG_PARENT
+FIRG = (ROOT / 'Shared-Project-State-Manager' / 'FIRG'
+        if _FIRG_PARENT.name == 'Shared-Project-State-Manager' else ROOT / 'FIRG')
 REG = FIRG / 'registry'
 LEDGER = FIRG / 'FIX-HISTORY.md'
 ID = re.compile(r'^(\d{4}\.\d{2}\.\d{2})-(0[1-9]|[1-9]\d+)$')
@@ -221,9 +223,10 @@ def sync(check=False):
 
 def validate():
     config(); load(FIRG/'schemas/fix-record.schema.json')
-    for name in ('AGENTS.md','README.md','policies/INTEGRATION.md','tools/firg.py','tests/test_firg.py'):
+    for name in ('README.md','policies/INTEGRATION.md','tools/firg.py','tests/test_firg.py'):
         if not (FIRG/name).is_file(): raise Error('missing required file: '+name)
-    if not (ROOT/'AGENTS.md').is_file(): raise Error('missing root AGENTS.md')
+    if not (ROOT/'Shared-Project-State-Manager'/'AGENT.md').is_file() and not (ROOT/'AGENTS.md').is_file():
+        raise Error('missing project agent instructions')
     sync(True)
 
 def resolve(ref):

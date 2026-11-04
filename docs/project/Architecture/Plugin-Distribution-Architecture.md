@@ -86,8 +86,14 @@ The Core detects its installation root from the executing package and rejects ma
 <project-root>/
 ├── src/                         # The AI Agent edits the original project files here
 └── Shared-Project-State-Manager/
-    ├── State-Manifest.json      # Core-authoritative task status and checkpoints
-    └── Tasks/
+    ├── FIRG/                     # Fix records, reports, tools, and policies
+    ├── Temporary-Files/
+    │   ├── Cache/                # Python bytecode and disposable caches
+    │   └── Test-Workspace/       # Disposable tests and generated fixtures
+    ├── Archive/                  # Retained archives
+    ├── History/                  # Events and backups
+    ├── Operations/               # Grouped task and runtime operations
+    │   └── Tasks/
         └── <Task-ID>/           # One isolated context folder per task
             ├── Instructions/
             ├── Handoff/
@@ -99,6 +105,8 @@ The Core detects its installation root from the executing package and rejects ma
             ├── Task-State.md
             ├── Test-Status.md
             └── Final-Report.md
+    ├── AGENT.md                  # Folder roles and mandatory artifact routing
+    └── State-Manifest.json       # Core-authoritative task status and checkpoints
 ```
 
 The category directories may contain task instructions, handoff notes, progress/final reports, helper scripts, small examples, reference images, and supporting documents. They are not a second source tree: an agent edits the original files under `<project-root>` and records their paths in the task checkpoint. AIPM Core exposes no project-source write/delete/execute API, does not run target-project tests, and does not add an approval gate over a host-authorized agent's source changes. Core metadata/artifact safeguards apply only to AIPM-owned state. Normal project rules, user authorization, and AI-host/OS permissions still govern the agent.
