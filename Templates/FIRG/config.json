@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "timezone": "UTC",
+  "functional_include": [
+    "*",
+    "**"
+  ],
+  "functional_exclude": [
+    "README.md",
+    "BUILD.md",
+    "CONTRIBUTING.md",
+    "SUPPORTED_SYSTEM.md",
+    "AGENTS.md",
+    "docs/**",
+    "FIRG/README.md",
+    "FIRG/AGENTS.md",
+    "FIRG/FIX-HISTORY.md",
+    "FIRG/policies/**",
+    "FIRG/reviews/**",
+    "FIRG/reports/**"
+  ],
+  "broader_tests": []
+}

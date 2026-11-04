@@ -7,6 +7,7 @@ $script:Root = $script:SourceRoot
 $script:RuntimeRoot = ''
 $script:OriginalDataDirectory = $null
 $script:OriginalLocalAppData = $null
+$script:OriginalBytecodeSetting = $null
 
 function Set-TestGroup { param([string]$Name) $script:Group = $Name; Write-Host ("`n== " + $Name) -ForegroundColor Cyan }
 function Add-TestResult {
@@ -23,13 +24,13 @@ function Skip-Test { param([string]$Name, [string]$Reason) Add-TestResult $Name 
 function Get-TestResults { return $script:Results }
 
 function Initialize-TestEnvironment {
-    $testRoot = Join-Path $script:SourceRoot '.test-workspace'
+    $testRoot = Join-Path $script:SourceRoot 'Shared-Project-State-Manager/Test-Workspace'
     if (-not (Test-Path -LiteralPath $testRoot -PathType Container)) { [void](New-Item -ItemType Directory -Path $testRoot -Force) }
     $script:Work = Join-Path $testRoot ('aipm-tui-tests-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
     [void](New-Item -ItemType Directory -Path $script:Work -Force)
     $script:RuntimeRoot = Join-Path $testRoot ('aipm-tui-runtime-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
     [void](New-Item -ItemType Directory -Path $script:RuntimeRoot -Force)
-    foreach ($name in @('Core-Engine', 'Capability-Library', 'TUI/AI-Project-Manager', 'Plugins/aipm-project-agent-bridge', 'Plugins/Adapters')) {
+    foreach ($name in @('Core-Engine', 'Capability-Library', 'TUI/AI-Project-Manager', 'Plugins/aipm-project-agent-bridge', 'Plugins/Adapters', 'Templates/FIRG')) {
         $source = Join-Path $script:SourceRoot $name
         if (Test-Path -LiteralPath $source -PathType Container) {
             $destination = Join-Path $script:RuntimeRoot $name
@@ -44,12 +45,14 @@ function Initialize-TestEnvironment {
     Import-AppModules -Root $script:Root
     $script:OriginalDataDirectory = $env:AIPM_DATA_DIR
     $script:OriginalLocalAppData = $env:LOCALAPPDATA
+    $script:OriginalBytecodeSetting = $env:PYTHONDONTWRITEBYTECODE
     $env:AIPM_DATA_DIR = Join-Path $script:Work 'data'    # tests never touch the real user profile
+    $env:PYTHONDONTWRITEBYTECODE = '1'
     Initialize-Renderer -Ansi $false -Sink Buffer
     Set-IconTier 'Ascii'
 }
 function Remove-TestEnvironment {
-    $testRoot = [System.IO.Path]::GetFullPath((Join-Path $script:SourceRoot '.test-workspace'))
+    $testRoot = [System.IO.Path]::GetFullPath((Join-Path $script:SourceRoot 'Shared-Project-State-Manager/Test-Workspace'))
     foreach ($candidate in @($script:Work, $script:RuntimeRoot)) {
         if ($candidate -and (Test-Path -LiteralPath $candidate)) {
             $candidatePath = [System.IO.Path]::GetFullPath($candidate)
@@ -63,6 +66,7 @@ function Remove-TestEnvironment {
     }
     if ($null -eq $script:OriginalDataDirectory) { Remove-Item Env:AIPM_DATA_DIR -ErrorAction SilentlyContinue } else { $env:AIPM_DATA_DIR = $script:OriginalDataDirectory }
     if ($null -eq $script:OriginalLocalAppData) { Remove-Item Env:LOCALAPPDATA -ErrorAction SilentlyContinue } else { $env:LOCALAPPDATA = $script:OriginalLocalAppData }
+    if ($null -eq $script:OriginalBytecodeSetting) { Remove-Item Env:PYTHONDONTWRITEBYTECODE -ErrorAction SilentlyContinue } else { $env:PYTHONDONTWRITEBYTECODE = $script:OriginalBytecodeSetting }
 }
 function Get-TestWork { return $script:Work }
 function Get-TestRoot { return $script:Root }

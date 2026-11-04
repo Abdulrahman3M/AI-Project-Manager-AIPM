@@ -278,7 +278,8 @@ function Show-Menu {
     param([Parameter(Mandatory)][string]$Title, [string]$Description = '', [Parameter(Mandatory)][object[]]$Items, [int]$Default = 0,
           [ValidateSet('','Arrows','Numbers','Hybrid','Search')][string]$Navigation = '',
           [string]$Preset = '',
-          [ValidateSet('','Muted','Shade','Inline','Panel','Off')][string]$DescriptionStyle = '')
+          [ValidateSet('','Muted','Shade','Inline','Panel','Off')][string]$DescriptionStyle = '',
+          [scriptblock]$DescriptionProvider = $null)
     $items = @($Items)
     if ($items.Count -eq 0) { throw 'Show-Menu needs at least one item.' }
     if (-not $Navigation) { $Navigation = $script:MenuDesign.Navigation }
@@ -291,6 +292,10 @@ function Show-Menu {
     $lastTerminalWidth = 0; $lastTerminalHeight = 0
     $visible = @()
     while ($true) {
+        if ($DescriptionProvider) {
+            $updatedDescription = [string](& $DescriptionProvider)
+            if ($updatedDescription -ne $Description) { $Description = $updatedDescription; $dirty = $true }
+        }
         $curSize = Get-TerminalSize
         if ($curSize.Width -ne $lastTerminalWidth -or $curSize.Height -ne $lastTerminalHeight) {
             $dirty = $true

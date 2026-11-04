@@ -1,5 +1,13 @@
 # AIPM Change Log
 
+## [1.9.0] — Project Setup, FIRG, And Maintenance (Repository Update; Not Published)
+
+- Added consent-based Git, FIRG, and Shared Project State setup, preserving previous project data and optional-component choices.
+- Added FIRG records, Markdown reports, Git commit tracking, external-change review tools, and a bypassable local interactive commit prompt that preserves existing hooks.
+- Added background component inspection, explicit project maintenance, resumable guarded FIRG updates, and backed-up legacy state schema upgrades.
+- Added an offline Git compatibility baseline and an explicit option to open the Git for Windows updater; the system installation update itself is not claimed as verified.
+- Platform and TUI versions are synchronized; independently versioned Plugins and Skills are unchanged. This update is local and unpublished.
+
 ## [1.8.7] — Antigravity Skills Bundle Layout (Repository Update; Not Published)
 
 - Replaced the unrecognized Antigravity manifest with the documented `.agents/skills/` discovery layout and marked the Skills folder layout verified; native installation and runtime remain unverified.

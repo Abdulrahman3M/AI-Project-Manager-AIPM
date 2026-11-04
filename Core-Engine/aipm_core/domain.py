@@ -441,6 +441,9 @@ class CoreEngine:
         elif event["command"] == "state.record-git-observation":
             if any(key not in event["input"] or manifest[key] != event["input"][key] for key in ("branch", "head_sha", "diff_fingerprint")):
                 raise StateError("Pending Commit Git Mismatch")
+        elif event["command"] == "state.upgrade-schema":
+            if event['input'] or (current['revision'] == revision - 1 and current.get('schema_version') != '1.0'):
+                raise StateError('Pending Schema Upgrade Mismatch')
         else:
             raise StateError("Unsupported Pending Commit Command")
         event_path = project.state_root / "History" / "Events" / f"{revision:020d}.json"
@@ -1283,7 +1286,7 @@ class CoreEngine:
             resumable.setdefault('changed_files', [])
             resumable.setdefault('test_results', [])
             return {'schema_version': '1.0', 'status': 'PASS', 'task': resumable, 'task_status': self.task_status(task), 'revision': manifest['revision']}
-        if command.command not in {"state.set-next-action", "state.record-git-observation"} | self.TASK_COMMANDS:
+        if command.command not in {"state.set-next-action", "state.record-git-observation", "state.upgrade-schema"} | self.TASK_COMMANDS:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:
             for record in history:
@@ -1302,6 +1305,9 @@ class CoreEngine:
             if not isinstance(next_action, str) or not next_action.strip():
                 return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_INPUT"}
             manifest["next_action"] = next_action
+        elif command.command == 'state.upgrade-schema':
+            if command.input or manifest.get('schema_version') != '1.0':
+                return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': 'SCHEMA_UPGRADE_NOT_APPLICABLE'}
         else:
             keys = ("branch", "head_sha", "diff_fingerprint")
             if any(key not in command.input or (command.input[key] is not None and (not isinstance(command.input[key], str) or not command.input[key].strip())) for key in keys):

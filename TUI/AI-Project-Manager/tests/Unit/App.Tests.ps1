@@ -1,5 +1,14 @@
 Set-TestGroup 'Evidence-Based App View Models'
 
+$updaterCapture = @{ Path = ''; Argument = '' }
+$fakeUpdater = { param($path, $arguments) $updaterCapture.Path = $path; $updaterCapture.Argument = [string]$arguments[0]; return [pscustomobject]@{ Id = 123 } }.GetNewClosure()
+$updaterStarted = Start-AipmGitUpdater -GitPath 'C:\Git With Spaces\git.exe' -Launcher $fakeUpdater
+Assert-Equal 'Git updater reports only that the process started' 'STARTED' $updaterStarted.Status
+Assert-Equal 'Git updater receives the selected executable without shell interpolation' 'C:\Git With Spaces\git.exe' $updaterCapture.Path
+Assert-Equal 'Git updater uses the official Git for Windows command' 'update-git-for-windows' $updaterCapture.Argument
+$updaterBlocked = Start-AipmGitUpdater -GitPath 'missing' -Launcher { param($path, $arguments) throw 'test failure' }
+Assert-Equal 'Git updater launch errors are reported without claiming success' 'BLOCKED' $updaterBlocked.Status
+
 $verifiedTask = [pscustomobject]@{
     title = 'Verify The Dashboard'
     scope = 'Core State Projection'

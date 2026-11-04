@@ -28,6 +28,7 @@ PUBLIC_DIRECTORIES = (
     "Plugins/aipm-project-agent-bridge",
     "TUI",
     "Templates/Shared-Project-State-Manager-Example",
+    "Templates/FIRG",
     "UX-TUI",
     "docs/README.md",
     "docs/project/Architecture/Plugin-Distribution-Architecture.md",

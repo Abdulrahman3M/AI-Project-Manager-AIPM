@@ -1,5 +1,21 @@
 # AI Project Manager Support Matrix
 
+## v1.9.0 Local Repository Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Project setup and maintenance | Windows / Python | PASS | 20 focused tests passed, covering Git dependency, user choices, existing hooks, interrupted installs and updates, root-rule preservation, schema upgrade, and Windows ACL preservation. |
+| Symbolic-link fixture | Windows / Python | UNVERIFIED | One test was skipped because the host denied symbolic-link creation with `WinError 1314`. |
+| Junction containment | Windows / isolated test outside the sandbox | PASS | A real junction pointing outside the test project was detected as invalid without changing its target. |
+| Core state regression | Isolated Windows / Python | PASS | 20 P03 Core tests passed in an isolated runtime. |
+| FIRG tooling | Windows / Python | PASS | Eight focused tooling tests passed; unsupported hard-link publication falls back to exclusive Windows rename. |
+| PowerShell terminal interface | PowerShell 7.6.5 / scripted input | PASS | 166 interface tests passed, including registration choices, project update, and Git commit to FIRG report. |
+| PowerShell client | Windows PowerShell 5.1 | PASS | 38 client tests passed, including the background component check. |
+| Interactive Git and TUI | Windows ConPTY / PowerShell 7 | PASS | Isolated terminal checks exercised commit prompt acceptance and refusal, report linkage, background status, and the Update Project screen. |
+| Git for Windows system update | Windows / isolated launch stub and read-only help | UNVERIFIED | The updater launch is tested with a stub and its real `-h` usage was inspected; no system Git installation was downloaded or modified. |
+| Windows Terminal resize and other operating systems | Not run | UNVERIFIED | ConPTY observation does not establish visual behavior under resize, or execution on Linux/macOS. |
+| Remote branch protection and Plugin installation | Not checked | UNVERIFIED | The update is local; no remote protection or host installation is claimed. |
+
 ## v1.8.7 Local Repository Update
 
 | Component | Environment | Status | Evidence |

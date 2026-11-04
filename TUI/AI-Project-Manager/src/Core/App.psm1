@@ -660,6 +660,91 @@ function ConvertFrom-AipmCodePoints {
     return $text
 }
 
+function Start-AipmGitUpdater {
+    param([Parameter(Mandatory)][string]$GitPath, [scriptblock]$Launcher = $null)
+    if (-not $Launcher) {
+        $Launcher = { param($path, $arguments) Start-Process -FilePath $path -ArgumentList $arguments -WindowStyle Normal -PassThru -ErrorAction Stop }
+    }
+    try {
+        $process = & $Launcher $GitPath @('update-git-for-windows')
+        if (-not $process) { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'UPDATER_NOT_STARTED' } }
+        return [pscustomobject]@{ Status = 'STARTED'; Reason = '' }
+    } catch { return [pscustomobject]@{ Status = 'BLOCKED'; Reason = 'UPDATER_NOT_STARTED' } }
+}
+
+function Invoke-AipmProjectUpdate {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$ProjectRoot, [Parameter(Mandatory)][string]$RegistryPath, [Parameter(Mandatory)][string]$ProjectId)
+    while ($true) {
+        $inspection = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $ProjectRoot
+        if ($inspection.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$inspection.Reason) -Kind Error; return }
+        $state = $inspection.Data.components
+        $description = 'Git: ' + [string]$state.git + ' (' + [string]$state.git_version + ', ' + [string]$state.git_version_status + ') | FIRG: ' + [string]$state.firg + ' | Commit Prompt: ' + [string]$state.commit_prompt + ' | Shared State: ' + [string]$state.shared_state
+        $items = @(
+            (New-MenuItem -Label 'Initialize Git' -Desc 'Initialize Only When The Project Has No Repository.' -Value 'git' -Icon 'Project'),
+            (New-MenuItem -Label 'Install FIRG' -Desc 'Install Only With Git And Without Replacing Existing FIRG Data.' -Value 'firg' -Icon 'Yes'),
+            (New-MenuItem -Label 'Update FIRG' -Desc 'Update Unmodified Managed Files And Preserve Project Data.' -Value 'upgrade' -Icon 'Settings'),
+            (New-MenuItem -Label 'Enable Or Update Commit Prompt' -Desc 'Preserve Unmanaged Hooks And Back Up An Unmodified Managed Hook.' -Value 'hook' -Icon 'Settings'),
+            (New-MenuItem -Label 'Review Shared State' -Desc 'Use State Recovery For Invalid Or Missing Managed State.' -Value 'state' -Icon 'Settings'),
+            (New-MenuItem -Label 'Upgrade Shared State' -Desc 'Back Up And Upgrade A Valid Legacy State Schema.' -Value 'state-upgrade' -Icon 'Settings'),
+            (New-MenuItem -Label 'Back' -Desc 'Return Without Additional Changes.' -Value 'back' -Icon 'Exit'),
+            (New-MenuItem -Label 'Review Git Version' -Desc 'Review The Installed Version And Compatibility Baseline.' -Value 'git-version' -Icon 'Info'),
+            (New-MenuItem -Label 'Restore Missing FIRG Rule' -Desc 'Add The Missing Rule Only When Existing Instructions Have No Conflict.' -Value 'rule' -Icon 'Settings'),
+            (New-MenuItem -Label 'Restore Missing FIRG Files' -Desc 'Restore Only Missing Managed Files That Match The Installed Baseline.' -Value 'repair-firg' -Icon 'Settings'),
+            (New-MenuItem -Label 'Open Git For Windows Updater' -Desc 'Open The Official Interactive Updater In A Separate Window.' -Value 'git-update' -Icon 'Settings')
+        )
+        $choice = Show-Menu -Title 'Update Project' -Description $description -Items $items
+        if (-not $choice -or $choice -in @('back','__QUIT__')) { return }
+        if ($choice -eq 'git-update') {
+            if (-not (Test-IsWindows) -or [string]$state.git_distribution -ne 'GIT_FOR_WINDOWS') {
+                Show-Notice -Title 'Git Updater Unavailable' -Lines @('The Detected Git Is Not Identified As Git For Windows. Use Its Own Package Manager Or Installer.') -Kind Info
+                continue
+            }
+            $gitExecutable = Find-Executable -Name 'git'
+            if (-not $gitExecutable) { Show-Notice -Title 'Git Updater Unavailable' -Lines @('Git Could Not Be Located On PATH.') -Kind Error; continue }
+            $gitProbe = Invoke-External -FilePath $gitExecutable -Arguments @('--version') -TimeoutSec 10
+            if (-not $gitProbe.Started -or $gitProbe.TimedOut -or $gitProbe.ExitCode -ne 0 -or $gitProbe.StdOut -notmatch '(?i)\.windows(?:\.|\s|$)') {
+                Show-Notice -Title 'Git Updater Unavailable' -Lines @('The Selected Git Executable Could Not Be Verified As Git For Windows.') -Kind Error
+                continue
+            }
+            $confirmed = Show-Confirm -Title 'Open Git For Windows Updater?' -Message ('Open A Separate Interactive Window For ' + $gitExecutable + '. The Updater May Download Software And Change The System Git Installation Outside This Project.') -YesLabel 'Open Updater Window' -NoLabel 'Cancel' -Default $false
+            if ($confirmed) {
+                $launch = Start-AipmGitUpdater -GitPath $gitExecutable
+                if ($launch.Status -eq 'STARTED') { Show-Notice -Title 'Git Updater Started' -Lines @('Complete Or Cancel The Update In Its Separate Window. The Result Is Not Yet Verified; Restart AIPM And Recheck Git.') -Kind Info }
+                else { Show-Notice -Title 'Git Updater Not Started' -Lines @([string]$launch.Reason) -Kind Error }
+            }
+            continue
+        }
+        if ($choice -eq 'git-version') {
+            Show-Notice -Title 'Git Version Review' -Lines @('Installed Git: ' + [string]$state.git_version, 'AIPM Offline Baseline: 2.20.0. Status: ' + [string]$state.git_version_status, 'This Check Does Not Determine The Latest Release. Update Git Through Your Chosen Installer If Needed.') -Kind Info
+            continue
+        }
+        if ($choice -eq 'state') { [void](Invoke-AipmStateRecovery -Root $Root -RegistryPath $RegistryPath -ProjectId $ProjectId -FailureReason 'COMPONENT_REVIEW'); continue }
+        if ($choice -eq 'state-upgrade') {
+            $preview = Invoke-AipmCore -AppRoot $Root -Command 'state-upgrade' -RegistryPath $RegistryPath -ProjectId $ProjectId
+            if ($preview.Status -ne 'PASS') { Show-Notice -Title 'State Upgrade Unavailable' -Lines @([string]$preview.Reason) -Kind Error; continue }
+            if (Show-Confirm -Title 'Upgrade Shared State?' -Message 'AIPM Will Back Up The Existing State And Record A Schema Upgrade Event.' -YesLabel 'Back Up And Upgrade' -NoLabel 'Cancel' -Default $false) {
+                $upgraded = Invoke-AipmCore -AppRoot $Root -Command 'state-upgrade' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
+                if ($upgraded.Status -eq 'PASS') { Show-Notice -Title 'Shared State Upgraded' -Lines @('Backup: ' + [string]$upgraded.Data.backup) -Kind Success }
+                else { Show-Notice -Title 'State Upgrade Failed' -Lines @([string]$upgraded.Reason) -Kind Error }
+            }
+            continue
+        }
+        if ($choice -notin @('git','firg','upgrade','hook','rule','repair-firg')) { continue }
+        $command = if ($choice -eq 'git') { 'project-git-init' } elseif ($choice -eq 'upgrade') { 'project-firg-update' } elseif ($choice -eq 'hook') { 'project-firg-hook' } elseif ($choice -eq 'rule') { 'project-firg-repair-rule' } elseif ($choice -eq 'repair-firg') { 'project-firg-repair' } else { 'project-firg-install' }
+        if (-not (Show-Confirm -Title 'Apply Component Change?' -Message ('Add ' + $choice + ' To ' + $ProjectRoot + '? Existing Components Are Not Overwritten.') -YesLabel 'Apply Change' -NoLabel 'Cancel' -Default $false)) { continue }
+        $result = Invoke-AipmCore -AppRoot $Root -Command $command -ProjectRoot $ProjectRoot
+        if ($result.Status -ne 'PASS') { Show-Notice -Title 'Component Change Failed' -Lines @([string]$result.Reason) -Kind Error; continue }
+        $newState = $result.Data.components
+        $previousGit = Get-AipmField $state.preferences 'git' $null
+        $previousFirg = Get-AipmField $state.preferences 'firg' $null
+        $gitChoice = if ([string]$newState.git -eq 'READY') { 'yes' } elseif ($previousGit -eq $false) { 'no' } elseif ($previousGit -eq $true) { 'yes' } else { 'unknown' }
+        $firgChoice = if ([string]$newState.firg -in @('READY','MODIFIED','UPDATE_AVAILABLE','EXISTING_UNMANAGED')) { 'yes' } elseif ($previousFirg -eq $false) { 'no' } elseif ($previousFirg -eq $true) { 'yes' } else { 'unknown' }
+        $saved = Invoke-AipmCore -AppRoot $Root -Command 'project-save-preferences' -ProjectRoot $ProjectRoot -GitChoice $gitChoice -FirgChoice $firgChoice
+        if ($saved.Status -ne 'PASS') { Show-Notice -Title 'Component Choice Not Saved' -Lines @([string]$saved.Reason) -Kind Error }
+        else { Show-Notice -Title 'Project Component Updated' -Lines @('The Selected Operation Completed.', 'Current Git: ' + [string]$newState.git, 'Current FIRG: ' + [string]$newState.firg, 'Current Shared State: ' + [string]$newState.shared_state) -Kind Success }
+    }
+}
+
 function Invoke-AipmRegistryManagement {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
     $currentPath = [System.IO.Path]::GetFullPath($RegistryPath)
@@ -674,7 +759,8 @@ function Invoke-AipmRegistryManagement {
             (New-MenuItem -Label 'Restore Registry Backup' -Desc 'Validate Its Checksum And Save A Pre-Restore Safety Copy.' -Value 'restore' -Icon 'Run'),
             (New-MenuItem -Label 'Change Registry Location' -Desc 'Select Or Create Another Registry; The Current Registry Is Kept Untouched.' -Value 'location' -Icon 'Settings'),
             (New-MenuItem -Label 'Connect Existing Registry File' -Desc 'Use A Valid Registry From Another Device Without Replacing Its Contents.' -Value 'connect' -Icon 'Project'),
-            (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
+            (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit'),
+            (New-MenuItem -Label 'Update Project' -Desc 'Inspect And Maintain Components Of A Registered Project.' -Value 'update' -Icon 'Settings')
         )
         $choice = Show-Menu -Title 'Registry Management' -Description $inventoryDescription -Items $actions
         if ($choice -in @($null, 'back', 'Back')) { return $currentPath }
@@ -702,8 +788,16 @@ function Invoke-AipmRegistryManagement {
             [void](Show-AipmPage -Title 'Registered Projects' -Lines $lines)
             continue
         }
+        if ($choice -eq 'update') {
+            $updateItems = @($inventory.Projects | ForEach-Object { New-MenuItem -Label ([string]$_.alias) -Desc ([string]$_.root_path) -Value ([string]$_.project_id) -Icon 'Project' })
+            $updateItems += New-MenuItem -Label 'Back' -Desc 'Return To Registry Management.' -Value 'back' -Icon 'Exit'
+            $selected = Show-Menu -Title 'Select Project To Update' -Items $updateItems
+            $entry = @($inventory.Projects | Where-Object { [string]$_.project_id -eq [string]$selected }) | Select-Object -First 1
+            if ($entry) { Invoke-AipmProjectUpdate -Root $Root -ProjectRoot ([string]$entry.root_path) -RegistryPath $currentPath -ProjectId ([string]$entry.project_id) }
+            continue
+        }
         if ($choice -eq 'register') {
-            $projectPath = Read-ValidatedInput -Prompt 'Project Folder Path' -Help 'Enter The Existing Project Folder. AIPM Will Add Only Its Managed State Folder.' -Example 'D:\Work\My-Project' -Default '' -Validate {
+            $projectPath = Read-ValidatedInput -Prompt 'Project Folder Path' -Help 'Enter The Existing Project Folder. Optional Components Are Added Only After Your Choice.' -Example 'D:\Work\My-Project' -Default '' -Validate {
                 param($text)
                 try { $candidate = [System.IO.Path]::GetFullPath($text.Trim()) } catch { return 'Enter A Valid Full Folder Path.' }
                 if (-not (Test-Path -LiteralPath $candidate -PathType Container)) { return 'The Project Folder Must Already Exist.' }
@@ -713,7 +807,34 @@ function Invoke-AipmRegistryManagement {
             $defaultAlias = Split-Path -Leaf ([System.IO.Path]::GetFullPath($projectPath))
             $alias = Read-ValidatedInput -Prompt 'Project Display Name' -Help 'This Name Appears In The AIPM Dashboard.' -Example $defaultAlias -Default $defaultAlias -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Project Name.' }; return $null }
             if (-not $alias) { continue }
-            $confirm = Show-Confirm -Title 'Register This Project?' -Message ('AIPM Will Create Shared-Project-State-Manager Under ' + $projectPath + '. It Will Not Edit Project Source Files.') -YesLabel 'Create State And Register' -YesDesc 'Write AIPM-Owned State Metadata, Then Add The Registry Entry.' -NoLabel 'Cancel' -NoDesc 'Make No Project Or Registry Changes.' -Default $false
+            $components = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $projectPath
+            if ($components.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$components.Reason) -Kind Error; continue }
+            $gitChoice = 'unknown'
+            $firgChoice = 'unknown'
+            $gitState = [string]$components.Data.components.git
+            if ($gitState -eq 'READY') { $gitChoice = 'yes' }
+            elseif ($gitState -eq 'MISSING') {
+                if (Show-Confirm -Title 'Initialize Git?' -Message 'Git Is Optional. FIRG Requires A Git Repository At The Project Root.' -YesLabel 'Initialize Git' -NoLabel 'Skip Git' -Default $false) {
+                    $initialized = Invoke-AipmCore -AppRoot $Root -Command 'project-git-init' -ProjectRoot $projectPath
+                    if ($initialized.Status -ne 'PASS') { Show-Notice -Title 'Git Initialization Failed' -Lines @([string]$initialized.Reason) -Kind Error; continue }
+                    $gitChoice = 'yes'
+                } else { $gitChoice = 'no' }
+            } elseif ($gitState -eq 'UNAVAILABLE') { Show-Notice -Title 'Git Is Unavailable' -Lines @('Git And FIRG Will Be Skipped. Install Git To Enable Them Later.') -Kind Info }
+            elseif ($gitState -eq 'PARENT_REPOSITORY') { Show-Notice -Title 'Parent Git Repository Detected' -Lines @('This Folder Is Not The Repository Root. Git And FIRG Setup Will Be Skipped; Shared State Registration Can Continue.') -Kind Info }
+            else { Show-Notice -Title 'Git Needs Review' -Lines @('Git Status: ' + $gitState, 'Resolve The Repository State Before Registration.') -Kind Error; continue }
+            $components = Invoke-AipmCore -AppRoot $Root -Command 'project-components' -ProjectRoot $projectPath
+            if ($components.Status -ne 'PASS') { Show-Notice -Title 'Project Inspection Failed' -Lines @([string]$components.Reason) -Kind Error; continue }
+            $firgState = [string]$components.Data.components.firg
+            if ($firgState -in @('READY','EXISTING_UNMANAGED','MODIFIED','UPDATE_AVAILABLE')) { $firgChoice = 'yes' }
+            elseif ($gitChoice -eq 'yes' -and $firgState -in @('MISSING','INSTALL_INTERRUPTED')) {
+                if (Show-Confirm -Title 'Add FIRG?' -Message 'Install FIRG To Document Fixes And Review Incoming Changes.' -YesLabel 'Add FIRG' -NoLabel 'Skip FIRG' -Default $false) {
+                    $installed = Invoke-AipmCore -AppRoot $Root -Command 'project-firg-install' -ProjectRoot $projectPath
+                    if ($installed.Status -ne 'PASS') { Show-Notice -Title 'FIRG Installation Failed' -Lines @([string]$installed.Reason) -Kind Error; continue }
+                    if ([string]$installed.Data.components.commit_prompt -ne 'READY') { Show-Notice -Title 'Commit Prompt Needs Review' -Lines @('FIRG Was Installed. Commit Prompt Status: ' + [string]$installed.Data.components.commit_prompt, 'Existing Hooks And Custom Hook Paths Are Preserved. Use FIRG Commit Status To Find Undocumented Commits.') -Kind Warning }
+                    $firgChoice = 'yes'
+                } else { $firgChoice = 'no' }
+            }
+            $confirm = Show-Confirm -Title 'Add Shared Project State Manager?' -Message ('AIPM Will Create Or Validate Shared-Project-State-Manager Under ' + $projectPath + '. This Is Required For Registration.') -YesLabel 'Create State And Register' -YesDesc 'Write AIPM-Owned State Metadata, Then Add The Registry Entry.' -NoLabel 'Skip Registration' -NoDesc 'Do Not Add The Project To The Registry.' -Default $false
             if (-not $confirm) { continue }
             $projectId = 'Project-' + [Guid]::NewGuid().ToString('N').Substring(0, 12)
             $existingManifestPath = Join-Path (Join-Path $projectPath 'Shared-Project-State-Manager') 'Project-Manifest.json'
@@ -727,6 +848,11 @@ function Invoke-AipmRegistryManagement {
             }
             $registered = Invoke-AipmCore -AppRoot $Root -Command 'registry-register' -RegistryPath $currentPath -ProjectRoot $projectPath -ProjectId $projectId -Alias $alias.Trim()
             if ($registered.Status -eq 'PASS') {
+                $preferenceFile = Join-Path (Join-Path $projectPath 'Shared-Project-State-Manager') 'Component-Preferences.json'
+                if (-not (Test-Path -LiteralPath $preferenceFile)) {
+                    $saved = Invoke-AipmCore -AppRoot $Root -Command 'project-save-preferences' -ProjectRoot $projectPath -GitChoice $gitChoice -FirgChoice $firgChoice
+                    if ($saved.Status -ne 'PASS') { Show-Notice -Title 'Component Choices Not Saved' -Lines @([string]$saved.Reason) -Kind Error }
+                }
                 $successLines = @(
                     'Project Folder Added Successfully.',
                     ('Please Select ' + (ConvertFrom-AipmCodePoints '27A1') + ' Refresh From The Home Page.')
@@ -1022,14 +1148,40 @@ function Show-AipmTaskRecord {
             }
             $stage = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'add', '-A', '--', '.', ':!Shared-Project-State-Manager/**') -TimeoutSec 30
             if (-not $stage.Started -or $stage.TimedOut -or $stage.ExitCode -ne 0) { Show-Notice -Title 'Git Stage Failed' -Lines @($stage.StdErr.Trim()) -Kind Error; continue }
-            $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '--no-verify', '-m', $message.Trim()) -TimeoutSec 30
+            $commit = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'commit', '-m', $message.Trim()) -TimeoutSec 30
             if (-not $commit.Started -or $commit.TimedOut -or $commit.ExitCode -ne 0) {
                 $errLines = @($commit.StdErr.Trim(), $commit.StdOut.Trim() | Where-Object { $_ })
                 if ($errLines.Count -eq 0) { $errLines = @('Git Commit Failed.') }
                 Show-Notice -Title 'Git Commit Failed' -Lines $errLines -Kind Error
                 continue
             }
+            $commitRef = Invoke-External -FilePath $git -Arguments @('-C', $projectRoot, 'rev-parse', '--verify', 'HEAD^{commit}') -TimeoutSec 10
             Show-Notice -Title 'Git Commit Created' -Lines @($commit.StdOut.Trim()) -Kind Success
+            $firgTool = Join-Path (Join-Path (Join-Path $projectRoot 'FIRG') 'tools') 'firg.py'
+            if ((Test-Path -LiteralPath $firgTool -PathType Leaf) -and (Show-Confirm -Title 'Document This Commit In FIRG?' -Message 'Create A FIRG Record And Markdown Report Linked To This Commit.' -YesLabel 'Document Commit' -NoLabel 'Skip Documentation' -Default $false)) {
+                if (-not $commitRef.Started -or $commitRef.TimedOut -or $commitRef.ExitCode -ne 0) { Show-Notice -Title 'Commit Reference Unavailable' -Lines @('The Git Commit Was Kept. Document It Later After Verifying Its Reference.') -Kind Error; continue }
+                $fields = @(
+                    @{ Key='problem'; Prompt='Original Problem'; Help='Describe The Problem That Prompted The Change.' },
+                    @{ Key='cause'; Prompt='Known Cause'; Help='Describe The Cause Or Enter Unknown.' },
+                    @{ Key='expected'; Prompt='Expected Behavior'; Help='Describe The Behavior To Preserve.' },
+                    @{ Key='implementation'; Prompt='Changes Implemented'; Help='Summarize The Actual Changes.' },
+                    @{ Key='rationale'; Prompt='Implementation Rationale'; Help='Explain The Decision Or Enter Unknown.' },
+                    @{ Key='notes'; Prompt='Notes And Related Changes'; Help='Describe Relevant Context Or Enter None.' }
+                )
+                $arguments = @($firgTool, 'document-commit', '--commit', $commitRef.StdOut.Trim())
+                $cancelled = $false
+                foreach ($field in $fields) {
+                    $value = Read-ValidatedInput -Prompt $field.Prompt -Help $field.Help -Example 'Enter A Factual Description' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter A Description.' }; return $null }
+                    if (-not $value) { $cancelled = $true; break }
+                    $arguments += @(('--' + [string]$field.Key), $value.Trim())
+                }
+                if ($cancelled) { Show-Notice -Title 'FIRG Documentation Deferred' -Lines @('The Commit Was Kept. No FIRG Report Was Created.') -Kind Info; continue }
+                $python = Find-AipmPython
+                if (-not $python) { Show-Notice -Title 'FIRG Documentation Failed' -Lines @('Python Is Unavailable. The Git Commit Was Kept.') -Kind Error; continue }
+                $documented = Invoke-External -FilePath $python -Arguments $arguments -TimeoutSec 30
+                if (-not $documented.Started -or $documented.TimedOut -or $documented.ExitCode -ne 0) { Show-Notice -Title 'FIRG Documentation Failed' -Lines @('The Git Commit Was Kept.', $documented.StdErr.Trim()) -Kind Error }
+                else { Show-Notice -Title 'FIRG Report Created' -Lines @($documented.StdOut.Trim(), 'The Report Has Unverified Test Evidence Until You Record Actual Results.') -Kind Success }
+            }
             continue
         }
         if ($action -eq '__HELP__') {
@@ -1406,6 +1558,10 @@ function Invoke-AipmTaskManagement {
         }
         $project = @($inventory.Projects | Where-Object { [string]$_.project_id -eq [string]$selectedProjectId }) | Select-Object -First 1
         if (-not $project) { continue }
+        $componentCheck = Start-AipmComponentCheck -AppRoot $Root -ProjectRoot ([string]$project.root_path)
+        $componentPrefix = 'Managed State: ' + [string]$project.root_path + ' | '
+        $componentProvider = { $componentPrefix + (Get-AipmComponentCheckText -Check $componentCheck) }.GetNewClosure()
+        try {
         while ($true) {
             $taskResult = Invoke-AipmCore -AppRoot $Root -Command 'task-list' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId)
             if ($taskResult.Status -ne 'PASS') {
@@ -1417,9 +1573,10 @@ function Invoke-AipmTaskManagement {
                 (New-MenuItem -Label 'Add Existing Work Folder' -Desc 'Create A Task Record Referencing A Folder; Keep Its Files In Place.' -Value 'folder' -Icon 'Project'),
                 (New-MenuItem -Label 'Open Existing Task' -Desc 'Review Or Update An Existing Core-Managed Task.' -Value 'open' -Icon 'Task'),
                 (New-MenuItem -Label 'Import Archived Task From ZIP' -Desc 'Restore And Re-Register A Task From Its Archive ZIP Using Metadata.json.' -Value 'import' -Icon 'Project'),
-                (New-MenuItem -Label 'Back To Project Selection' -Desc 'Choose Another Registered Project.' -Value 'back' -Icon 'Exit')
+                (New-MenuItem -Label 'Back To Project Selection' -Desc 'Choose Another Registered Project.' -Value 'back' -Icon 'Exit'),
+                (New-MenuItem -Label 'Update Project' -Desc 'Review Git, FIRG, And Shared State Components.' -Value 'update' -Icon 'Settings')
             )
-            $taskChoice = Show-Menu -Title ('Tasks: ' + [string]$project.alias) -Description ('Managed State: ' + [string]$project.root_path) -Items $taskItems
+            $taskChoice = Show-Menu -Title ('Tasks: ' + [string]$project.alias) -DescriptionProvider $componentProvider -Items $taskItems
             if (-not $taskChoice -or $taskChoice -in @('back','__QUIT__')) { break }
             if ($taskChoice -eq '__HELP__') {
                 [void](Show-AipmPage -Title 'Task Management Help' -Lines @(
@@ -1430,6 +1587,7 @@ function Invoke-AipmTaskManagement {
                 ))
                 continue
             }
+            if ($taskChoice -eq 'update') { Invoke-AipmProjectUpdate -Root $Root -ProjectRoot ([string]$project.root_path) -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId); break }
             if ($taskChoice -eq 'create' -or $taskChoice -eq 'folder') {
                 $scopePrefix = ''
                 $folderPath = ''
@@ -1547,6 +1705,7 @@ function Invoke-AipmTaskManagement {
                 if ($selectedTask) { Show-AipmTaskRecord -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -ProjectRoot ([string]$project.root_path) -TaskRow $selectedTask }
             }
         }
+        } finally { Stop-AipmComponentCheck -Check $componentCheck }
     }
 }
 
@@ -1752,4 +1911,4 @@ function Start-TuiApp {
     }
 }
 
-Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage, Get-AipmField, Invoke-AipmStateRecovery
+Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage, Get-AipmField, Invoke-AipmStateRecovery, Start-AipmGitUpdater

@@ -38,6 +38,15 @@ $taskRegistry = Join-Path (Get-TestWork) 'task-client-registry.json'
 $taskProjectId = 'Task-Client-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
 $registeredTaskProject = Invoke-AipmCore -AppRoot $appRoot -Command 'registry-register' -RegistryPath $taskRegistry -ProjectRoot $taskProjectRoot -ProjectId $taskProjectId -Alias 'Task Client Fixture'
 Assert-Equal 'task management fixture registers through Core' 'PASS' $registeredTaskProject.Status
+$componentCheck = Start-AipmComponentCheck -AppRoot $appRoot -ProjectRoot $taskProjectRoot
+try {
+    $componentDeadline = [DateTime]::UtcNow.AddSeconds(15)
+    do {
+        $componentText = Get-AipmComponentCheckText -Check $componentCheck
+        if (-not $componentCheck.Complete) { Start-Sleep -Milliseconds 50 }
+    } while (-not $componentCheck.Complete -and [DateTime]::UtcNow -lt $componentDeadline)
+    Assert-True 'background component check completes with project status' ($componentCheck.Complete -and $componentText.Contains('Git:') -and $componentText.Contains('FIRG:') -and $componentText.Contains('State:')) $componentText
+} finally { Stop-AipmComponentCheck -Check $componentCheck }
 $createdTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-create' -RegistryPath $taskRegistry -ProjectId $taskProjectId -Title 'Organize Existing Work' -Scope 'Keep work files at their original project paths.'
 Assert-Equal 'task create crosses the Core client boundary' 'PASS' $createdTask.Status
 Assert-Equal 'task create returns the requested title from Core state' 'Organize Existing Work' $createdTask.Data.task.title

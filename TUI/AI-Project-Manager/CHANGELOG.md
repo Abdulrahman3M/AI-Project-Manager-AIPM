@@ -1,5 +1,12 @@
 # AI Project Manager TUI Change Log
 
+## [1.9.0] — Project Setup And Maintenance
+
+- Added ordered optional Git and FIRG setup followed by required shared-state registration.
+- Added background status, project maintenance, and interactive documentation after AIPM-created Git commits.
+- Added a user-confirmed launch of the Git for Windows updater; its eventual system update remains unverified.
+- Preserved project choices and existing files; synchronized the TUI version with the platform.
+
 ## [1.8.7] — Antigravity Distribution Synchronization
 
 - Synchronized TUI metadata with platform `1.8.7`; no TUI runtime behavior changed.

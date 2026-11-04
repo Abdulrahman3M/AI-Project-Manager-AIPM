@@ -12,11 +12,12 @@ from aipm_core.domain import CommandEnvelope, CoreEngine
 from aipm_core.host_adapters import load_capability_matrix
 from aipm_core.storage import ManagedProject, ProjectRegistry, STATE_ROOT_NAME, StateError, _canonical, _protect_platform_path, default_registry_path, initialize_project_state
 from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
+from aipm_core.project_setup import inspect_project, initialize_git, install_firg, install_firg_hook, repair_firg_files, repair_firg_rule, save_preferences, update_firg
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="aipm")
-    parser.add_argument("command", choices=["health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "state-validate", "state-normalize", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
+    parser.add_argument("command", choices=["project-components", "project-git-init", "project-firg-install", "project-firg-update", "project-firg-hook", "project-firg-repair", "project-firg-repair-rule", "project-save-preferences", "health", "list", "inspect", "state-read", "state-diagnose", "state-repair", "state-validate", "state-normalize", "state-upgrade", "host-capabilities", "dashboard", "catalog", "registry-init", "registry-register", "registry-unregister", "registry-backup", "registry-restore", "task-create", "task-import-work-folder", "task-list", "task-read", "task-plan", "task-checkpoint", "task-blocker-add", "task-blocker-clear", "task-verify", "task-report", "task-close", "task-reopen", "task-archive", "task-delete-folder", "task-unregister", "task-import-archive", "task-metadata", "task-artifact-list", "task-artifact-read", "task-artifact-write", "task-edit", "task-rename", "task-clone", "task-delete"])
     parser.add_argument("--registry")
     parser.add_argument("--project-id")
     parser.add_argument("--project-root")
@@ -40,6 +41,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--delete-folder", action="store_true")
     parser.add_argument("--delete-archive", action="store_true")
     parser.add_argument("--confirm-repair", action="store_true")
+    parser.add_argument("--git-choice", choices=["yes", "no", "unknown"])
+    parser.add_argument("--firg-choice", choices=["yes", "no", "unknown"])
     parser.add_argument("--stdin", action="store_true")
     parser.add_argument("--from-file")
     return parser
@@ -329,6 +332,35 @@ def _catalog(root: Path) -> dict:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     registry_path = Path(args.registry) if args.registry else default_registry_path()
+    if args.command.startswith("project-"):
+        try:
+            if not args.project_root:
+                raise StateError("PROJECT_ROOT_REQUIRED")
+            root = Path(args.project_root)
+            if args.command == "project-git-init":
+                initialize_git(root)
+            elif args.command == "project-firg-install":
+                install_firg(root)
+            elif args.command == "project-firg-update":
+                update_firg(root)
+            elif args.command == "project-firg-hook":
+                hook_result = install_firg_hook(root)
+                if hook_result != 'READY':
+                    raise StateError('FIRG_HOOK_' + hook_result)
+            elif args.command == "project-firg-repair-rule":
+                repair_firg_rule(root)
+            elif args.command == "project-firg-repair":
+                repair_firg_files(root)
+            elif args.command == "project-save-preferences":
+                if not args.git_choice or not args.firg_choice:
+                    raise StateError("COMPONENT_CHOICES_REQUIRED")
+                choices = {"yes": True, "no": False, "unknown": None}
+                save_preferences(root, git=choices[args.git_choice], firg=choices[args.firg_choice])
+            result = {"schema_version": "1.0", "status": "PASS", "components": inspect_project(root)}
+        except (StateError, OSError, ValueError) as error:
+            result = {"schema_version": "1.0", "status": "BLOCKED", "reason": str(error)}
+        print(json.dumps(result, ensure_ascii=False))
+        return 0 if result["status"] == "PASS" else 1
     if args.command.startswith("registry-"):
         try:
             registry = ProjectRegistry(registry_path)
@@ -379,11 +411,32 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
         print(json.dumps(result))
         return 0 if result["status"] == "PASS" else 1
-    if args.command in {"state-diagnose", "state-repair", "state-validate", "state-normalize"}:
+    if args.command in {"state-diagnose", "state-repair", "state-validate", "state-normalize", "state-upgrade"}:
         try:
             project = _managed_project(registry_path, args.project_id)
             engine = CoreEngine({project.project_id: project})
-            if args.command == "state-diagnose":
+            if args.command == "state-upgrade":
+                pending = project.state_root / 'History' / 'Pending-Commit.json'
+                if pending.exists():
+                    raise StateError('PENDING_STATE_REQUIRES_RECOVERY')
+                original = json.loads((project.state_root / 'State-Manifest.json').read_text(encoding='utf-8'))
+                if not isinstance(original, dict):
+                    raise StateError('INVALID_STATE')
+                current = engine.execute(CommandEnvelope("state-upgrade-read", "state.read", "aipm-cli", project.project_id, 0, None, {}))
+                if current.get("status") != "PASS":
+                    result = current
+                elif current['state'].get('tasks', {}) != original.get('tasks', {}):
+                    result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "TASK_NORMALIZATION_REQUIRES_REVIEW"}
+                elif current['state'].get('schema_version') != '1.0':
+                    result = {"schema_version": "1.0", "status": "BLOCKED", "reason": "SCHEMA_UPGRADE_NOT_APPLICABLE"}
+                elif not args.confirm_repair:
+                    result = {"schema_version": "1.0", "status": "PASS", "applied": False, "revision": current['revision'], "reason": "DRY_RUN"}
+                else:
+                    backup, _ = engine._create_state_backup(project, 'SCHEMA_UPGRADE')
+                    result = engine.execute(CommandEnvelope("state-upgrade", "state.upgrade-schema", "aipm-state-upgrade", project.project_id, current['revision'], None, {}))
+                    result['backup'] = str(backup)
+                    result['applied'] = result.get('status') == 'PASS'
+            elif args.command == "state-diagnose":
                 result = {"schema_version": "1.0", **engine.diagnose_pending_task_commit(project)}
             elif args.command == "state-validate":
                 result = engine.inspect_state(project)

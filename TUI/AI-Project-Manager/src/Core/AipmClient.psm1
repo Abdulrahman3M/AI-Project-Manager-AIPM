@@ -31,15 +31,67 @@ function Find-AipmPython {
     return $python
 }
 
+function Start-AipmComponentCheck {
+    param([Parameter(Mandatory)][string]$AppRoot, [Parameter(Mandatory)][string]$ProjectRoot)
+    $check = [pscustomobject]@{ Process = $null; Output = $null; ErrorOutput = $null; StartedAt = [DateTime]::UtcNow; Text = 'Component Check Pending'; Complete = $false }
+    try {
+        $python = Find-AipmPython
+        if (-not $python) { throw 'Python Unavailable' }
+        $entry = Join-Path (Join-Path (Get-AipmRepositoryRoot -AppRoot $AppRoot) 'Core-Engine') 'aipm.py'
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $python
+        $psi.Arguments = ConvertTo-ProcessArgumentString @($entry, 'project-components', '--project-root', [System.IO.Path]::GetFullPath($ProjectRoot))
+        $psi.UseShellExecute = $false; $psi.CreateNoWindow = $true
+        $psi.RedirectStandardOutput = $true; $psi.RedirectStandardError = $true
+        $psi.StandardOutputEncoding = [System.Text.Encoding]::UTF8; $psi.StandardErrorEncoding = [System.Text.Encoding]::UTF8
+        $check.Process = New-Object System.Diagnostics.Process
+        $check.Process.StartInfo = $psi
+        [void]$check.Process.Start()
+        $check.Output = $check.Process.StandardOutput.ReadToEndAsync()
+        $check.ErrorOutput = $check.Process.StandardError.ReadToEndAsync()
+    } catch { $check.Text = 'Component Check Unavailable'; $check.Complete = $true }
+    return $check
+}
+
+function Get-AipmComponentCheckText {
+    param([Parameter(Mandatory)]$Check)
+    if (-not $Check.Complete) {
+        try {
+            if ($Check.Process.HasExited) {
+                $data = $Check.Output.Result | ConvertFrom-Json -ErrorAction Stop
+                if ($Check.Process.ExitCode -ne 0 -or $data.status -ne 'PASS') { throw 'Component Check Failed' }
+                $state = $data.components
+                $Check.Text = 'Git: ' + [string]$state.git + ' (' + [string]$state.git_version + ', ' + [string]$state.git_version_status + ') | FIRG: ' + [string]$state.firg + ' | Commit Prompt: ' + [string]$state.commit_prompt + ' | State: ' + [string]$state.shared_state
+                $Check.Complete = $true
+            } elseif (([DateTime]::UtcNow - $Check.StartedAt).TotalSeconds -gt 10) {
+                try { $Check.Process.Kill() } catch { }
+                $Check.Text = 'Component Check Timed Out'; $Check.Complete = $true
+            }
+        } catch { $Check.Text = 'Component Check Unavailable'; $Check.Complete = $true }
+    }
+    return [string]$Check.Text
+}
+
+function Stop-AipmComponentCheck {
+    param($Check)
+    if ($Check -and $Check.Process) {
+        try { if (-not $Check.Process.HasExited) { $Check.Process.Kill() } } catch { }
+        $Check.Process.Dispose()
+        $Check.Process = $null
+    }
+}
+
 function Invoke-AipmCore {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][string]$AppRoot,
-        [Parameter(Mandatory)][ValidateSet('health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write', 'task-edit', 'task-rename', 'task-clone', 'task-delete')][string]$Command,
+        [Parameter(Mandatory)][ValidateSet('project-components', 'project-git-init', 'project-firg-install', 'project-firg-update', 'project-firg-hook', 'project-firg-repair', 'project-firg-repair-rule', 'project-save-preferences', 'health', 'list', 'dashboard', 'catalog', 'host-capabilities', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize', 'state-upgrade', 'task-create', 'task-import-work-folder', 'task-list', 'task-read', 'task-plan', 'task-checkpoint', 'task-blocker-add', 'task-blocker-clear', 'task-verify', 'task-report', 'task-close', 'task-reopen', 'task-archive', 'task-delete-folder', 'task-unregister', 'task-import-archive', 'task-metadata', 'task-artifact-list', 'task-artifact-write', 'task-edit', 'task-rename', 'task-clone', 'task-delete')][string]$Command,
         [string]$RegistryPath = '',
         [string]$ProjectRoot = '',
         [string]$ProjectId = '',
         [string]$Alias = '',
+        [string]$GitChoice = '',
+        [string]$FirgChoice = '',
         [string]$TaskId = '',
         [string]$NewTaskId = '',
         [string]$Title = '',
@@ -65,12 +117,14 @@ function Invoke-AipmCore {
 
     $entry = Join-Path (Join-Path $root 'Core-Engine') 'aipm.py'
     $arguments = @($entry, $Command)
-    if ($RegistryPath -and ($Command -in @('list', 'dashboard', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize') -or $Command.StartsWith('task-'))) {
+    if ($RegistryPath -and ($Command -in @('list', 'dashboard', 'registry-init', 'registry-register', 'registry-unregister', 'registry-backup', 'registry-restore', 'state-diagnose', 'state-repair', 'state-validate', 'state-normalize', 'state-upgrade') -or $Command.StartsWith('task-'))) {
         $arguments += @('--registry', [System.IO.Path]::GetFullPath($RegistryPath))
     }
     if ($ProjectRoot) { $arguments += @('--project-root', [System.IO.Path]::GetFullPath($ProjectRoot)) }
     if ($ProjectId) { $arguments += @('--project-id', $ProjectId) }
     if ($Alias) { $arguments += @('--alias', $Alias) }
+    if ($GitChoice) { $arguments += @('--git-choice', $GitChoice) }
+    if ($FirgChoice) { $arguments += @('--firg-choice', $FirgChoice) }
     if ($TaskId) { $arguments += @('--task-id', $TaskId) }
     if ($NewTaskId) { $arguments += @('--new-task-id', $NewTaskId) }
     if ($Title) { $arguments += @('--title', $Title) }
@@ -127,4 +181,4 @@ function Get-AipmDependencyStatus {
     return [pscustomobject]@{ Status = 'PASS'; Reason = ''; Version = $versionText }
 }
 
-Export-ModuleMember -Function Get-AipmRepositoryRoot, Find-AipmPython, Invoke-AipmCore, Get-AipmDependencyStatus
+Export-ModuleMember -Function Get-AipmRepositoryRoot, Find-AipmPython, Invoke-AipmCore, Get-AipmDependencyStatus, Start-AipmComponentCheck, Get-AipmComponentCheckText, Stop-AipmComponentCheck

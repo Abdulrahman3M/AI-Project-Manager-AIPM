@@ -1,0 +1,7 @@
+# Integration Lifecycle
+
+1. Read root and scoped rules, master history and relevant records; inspect Git status. Obtain the candidate only through an authorized workflow and isolate review from the protected branch.
+2. Run intake on exact base/head with explicit source and reference. Inspect changed and renamed paths, overlapping fixes, dependencies, tests and candidate duplicate patches. No overlap does not establish safety.
+3. Run focused tests in the candidate and compare pre-existing failures against the baseline. Record exact commands, evidence and PASS, FAIL or UNVERIFIED. Investigate indirect dependencies and coverage gaps. Defer or reject unresolved changes; never infer safety from AI or clean merges.
+4. Write a dated review report with source, exact resolved SHAs, relevant IDs, evidence, disposition, rationale and risks. The JSON review supplied to gate must contain these fields and matching test evidence. Approval requires actual passing tests and known provenance. Any owner exception documents scope, risk, actor and timestamp and does not make an automated gate pass.
+5. Only after approved integration and actual tests, register each material fix with verified provenance and references; sync, validate, check and run focused tests. Record unavailable commit evidence honestly using an immutable patch/PR/release reference and reason. Follow native changelog processes separately. Do not remove earlier entries; document justified transitions.
