@@ -1,5 +1,10 @@
 # AIPM Change Log
 
+## [1.10.1] — FIRG Provisioning During Project Update (Repository Update; Not Published)
+
+- Updated **Update Project** to install a complete managed FIRG in `Shared-Project-State-Manager/FIRG/` when FIRG is absent, while retaining the guarded migration path for existing managed root-level FIRG.
+- Added regression coverage for both legacy migration and missing-FIRG provisioning. Platform and TUI versions are synchronized; no Plugin content changed.
+
 ## [1.10.0] — Git-First Registration And Unified Project State (Repository Update; Not Published)
 
 - Required a Git repository at the selected project root before registration; **Update Project** initializes Git when the owner confirms.

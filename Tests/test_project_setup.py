@@ -99,6 +99,19 @@ class ProjectSetupTests(unittest.TestCase):
         self.assertEqual((state / 'Temporary-Files' / 'Cache' / 'old.pyc').read_bytes(), b'cache')
         self.assertEqual((state / 'Temporary-Files' / 'Test-Workspace' / 'fixture.tmp').read_text(encoding='utf-8'), 'fixture')
 
+    def test_project_layout_installs_firg_when_missing(self):
+        setup.initialize_git(self.root)
+        state = self.root / 'Shared-Project-State-Manager'
+        state.mkdir()
+        (state / 'Project-Manifest.json').write_text(json.dumps({'schema_version':'1.0','project_id':'layout-test','project_alias':'Layout Test','state_root_name':'Shared-Project-State-Manager'}), encoding='utf-8')
+        (state / 'State-Manifest.json').write_text(json.dumps({'schema_version':'1.1','project_id':'layout-test'}), encoding='utf-8')
+        result = setup.update_project_layout(self.root)
+        self.assertEqual(result['migrated'], 0)
+        self.assertEqual(setup.inspect_project(self.root)['firg'], 'READY')
+        self.assertTrue((state / 'FIRG' / 'tools' / 'firg.py').is_file())
+        self.assertTrue((state / 'AGENT.md').is_file())
+        self.assertFalse((self.root / 'FIRG').exists())
+
     def test_git_version_baseline_reports_unknown_and_old_without_guessing_latest(self):
         cases = [('git version 2.19.9', ('2.19.9', 'BELOW_BASELINE', 'OTHER_OR_UNKNOWN')),
                  ('git version 2.20.0.windows.1', ('2.20.0', 'MEETS_BASELINE', 'GIT_FOR_WINDOWS')),

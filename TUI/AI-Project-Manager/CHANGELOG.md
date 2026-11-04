@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.10.1] — FIRG Provisioning During Project Update
+
+- Synchronized the TUI version with platform `1.10.1` for the guarded FIRG provisioning fix in **Update Project**.
+
 ## [1.10.0] — Git-First Registration And State Layout Migration
 
 - Required Git at the selected project root during registration and added a confirmed Git initialization step to **Update Project**.

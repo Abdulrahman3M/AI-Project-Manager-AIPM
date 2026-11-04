@@ -479,6 +479,12 @@ def update_project_layout(path: Path) -> dict:
                 target.rename(source)
         raise StateError('PROJECT_LAYOUT_UPDATE_FAILED: ' + str(exc)) from exc
     status = inspect_project(root)['firg']
+    if status == 'MISSING':
+        # A layout update also provisions FIRG when the project has never had it.
+        # install_firg targets Shared-Project-State-Manager/FIRG now that the
+        # canonical state directory exists, and refuses unmanaged collisions.
+        install_firg(root)
+        status = inspect_project(root)['firg']
     if status == 'UPDATE_AVAILABLE':
         update_firg(root)
         hook_result = install_firg_hook(root)
