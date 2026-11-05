@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.10.2] — PowerShell Operator Guides
+
+- Added dedicated English and Arabic operator guides for the PowerShell TUI and synchronized the TUI version with platform `1.10.2`.
+
 ## [1.10.1] — FIRG Provisioning During Project Update
 
 - Synchronized the TUI version with platform `1.10.1` for the guarded FIRG provisioning fix in **Update Project**.

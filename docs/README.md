@@ -5,6 +5,7 @@ This folder contains maintained user and product documentation. Historical const
 | Location | Purpose |
 | --- | --- |
 | [`guides/`](guides/README.md) | Beginner guides in English and Arabic, and state recovery runbook. |
+| [`guides/AIPM-PowerShell-Guide.en.md`](guides/AIPM-PowerShell-Guide.en.md) / [`guides/دليل-AIPM-PowerShell.ar.md`](guides/دليل-AIPM-PowerShell.ar.md) | Dedicated operator manuals for AIPM's PowerShell terminal interface, in English and Arabic. |
 | [`guides/State-Recovery-Guide.md`](guides/State-Recovery-Guide.md) | Operational runbook for diagnosing and repairing task state and history drift. |
 | [`guides/General-Skills.md`](guides/General-Skills.md) | Alphabetical educational index of all General Skills. |
 | [`guides/General-Prompts.md`](guides/General-Prompts.md) | Alphabetical educational index of all standalone General Prompts. |

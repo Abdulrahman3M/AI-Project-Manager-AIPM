@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.10.2] — PowerShell Operator Guides (Repository Update; Not Published)
+
+- Added dedicated English and Arabic operator guides for AIPM's PowerShell TUI, including setup, navigation, project updates, tasks, FIRG, recovery, strengths, and limitations.
+- Linked the guides from documentation indexes and excluded the local `Shared-Project-State-Manager/` runtime folder from Git tracking without changing its contents.
+- Synchronized platform and TUI versions. No Plugin content changed; this update is local and unpublished.
+
 ## [1.10.1] — FIRG Provisioning During Project Update (Repository Update; Not Published)
 
 - Updated **Update Project** to install a complete managed FIRG in `Shared-Project-State-Manager/FIRG/` when FIRG is absent, while retaining the guarded migration path for existing managed root-level FIRG.

@@ -4,6 +4,8 @@
 
 - [Project README](README.md)
 - [Beginner Guides — English And Arabic](docs/guides/README.md)
+- [AIPM PowerShell Operator Guide — English](docs/guides/AIPM-PowerShell-Guide.en.md)
+- [دليل تشغيل AIPM باستخدام PowerShell](docs/guides/دليل-AIPM-PowerShell.ar.md)
 - [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md)
 - [Project Rules](docs/project/Project-Rules.md)
 - [Change Log](CHANGELOG.md)
@@ -24,6 +26,9 @@
 
 ## Release History
 
+- [Repository Update Notes v1.10.2 — Not Published](docs/project/Release-Notes/Release-Notes-v1.10.2.md)
+- [Repository Update Notes v1.10.1 — Not Published](docs/project/Release-Notes/Release-Notes-v1.10.1.md)
+- [Repository Update Notes v1.10.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.10.0.md)
 - [Repository Update Notes v1.9.0 — Not Published](docs/project/Release-Notes/Release-Notes-v1.9.0.md)
 - [Repository Update Notes v1.8.7 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.7.md)
 - [Repository Update Notes v1.8.6 — Not Published](docs/project/Release-Notes/Release-Notes-v1.8.6.md)

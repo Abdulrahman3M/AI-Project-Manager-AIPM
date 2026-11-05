@@ -1,5 +1,13 @@
 # AI Project Manager Support Matrix
 
+## v1.10.2 Local Documentation Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| PowerShell operator guides | Documentation review | PASS | English and Arabic manuals cover requirements, launch commands, navigation, project registration/update, task evidence, Git/FIRG, recovery, strengths, and limitations; both are linked from documentation indexes. |
+| Git worktree hygiene | Windows / Git | PASS | The local runtime state directory is explicitly ignored without deleting or staging its contents. |
+| Remote publication | Not performed | NOT PUBLISHED | Version `1.10.2` is a repository update; the latest published-release badge remains unchanged. |
+
 ## v1.10.0 Local Repository Update
 
 | Component | Environment | Status | Evidence |
