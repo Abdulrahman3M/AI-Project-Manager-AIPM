@@ -1,3 +1,9 @@
+## [1.0.1] — Six-Stage Standalone Handoffs
+
+- Added six-stage handoffs, capability profiles, evidence traceability and small/large output routing while preserving author and executor separation.
+- Added offline structural validation, packaging tools, tests and portable guidance; removed mandatory dependencies on other Skills.
+- Aligned current Skill and Prompt versions; retained historical release records.
+
 ## [1.0.0] — AIPM Release Baseline
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.

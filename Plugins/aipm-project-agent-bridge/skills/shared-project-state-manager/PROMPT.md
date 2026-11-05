@@ -35,7 +35,7 @@ EXECUTION
 - Before a risky change, meaningful boundary, agent switch, session/usage-limit boundary, or phase completion, create/update a checkpoint.
 
 HANDOFF
-Before switching agents, record: active task/phase; exact last verified action; exact next action; files intentionally changed; current tests/evidence; branch/HEAD/working-tree state when available; blockers/risks; owner decisions; items not to repeat; and paths to detailed reports. Do not falsely finish an incomplete phase.
+Before switching agents, record: active task/phase; exact last verified action; exact next action; files intentionally changed; current tests/evidence; branch/HEAD/working-tree state when available; blockers/risks; owner decisions; items not to repeat; and paths to detailed reports. Do not falsely finish an incomplete phase. Never edit State-Manifest.json directly or manually; update state only through official Core or sps commands.
 
 INCOMING AGENT
 Never trust the handoff blindly. Verify repository/runtime reality first. Confirm whether the interrupted edit/command actually completed before retrying it. If an external/irreversible side effect might have occurred, inspect state before repeating it.
@@ -52,7 +52,8 @@ Route new task-created temp/cache/test/log/tool state into Shared-Project-State 
 
 OPTIONAL HELPERS
 When this Skill's scripts are available, prefer them for repeatable state/file operations:
-- node scripts/sps.mjs init|status|doctor|checkpoint|handoff
+- node scripts/sps.mjs init|status|doctor|checkpoint|handoff|files|route
+- python scripts/route_transient_state.py --env|--run|--sweep|--status|--clean
 - python scripts/validate_state.py --project-root <project-root>
 - python scripts/safe_file_ops.py diagnose|move|quarantine|restore|clear-readonly|repair-acl|purge ...
 The helpers do not override project rules or grant permissions. If runtimes are unavailable, follow the same protocol manually.

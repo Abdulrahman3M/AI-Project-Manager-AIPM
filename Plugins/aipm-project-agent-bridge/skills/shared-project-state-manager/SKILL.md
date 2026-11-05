@@ -257,7 +257,7 @@ Before handing work to another agent:
 3. record the exact last verified action and exact next action;
 4. update changed-file and test status;
 5. write a checkpoint;
-6. update `Current-State.md`, `State-Manifest.json`, and `Next-Agent-Handoff.md`;
+6. update `Current-State.md` and `Next-Agent-Handoff.md`; update `State-Manifest.json` only through the official AIPM Core CLI (e.g. `task-checkpoint`, `task-verify`, `task-close`) or official `sps` CLI; never edit `State-Manifest.json` directly or manually;
 7. ensure blockers and owner decisions are explicit.
 
 The handoff must be concise, with paths to detailed reports instead of copying large logs.
@@ -373,7 +373,8 @@ When Node.js 18+ is available, use `scripts/sps.mjs` for repeatable state operat
 - `doctor` — check required root files, manifest fields, writability, runtimes, platform, and Git state;
 - `checkpoint` — create the next numbered checkpoint and refresh recorded Git/next-action fields;
 - `handoff` — write the next-agent handoff and record current Git/next-action fields;
-- `files` — delegate safe project-scoped file operations to the Python helper.
+- `files` — delegate safe project-scoped file operations to the Python helper;
+- `route` — route, sweep, and manage transient Cache, Temporary-Files, and Test-Workspace storage.
 
 The CLI uses Node.js built-in modules only. Do not require `npm install` merely to run it.
 
@@ -384,6 +385,15 @@ Use `scripts/validate_state.py` when Python 3.10+ is available to validate the r
 ### 20.3 PowerShell Convenience
 
 On Windows, `scripts/sps.ps1` wraps the Node CLI. `scripts/Install-Prerequisites.ps1` reports missing Node/Python runtimes and installs them only when its explicit `-Install` switch is supplied. Never silently install machine software.
+
+### 20.4 Transient State Routing And Sweeper (Route-Transient-State)
+
+Use `scripts/route_transient_state.py` (or PowerShell wrapper `scripts/Route-Transient-State.ps1` / `Route-Transient-State.py` in the state manager root) to centralize operational artifacts into `Shared-Project-State-Manager`:
+- `--env [powershell|bash|cmd]` — exports `PYTHONPYCACHEPREFIX`, `TEMP`, `TMP`, `PYTEST_ADDOPTS`, `MYPY_CACHE_DIR`, and `RUFF_CACHE_DIR` directly pointing to `Cache/Python`, `Temporary-Files`, and `Test-Workspace`.
+- `--run <command...>` — executes any tool with pre-configured routing variables so created caches and temp files land under `Shared-Project-State-Manager`.
+- `--sweep` — scans the repository and automatically relocates stray `__pycache__`, `.pytest_cache`, scratch files, and temporary test directories into their designated state subfolders.
+- `--status` — displays an itemized size and file count breakdown across transient storage categories.
+- `--clean` — safely empties disposable files in temporary and test directories.
 
 Read `references/CLI-Reference.md` before automating unfamiliar operations.
 

@@ -1,6 +1,8 @@
 ---
 name: create-strict-implementation-handoff
 description: Create a strict, execution-ready Implementation Handoff Markdown file from the current conversation and the owner's latest decisions. Use when the user asks for an Implementation Handoff, execution-ready handoff, implementation task file, strict coding handoff, or equivalent instructions for another AI coding agent. Do not implement the underlying task; produce the handoff only.
+metadata:
+  version: "1.0.1"
 ---
 # Create a Strict Implementation Handoff
 ## Role
@@ -21,7 +23,7 @@ Assume the execution agent may:
 Therefore, the handoff must minimize ambiguity and unauthorized judgment as much as reasonably possible.
 ---
 # 1. Source of Truth
-Use the **current conversation and the owner's latest decisions** as the primary source of requirements. When initiated from `deep-brainstorming`, consume the verified analysis, owner decisions, evidence, root-cause confidence, considered alternatives, recommended design and testable acceptance conditions, while keeping any unverified hypothesis explicitly unconfirmed.
+Use the **current conversation and the owner's latest decisions** as the primary source of requirements. Accept an optional analysis packet from any source: observations and evidence references, hypotheses and confidence, owner decisions, alternatives, selected design, tests and open questions. Keep hypotheses explicitly unconfirmed. A prior packet is not required.
 
 You MUST:
 1. reconstruct the complete agreed task from the discussion;
@@ -44,28 +46,28 @@ Create an explicit **Owner Approval Gate only when a genuine blocking conflict i
 ---
 # 1A. Analysis-to-Handoff Integration
 
-When `deep-brainstorming` completes analysis and a strict MD is required:
+When an analysis packet is available and a strict handoff is required:
 1. Accept its analysis packet: objective, owner-approved requirements, observed evidence, confirmed vs suspected root cause, competing solutions, recommended decision/rationale, preservation rules, risks, edge cases, acceptance criteria and unresolved investigations.
 2. Apply this existing Skill's **entire** required handoff structure and output contract; do not create a shorter competing format.
 3. Preserve root-cause confidence: suspected diagnoses require verification instructions for the implementation agent **before edits**.
 4. Generate the `IMPLEMENTATION-HANDOFF_<Project>_<Task-Name>.md` file as a **documentation artifact only**. Do not run the planned product implementation, install packages or invoke a downstream execution agent.
-5. Use `token-optimization` only as an independent support Skill to remove redundant context, preserve compact evidence references and avoid wasteful calls. Never remove required details, tests, governance or constraints to save tokens.
+5. Optionally use `token-optimization` during authoring only. Never remove required details, tests, governance or constraints to save tokens. Deliverables must not require any installed Skill.
 6. Standalone handoff requests remain supported exactly as before; prior analysis is optional.
 
 ---
 
 # Mandatory Browser Verification and Fallback Policy
-For tasks requiring browser interaction or visual verification, the generated handoff MUST instruct the execution agent to perform a quick, read-only dedicated-browser preflight before browser work. Delegate environment discovery, identity checks, launch, repair and connection to `browser-environment-manager`; do not implement competing browser-management logic.
+For tasks requiring browser interaction or visual verification, the generated handoff MUST instruct the execution agent to perform a quick, read-only dedicated-browser preflight before browser work using available authorized tools; do not require a named browser-management Skill.
 
 1. Check whether an owner-approved isolated AI browser is configured and accessible. Verify the dedicated user-data directory, exact process ownership, loopback CDP endpoint and active profile using supported tools. Never equate an open port with verified identity, and never use the personal profile.
-2. If an existing approved environment is stopped, request/obtain any necessary permission to start it; if broken, diagnose and attempt authorized non-destructive repair through `browser-environment-manager`. Report repaired issues succinctly with actual evidence. Do not claim a repair succeeded without re-verification. Never reset/delete profile data without explicit consent.
+2. If an existing approved environment is stopped, request/obtain any necessary permission to start it; if broken, diagnose and attempt authorized non-destructive repair. Report repaired issues succinctly with actual evidence. Do not claim a repair succeeded without re-verification. Never reset/delete profile data without explicit consent.
 3. If no dedicated environment exists, ask the owner whether to create one; do not create or adopt a profile without approval. If the owner refuses creation, maintenance, startup or use, respect the refusal without repeated prompts.
 4. Next try an available authorized built-in browser (Codex browser or cloud browser), then an available authorized browser extension/connector. Check capabilities and permissions at each stage. Never silently substitute a personal browser, claim access to a local CDP port from a cloud sandbox, or bypass platform boundaries.
 5. If all available paths fail, report browser/visual checks `UNVERIFIED`, identify attempted paths and blockers, and continue non-browser work when safe. Do not fabricate screenshots, navigation, visual results or a completed verification.
 6. Include the browser outcome in the final execution report: dedicated environment verified/started/repaired, authorized fallback used, or browser unavailable. Skip browser startup entirely when browser verification is irrelevant.
 
 # Mandatory Token and Agent-Budget Policy
-Every generated handoff MUST explicitly invoke the independent `token-optimization` support Skill for substantial execution, preserving all quality, safety, correctness, test, documentation and acceptance requirements. Require selective file/range reads, reusable compact evidence checkpoints, bounded non-duplicative tool calls, focused validation and concise reporting. **Single agent and sequential execution are the default.** Multi-agent spawning, subagent delegation or parallel agent teams are forbidden unless the owner explicitly authorizes them; the executor may ask once before execution when genuinely beneficial, otherwise proceed with one agent. Ordinary batching of independent tool reads within one agent is allowed. Do not infer consent from performance considerations. Never promise numerical token savings without measured data. Do not omit tests or reduce specification quality for economy.
+Only `token-optimization` may be used as an optional authoring-time support Skill. The handoff itself must be standalone and must not require any external Skill. Include selective file/range reads, compact evidence checkpoints, bounded non-duplicative calls, focused validation and concise reporting without omitting required quality, safety, tests or governance. **Single agent and sequential execution are the default.** Multi-agent spawning requires explicit owner authorization. Ordinary batching of independent reads within one agent is allowed. Never promise unmeasured savings.
 
 # 2. Required Output
 Create a Markdown file named approximately:
@@ -74,7 +76,7 @@ Create a Markdown file named approximately:
 
 Do not merely summarize the task in chat or terminal output; create the Markdown file.
 
-If the task is one coherent implementation unit, create one MD file. If it genuinely requires multiple independently executable phases, create one MD file per phase, make dependencies and order explicit, and do not split the task artificially. When multiple handoff files are produced and the environment supports file packaging, provide them together in one downloadable ZIP in addition to the individual MD files.
+Route SMALL (one bounded low-risk subsystem with focused tests) to one self-contained MD. Route LARGE (multiple subsystems or phases, material data/security/compatibility risk, or too much context for one weak executor) to one actual downloadable ZIP containing a master MD, ordered independently verifiable phase/unit MDs, `handoff-lint.py`, its tests, all necessary utilities, `HOW-TO-VALIDATE-AND-EXECUTE.md`, and an integrity manifest. Medium work may remain one MD with atomic units if safely executable. Do not split artificially. Use relative paths and offline standard-library tools; exclude secrets and private profiles. If packaging is unavailable, report it honestly.
 
 The Markdown file must be **execution-ready**, sufficiently detailed that the execution agent can begin work directly from it.
 
@@ -113,6 +115,20 @@ Do not use vague instructions such as:
 - “follow best practices”;
 
 unless the handoff immediately defines exactly what those words mean for this task.
+
+## Six-Stage Contract And Profiles
+
+Each handoff contains these exact ordered stages: **Stage 01 — Verified Diagnosis**, **Stage 02 — Solution Blueprint**, **Stage 03 — Handoff Compilation**, **Stage 04 — Preflight Verification**, **Stage 05 — Atomic Implementation**, and **Stage 06 — Evidence-Based Verification**. Stages 01–03 record what the author established or could not verify; stages 04–06 instruct the separate executor. The author produces and validates artifacts only; never perform the downstream implementation.
+
+Use three pillars: precise sequential instructions, evidence and confidence for decisions, and executable or measurable verification. Distinguish observations, hypotheses, unknowns and owner decisions. Cite verified source paths and lines or command evidence; provide discovery steps instead of inventing paths or APIs.
+
+Select `STANDARD` for capable executors, `GUIDED` by default for nontrivial work, and `ULTRA-STRICT` when the owner identifies a very weak executor or risk warrants it; honor explicit profile selection. All retain scope, preservation, evidence, stop rules, tests and honest status. GUIDED adds atomic units, decision branches, checkpoints and traceability. ULTRA-STRICT additionally requires expected/actual snapshot checks, verified anchors and commands, a per-unit test gate, and an executor capability readback of scope, first unit, pass criterion and stop condition before high-risk work. A failed readback stops affected high-risk work and escalates.
+
+For important requirements assign unique `REQ-###`, evidence `EVID-###` or `UNVERIFIED`, execution `UNIT-###`, `TEST-###`, acceptance `AC-###`, and relevant decision `DEC-###`; link them in a traceability matrix. Each unit specifies input, permitted scope, action, test, expected result and stop condition. Apply the ten improvements proportionally: Evidence-Locked Diagnosis; Atomic Execution Units; Deterministic Decision Trees; Handoff Preflight Validator; Executable Acceptance Contracts; Capability-Aware Instructions; Failure Escalation Protocol; Repository Snapshot Lock; Risk-Based Checkpoints; Requirement-to-Evidence-to-Test Traceability Matrix.
+
+Record repository root-relative paths, Git HEAD and relevant dirty state where available, or comparable file signatures for non-Git projects. Recheck source anchors before edits and record risk checkpoints and a safe undo strategy. IF preflight differs from the baseline, stop the affected unit and record expected/actual; IF a cause is hypothetical, reproduce it before editing; IF a focused test fails, investigate boundedly and do not claim completion; IF resolving a conflict changes approved public behavior, data or architecture, obtain the owner's decision; ELSE proceed with in-scope convention-following details. Escalation identifies unit, observed versus expected, evidence, attempted checks, risk and specific decision required.
+
+Run the bundled `scripts/handoff-lint.py` on generated documents when Python 3.10+ is available (Gate A). Review substantive evidence, contradictions, coverage, test adequacy and executor ambiguity for complex or risky work (Gate B); if unavailable, mark it `UNVERIFIED`. Structural lint does not prove a diagnosis or implementation correct. If Python is unavailable, mark Gate A `UNVERIFIED` and provide a manual checklist covering six stages, scope, evidence, IDs and links, preservation, tests, stops and final status. For LARGE include the linter, packaging helper, tests and guide in the ZIP, and verify its manifest. See `references/HOW-TO-VALIDATE-AND-EXECUTE.md` and `templates/` for the portable contract.
 ---
 # 4. Mandatory Handoff Structure
 Adapt the headings to the task, but cover all applicable areas below.
@@ -518,7 +534,7 @@ The execution agent should not have to infer the owner's intent from prose.
 # 16. Final Instruction
 When this skill is invoked, review the entire relevant discussion immediately preceding the skill invocation.
 
-Extract the final agreed requirements and create/write the **Implementation Handoff `.md` file**.
+Extract the final agreed requirements and create the appropriate **Implementation Handoff** artifact: one Markdown file for SMALL or an offline ZIP for LARGE.
 
 Do not implement the task yourself.
 

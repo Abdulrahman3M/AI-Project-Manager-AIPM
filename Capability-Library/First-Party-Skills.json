@@ -2,6 +2,15 @@
   "schema_version": "1.0",
   "skills": [
     {
+      "slug": "create-strict-implementation-handoff",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "1.0.1",
+      "source_reference": "Owner-authorized AIPM maintenance of the migrated strict handoff Skill lineage; historical source hashes remain in Skill-Migration-Record.json"
+    },
+    {
       "slug": "browser-environment-manager",
       "owner": "AIPM Project Owner",
       "origin": "AIPM_FIRST_PARTY",

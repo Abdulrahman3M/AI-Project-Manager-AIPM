@@ -1,5 +1,14 @@
 # AI Project Manager Support Matrix
 
+## v1.10.3 Local Handoff Upgrade
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| Handoff tools | Python 3.14 / offline | PASS | Fourteen focused tests passed, including missing stages, invalid references, Arabic text and package tampering. Structural lint does not prove implementation correctness. |
+| Capability documentation | Python / local checkout | PASS | Three index inventory, ordering and link tests passed. |
+| Local distributions | Python / local build | FORMAT VERIFIED | Three host archives passed inventory and manifest validation and independent SHA-256 checks. Installation and host runtime remain unverified. |
+| Remote publication | Not performed | NOT PUBLISHED | This is a local repository update. |
+
 ## v1.10.2 Local Documentation Update
 
 | Component | Environment | Status | Evidence |

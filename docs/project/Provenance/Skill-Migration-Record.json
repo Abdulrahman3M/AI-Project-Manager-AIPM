@@ -1,7 +1,6 @@
 {
   "byte_preserved_skills": [
     "audio-timing-author",
-    "create-strict-implementation-handoff",
     "deep-brainstorming",
     "doc-to-md",
     "find-skills",
@@ -14,6 +13,12 @@
     "token-optimization"
   ],
   "owner_approved_maintenance": [
+    {
+      "slug": "create-strict-implementation-handoff",
+      "approved_date": "2026-11-05",
+      "reason": "The project owner explicitly requested the local 1.0.1 Skill upgrade; original imported source hashes remain preserved below.",
+      "historical_source_hashes_retained": true
+    },
     {
       "slug": "powershell-tui-app-designer",
       "approved_date": "2026-10-19",

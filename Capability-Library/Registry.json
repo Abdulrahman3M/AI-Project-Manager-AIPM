@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.8.7",
+  "platform_version": "1.10.3",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -111,11 +111,18 @@
       "customization": "AIPM-owned Skill",
       "description": "Create a strict, execution-ready Implementation Handoff Markdown file from the current conversation and the owner's latest decisions. Use when the user asks for an Implementation Handoff, execution-ready handoff, implementation task file, strict coding handoff, or equivalent instructions for another AI coding agent. Do not implement the underlying task; produce the handoff only.",
       "files": {
-        "CHANGELOG.md": "ddb63ae1a6f849142049e86a4130d77923a1800e87cde71a861b26b62a658154",
-        "SKILL.md": "ae2f07180626eccee3381c59dcd7063b4079712ce7d633de3147bbe9263b5894",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
-        "prompts/Strict-Impl-Handoff-Execute.md": "9b6230869ea2b0d9a5d69dd80cc087c0c9adb3cb35712c18683e3b58b780a87f",
-        "prompts/Strict-Impl-Handoff-Request.md": "b4ebf591f64ecabeec8969433867320b16505df589bfb1d3aa5c2e3ef393fdd5"
+        "CHANGELOG.md": "7bc010b6880ec78289e95b5c43b5771547a37327be19cdba13f2be35248adb2f",
+        "SKILL.md": "9a749c9a234de9c26e0d113ca700223123dbc4198347043697caecf5b388cf6e",
+        "VERSION": "f34306bb50e2d2ec59c788b9013c5ac682ef7f7f69345a3e957e38c0b6ba2fdd",
+        "prompts/Strict-Impl-Handoff-Execute.md": "4882aa482e2456c208432f55cd824421e39fcd3044d299adaaf567b26b41ab29",
+        "prompts/Strict-Impl-Handoff-Request.md": "7ad5cdc5950bc6b6968cac3ec832acb73f3d49184a66063d9e7921a84b08fbac",
+        "references/HOW-TO-VALIDATE-AND-EXECUTE.md": "59362ac274adb02ffb1663aa3e4c8953ac551c3e051213e5bfca139e8c0402c7",
+        "scripts/bundle-handoff.py": "3b7a63c6f42b62d3df76d6fbd2ec3445f00bc15ee83df1c00a192c7f36e0203c",
+        "scripts/handoff-lint.py": "bef4df90e5eefc1829110b113938c59f688470669e1a1f6b96f95342f625e919",
+        "templates/LARGE-LAYOUT.md": "d073708308b1761cfda778c525b4ecb88afe2bb7b6cf7d6b42578c991c6d4184",
+        "templates/OUTPUT-SMALL-SAMPLE.md": "4a4fb39fd0127f884946fd32f3322114f1537dc0c1569f0c27080a1945b45f3f",
+        "tests/fixture-master.md": "c81346bc318ae68e5c2bcaf6a0cbfc1c70eabc2b2f9c000b78b1c30f48f553da",
+        "tests/test_handoff_tools.py": "c2ec921eb024376acc3cb9e5958cc55b85eb869eea5694e62a6391ddbf53c763"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -131,13 +138,13 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "c4eef8dfb064578a3059eed337ec67ecbf1a89219074338849c577ae4ddf52e6",
+      "sha256": "a84de8c71db9d476d85d0be38a61c2a0643a732e769bbd86b37f8478b8535829",
       "skill_owned_prompts": [
         "prompts/Strict-Impl-Handoff-Execute.md",
         "prompts/Strict-Impl-Handoff-Request.md"
       ],
       "slug": "create-strict-implementation-handoff",
-      "version": "1.0.0"
+      "version": "1.0.1"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -490,10 +497,10 @@
       "customization": "AIPM-owned Skill",
       "description": "Select and coordinate specialist Skills when the user asks for help choosing a Skill, the request spans multiple capabilities or workstreams, or project-level supervision is needed. Analyze the requested outcome and deliverable before routing; send execution instructions or handoff documents for another AI agent to create-strict-implementation-handoff. For a clear single-specialist deliverable, invoke that specialist directly without adding orchestration overhead. Use project-governance-manager and shared-project-state-manager as foundational assistants when applicable to substantial work.",
       "files": {
-        "CHANGELOG.md": "7de8a8660e04a955eee119292f8ddb7249e464bc016a4b03402681f1c3691319",
+        "CHANGELOG.md": "7274927147075415a8899c97a494eb3abab8e50d88623d125c33dd2369bcb636",
         "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "eae6dd03995d00b99f4423924b13a9e8416fc0a1fc84d19fc23fbdea662a4350",
-        "VERSION": "326dd5d8641f399990de42def50ac29eb4c9222601c0a0a3fc3c947dd3bec65d",
+        "SKILL.md": "e6a45cd3ef8f61bd967eea4726bde041f117c3cabbeb9fa0240421de38dd05e7",
+        "VERSION": "2df2bd7011e87351e2e3e296ddb7f2520270a76160f95b2d64b337167294f28c",
         "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
         "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
         "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
@@ -513,10 +520,10 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "50d433aa655d5efd4cffc75459d791e94c7b8f1f4fe687c35f702b51130445b6",
+      "sha256": "d505340863f50626575199b50698ee041145073049449451e39c4aab6d37928d",
       "skill_owned_prompts": [],
       "slug": "project-orchestrator",
-      "version": "1.0.8"
+      "version": "1.0.9"
     },
     {
       "customization": "AIPM-owned Skill",

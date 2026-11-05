@@ -1,5 +1,10 @@
 # AIPM Change Log
 
+## [1.10.3] — Strict Handoff Upgrade (Repository Update; Not Published)
+
+- Upgraded Create Strict Implementation Handoff to 1.0.1 with six stages, capability profiles and portable offline validation and packaging.
+- Synchronized the Skill catalog, project and TUI versions, documentation and affected local distribution metadata.
+
 ## [1.10.2] — PowerShell Operator Guides (Repository Update; Not Published)
 
 - Added dedicated English and Arabic operator guides for AIPM's PowerShell TUI, including setup, navigation, project updates, tasks, FIRG, recovery, strengths, and limitations.

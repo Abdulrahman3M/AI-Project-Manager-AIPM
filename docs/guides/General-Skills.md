@@ -55,11 +55,11 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `create-strict-implementation-handoff`
 
-**Description:** Turns the current conversation and the owner's latest decisions into a detailed, execution-ready Markdown handoff for another coding agent.
+**Description:** Creates evidence-aware, six-stage implementation handoffs for another agent, with capability profiles, offline validation and portable packaging for complex tasks.
 
 **When to Use:** Use it when the requested deliverable is an implementation handoff, strict task file, or coding brief for another agent to carry out.
 
-**How to Use:** Example: “Use `create-strict-implementation-handoff` to turn the agreed requirements into a handoff for the next coding agent.”
+**How to Use:** Example: “Use `create-strict-implementation-handoff` to create a guided handoff for the next coding agent.” Small tasks produce one Markdown file; complex tasks produce a self-contained ZIP. The Skill authors the handoff without implementing the target task.
 
 **Source:** [View Skill Instructions](../../01-Skills-General/create-strict-implementation-handoff/SKILL.md)
 

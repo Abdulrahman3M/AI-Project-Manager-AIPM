@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.10.3] — Strict Handoff Upgrade
+
+- Synchronized TUI metadata with platform 1.10.3 for the Skill upgrade; no TUI runtime behavior changed.
+
 ## [1.10.2] — PowerShell Operator Guides
 
 - Added dedicated English and Arabic operator guides for the PowerShell TUI and synchronized the TUI version with platform `1.10.2`.

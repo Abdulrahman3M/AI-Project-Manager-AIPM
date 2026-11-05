@@ -1,3 +1,7 @@
+## [1.0.9] — 2026-11-05
+
+- Synchronized the handoff Skill catalog entry with its 1.0.1 release.
+
 ## [1.0.8] — 2026-10-30
 
 - Updated the Browser Environment Manager catalog entry to v1.1.2 and clarified its browser, agent-integration and local-server preflight coverage.
