@@ -1,5 +1,9 @@
 # AI Project Manager TUI Change Log
 
+## [1.10.4] — Large Artifact Capacity Synchronization
+
+- Synchronized TUI metadata with platform 1.10.4 for Core Engine large artifact support and streaming hashes.
+
 ## [1.10.3] — Strict Handoff Upgrade
 
 - Synchronized TUI metadata with platform 1.10.3 for the Skill upgrade; no TUI runtime behavior changed.

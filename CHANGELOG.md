@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.10.4] — Large Artifact Capacity And Streaming Hashes (Repository Update; Not Published)
+
+- Increased task artifact size limit from 16 MiB to 256 MiB in Core Engine and host adapters.
+- Streamed SHA-256 hash calculation in 64 KiB chunks for artifact listings and metadata generation, eliminating excessive memory consumption.
+- Synchronized platform, documentation, and TUI metadata to 1.10.4.
+
 ## [1.10.3] — Strict Handoff Upgrade (Repository Update; Not Published)
 
 - Upgraded Create Strict Implementation Handoff to 1.0.1 with six stages, capability profiles and portable offline validation and packaging.
