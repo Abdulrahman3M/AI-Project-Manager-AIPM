@@ -20,7 +20,7 @@ from .storage import ManagedProject, StateError, _canonical, _inside, validate_m
 
 
 TASK_ARTIFACT_CATEGORIES = frozenset({"Instructions", "Handoff", "Reports", "Scripts", "Examples", "References"})
-MAX_TASK_ARTIFACT_BYTES = 16 * 1024 * 1024
+MAX_TASK_ARTIFACT_BYTES = 256 * 1024 * 1024
 MAX_TASK_ARTIFACT_PATH_CHARS = 240
 CORE_PROJECTIONS = frozenset({"Task-Plan.md", "Blockers.md", "Final-Report.md", "Test-Status.md", "Task-State.md", "Metadata.json", "Metadat.json"})
 TASK_RECORD_FIELDS = ('title', 'scope', 'plan', 'blockers', 'verification', 'report', 'status_override', 'last_verified_action', 'next_action', 'completed_work', 'changed_files', 'test_results')
@@ -390,10 +390,13 @@ class TaskOperations:
                 rel_posix = entry.relative_to(task_root).as_posix()
                 if rel_posix in {'Metadata.json', 'Metadat.json'}:
                     continue
-                content = entry.read_bytes()
-                size = len(content)
+                size = entry.stat().st_size
                 total_bytes += size
-                digest = hashlib.sha256(content).hexdigest()
+                hasher = hashlib.sha256()
+                with entry.open('rb') as stream:
+                    while chunk := stream.read(65536):
+                        hasher.update(chunk)
+                digest = hasher.hexdigest()
                 category = rel_posix.split('/')[0] if '/' in rel_posix else 'Root'
                 categories_count[category] = categories_count.get(category, 0) + 1
                 try:
@@ -800,7 +803,7 @@ class TaskOperations:
         normalized, task_root, target = self._artifact_target(task, relative_path)
         task_id = task_root.name
         if not isinstance(content, bytes) or len(content) > MAX_TASK_ARTIFACT_BYTES:
-            raise StateError('Task Artifact Must Be Bytes Within The 16 MiB Limit')
+            raise StateError('Task Artifact Must Be Bytes Within The 256 MiB Limit')
         if expected_sha256 is not None and not re.fullmatch(r'[0-9a-f]{64}', expected_sha256):
             raise StateError('Invalid Expected Artifact SHA-256')
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -896,8 +899,12 @@ class TaskOperations:
                 if not path.is_file() or path.stat().st_size > MAX_TASK_ARTIFACT_BYTES:
                     raise StateError('Invalid Or Oversized Task Artifact')
                 relative = path.relative_to(task_root).as_posix()
-                data = path.read_bytes()
-                artifacts.append(self._artifact_metadata(relative, data))
+                file_size = path.stat().st_size
+                hasher = hashlib.sha256()
+                with path.open('rb') as stream:
+                    while chunk := stream.read(65536):
+                        hasher.update(chunk)
+                artifacts.append({'path': relative, 'size_bytes': file_size, 'sha256': hasher.hexdigest(), 'replayed': False})
         return sorted(artifacts, key=lambda item: item['path'].casefold())
 
     def sync_artifacts(self, task: Path) -> None:
