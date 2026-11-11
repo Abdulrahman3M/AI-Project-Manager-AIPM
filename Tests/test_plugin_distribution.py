@@ -59,6 +59,10 @@ class PluginDistributionTests(unittest.TestCase):
                 self.assertEqual(validation["status"], "PASS")
                 with zipfile.ZipFile(archive) as package:
                     names = set(package.namelist())
+                    plugin_version = (ROOT / "Plugins" / "VERSION").read_text(encoding="utf-8").strip()
+                    self.assertEqual(package.read("VERSION").decode("utf-8").strip(), plugin_version)
+                    self.assertIn(f"-v{plugin_version}.zip", archive.name)
+                    self.assertEqual(json.loads(package.read("AIPM-Distribution-Manifest.json"))["source_project_version"], catalog["platform_version"])
                     self.assertIn("prompts/Autonomous-Task-Execution.md", names)
                     self.assertIn("licenses/Apache-2.0.txt", names)
                     self.assertIn("NOTICE", names)
@@ -75,6 +79,8 @@ class PluginDistributionTests(unittest.TestCase):
             with zipfile.ZipFile(archive) as package:
                 portable = json.loads(package.read("plugin.json"))
                 codex = json.loads(package.read(".codex-plugin/plugin.json"))
+                self.assertEqual(portable["version"], (ROOT / "Plugins" / "VERSION").read_text(encoding="utf-8").strip())
+                self.assertEqual(codex["version"], portable["version"])
                 project_url = "https://github.com/Abdulrahman3M/AI-Project-Manager-AIPM/"
                 self.assertEqual(portable["$schema"], "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json")
                 self.assertEqual(portable["author"]["name"], "Abdulrahman Elbatrah")

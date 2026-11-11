@@ -16,6 +16,8 @@ Use one of these platform values:
 
 The command writes a ZIP and its `.sha256` checksum sidecar to `Plugins/Dist/`, then validates the archive before reporting success. It includes every AIPM-approved General Skill, all Skill-owned Prompts, and each approved standalone Prompt.
 
+The archive release version comes from `Plugins/VERSION` and is independent of the source platform version recorded in the distribution manifest. Increment the Plugin version before uploading an update to an existing host release.
+
 The archives are local build products: this command does not install, publish, or grant any Plugin access to your local project files. For ChatGPT/Codex, use the import or marketplace workflow provided by your account or workspace. For Claude, use its available Plugin installation workflow. The Antigravity archive is a Skills bundle; extract its `.agents/skills/` folder into the workspace root. This follows Google's documented Skill discovery layout but does not claim a native ZIP installer or runtime acceptance.
 
 For a ChatGPT workspace upload, select the generated `AIPM-ChatGPT-Plugin-vX.Y.Z.zip` file. The package now includes the portable Agent Plugins manifest, Codex compatibility manifest, listing metadata, SVG icon, and YAML metadata required for a Skills-only package. If upload validation reports a server-side finding, copy its exact issue code before changing the package.
@@ -23,6 +25,6 @@ For a ChatGPT workspace upload, select the generated `AIPM-ChatGPT-Plugin-vX.Y.Z
 To recheck one archive without rebuilding it, use the Python validator from the repository root:
 
 ```powershell
-$version = (Get-Content .\VERSION -Raw).Trim()
+$version = (Get-Content .\Plugins\VERSION -Raw).Trim()
 python .\Plugins\Build-System\build_plugins.py --platform chatgpt --validate ".\Plugins\Dist\AIPM-ChatGPT-Plugin-v$version.zip"
 ```
