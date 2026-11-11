@@ -1,5 +1,32 @@
 # AI Project Manager TUI Change Log
 
+## [1.11.9] — Project Manager Synchronization (Not Published)
+
+- Synchronize TUI metadata with the platform; no TUI runtime behavior changed in this update.
+
+## [1.11.8] — Verification Synchronization (Not Published)
+
+- Synchronize TUI version with the platform; no TUI runtime behavior changed in this update.
+
+## [1.11.7] — Verification Synchronization (Not Published)
+
+- Synchronize TUI version with the platform; no TUI runtime behavior changed in this update.
+
+## [1.11.6] — Resource Budget Synchronization (Not Published)
+
+- Synchronize TUI version with the platform; no TUI runtime behavior changed in this update.
+
+## [1.11.5] — Golden Triangle Synchronization (Not Published)
+
+- Synchronize TUI version with the platform; no TUI runtime behavior changed in this update.
+
+## [1.10.5] — StrictMode Collection And State Recovery Hardening (Not Published)
+
+- Added exported `Get-AipmCount` helper and null-value fallback in `Get-AipmField` (`src/Core/App.psm1`) to prevent `Set-StrictMode -Version 2.0` `.Count` crashes when PowerShell unrolls 0-element or 1-element collections in `Invoke-AipmStateRecovery`, task views, registry views, and dashboard projections.
+- Hardened `Invoke-AipmStateRecovery`, `Get-AipmProjectSummary`, `Get-AipmPageLines`, `Show-AipmTaskRecord`, and `Invoke-AipmTaskManagement` against omitted optional Core fields, replaced a non-ASCII finding separator with pure ASCII, and added support for `Shared-Project-State-Manager/Operations/Tasks/` alongside legacy `Tasks/`.
+- Enhanced `Start-AIPM.ps1` error logging with `[<FileName>:<LineNumber>]` provenance in `app.log` while keeping terminal output clean.
+- Added `Set-StrictMode -Version 2.0` unit and UI regression tests in `tests/Unit/App.Tests.ps1`, and synchronized TUI version with platform `1.10.5`.
+
 ## [1.10.4] — Large Artifact Capacity Synchronization
 
 - Synchronized TUI metadata with platform 1.10.4 for Core Engine large artifact support and streaming hashes.

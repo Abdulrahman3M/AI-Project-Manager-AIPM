@@ -1,3 +1,11 @@
 # Preserve VERSION bytes used by the protected capability hash baseline.
 01-Skills-General/*/VERSION -text whitespace=cr-at-eol
 Plugins/aipm-project-agent-bridge/skills/*/VERSION -text whitespace=cr-at-eol
+
+# Capability registries and generated bridge manifests hash exact file bytes.
+# Preserve mixed and platform-specific line endings across Git checkouts.
+01-Skills-General/** -text
+02-Prompt-General/** -text
+Plugins/aipm-project-agent-bridge/** -text
+LICENSE -text
+NOTICE -text

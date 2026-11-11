@@ -7,8 +7,21 @@ function Get-AipmField {
     param($Object, [string]$Name, $Default = $null)
     if ($null -eq $Object) { return $Default }
     $property = $Object.PSObject.Properties[$Name]
-    if ($property) { return $property.Value }
+    if ($property -and $null -ne $property.Value) { return $property.Value }
     return $Default
+}
+
+function Get-AipmCount {
+    param($InputObject)
+    if ($null -eq $InputObject) { return 0 }
+    if ($InputObject -is [string]) { return 1 }
+    if ($InputObject -is [System.Collections.ICollection]) { return [int]$InputObject.Count }
+    if ($InputObject -is [System.Collections.IEnumerable]) {
+        $count = 0
+        foreach ($unused in $InputObject) { $count += 1 }
+        return $count
+    }
+    return 1
 }
 
 function Invoke-AipmSessionCore {
@@ -164,43 +177,50 @@ function Get-AipmProjectSummary {
         return [pscustomobject]$summary
     }
 
-    $summary.Status = 'Ready'
-    foreach ($pair in @(
-        @{ Key = 'active_phase'; Target = 'Phase' },
-        @{ Key = 'task_id'; Target = 'TaskId' },
-        @{ Key = 'updated_at'; Target = 'UpdatedAt' },
-        @{ Key = 'updated_by'; Target = 'UpdatedBy' },
-        @{ Key = 'next_action'; Target = 'NextAction' },
-        @{ Key = 'branch'; Target = 'Branch' },
-        @{ Key = 'head_sha'; Target = 'Head' }
-    )) {
-        $value = Get-AipmField $state $pair.Key
-        if ($null -ne $value -and [string]$value) { $summary[$pair.Target] = [string]$value }
-    }
-    $summary.TaskStatus = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $state 'task_status' 'UNVERIFIED'))
-
-    $tasks = Get-AipmField $state 'tasks'
-    $taskItems = @()
-    if ($tasks -is [System.Collections.IDictionary]) {
-        $taskItems = @($tasks.Values)
-    } elseif ($null -ne $tasks) {
-        $taskItems = @($tasks.PSObject.Properties | ForEach-Object { $_.Value })
-    }
-    $summary.TaskCount = $taskItems.Count
-    foreach ($task in $taskItems) {
-        $verification = Get-AipmField $task 'verification'
-        $result = [string](Get-AipmField $verification 'result' '')
-        $evidence = [string](Get-AipmField $verification 'evidence' '')
-        $report = [string](Get-AipmField $task 'report' '')
-        $blockers = @(Get-AipmField $task 'blockers' @())
-        if ($blockers.Count -gt 0) { $summary.BlockedTaskCount++ }
-        if ($result -eq 'PASS' -and $evidence.Trim() -and $report.Trim()) {
-            $summary.VerifiedTaskCount++; $summary.PassedEvidence++
-        } elseif ($result -eq 'FAIL') {
-            $summary.FailedEvidence++
-        } else {
-            $summary.UnverifiedEvidence++
+    try {
+        $summary.Status = 'Ready'
+        foreach ($pair in @(
+            @{ Key = 'active_phase'; Target = 'Phase' },
+            @{ Key = 'task_id'; Target = 'TaskId' },
+            @{ Key = 'updated_at'; Target = 'UpdatedAt' },
+            @{ Key = 'updated_by'; Target = 'UpdatedBy' },
+            @{ Key = 'next_action'; Target = 'NextAction' },
+            @{ Key = 'branch'; Target = 'Branch' },
+            @{ Key = 'head_sha'; Target = 'Head' }
+        )) {
+            $value = Get-AipmField $state $pair.Key
+            if ($null -ne $value -and [string]$value) { $summary[$pair.Target] = [string]$value }
         }
+        $summary.TaskStatus = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $state 'task_status' 'UNVERIFIED'))
+
+        $tasks = Get-AipmField $state 'tasks'
+        [object[]]$taskItems = @()
+        if ($tasks -is [System.Collections.IDictionary]) {
+            $taskItems = @($tasks.Values)
+        } elseif ($null -ne $tasks) {
+            $taskItems = @($tasks.PSObject.Properties | ForEach-Object { $_.Value })
+        }
+        $summary.TaskCount = Get-AipmCount $taskItems
+        foreach ($task in $taskItems) {
+            $verification = Get-AipmField $task 'verification'
+            $result = [string](Get-AipmField $verification 'result' '')
+            $evidence = [string](Get-AipmField $verification 'evidence' '')
+            $report = [string](Get-AipmField $task 'report' '')
+            $rawBlockers = Get-AipmField $task 'blockers' @()
+            [object[]]$blockers = @(if ($null -ne $rawBlockers) { $rawBlockers })
+            if ((Get-AipmCount $blockers) -gt 0) { $summary.BlockedTaskCount++ }
+            if ($result -eq 'PASS' -and $evidence.Trim() -and $report.Trim()) {
+                $summary.VerifiedTaskCount++; $summary.PassedEvidence++
+            } elseif ($result -eq 'FAIL') {
+                $summary.FailedEvidence++
+            } else {
+                $summary.UnverifiedEvidence++
+            }
+        }
+    } catch {
+        Write-AppLog ('Project summary fallback for ' + $summary.Name + ': ' + $_.Exception.Message) 'WARNING'
+        $summary.Status = 'Unverified'
+        if (-not $summary.Reason) { $summary.Reason = 'SUMMARY_PROJECTION_ERROR' }
     }
     return [pscustomobject]$summary
 }
@@ -445,18 +465,21 @@ function Show-AipmCapabilityLibrary {
 function Get-AipmPageLines {
     param([string]$Section, $Dashboard, $Catalog, $HostMatrix, [string]$Version)
     $lines = New-Object System.Collections.Generic.List[string]
-    $projects = @(Get-AipmField $Dashboard 'projects' @())
-    $summaries = @($projects | ForEach-Object { Get-AipmProjectSummary -Project $_ })
+    $rawProjects = Get-AipmField $Dashboard 'projects' @()
+    [object[]]$projects = @(if ($null -ne $rawProjects) { $rawProjects })
+    [object[]]$summaries = @($projects | ForEach-Object { Get-AipmProjectSummary -Project $_ })
+    $summaryCount = Get-AipmCount $summaries
     switch ($Section) {
         'Dashboard' {
-            $lines.Add(('Core: ' + $(if ($Dashboard.status -eq 'PASS') { 'Ready' } else { 'Blocked' })))
-            $lines.Add(('Registry: ' + (ConvertTo-AipmDisplayStatus ([string]$Dashboard.registry_status))))
-            $lines.Add(('Registered Projects: ' + $summaries.Count))
+            $dashStatus = [string](Get-AipmField $Dashboard 'status' 'BLOCKED')
+            $lines.Add(('Core: ' + $(if ($dashStatus -eq 'PASS') { 'Ready' } else { 'Blocked' })))
+            $lines.Add(('Registry: ' + (ConvertTo-AipmDisplayStatus ([string](Get-AipmField $Dashboard 'registry_status' 'UNVERIFIED')))))
+            $lines.Add(('Registered Projects: ' + $summaryCount))
             foreach ($s in $summaries) { $lines.Add(('{0} | {1} | Phase {2} | Task {3} | Progress {4}' -f $s.Name,$s.Status,$s.Phase,$s.TaskId,$s.Progress)) }
-            if ($summaries.Count -eq 0) { $lines.Add('No Registered Projects Were Returned By Core.') }
+            if ($summaryCount -eq 0) { $lines.Add('No Registered Projects Were Returned By Core.') }
         }
         'Projects' {
-            if ($summaries.Count -eq 0) { $lines.Add('No Registered Projects Were Returned By Core.') }
+            if ($summaryCount -eq 0) { $lines.Add('No Registered Projects Were Returned By Core.') }
             foreach ($s in $summaries) {
                 $lines.Add(($s.Name + ' | ' + $s.Status + ' | Project Id: ' + $s.ProjectId))
                 $lines.Add(('Phase: ' + $s.Phase + ' | Task: ' + $s.TaskId + ' | Status: ' + $s.TaskStatus + ' | Progress: ' + $s.Progress))
@@ -470,13 +493,13 @@ function Get-AipmPageLines {
             foreach ($project in $projects) {
                 $s = Get-AipmProjectSummary -Project $project
                 $lines.Add($s.Name + ' | ' + $s.TaskStatus + ' | Active Task: ' + $s.TaskId)
-                foreach ($entry in @(Get-AipmStateTasks $project.state)) {
+                foreach ($entry in @(Get-AipmStateTasks (Get-AipmField $project 'state'))) {
                     $task = $entry.Data; $verification = Get-AipmField $task 'verification'
                     $status = ConvertTo-AipmDisplayStatus ([string](Get-AipmField $verification 'result' 'UNVERIFIED'))
                     $lines.Add(('  ' + $entry.Id + ' | ' + [string](Get-AipmField $task 'title' 'Untitled Task') + ' | ' + $status))
                 }
             }
-            if ($summaries.Count -eq 0) { $lines.Add('Task Data Is Unavailable Until A Project Is Registered.') }
+            if ($summaryCount -eq 0) { $lines.Add('Task Data Is Unavailable Until A Project Is Registered.') }
         }
         'Phases' {
             foreach ($s in $summaries) { $lines.Add($s.Name + ' | Active Phase: ' + $s.Phase) }
@@ -489,7 +512,7 @@ function Get-AipmPageLines {
                 $lines.Add(('Verified Tasks: {0} | Passed Evidence: {1} | Failed Evidence: {2} | Unverified Evidence: {3}' -f $s.VerifiedTaskCount,$s.PassedEvidence,$s.FailedEvidence,$s.UnverifiedEvidence))
             }
             $lines.Add('No Test Run Count Is Inferred From Task Evidence.')
-            if ($summaries.Count -eq 0) { $lines.Add('No Project Evidence Is Available.') }
+            if ($summaryCount -eq 0) { $lines.Add('No Project Evidence Is Available.') }
         }
         'Agents & Handoffs' {
             foreach ($s in $summaries) { $lines.Add($s.Name + ' | Live Session: ' + $s.AgentStatus) }
@@ -500,16 +523,22 @@ function Get-AipmPageLines {
         'Timeline' {
             foreach ($s in $summaries) { $lines.Add(($s.Name + ' | Updated: ' + $s.UpdatedAt + ' | By: ' + $s.UpdatedBy)) }
             $lines.Add('Event-Level History Is Not Supplied By The Read-Only Dashboard Command.')
-            if ($summaries.Count -eq 0) { $lines.Add('No Project Timeline Is Available.') }
+            if ($summaryCount -eq 0) { $lines.Add('No Project Timeline Is Available.') }
         }
         'Skills & Plugins' {
             $c = Get-AipmField $Catalog 'catalog'
             if ($c) {
-                $lines.Add(('Capability Integrity: ' + [string]$c.integrity_status))
-                $lines.Add(('AIPM-Owned Skills: ' + [string]$c.skill_count))
+                $lines.Add(('Capability Integrity: ' + [string](Get-AipmField $c 'integrity_status' 'UNVERIFIED')))
+                $lines.Add(('AIPM-Owned Skills: ' + [string](Get-AipmField $c 'skill_count' 'Unverified')))
                 $lines.Add('All Listed Skills Are Covered By The Apache License 2.0.')
-                foreach ($skill in @($c.skills)) { $lines.Add(('  ' + [string]$skill.slug + ' ' + [string]$skill.version + ' | ' + [string]$skill.source_license)) }
-                if ($c.plugin_sample) { $lines.Add(('Plugin Package: ' + [string]$c.plugin_sample.status + ' | Install: ' + [string]$c.plugin_sample.installation + ' | Publish: ' + [string]$c.plugin_sample.publication)) }
+                $rawCatalogSkills = Get-AipmField $c 'skills' @()
+                foreach ($skill in @(if ($null -ne $rawCatalogSkills) { $rawCatalogSkills })) {
+                    $lines.Add(('  ' + [string](Get-AipmField $skill 'slug' '') + ' ' + [string](Get-AipmField $skill 'version' 'Unverified') + ' | ' + [string](Get-AipmField $skill 'source_license' 'Apache License 2.0')))
+                }
+                $pluginSample = Get-AipmField $c 'plugin_sample'
+                if ($pluginSample) {
+                    $lines.Add(('Plugin Package: ' + [string](Get-AipmField $pluginSample 'status' 'UNVERIFIED') + ' | Install: ' + [string](Get-AipmField $pluginSample 'installation' 'UNVERIFIED') + ' | Publish: ' + [string](Get-AipmField $pluginSample 'publication' 'UNVERIFIED')))
+                }
             } else { $lines.Add('Capability Catalog Is Unverified.') }
         }
         'Assistant Console' {
@@ -617,8 +646,10 @@ function Resolve-AipmRegistryPath {
 function Get-AipmRegistryEntries {
     param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)][string]$RegistryPath)
     $result = Invoke-AipmCore -AppRoot $Root -Command 'list' -RegistryPath $RegistryPath
-    if ($result.Status -ne 'PASS') { return [pscustomobject]@{ Status='BLOCKED'; Reason=$result.Reason; Projects=@() } }
-    return [pscustomobject]@{ Status='PASS'; Reason=''; Projects=@((Get-AipmField $result.Data 'projects' @())) }
+    if ($result.Status -ne 'PASS') { return [pscustomobject]@{ Status='BLOCKED'; Reason=$result.Reason; Projects=([object[]]@()) } }
+    $rawProjects = Get-AipmField $result.Data 'projects' @()
+    [object[]]$projects = @(if ($null -ne $rawProjects) { $rawProjects })
+    return [pscustomobject]@{ Status='PASS'; Reason=''; Projects=$projects }
 }
 
 function Connect-AipmExistingRegistry {
@@ -642,7 +673,7 @@ function Connect-AipmExistingRegistry {
     }
     $saved = Set-UserSetting -Name 'registry_path' -Value $path
     $lines = @(
-        ('Loaded ' + $inventory.Projects.Count + ' Registered Project(s).'),
+        ('Loaded ' + (Get-AipmCount $inventory.Projects) + ' Registered Project(s).'),
         'The Existing Registry File Was Validated And Kept Unchanged.',
         'Project Root Paths Must Exist On This Device; AIPM Does Not Copy Project Files.'
     )
@@ -765,7 +796,8 @@ function Invoke-AipmRegistryManagement {
     $currentPath = [System.IO.Path]::GetFullPath($RegistryPath)
     while ($true) {
         $inventory = Get-AipmRegistryEntries -Root $Root -RegistryPath $currentPath
-        $inventoryDescription = if ($inventory.Status -eq 'PASS') { ('{0} Project(s) | {1}' -f $inventory.Projects.Count, $currentPath) } else { ('Registry Read Blocked: ' + $inventory.Reason) }
+        $projectCount = Get-AipmCount $inventory.Projects
+        $inventoryDescription = if ($inventory.Status -eq 'PASS') { ('{0} Project(s) | {1}' -f $projectCount, $currentPath) } else { ('Registry Read Blocked: ' + $inventory.Reason) }
         $actions = @(
             (New-MenuItem -Label 'View Registered Projects' -Desc 'Read Project IDs, Names, And Their Root Paths.' -Value 'view' -Icon 'Project'),
             (New-MenuItem -Label 'Register A Project' -Desc 'Create Its Shared State Folder, Then Add A Registry Pointer.' -Value 'register' -Icon 'Yes'),
@@ -794,12 +826,12 @@ function Invoke-AipmRegistryManagement {
             continue
         }
         if ($choice -eq 'view') {
-            $lines = @('Registry Path: ' + $currentPath, 'Registered Projects: ' + $inventory.Projects.Count, '')
+            $lines = @('Registry Path: ' + $currentPath, 'Registered Projects: ' + $projectCount, '')
             foreach ($project in $inventory.Projects) {
                 $lines += ([string]$project.alias + ' | ' + [string]$project.project_id)
                 $lines += ('  Root: ' + [string]$project.root_path)
             }
-            if ($inventory.Projects.Count -eq 0) { $lines += 'No Projects Are Registered Yet.' }
+            if ($projectCount -eq 0) { $lines += 'No Projects Are Registered Yet.' }
             [void](Show-AipmPage -Title 'Registered Projects' -Lines $lines)
             continue
         }
@@ -881,7 +913,7 @@ function Invoke-AipmRegistryManagement {
             continue
         }
         if ($choice -eq 'unregister') {
-            if ($inventory.Projects.Count -eq 0) { Show-Notice -Title 'No Projects To Unregister' -Lines @('The Registry Is Empty.') -Kind Info; continue }
+            if ($projectCount -eq 0) { Show-Notice -Title 'No Projects To Unregister' -Lines @('The Registry Is Empty.') -Kind Info; continue }
             $projectItems = @($inventory.Projects | ForEach-Object { New-MenuItem -Label ([string]$_.alias) -Desc ([string]$_.root_path) -Value ([string]$_.project_id) -Icon 'Project' })
             $projectItems += New-MenuItem -Label 'Cancel' -Desc 'Return Without Removing A Registry Entry.' -Value 'cancel' -Icon 'Exit'
             $selected = Show-Menu -Title 'Select Project To Unregister' -Items $projectItems
@@ -965,21 +997,30 @@ function Show-AipmTaskRecord {
             return
         }
         $task = $freshResult.Data.task
+        $taskTitle = [string](Get-AipmField $task 'title' ([string]$TaskRow.task_id))
+        $taskStatus = [string](Get-AipmField $task 'task_status' 'UNVERIFIED')
+        $taskScope = [string](Get-AipmField $task 'scope' '')
+        $taskPlan = [string](Get-AipmField $task 'plan' '')
         $lines = @(
             ('Task ID: ' + [string]$TaskRow.task_id),
-            ('Status: ' + [string]$task.task_status + ' (Derived From Task Evidence And Blockers)'),
-            ('Scope: ' + [string]$task.scope),
+            ('Status: ' + $taskStatus + ' (Derived From Task Evidence And Blockers)'),
+            ('Scope: ' + $taskScope),
             ('Last Verified Action: ' + [string](Get-AipmField $task 'last_verified_action' 'Not Recorded')),
             ('Next Action: ' + [string](Get-AipmField $task 'next_action' 'Not Recorded')),
             '',
             'Plan:',
-            [string]$task.plan
+            $taskPlan
         )
-        foreach ($blocker in @($task.blockers)) { $lines += ('Blocker: ' + [string]$blocker) }
-        if ($task.verification) { $lines += ('Verification: ' + [string]$task.verification.result + ' | ' + [string]$task.verification.evidence) }
-        if ($task.report) { $lines += ('Report: ' + [string]$task.report) }
+        $rawTaskBlockers = Get-AipmField $task 'blockers' @()
+        foreach ($blocker in @(if ($null -ne $rawTaskBlockers) { $rawTaskBlockers })) { $lines += ('Blocker: ' + [string]$blocker) }
+        $taskVerification = Get-AipmField $task 'verification'
+        if ($taskVerification) {
+            $lines += ('Verification: ' + [string](Get-AipmField $taskVerification 'result' 'UNVERIFIED') + ' | ' + [string](Get-AipmField $taskVerification 'evidence' ''))
+        }
+        $taskReport = [string](Get-AipmField $task 'report' '')
+        if ($taskReport) { $lines += ('Report: ' + $taskReport) }
         $actions = @(
-            (New-MenuItem -Label 'View Task Status And Details' -Desc ('Current Status: ' + [string]$task.task_status + ' | Review Scope, Progress, Plan And Evidence.') -Value 'view' -Icon 'Task'),
+            (New-MenuItem -Label 'View Task Status And Details' -Desc ('Current Status: ' + $taskStatus + ' | Review Scope, Progress, Plan And Evidence.') -Value 'view' -Icon 'Task'),
             (New-MenuItem -Label 'Update Task Plan' -Desc 'Replace The Current Plan In AIPM Task State.' -Value 'plan' -Icon 'Edit'),
             (New-MenuItem -Label 'Update Progress Checkpoint' -Desc 'Record The Last Verified Action And The Exact Next Action.' -Value 'checkpoint' -Icon 'Handoff'),
             (New-MenuItem -Label 'Add A Blocker' -Desc 'Record A Current Obstacle Without Editing Project Files.' -Value 'blocker' -Icon 'Warning'),
@@ -1000,15 +1041,15 @@ function Show-AipmTaskRecord {
             (New-MenuItem -Label 'Delete Task' -Desc 'Permanently Delete Live Folder And Unregister Task, Even If Incomplete.' -Value 'delete' -Icon 'Warning'),
             (New-MenuItem -Label 'Back' -Desc 'Return To The Project Task List.' -Value 'back' -Icon 'Exit')
         )
-        $action = Show-Menu -Title ('Manage Task: ' + [string]$task.title) -Description ('Status: ' + [string]$task.task_status + ' | Task ID: ' + [string]$TaskRow.task_id) -Items $actions
+        $action = Show-Menu -Title ('Manage Task: ' + $taskTitle) -Description ('Status: ' + $taskStatus + ' | Task ID: ' + [string]$TaskRow.task_id) -Items $actions
         if ($action -in @($null, 'back', 'Back', '__QUIT__')) { return }
         if ($action -eq 'view') {
-            [void](Show-AipmPage -Title ('Task Status And Details: ' + [string]$task.title) -Lines $lines)
+            [void](Show-AipmPage -Title ('Task Status And Details: ' + $taskTitle) -Lines $lines)
             continue
         }
         if ($action -eq 'edit') {
-            $currentTitle = [string]$task.title
-            $currentScope = [string]$task.scope
+            $currentTitle = $taskTitle
+            $currentScope = $taskScope
             $editChoice = Show-Menu -Title 'Edit Task Title Or Description' -Description ('Task ID: ' + [string]$TaskRow.task_id) -Items @(
                 (New-MenuItem -Label 'Edit Task Title' -Desc ('Current: ' + $currentTitle) -Value 'title' -Icon 'Edit'),
                 (New-MenuItem -Label 'Edit Task Description / Scope' -Desc ('Current: ' + $currentScope) -Value 'scope' -Icon 'Edit'),
@@ -1042,12 +1083,15 @@ function Show-AipmTaskRecord {
             if ($updated.Status -ne 'PASS') {
                 Show-Notice -Title 'Failed To Update Task Details' -Lines @([string]$updated.Reason) -Kind Error
             } else {
-                if ($updated.Data -and $updated.Data.task -and $updated.Data.task.title) {
-                    $TaskRow.title = [string]$updated.Data.task.title
+                $updatedTask = Get-AipmField $updated.Data 'task'
+                $updatedTitle = [string](Get-AipmField $updatedTask 'title' '')
+                $updatedScope = [string](Get-AipmField $updatedTask 'scope' '')
+                if ($updatedTitle -and $TaskRow.PSObject.Properties['title']) {
+                    $TaskRow.title = $updatedTitle
                 }
                 Show-Notice -Title 'Task Details Updated' -Lines @(
-                    ('Title: ' + [string]$updated.Data.task.title),
-                    ('Scope: ' + [string]$updated.Data.task.scope)
+                    ('Title: ' + $updatedTitle),
+                    ('Scope: ' + $updatedScope)
                 ) -Kind Success
             }
             continue
@@ -1069,20 +1113,29 @@ function Show-AipmTaskRecord {
                 Show-Notice -Title 'Failed To Rename Task' -Lines @([string]$renamed.Reason) -Kind Error
             } else {
                 $TaskRow.task_id = $newId.Trim()
-                Show-Notice -Title 'Task Renamed Successfully' -Lines @(('New Task ID: ' + $newId.Trim()), ('Path: ' + [string]$renamed.Data.task_path)) -Kind Success
+                Show-Notice -Title 'Task Renamed Successfully' -Lines @(('New Task ID: ' + $newId.Trim()), ('Path: ' + [string](Get-AipmField $renamed.Data 'task_path' ''))) -Kind Success
             }
             continue
         }
         if ($action -eq 'open-folder') {
             $taskFolder = $null
             if ($ProjectRoot) {
-                $candidate = Join-Path (Join-Path $ProjectRoot 'Shared-Project-State-Manager\Tasks') ([string]$TaskRow.task_id)
-                if (Test-Path -LiteralPath $candidate) { $taskFolder = [System.IO.Path]::GetFullPath($candidate) }
+                $stateDir = Join-Path $ProjectRoot 'Shared-Project-State-Manager'
+                foreach ($relTasks in @((Join-Path 'Operations' 'Tasks'), 'Tasks')) {
+                    $candidate = Join-Path (Join-Path $stateDir $relTasks) ([string]$TaskRow.task_id)
+                    if (Test-Path -LiteralPath $candidate) {
+                        $taskFolder = [System.IO.Path]::GetFullPath($candidate)
+                        break
+                    }
+                }
             }
             if (-not $taskFolder) {
                 $liveResult = Invoke-AipmCore -AppRoot $Root -Command 'task-read' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id)
-                if ($liveResult.Status -eq 'PASS' -and $liveResult.Data.task -and $liveResult.Data.task.task_path) {
-                    $taskFolder = [string]$liveResult.Data.task.task_path
+                if ($liveResult.Status -eq 'PASS' -and $liveResult.Data) {
+                    $liveTask = Get-AipmField $liveResult.Data 'task'
+                    $liveTaskPath = [string](Get-AipmField $liveTask 'task_path' '')
+                    if (-not $liveTaskPath) { $liveTaskPath = [string](Get-AipmField $liveResult.Data 'task_path' '') }
+                    if ($liveTaskPath) { $taskFolder = $liveTaskPath }
                 }
             }
             if ($taskFolder -and (Test-Path -LiteralPath $taskFolder)) {
@@ -1256,17 +1309,18 @@ function Show-AipmTaskRecord {
             if ($listed.Status -ne 'PASS') {
                 Show-Notice -Title 'Task Files Could Not Be Listed' -Lines @([string]$listed.Reason, 'Return To The Task Menu And Try Again.') -Kind Error
             } else {
-                $artifactRows = @($listed.Data.artifacts)
+                $rawArtifacts = Get-AipmField $listed.Data 'artifacts' @()
+                [object[]]$artifactRows = @(if ($null -ne $rawArtifacts) { $rawArtifacts })
                 $searchQuery = ''
                 while ($true) {
-                    $visibleArtifacts = @()
-                    $exactArtifacts = @()
+                    [object[]]$visibleArtifacts = @()
+                    [object[]]$exactArtifacts = @()
                     $normalizedQuery = $searchQuery.Trim().Replace('\', '/')
                     if (-not $normalizedQuery) {
                         $visibleArtifacts = $artifactRows
                     } else {
                         foreach ($artifact in $artifactRows) {
-                            $artifactPath = [string]$artifact.path
+                            $artifactPath = [string](Get-AipmField $artifact 'path' '')
                             $artifactName = [System.IO.Path]::GetFileName($artifactPath)
                             if ($artifactPath.IndexOf($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase) -ge 0 -or $artifactName.IndexOf($normalizedQuery, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
                                 $visibleArtifacts += $artifact
@@ -1277,18 +1331,21 @@ function Show-AipmTaskRecord {
                         }
                     }
                     $queryLabel = if ($normalizedQuery) { $normalizedQuery } else { 'All Files' }
-                    $artifactLines = @('Task: ' + [string]$task.title, 'Status: ' + [string]$task.task_status, ('Search Query: ' + $queryLabel))
+                    $artifactLines = @('Task: ' + $taskTitle, 'Status: ' + $taskStatus, ('Search Query: ' + $queryLabel))
                     if ($normalizedQuery) {
-                        $exactLabel = if ($exactArtifacts.Count -gt 0) { 'Found' } else { 'Not Found' }
+                        $exactLabel = if ((Get-AipmCount $exactArtifacts) -gt 0) { 'Found' } else { 'Not Found' }
                         $artifactLines += ('Exact File Match: ' + $exactLabel)
                     }
-                    $artifactLines += ('Matching Files: ' + $visibleArtifacts.Count)
+                    $visibleCount = Get-AipmCount $visibleArtifacts
+                    $artifactLines += ('Matching Files: ' + $visibleCount)
                     $artifactLines += ''
-                    if ($visibleArtifacts.Count -eq 0) {
-                        if ($artifactRows.Count -eq 0 -and -not $normalizedQuery) { $artifactLines += 'No Supporting Files Are Attached To This Task Yet.' }
+                    if ($visibleCount -eq 0) {
+                        if ((Get-AipmCount $artifactRows) -eq 0 -and -not $normalizedQuery) { $artifactLines += 'No Supporting Files Are Attached To This Task Yet.' }
                         else { $artifactLines += 'No Matching Files Found.' }
                     }
-                    foreach ($artifact in $visibleArtifacts) { $artifactLines += ([string]$artifact.path + ' | ' + [string]$artifact.sha256) }
+                    foreach ($artifact in $visibleArtifacts) {
+                        $artifactLines += ([string](Get-AipmField $artifact 'path' '') + ' | ' + [string](Get-AipmField $artifact 'sha256' ''))
+                    }
                     $pageResult = Show-AipmPage -Title 'Attached Task Files' -Lines $artifactLines -Searchable
                     if ($pageResult -ne '__SEARCH__') { break }
                     $enteredQuery = Read-ValidatedInput -Prompt 'Search Attached Task Files' -Help 'Enter A Full Or Partial File Name Or Relative Path. Leave Empty To Show All Attached Files.' -Example 'Agent Progress Report.md' -Default $searchQuery
@@ -1388,14 +1445,15 @@ function Invoke-AipmStateRecovery {
     if ($diagnosis.Status -eq 'PASS' -and $isRepairable) {
         $diagReconciled = Get-AipmField $diagnosis.Data 'reconciled_tasks' @()
         $diagUntracked = Get-AipmField $diagnosis.Data 'untracked_tasks' @()
-        $reconciledItems = if ($diagReconciled -and @($diagReconciled).Count -gt 0) {
-            @($diagReconciled)
+        $selectedTasks = if ((Get-AipmCount $diagReconciled) -gt 0) {
+            $diagReconciled
         } else {
-            @($diagUntracked)
+            $diagUntracked
         }
+        [object[]]$reconciledItems = @(if ($null -ne $selectedTasks) { $selectedTasks })
         $pendingTaskId = [string](Get-AipmField $diagnosis.Data 'pending_task_id' '')
         $pendingRevision = [string](Get-AipmField $diagnosis.Data 'pending_revision' '')
-        $taskList = if ($reconciledItems.Count -gt 0) { $reconciledItems -join ', ' } else { $pendingTaskId }
+        $taskList = if ((Get-AipmCount $reconciledItems) -gt 0) { $reconciledItems -join ', ' } elseif ($pendingTaskId) { $pendingTaskId } else { 'None (Revision Sync Only)' }
         $diagCause = [string](Get-AipmField $diagnosis.Data 'cause' '')
         $diagRemedy = [string](Get-AipmField $diagnosis.Data 'remedy' '')
         $pendingLine = if ($pendingTaskId) {
@@ -1415,13 +1473,15 @@ function Invoke-AipmStateRecovery {
         $repaired = Invoke-AipmCore -AppRoot $Root -Command 'state-repair' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
         if ($repaired.Status -eq 'PASS') {
             $repBackup = [string](Get-AipmField $repaired.Data 'backup' '')
-            $repTasks = @(Get-AipmField $repaired.Data 'recovered_tasks' @())
+            $rawRepTasks = Get-AipmField $repaired.Data 'recovered_tasks' @()
+            [object[]]$repTasks = @(if ($null -ne $rawRepTasks) { $rawRepTasks })
             $repCreatedId = [string](Get-AipmField $repaired.Data 'created_task_id' '')
             $repRevision = [string](Get-AipmField $repaired.Data 'revision' '')
             $createdLine = if ($repCreatedId) { $repCreatedId } else { 'None (Direct Manifest Reconciliation)' }
+            $recoveredLine = if ((Get-AipmCount $repTasks) -gt 0) { $repTasks -join ', ' } else { 'None' }
             Show-Notice -Title 'Task State Repaired' -Lines @(
                 ('Verified Backup: ' + $repBackup),
-                ('Recovered Task Records: ' + ($repTasks -join ', ')),
+                ('Recovered Task Records: ' + $recoveredLine),
                 ('Pending Task Created: ' + $createdLine),
                 ('Committed Revision: ' + $repRevision),
                 'AIPM Verified The Event History And State Manifest After Repair.'
@@ -1440,11 +1500,12 @@ function Invoke-AipmStateRecovery {
     if (-not $remedy) { $remedy = 'Keep the state unchanged and restore a verified Shared Project State backup or request an integrity review.' }
 
     $validation = Invoke-AipmCore -AppRoot $Root -Command 'state-validate' -RegistryPath $RegistryPath -ProjectId $ProjectId
-    $findings = @()
+    [object[]]$findings = @()
     $canNormalize = $false
     if ($validation.Status -in @('PASS', 'BLOCKED') -and $validation.Data) {
-        $findings = @(Get-AipmField $validation.Data 'findings' @())
-        $canNormalize = [bool]($findings | Where-Object { [string]$_.repairable_by -eq 'state-normalize' })
+        $rawFindings = Get-AipmField $validation.Data 'findings' @()
+        $findings = @(if ($null -ne $rawFindings) { $rawFindings })
+        $canNormalize = [bool]($findings | Where-Object { [string](Get-AipmField $_ 'repairable_by' '') -eq 'state-normalize' })
     }
 
     $techReason = [string]$diagnosis.Reason
@@ -1454,17 +1515,21 @@ function Invoke-AipmStateRecovery {
         ('Error Code: ' + $FailureReason),
         ('Technical Reason: ' + $techReason)
     )
-    if ($findings.Count -gt 0) {
+    $findingCount = Get-AipmCount $findings
+    if ($findingCount -gt 0) {
         $lines += 'Specific Findings:'
         $displayed = 0
         foreach ($f in $findings) {
             if ($displayed -ge 4) {
-                $lines += ('... and ' + ($findings.Count - $displayed) + ' more finding(s).')
+                $lines += ('... and ' + ($findingCount - $displayed) + ' more finding(s).')
                 break
             }
-            $target = if ($f.task_id) { [string]$f.task_id } else { 'Manifest' }
-            if ($f.field) { $target += ' › ' + [string]$f.field }
-            $lines += (' - ' + $target + ': ' + [string]$f.message)
+            $findingTaskId = [string](Get-AipmField $f 'task_id' '')
+            $findingField = [string](Get-AipmField $f 'field' '')
+            $findingMessage = [string](Get-AipmField $f 'message' '')
+            $target = if ($findingTaskId) { $findingTaskId } else { 'Manifest' }
+            if ($findingField) { $target += ' > ' + $findingField }
+            $lines += (' - ' + $target + ': ' + $findingMessage)
             $displayed += 1
         }
     } else {
@@ -1486,13 +1551,14 @@ function Invoke-AipmStateRecovery {
         if ($normChoice -eq 'preview') {
             $dryRun = Invoke-AipmCore -AppRoot $Root -Command 'state-normalize' -RegistryPath $RegistryPath -ProjectId $ProjectId
             $diffLines = @('Proposed Task Record Normalization (Dry Run):', '')
-            if ($dryRun.Data -and $dryRun.Data.changes) {
-                foreach ($prop in $dryRun.Data.changes.PSObject.Properties) {
+            $plannedChanges = Get-AipmField $dryRun.Data 'changes'
+            if ($plannedChanges -and (Get-AipmCount $plannedChanges.PSObject.Properties) -gt 0) {
+                foreach ($prop in $plannedChanges.PSObject.Properties) {
                     $diffLines += ('Task: ' + $prop.Name)
-                    foreach ($change in @($prop.Value)) {
-                        $diffLines += ('  [' + [string]$change.field + ']: ' + [string]$change.source)
-                        $diffLines += ('    Old: ' + [string]$change.old)
-                        $diffLines += ('    New: ' + [string]$change.new)
+                    foreach ($change in @(if ($null -ne $prop.Value) { $prop.Value })) {
+                        $diffLines += ('  [' + [string](Get-AipmField $change 'field' '') + ']: ' + [string](Get-AipmField $change 'source' ''))
+                        $diffLines += ('    Old: ' + [string](Get-AipmField $change 'old' ''))
+                        $diffLines += ('    New: ' + [string](Get-AipmField $change 'new' ''))
                     }
                 }
             } else {
@@ -1505,9 +1571,11 @@ function Invoke-AipmStateRecovery {
             $confirmed = Show-Confirm -Title 'Apply Guided Task Normalization?' -Message 'AIPM Will Create A Hash-Verified Backup First In History/Snapshots, Preserving All Valid Data. Project Source Files Are Not Changed.' -YesLabel 'Back Up And Normalize' -YesDesc 'Apply Validated Task Fields And Record A Reconcile Event.' -NoLabel 'Cancel' -NoDesc 'Leave All State Files Unchanged.' -Default $false
             if (-not $confirmed) { return $false }
             $normalized = Invoke-AipmCore -AppRoot $Root -Command 'state-normalize' -RegistryPath $RegistryPath -ProjectId $ProjectId -ConfirmRepair
-            if ($normalized.Status -eq 'PASS' -and $normalized.Data -and $normalized.Data.applied) {
+            $normApplied = [bool](Get-AipmField $normalized.Data 'applied' $false)
+            if ($normalized.Status -eq 'PASS' -and $normApplied) {
                 $normBackup = [string](Get-AipmField $normalized.Data 'backup' '')
-                $normTasks = @(Get-AipmField $normalized.Data 'normalized_tasks' @())
+                $rawNormTasks = Get-AipmField $normalized.Data 'normalized_tasks' @()
+                [object[]]$normTasks = @(if ($null -ne $rawNormTasks) { $rawNormTasks })
                 $normRev = [string](Get-AipmField $normalized.Data 'revision' '')
                 Show-Notice -Title 'Task State Normalized' -Lines @(
                     ('Verified Backup: ' + $normBackup),
@@ -1518,7 +1586,10 @@ function Invoke-AipmStateRecovery {
                 return $true
             }
             $failLines = @('Reason: ' + [string]$normalized.Reason)
-            if ($normalized.Data -and $normalized.Data.detail) { $failLines += ('Detail: ' + [string]$normalized.Data.detail) }
+            $normDetail = [string](Get-AipmField $normalized.Data 'detail' '')
+            if ($normDetail) { $failLines += ('Detail: ' + $normDetail) }
+            $normSafetyBackup = [string](Get-AipmField $normalized.Data 'backup' '')
+            if ($normSafetyBackup) { $failLines += ('Safety Backup: ' + $normSafetyBackup) }
             Show-Notice -Title 'Normalization Did Not Complete' -Lines $failLines -Kind Error
             return $false
         }
@@ -1526,12 +1597,7 @@ function Invoke-AipmStateRecovery {
     }
 
     $lines += ('Recommended Action: ' + $remedy)
-    Show-Notice -Title 'Task State Needs Manual Review' -Lines @(
-        ('Error Code: ' + $FailureReason),
-        ('Technical Reason: ' + $techReason),
-        ('Diagnosis: ' + $cause),
-        ('Recommended Action: ' + $remedy)
-    ) -Kind Error
+    Show-Notice -Title 'Task State Needs Manual Review' -Lines $lines -Kind Error
     return $false
 }
 
@@ -1545,7 +1611,7 @@ function Invoke-AipmTaskManagement {
             Show-Notice -Title 'Project Registry Is Unavailable' -Lines @([string]$inventory.Reason, 'Resolve The Registry Before Managing Tasks.') -Kind Error
             return $currentPath
         }
-        if ($inventory.Projects.Count -eq 0) {
+        if ((Get-AipmCount $inventory.Projects) -eq 0) {
             $emptyItems = @(
                 (New-MenuItem -Label 'Register A Project First' -Desc 'Task Records Must Belong To A Registered Project.' -Value 'register' -Icon 'Project'),
                 (New-MenuItem -Label 'Back' -Desc 'Return To The Main Dashboard.' -Value 'back' -Icon 'Exit')
@@ -1623,18 +1689,31 @@ function Invoke-AipmTaskManagement {
                         $base = [System.IO.Path]::GetFullPath([string]$project.root_path).TrimEnd([char[]]@('\','/')) + [System.IO.Path]::DirectorySeparatorChar
                         if (-not $candidate.StartsWith($base, [System.StringComparison]::OrdinalIgnoreCase)) { return 'Choose A Folder Inside The Selected Registered Project.' }
                         $stateBase = (Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager').TrimEnd([char[]]@('\','/'))
-                        # Agent-created task folders inside Shared-Project-State-Manager are valid; only the state root and its Tasks container are rejected.
+                        $opsBase = (Join-Path $stateBase 'Operations').TrimEnd([char[]]@('\','/'))
+                        $opsTasksBase = (Join-Path $opsBase 'Tasks').TrimEnd([char[]]@('\','/'))
+                        $legacyTasksBase = (Join-Path $stateBase 'Tasks').TrimEnd([char[]]@('\','/'))
+                        # Agent-created task folders inside Shared-Project-State-Manager are valid; only the state root and its Tasks containers are rejected.
                         $trimmedCandidate = $candidate.TrimEnd([char[]]@('\','/'))
-                        if ($trimmedCandidate.Equals($stateBase, [System.StringComparison]::OrdinalIgnoreCase) -or $trimmedCandidate.Equals((Join-Path $stateBase 'Tasks'), [System.StringComparison]::OrdinalIgnoreCase)) {
+                        if (
+                            $trimmedCandidate.Equals($stateBase, [System.StringComparison]::OrdinalIgnoreCase) -or
+                            $trimmedCandidate.Equals($opsBase, [System.StringComparison]::OrdinalIgnoreCase) -or
+                            $trimmedCandidate.Equals($opsTasksBase, [System.StringComparison]::OrdinalIgnoreCase) -or
+                            $trimmedCandidate.Equals($legacyTasksBase, [System.StringComparison]::OrdinalIgnoreCase)
+                        ) {
                             return 'Choose A Specific Work Folder, Not The Shared-Project-State-Manager Or Its Tasks Root.'
                         }
                         return $null
                     }
                     if (-not $folderPath) { continue }
                     $folderPath = [System.IO.Path]::GetFullPath($folderPath.Trim().Trim('"')).TrimEnd([char[]]@('\','/'))
-                    $tasksContainer = (Join-Path (Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager') 'Tasks').TrimEnd([char[]]@('\','/'))
+                    $stateRootFull = Join-Path ([System.IO.Path]::GetFullPath([string]$project.root_path)) 'Shared-Project-State-Manager'
+                    $opsTasksContainer = (Join-Path (Join-Path $stateRootFull 'Operations') 'Tasks').TrimEnd([char[]]@('\','/'))
+                    $legacyTasksContainer = (Join-Path $stateRootFull 'Tasks').TrimEnd([char[]]@('\','/'))
                     $parentCandidate = (Split-Path -Parent $folderPath).TrimEnd([char[]]@('\','/'))
-                    if ($parentCandidate.Equals($tasksContainer, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    if (
+                        $parentCandidate.Equals($opsTasksContainer, [System.StringComparison]::OrdinalIgnoreCase) -or
+                        $parentCandidate.Equals($legacyTasksContainer, [System.StringComparison]::OrdinalIgnoreCase)
+                    ) {
                         $isExistingTaskFolder = $true
                         $leafName = [System.IO.Path]::GetFileName($folderPath)
                         $defaultTitle = ($leafName -replace '^Task-(?:\d{4}-\d{2}-\d{2}-)?', '' -replace '-[0-9a-fA-F]{12}$', '' -replace '[-_]', ' ').Trim()
@@ -1647,8 +1726,9 @@ function Invoke-AipmTaskManagement {
                 if ($isExistingTaskFolder) {
                     $created = Invoke-AipmCore -AppRoot $Root -Command 'task-import-work-folder' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Source $folderPath
                     if ($created.Status -eq 'PASS') {
-                        $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
-                        $createdTitle = [string]$created.Data.task.title
+                        $createdId = [System.IO.Path]::GetFileName([string](Get-AipmField $created.Data 'task_path' ''))
+                        $createdTaskObj = Get-AipmField $created.Data 'task'
+                        $createdTitle = [string](Get-AipmField $createdTaskObj 'title' '')
                         Show-Notice -Title 'Existing Task Folder Registered' -Lines @(
                             ('Task: ' + $createdTitle),
                             ('Task ID: ' + $createdId),
@@ -1677,7 +1757,7 @@ function Invoke-AipmTaskManagement {
                     Invoke-AipmCore -AppRoot $Root -Command 'task-create' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Title $title.Trim() -Scope $finalScope
                 }
                 if ($created.Status -eq 'PASS') {
-                    $createdId = [System.IO.Path]::GetFileName([string]$created.Data.task_path)
+                    $createdId = [System.IO.Path]::GetFileName([string](Get-AipmField $created.Data 'task_path' ''))
                     Show-Notice -Title 'Task Created' -Lines @(('Task: ' + $title.Trim()), ('Task ID: ' + $createdId), 'The Task Record Was Saved In AIPM Project State. No Project Files Were Moved Or Edited.') -Kind Success
                 } elseif (-not (Invoke-AipmStateRecovery -Root $Root -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -FailureReason ([string]$created.Reason))) {
                     Show-Notice -Title 'Task Creation Failed' -Lines @('The requested task was not confirmed as committed.', 'Review the state diagnosis above before retrying.') -Kind Error
@@ -1697,18 +1777,19 @@ function Invoke-AipmTaskManagement {
                 $imported = Invoke-AipmCore -AppRoot $Root -Command 'task-import-archive' -RegistryPath $currentPath -ProjectId ([string]$selectedProjectId) -Source ($zipPath.Trim().Trim('"'))
                 if ($imported.Status -eq 'PASS') {
                     Show-Notice -Title 'Archived Task Imported' -Lines @(
-                        ('Task: ' + [string]$imported.Data.title),
-                        ('Task ID: ' + [string]$imported.Data.task_id),
-                        ('Status: ' + [string]$imported.Data.task_status),
-                        ('Archive Copy: ' + [string]$imported.Data.archive_path),
+                        ('Task: ' + [string](Get-AipmField $imported.Data 'title' '')),
+                        ('Task ID: ' + [string](Get-AipmField $imported.Data 'task_id' '')),
+                        ('Status: ' + [string](Get-AipmField $imported.Data 'task_status' '')),
+                        ('Archive Copy: ' + [string](Get-AipmField $imported.Data 'archive_path' '')),
                         'The Task Was Re-Registered And Its Live Folder Was Restored From Metadata.json And The Archive.'
                     ) -Kind Success
                 } else { Show-Notice -Title 'Archive Import Failed' -Lines @([string]$imported.Reason, 'Nothing Was Registered Or Changed.') -Kind Error }
                 continue
             }
             if ($taskChoice -eq 'open') {
-                $rows = @($taskResult.Data.tasks)
-                if ($rows.Count -eq 0) { Show-Notice -Title 'No Tasks Yet' -Lines @('Create A New Task Or Add An Existing Work Folder First.') -Kind Info; continue }
+                $rawRows = Get-AipmField $taskResult.Data 'tasks' @()
+                [object[]]$rows = @(if ($null -ne $rawRows) { $rawRows })
+                if ((Get-AipmCount $rows) -eq 0) { Show-Notice -Title 'No Tasks Yet' -Lines @('Create A New Task Or Add An Existing Work Folder First.') -Kind Info; continue }
                 $existingItems = @($rows | ForEach-Object {
                     New-MenuItem -Label ([string]$_.title) -Desc (([string]$_.status) + ' | ' + [string]$_.task_id) -Value ([string]$_.task_id) -Icon 'Task'
                 })
@@ -1932,4 +2013,4 @@ function Start-TuiApp {
     }
 }
 
-Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage, Get-AipmField, Invoke-AipmStateRecovery, Start-AipmGitUpdater
+Export-ModuleMember -Function Get-AppVersion, Get-AipmViewMode, Test-PersonName, Get-AppDesign, Apply-AppDesign, Invoke-DesignWizard, Start-TuiApp, Get-AipmProjectSummary, ConvertTo-AipmDisplayStatus, Format-AipmEvidenceCoverage, Get-AipmSessionSnapshot, Refresh-AipmSessionSnapshot, Get-AipmCapabilityLibraryRows, Show-AipmCapabilityLibrary, Get-AipmPageLines, Show-AipmPage, Get-AipmField, Get-AipmCount, Invoke-AipmStateRecovery, Start-AipmGitUpdater

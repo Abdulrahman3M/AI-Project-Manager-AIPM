@@ -1,3 +1,7 @@
+## [2.0.0] — 2026-11-10
+
+- Require explicit owner request before invoking the separate local PowerShell state tool.
+
 ## [1.0.0] — AIPM Release Baseline
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.

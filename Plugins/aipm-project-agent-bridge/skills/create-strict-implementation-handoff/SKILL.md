@@ -51,7 +51,7 @@ When an analysis packet is available and a strict handoff is required:
 2. Apply this existing Skill's **entire** required handoff structure and output contract; do not create a shorter competing format.
 3. Preserve root-cause confidence: suspected diagnoses require verification instructions for the implementation agent **before edits**.
 4. Generate the `IMPLEMENTATION-HANDOFF_<Project>_<Task-Name>.md` file as a **documentation artifact only**. Do not run the planned product implementation, install packages or invoke a downstream execution agent.
-5. Optionally use `token-optimization` during authoring only. Never remove required details, tests, governance or constraints to save tokens. Deliverables must not require any installed Skill.
+5. In AIPM-managed work, Project Manager activates `task-scope-contract` and `resource-optimization` during authoring. Never remove required details, tests, governance or constraints to save tokens. Deliverables must not require any installed Skill.
 6. Standalone handoff requests remain supported exactly as before; prior analysis is optional.
 
 ---
@@ -67,7 +67,7 @@ For tasks requiring browser interaction or visual verification, the generated ha
 6. Include the browser outcome in the final execution report: dedicated environment verified/started/repaired, authorized fallback used, or browser unavailable. Skip browser startup entirely when browser verification is irrelevant.
 
 # Mandatory Token and Agent-Budget Policy
-Only `token-optimization` may be used as an optional authoring-time support Skill. The handoff itself must be standalone and must not require any external Skill. Include selective file/range reads, compact evidence checkpoints, bounded non-duplicative calls, focused validation and concise reporting without omitting required quality, safety, tests or governance. **Single agent and sequential execution are the default.** Multi-agent spawning requires explicit owner authorization. Ordinary batching of independent reads within one agent is allowed. Never promise unmeasured savings.
+For AIPM-managed tasks, `project-manager` first activates `task-scope-contract` and `resource-optimization` as continuous policies. The handoff itself must be standalone and must not require any external Skill. Include selective file/range reads, compact evidence checkpoints, bounded non-duplicative calls, focused validation and concise reporting without omitting required quality, safety, tests or governance. **Single agent and sequential execution are the default.** Multi-agent spawning requires explicit owner authorization. Ordinary batching of independent reads within one agent is allowed. Never promise unmeasured savings.
 
 # 2. Required Output
 Create a Markdown file named approximately:

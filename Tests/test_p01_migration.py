@@ -35,7 +35,7 @@ class P01MigrationTests(unittest.TestCase):
         first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
         declared_first_party = {item["slug"] for item in first_party["skills"]}
         self.assertEqual(
-            {"browser-environment-manager", "powershell-tui-app-designer", "professional-word-designer", "screenshot-to-code", "tui-intelligence", "web-design-engineering"},
+            {"browser-environment-manager", "create-strict-implementation-handoff", "powershell-tui-app-designer", "professional-word-designer", "project-manager", "resource-optimization", "resume-task", "screenshot-to-code", "shared-project-state-manager", "task-scope-contract", "tui-intelligence", "web-design-engineering"},
             declared_first_party,
         )
         self.assertEqual(approved, installed)
@@ -44,11 +44,11 @@ class P01MigrationTests(unittest.TestCase):
         self.assertFalse(installed & EXCLUDED)
         self.assertFalse((ROOT / "02-Skills-Personal").exists())
 
-        orchestrator_text = "\n".join(
+        manager_text = "\n".join(
             path.read_text(encoding="utf-8")
-            for path in (TARGET / "project-orchestrator").rglob("*.md")
+            for path in (TARGET / "project-manager").rglob("*.md")
         )
-        self.assertFalse(any(marker in orchestrator_text for marker in PERSONAL_MARKERS))
+        self.assertFalse(any(marker in manager_text for marker in PERSONAL_MARKERS))
 
         record = json.loads((ROOT / "docs/project" / "Provenance" / "Skill-Migration-Record.json").read_text(encoding="utf-8"))
         # This record is an immutable historical baseline, not the current inventory:

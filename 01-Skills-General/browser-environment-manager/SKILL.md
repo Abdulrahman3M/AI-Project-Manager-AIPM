@@ -9,7 +9,7 @@ description: Prepare with user consent, launch with approval, diagnose, maintain
 
 ## Ownership and routing
 
-The skill owns only management and verification of dedicated browser environments. The project's `project-orchestrator` routes relevant tasks here. Use `skill-creator` for creating the skill, not for browser environment operations. Use `powershell-tui-app-designer` only when a graphical/terminal menu application is explicitly requested. Do not introduce a second competing browser-management system.
+The skill owns only management and verification of dedicated browser environments. The project's `project-manager` routes relevant tasks here. Use `skill-creator` for creating the skill, not for browser environment operations. Use `powershell-tui-app-designer` only when a graphical/terminal menu application is explicitly requested. Do not introduce a second competing browser-management system.
 
 ## Hard safety rules
 

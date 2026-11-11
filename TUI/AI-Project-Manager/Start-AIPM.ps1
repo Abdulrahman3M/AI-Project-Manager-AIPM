@@ -41,7 +41,11 @@ try {
     $code = 0   # Ctrl+C: leave quietly
 } catch {
     $code = 1
-    Write-AppLog ('unhandled: ' + $_.Exception.Message) 'ERROR'
+    $origin = ''
+    if ($_.InvocationInfo -and $_.InvocationInfo.ScriptName) {
+        $origin = ' [' + [System.IO.Path]::GetFileName($_.InvocationInfo.ScriptName) + ':' + $_.InvocationInfo.ScriptLineNumber + ']'
+    }
+    Write-AppLog ('unhandled' + $origin + ': ' + $_.Exception.Message) 'ERROR'
     $failure = $_.Exception.Message
 } finally {
     Exit-Screen

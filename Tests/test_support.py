@@ -30,6 +30,9 @@ def _prepare_runtime() -> None:
         source = REPOSITORY_ROOT / "Plugins" / name
         if source.is_dir():
             shutil.copytree(source, RUNTIME_ROOT / "Plugins" / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    firg = REPOSITORY_ROOT / "Templates" / "FIRG"
+    if firg.is_dir():
+        shutil.copytree(firg, RUNTIME_ROOT / "Templates" / "FIRG", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
 
 
 _prepare_runtime()

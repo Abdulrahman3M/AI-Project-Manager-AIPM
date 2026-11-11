@@ -1,5 +1,7 @@
 # Shared Project State Manager
 
+Use this separate local tool only on an explicit owner request through PowerShell. Do not automatically activate or initialize it for task events. Existing AIPM Core state operations are separate.
+
 A vendor-neutral continuity protocol and optional local toolset for long-running AI-agent work. It lets Claude Code, Codex, ChatGPT coding agents, IDE agents, and other file-capable agents hand a task to one another through verified project state instead of hidden conversation context.
 
 ## What v2 Adds
@@ -14,7 +16,7 @@ Version 2 combines the original Shared Project State protocol with executable he
 - machine-readable JSON Schemas and reusable templates;
 - 20 worked examples spanning agent switches, session limits, crashes, verification failures, locked/read-only folders, ACL problems, state divergence, monorepos, and final closure.
 
-The protocol still works manually if Node.js or Python is unavailable. The scripts are helpers, not a new source of truth.
+PowerShell is the required entry point; report missing dependencies as UNVERIFIED. The scripts are helpers, not a new source of truth.
 
 ## Runtime Requirements
 
@@ -49,21 +51,21 @@ The first command only reports status. `-Install` performs the `winget` installs
 ## Quick Start
 
 ```powershell
-node .\scripts\sps.mjs init --project-root "D:\Projects\MyProject" --task-id "Task-2026-10-08-Feature" --title "Implement Feature" --agent "Claude Code"
-node .\scripts\sps.mjs status --project-root "D:\Projects\MyProject"
-node .\scripts\sps.mjs doctor --project-root "D:\Projects\MyProject"
+.\scripts\sps.ps1 init --project-root "D:\Projects\MyProject" --task-id "Task-2026-10-08-Feature" --title "Implement Feature" --agent "Claude Code"
+.\scripts\sps.ps1 status --project-root "D:\Projects\MyProject"
+.\scripts\sps.ps1 doctor --project-root "D:\Projects\MyProject"
 ```
 
 Create a checkpoint:
 
 ```powershell
-node .\scripts\sps.mjs checkpoint --project-root "D:\Projects\MyProject" --agent "Claude Code" --phase P02 --last-verified "Focused P02 tests pass" --next-action "Implement P03"
+.\scripts\sps.ps1 checkpoint --project-root "D:\Projects\MyProject" --agent "Claude Code" --phase P02 --last-verified "Focused P02 tests pass" --next-action "Implement P03"
 ```
 
 Hand the task to another agent:
 
 ```powershell
-node .\scripts\sps.mjs handoff --project-root "D:\Projects\MyProject" --from-agent "Claude Code" --to-agent "Codex" --phase P02 --last-verified "P02 verified" --next-action "Begin P03 after reconciling Git state"
+.\scripts\sps.ps1 handoff --project-root "D:\Projects\MyProject" --from-agent "Claude Code" --to-agent "Codex" --phase P02 --last-verified "P02 verified" --next-action "Begin P03 after reconciling Git state"
 ```
 
 The incoming agent reads the Shared Project State and then verifies real repository/runtime state before editing.
@@ -73,31 +75,31 @@ The incoming agent reads the Shared Project State and then verifies real reposit
 Diagnose first:
 
 ```powershell
-python .\scripts\safe_file_ops.py diagnose ".\Temp-Work" --project-root .
+.\scripts\sps.ps1 files diagnose ".\Temp-Work" --project-root .
 ```
 
 Prefer reversible quarantine instead of deletion:
 
 ```powershell
-python .\scripts\safe_file_ops.py quarantine ".\Temp-Work" --project-root .
+.\scripts\sps.ps1 files quarantine ".\Temp-Work" --project-root .
 ```
 
 Restore from the generated record:
 
 ```powershell
-python .\scripts\safe_file_ops.py restore ".\Shared-Project-State\Quarantine\Records\<record>.json" --project-root .
+.\scripts\sps.ps1 files restore ".\Shared-Project-State\Quarantine\Records\<record>.json" --project-root .
 ```
 
 Clear read-only bits only when diagnosed and authorized:
 
 ```powershell
-python .\scripts\safe_file_ops.py clear-readonly ".\Temp-Work" --project-root . --confirm CLEAR-READONLY
+.\scripts\sps.ps1 files clear-readonly ".\Temp-Work" --project-root . --confirm CLEAR-READONLY
 ```
 
 If Windows ACLs are actually the problem on a project-owned path:
 
 ```powershell
-python .\scripts\safe_file_ops.py repair-acl ".\Temp-Work" --project-root . --confirm REPAIR-ACL
+.\scripts\sps.ps1 files repair-acl ".\Temp-Work" --project-root . --confirm REPAIR-ACL
 ```
 
 The helper does **not** self-elevate, kill processes, force-close file handles, take ownership, disable security controls, overwrite destinations, or operate outside the selected project root. If a process owns the lock, release/stop that authorized process or agent session first. If ACL repair legitimately requires elevation, the tool reports that requirement rather than bypassing it.
@@ -105,7 +107,7 @@ The helper does **not** self-elevate, kill processes, force-close file handles, 
 Permanent deletion is limited to an item already moved into this Skill's quarantine area and requires an explicit token:
 
 ```powershell
-python .\scripts\safe_file_ops.py purge ".\Shared-Project-State\Quarantine\Records\<record>.json" --project-root . --confirm PURGE-QUARANTINE
+.\scripts\sps.ps1 files purge ".\Shared-Project-State\Quarantine\Records\<record>.json" --project-root . --confirm PURGE-QUARANTINE
 ```
 
 ## Canonical Project State
@@ -156,7 +158,7 @@ The real project files, Git state, official tests, and project governance remain
 ```powershell
 npm test
 python -m unittest discover -s tests -p "test_*.py"
-python .\scripts\validate_state.py --project-root "D:\Projects\MyProject"
+.\scripts\Validate-State.ps1 --project-root "D:\Projects\MyProject"
 ```
 
 PowerShell-specific behavior should additionally be checked on Windows because a non-Windows development environment cannot validate Windows ACL semantics.

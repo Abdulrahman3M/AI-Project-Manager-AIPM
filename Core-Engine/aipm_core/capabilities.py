@@ -683,7 +683,7 @@ def _plugin_expected_files(root: Path, catalog: dict[str, Any], version: str, *,
     return files
 
 
-def _agent_bridge_document() -> str:
+def _legacy_agent_bridge_document() -> str:
     return (
         "# AIPM Project Agent Bridge\n\n"
         "## Purpose\n\n"
@@ -695,6 +695,22 @@ def _agent_bridge_document() -> str:
         "2. Query AIPM Core for authoritative project state where the host adapter supports it.\n"
         "3. Select the smallest relevant included Skill and preserve project evidence.\n"
         "4. Keep unsupported host operations permission-gated and fail-closed.\n"
+    )
+
+
+def _agent_bridge_document() -> str:
+    return (
+        "# AIPM Project Agent Bridge\n\n"
+        "## Purpose\n\n"
+        "For every AIPM-managed task event, start with `project-manager`, then keep `task-scope-contract` and `resource-optimization` active while selecting only relevant specialists. Reconcile revised and reopened work with current source and prior evidence.\n\n"
+        "## Operating Boundary\n\n"
+        "This guidance is INSTRUCTION_ONLY: the package does not enforce host invocation, install or publish itself, start a session, or grant project access. Host permissions remain authoritative. The separate Shared Project State Manager is invoked through local PowerShell only on explicit owner request; AIPM Core state remains separately permission-gated.\n\n"
+        "## Agent Workflow\n\n"
+        "1. Run the lightweight Project Manager bootstrap and read applicable project rules.\n"
+        "2. Establish scope and resource policies; reuse unchanged verified context.\n"
+        "3. Query AIPM Core for authoritative project state only where the host adapter supports it.\n"
+        "4. Route to the smallest relevant specialist set, verify outcomes and preserve evidence.\n"
+        "5. Keep unsupported host operations permission-gated and fail-closed.\n"
     )
 
 
@@ -891,7 +907,11 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
     license_path = target / license_relative
     if _sha256_file(license_path) != source_license_hash:
         raise CapabilityError("Generated Plugin project license has changed")
-    if (target / "AIPM-Agent-Bridge.md").read_bytes() != _agent_bridge_document().encode("utf-8"):
+    guidance = (target / "AIPM-Agent-Bridge.md").read_bytes()
+    legacy_allowed = not any(item.get("slug") == "project-manager" for item in skills)
+    if guidance != _agent_bridge_document().encode("utf-8") and not (
+        legacy_allowed and guidance == _legacy_agent_bridge_document().encode("utf-8")
+    ):
         raise CapabilityError("Generated Plugin bridge guidance has changed")
 
     portable = _portable_plugin_json(version)
@@ -995,6 +1015,36 @@ def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
     return {"status": "PASS", "skill_count": len(catalog["skills"]), "standalone_prompt_count": 0, "published": False, "installed": False}
 
 
+def plugin_workspace(root: str | Path) -> Path:
+    """Select an optional existing in-project staging directory without crossing a link."""
+    root = _root(root)
+    override = os.environ.get("AIPM_BUILD_WORKSPACE")
+    if override:
+        raw = Path(override)
+        if not raw.is_absolute() or not raw.is_dir():
+            raise CapabilityError("Build workspace must be an existing unlinked absolute directory")
+        try:
+            relative = raw.relative_to(root)
+        except ValueError as exc:
+            raise CapabilityError("Build workspace must be inside the AIPM project") from exc
+        if not relative.parts or any(part in (".", "..") for part in relative.parts):
+            raise CapabilityError("Build workspace must be inside the AIPM project")
+        current = root
+        for part in relative.parts:
+            current = current / part
+            if _has_reparse_point(current):
+                raise CapabilityError("Build workspace must not traverse a linked directory")
+        workspace = raw.resolve()
+        if workspace == root or not workspace.is_relative_to(root):
+            raise CapabilityError("Build workspace must be inside the AIPM project")
+        return workspace
+    workspace = root / ".test-workspace"
+    workspace.mkdir(parents=True, exist_ok=True)
+    if _has_reparse_point(workspace):
+        raise CapabilityError("Build workspace must not be a linked directory")
+    return workspace
+
+
 def build_plugin(root: str | Path, target: str | Path, *, replace_generated: bool = False) -> dict[str, Any]:
     root = _root(root)
     target_path = _within(root, Path(target) if Path(target).is_absolute() else root / target)
@@ -1026,8 +1076,7 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
         backup: Path | None = None
     else:
         version, backup = PLUGIN_VERSION_INITIAL, None
-    workspace = root / ".test-workspace"
-    workspace.mkdir(parents=True, exist_ok=True)
+    workspace = plugin_workspace(root)
     stage = Path(tempfile.mkdtemp(prefix="p06-plugin-stage-", dir=workspace))
     preserve_backup = False
     backup_directory: Path | None = None

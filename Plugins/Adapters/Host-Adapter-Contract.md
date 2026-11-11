@@ -18,6 +18,12 @@ Host adapters are thin entry points into the AIPM Core Engine. The checked-in [H
 
 `PASS` means the local Core operation returned success. `BLOCKED` means policy or Core refused it. `UNVERIFIED` means data crossed a manual or unverified host boundary and cannot be treated as fresh authoritative state.
 
+## Task Entry Guidance
+
+For each AIPM-managed task event, start with `project-manager`, then keep both `task-scope-contract` and `resource-optimization` active. Reuse unchanged context and refresh revised scope; a reopened task retains its prior evidence. Invoke the separate Shared Project State Manager only on explicit owner request through local PowerShell. Existing Core state operations retain their own permission checks.
+
+The current Codex, Claude Code and Gemini/Antigravity package guidance is `INSTRUCTION_ONLY`: a manifest or Skill instruction does not prove host interception, Skill invocation or local file access. ChatGPT text without a file-capable bridge cannot access local files. The local CLI's tested Core adapter is not evidence that the golden-triangle Skill entry is enforced. Mark any actual host runtime behavior `UNVERIFIED` until tested on that host; do not install hooks or change host permissions to imply enforcement.
+
 ## Format References
 
 - [OpenAI Portable Agent Plugins](https://developers.openai.com/plugins/build/plugins) use a root `plugin.json` and `skills/`; `.codex-plugin/plugin.json` remains a compatibility manifest.

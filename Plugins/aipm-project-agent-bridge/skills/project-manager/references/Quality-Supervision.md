@@ -1,0 +1,7 @@
+# Quality Supervision
+
+Classify risk and define measurable acceptance, preservation and verification before edits. Inspect live state immediately before writes; preserve unrelated changes, provenance and licensed material. Execute each workstream with a bounded assignment, specialist self-check, supervisor review and an explicit accepted, rework, blocked or unverified outcome. Verify integration, links and required tests; do not turn missing evidence into a pass. Diagnose failed checks with bounded retries and a new hypothesis.
+
+Keep concise checkpoints without automatically creating the optional Shared Project State Manager. On resumption compare the checkpoint to current source and run the first unverified step. Follow project governance for safe rollback and versions. Report actual files, evidence, limitations, unresolved blockers and `COMPLETE`, `PARTIALLY COMPLETE` or `BLOCKED`; completeness requires all applicable acceptance and quality gates.
+
+Before accepting the result, verify that required workstreams and phases are accepted, blocking issues are resolved, cross-workstream integration and applicable project governance are checked, prior task evidence remains intact, unrelated changes are isolated, and each acceptance criterion has actual evidence. Summarize the objective, selected Skills and their roles, workstream outcomes, supervision findings, tests, changed paths, remaining issues and final status. Never report logical roles as actual spawned agents.

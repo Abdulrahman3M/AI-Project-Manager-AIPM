@@ -113,7 +113,7 @@ class CoreDashboardCliTests(unittest.TestCase):
         self.assertEqual(response["catalog"]["integrity_status"], "UNVERIFIED")
         self.assertEqual(
             response["catalog"]["first_party_skills"],
-            ["browser-environment-manager", "powershell-tui-app-designer", "professional-word-designer", "screenshot-to-code", "tui-intelligence", "web-design-engineering"],
+            ["browser-environment-manager", "create-strict-implementation-handoff", "powershell-tui-app-designer", "professional-word-designer", "project-manager", "resource-optimization", "resume-task", "screenshot-to-code", "shared-project-state-manager", "task-scope-contract", "tui-intelligence", "web-design-engineering"],
         )
         self.assertEqual(response["catalog"]["plugin_sample"]["status"], "PACKAGE_SAMPLE_ONLY")
         self.assertEqual(response["catalog"]["plugin_sample"]["installation"], "UNVERIFIED")

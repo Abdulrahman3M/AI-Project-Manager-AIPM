@@ -1,3 +1,7 @@
+## [1.0.2] — 2026-11-10
+
+- Synchronize active routing with the AIPM Golden Triangle.
+
 ## [1.0.1] — Six-Stage Standalone Handoffs
 
 - Added six-stage handoffs, capability profiles, evidence traceability and small/large output routing while preserving author and executor separation.

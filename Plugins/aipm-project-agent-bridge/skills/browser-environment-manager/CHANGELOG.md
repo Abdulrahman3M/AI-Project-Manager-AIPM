@@ -1,3 +1,7 @@
+## [1.1.3] — 2026-11-10
+
+- Synchronize active routing with the AIPM Golden Triangle.
+
 ## [1.0.0] — AIPM Release Baseline
 
 - Reset the Skill release line to 1.0.0 for independent AIPM development after project completion.

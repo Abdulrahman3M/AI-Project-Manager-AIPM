@@ -7,7 +7,6 @@
     "frontend-design",
     "plugin-creator",
     "project-governance-manager",
-    "resume-task",
     "skill-creator",
     "teach",
     "token-optimization"
@@ -35,6 +34,12 @@
       "slug": "shared-project-state-manager",
       "approved_date": "2026-10-31",
       "reason": "The project owner explicitly authorized development and maintenance of this Skill for AIPM; added Route-Transient-State and tightened handoff direct manifest edit prohibition.",
+      "historical_source_hashes_retained": true
+    },
+    {
+      "slug": "resume-task",
+      "approved_date": "2026-11-10",
+      "reason": "Owner-requested AIPM Golden Triangle migration: make the separate Shared Project State Manager explicit opt-in; original imported source hashes remain preserved.",
       "historical_source_hashes_retained": true
     }
   ],

@@ -2,15 +2,16 @@
 
 ## Purpose
 
-Use this local package to orient an AI agent to an AI Project Manager (AIPM) project. Start with the project rules, use AIPM Core as the authority for project state, and select an included Skill only when it matches the requested work.
+For every AIPM-managed task event, start with `project-manager`, then keep `task-scope-contract` and `resource-optimization` active while selecting only relevant specialists. Reconcile revised and reopened work with current source and prior evidence.
 
 ## Operating Boundary
 
-This package does not install itself, publish itself, start a background session, or grant access to local project files. The host must explicitly provide the project workspace and any required permissions.
+This guidance is INSTRUCTION_ONLY: the package does not enforce host invocation, install or publish itself, start a session, or grant project access. Host permissions remain authoritative. The separate Shared Project State Manager is invoked through local PowerShell only on explicit owner request; AIPM Core state remains separately permission-gated.
 
 ## Agent Workflow
 
-1. Read the project rules and current phase/checkpoint.
-2. Query AIPM Core for authoritative project state where the host adapter supports it.
-3. Select the smallest relevant included Skill and preserve project evidence.
-4. Keep unsupported host operations permission-gated and fail-closed.
+1. Run the lightweight Project Manager bootstrap and read applicable project rules.
+2. Establish scope and resource policies; reuse unchanged verified context.
+3. Query AIPM Core for authoritative project state only where the host adapter supports it.
+4. Route to the smallest relevant specialist set, verify outcomes and preserve evidence.
+5. Keep unsupported host operations permission-gated and fail-closed.

@@ -135,6 +135,8 @@ Do not create a project note solely for this template if the user or project dis
 
 ## Relationship to project state and other Skills
 
+Do not automatically activate or initialize the separate Shared Project State Manager. Use that local PowerShell tool only on an explicit owner request; ordinary AIPM Core task-state operations remain separate.
+
 Use the active project's shared-state, orchestration, governance, testing, or domain-specific Skills when their triggers and governing rules apply. This Skill provides the resumption and verification gates; it does not replace a project's broader state-management system. If the user explicitly names another Skill, follow the active project's routing precedence and do not silently substitute. Apply this Skill's general workflow across projects while keeping each project's own rules, vocabulary, approval process, and tooling separate.
 
 ## Strict Task Resume — Bilingual Prompts

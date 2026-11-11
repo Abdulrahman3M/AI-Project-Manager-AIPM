@@ -1,5 +1,11 @@
 # AIPM Project Rules
 
+## Golden Triangle Task Entry
+
+For every AIPM-managed task interaction, including continuation, revision, resume, reopen, correction and recheck, begin with the lightweight `project-manager` bootstrap. Keep `task-scope-contract` and `resource-optimization` active throughout the work. Select additional specialists only as needed, preserve prior evidence and use one agent by default. Instructions and package manifests alone do not prove host enforcement; report host runtime capability according to actual evidence.
+
+The separate Shared Project State Manager tool is optional and local: invoke it through PowerShell only on an explicit owner request. Starting or continuing a task does not initialize it. AIPM Core's separately authorized project registration and task-state operations remain governed by their existing rules.
+
 ## AIPM Self-Protection
 
 When using AIPM on another project, the AIPM repository itself is protected from changes. Only a direct, explicit owner request to develop or repair AIPM permits edits to its source. The Core Engine rejects project roots, registry files, and registry backups whose paths overlap the detected AIPM installation. This is an application boundary, not an operating-system sandbox: external AI agents with direct filesystem permissions must also be constrained by their host workspace permissions or Windows ACLs.
@@ -20,7 +26,7 @@ For multiple tasks, use one independent ID and artifact folder per task. Updatin
 
 ## Authoritative Sources
 
-- `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-orchestrator` is the documented derivative.
+- `01-Skills-General/` is the owner-managed General Skill library. The owner may add or remove Skills and establish a new SemVer release baseline. Active imported Skill content, excluding owner-managed `VERSION` and `CHANGELOG.md` release metadata, is checked against recorded source hashes; new AIPM-authored Skills must be declared in the first-party manifest. `project-manager` is the owner-maintained successor to the documented orchestration and governance lineages; historical source hashes remain in the migration record.
 - `02-Prompt-General/` holds standalone Prompts only. A Prompt belonging to a Skill remains under that Skill and is versioned with it.
 - `Capability-Library/Registry.json` and `docs/project/Provenance/Capability-Library-Ledger.json` record the inventory and file hashes. Validate before consuming or generating derived artifacts.
 - `Capability-Library/First-Party-Skills.json` declares AIPM-authored and owner-maintained Skills separately from imported migration provenance. `browser-environment-manager`, `powershell-tui-app-designer`, and `tui-intelligence` are declared first-party Skills. The PowerShell TUI App Designer's original migration hashes remain in the historical migration record after its owner-authorized maintenance classification.

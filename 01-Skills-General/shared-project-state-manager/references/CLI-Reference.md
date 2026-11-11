@@ -1,9 +1,9 @@
 # CLI Reference
 
-## Node.js State CLI
+## PowerShell State CLI
 
 ```text
-node scripts/sps.mjs <command> [options]
+.\scripts\sps.ps1 <command> [options]
 ```
 
 - `init`: creates/reuses the Shared Project State structure and templates. Existing state files are preserved.
@@ -16,19 +16,19 @@ node scripts/sps.mjs <command> [options]
 ## Validator
 
 ```text
-python scripts/validate_state.py --project-root <project-root> [--strict]
+.\scripts\Validate-State.ps1 --project-root <project-root> [--strict]
 ```
 
 ## Safe File Operations
 
 ```text
-python scripts/safe_file_ops.py diagnose PATH --project-root ROOT
-python scripts/safe_file_ops.py move SOURCE DEST --project-root ROOT [--dry-run] [--retry-seconds N]
-python scripts/safe_file_ops.py quarantine PATH --project-root ROOT [--dry-run] [--retry-seconds N]
-python scripts/safe_file_ops.py restore RECORD --project-root ROOT [--dry-run]
-python scripts/safe_file_ops.py clear-readonly PATH --project-root ROOT --confirm CLEAR-READONLY [--dry-run]
-python scripts/safe_file_ops.py repair-acl PATH --project-root ROOT --confirm REPAIR-ACL [--dry-run]
-python scripts/safe_file_ops.py purge RECORD --project-root ROOT --confirm PURGE-QUARANTINE [--dry-run]
+.\scripts\sps.ps1 files diagnose PATH --project-root ROOT
+.\scripts\sps.ps1 files move SOURCE DEST --project-root ROOT [--dry-run] [--retry-seconds N]
+.\scripts\sps.ps1 files quarantine PATH --project-root ROOT [--dry-run] [--retry-seconds N]
+.\scripts\sps.ps1 files restore RECORD --project-root ROOT [--dry-run]
+.\scripts\sps.ps1 files clear-readonly PATH --project-root ROOT --confirm CLEAR-READONLY [--dry-run]
+.\scripts\sps.ps1 files repair-acl PATH --project-root ROOT --confirm REPAIR-ACL [--dry-run]
+.\scripts\sps.ps1 files purge RECORD --project-root ROOT --confirm PURGE-QUARANTINE [--dry-run]
 ```
 
 All operated paths are project-scoped. Destination overwrite is refused.

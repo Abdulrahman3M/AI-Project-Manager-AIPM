@@ -1,5 +1,36 @@
 # AI Project Manager Support Matrix
 
+## v1.11.9 Orchestration Brief Update
+
+The brief is optional and does not initialize the separate state tool. Host runtime enforcement remains UNVERIFIED; this update is local and unpublished.
+
+## v1.11.8 Retry And Upgrade Validation Update
+
+Host interception and runtime activation remain UNVERIFIED. This update is local and unpublished.
+
+## v1.11.7 Verification Hardening Update
+
+Host interception and runtime activation remain UNVERIFIED. This update is local and unpublished.
+
+## v1.11.6 Resource Budget Update
+
+Resource targets preserve required checks and observed usage when revised. Host enforcement remains UNVERIFIED; this update is not published.
+
+## v1.11.5 Golden Triangle Update
+
+| Capability | Evidence | Status | Notes |
+| --- | --- | --- | --- |
+| Host runtime enforcement | No actual host interception test yet | UNVERIFIED | Package instructions alone do not enforce Skills. |
+| Remote publication | Not performed | NOT PUBLISHED | Local update only. |
+
+## v1.10.5 Local StrictMode Hardening Update
+
+| Component | Environment | Status | Evidence |
+| --- | --- | --- | --- |
+| PowerShell TUI source & ASCII audit | Static source inspection | PASS | Verified pure-ASCII compliance, PowerShell 5.1/7 compatibility, `Get-AipmCount` / `Get-AipmField` StrictMode guards, and `Operations/Tasks` + legacy `Tasks` path handling across `Start-AIPM.ps1`, `App.psm1`, and `App.Tests.ps1`. |
+| PowerShell TUI & Python regression suites | Local terminal after parent folder rename | UNVERIFIED | Shell execution was unavailable inside the agent session bound to the pre-rename workspace path; run `pwsh -NoProfile -File TUI\AI-Project-Manager\tests\Run-Tests.ps1`, `powershell -NoProfile -ExecutionPolicy Bypass -File TUI\AI-Project-Manager\tests\Run-Tests.ps1`, and `python -m unittest discover -s Tests -v` locally to verify. |
+| Remote publication | Not performed | NOT PUBLISHED | Local repository update `1.10.5`; latest published GitHub Release remains `v1.6.13`. |
+
 ## v1.10.3 Local Handoff Upgrade
 
 | Component | Environment | Status | Evidence |

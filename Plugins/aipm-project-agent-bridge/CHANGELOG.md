@@ -1,5 +1,35 @@
 # AIPM Project Agent Bridge Change Log
 
+## [1.3.4] — Capability And Project Metadata Synchronization
+
+- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.
+- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.
+- Kept the package local, uninstalled, and unpublished.
+
+## [1.3.3] — Capability And Project Metadata Synchronization
+
+- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.
+- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.
+- Kept the package local, uninstalled, and unpublished.
+
+## [1.3.2] — Capability And Project Metadata Synchronization
+
+- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.
+- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.
+- Kept the package local, uninstalled, and unpublished.
+
+## [1.3.1] — Capability And Project Metadata Synchronization
+
+- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.
+- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.
+- Kept the package local, uninstalled, and unpublished.
+
+## [1.3.0] — Capability And Project Metadata Synchronization
+
+- Regenerated from the validated Capability Library and synchronized AIPM source project metadata.
+- Recorded the exact source version, approved Skill versions, and content hashes in the distribution manifest.
+- Kept the package local, uninstalled, and unpublished.
+
 ## [1.2.4] — Capability And Project Metadata Synchronization
 
 - Regenerated from the validated Capability Library and synchronized AIPM source project metadata.

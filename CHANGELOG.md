@@ -1,5 +1,38 @@
 # AIPM Change Log
 
+## [1.11.9] — Orchestration Brief Restoration (Repository Update; Not Published)
+
+- Restore the Project Manager coordination brief without automatically initializing the optional state tool.
+
+## [1.11.8] — Evidence-Aware Retry Hardening (Repository Update; Not Published)
+
+- Permit bounded retries for genuinely changed evidence and tighten generated bridge upgrade validation.
+- Preserve exact capability and bridge bytes through Git line-ending conversion so recorded hashes remain reproducible.
+
+## [1.11.7] — Golden Triangle Verification Hardening (Repository Update; Not Published)
+
+- Reject repeated retry hypotheses and unverified telemetry, harden staging paths, and expose PowerShell-only state validation guidance.
+- Reject legacy bridge guidance when a generated package already contains Project Manager, while preserving verified pre-manager upgrade compatibility.
+
+## [1.11.6] — Resource Budget Reconciliation (Repository Update; Not Published)
+
+- Preserve mandatory checks and observations when revising Resource Optimization budgets.
+
+## [1.11.5] — Golden Triangle Task Lifecycle (Repository Update; Not Published)
+
+- Introduce Project Manager, Task Scope Contract and Resource Optimization; keep the separate PowerShell state tool opt-in.
+- Synchronize affected Skill provenance, documentation and local packages. Host enforcement requires actual verification.
+
+## [1.10.5] — StrictMode Collection And State Recovery Hardening (Repository Update; Not Published)
+
+- Added `Get-AipmCount` and null-safe fallback behavior in `Get-AipmField` inside `TUI/AI-Project-Manager/src/Core/App.psm1`, eliminating `Set-StrictMode -Version 2.0` `PropertyNotFoundException` crashes (`The property 'Count' cannot be found on this object`) when PowerShell unrolls 0-element or 1-element arrays such as single-task `reconciled_tasks` during manifest-history drift recovery.
+- Hardened `Invoke-AipmStateRecovery`, `Get-AipmProjectSummary` (with per-project fault isolation), `Get-AipmPageLines`, `Get-AipmRegistryEntries`, `Show-AipmTaskRecord`, and `Invoke-AipmTaskManagement` against missing optional JSON properties and scalar collection unrolling under `Set-StrictMode -Version 2.0`.
+- Replaced a non-ASCII separator in `App.psm1` with pure ASCII for Windows PowerShell 5.1 compatibility, and updated `Show-AipmTaskRecord` and `Invoke-AipmTaskManagement` to recognize both `Shared-Project-State-Manager/Operations/Tasks/` and legacy `Shared-Project-State-Manager/Tasks/`.
+- Enhanced `Start-AIPM.ps1` unhandled-exception logging to record the originating script filename and line number in `app.log` without exposing raw stack traces on console stderr.
+- Added automated `StrictMode 2.0` regression tests in `TUI/AI-Project-Manager/tests/Unit/App.Tests.ps1` for `Get-AipmCount`, null-valued fields, 1-element `reconciled_tasks` drift recovery, and 0-element `reconciled_tasks` drift recovery.
+- Updated `AGENTS.md` post-task governance to codify the mandatory three-step closeout workflow: cache/temporary artifact cleanup, Git commit of all task changes, and pushing `main` updates to GitHub.
+- Synchronized platform and TUI versions at `1.10.5`; no Skill, standalone Prompt, or Plugin package content changed. This update is local and unpublished.
+
 ## [1.10.4] — Large Artifact Capacity And Streaming Hashes (Repository Update; Not Published)
 
 - Increased task artifact size limit from 16 MiB to 256 MiB in Core Engine and host adapters.

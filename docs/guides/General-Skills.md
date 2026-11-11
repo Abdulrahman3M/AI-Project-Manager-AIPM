@@ -12,12 +12,12 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 - [Doc To MD](#doc-to-md)
 - [PowerShell TUI App Designer](#powershell-tui-app-designer)
 - [Professional Word Designer](#professional-word-designer)
-- [Project Governance Manager](#project-governance-manager)
-- [Project Orchestrator](#project-orchestrator)
+- [Project Manager](#project-manager)
+- [Resource Optimization](#resource-optimization)
 - [Resume Task](#resume-task)
 - [Screenshot To Code](#screenshot-to-code)
 - [Shared Project State Manager](#shared-project-state-manager)
-- [Token Optimization](#token-optimization)
+- [Task Scope Contract](#task-scope-contract)
 - [TUI Intelligence](#tui-intelligence)
 - [Web Design Engineering](#web-design-engineering)
 
@@ -107,31 +107,31 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 ---
 
-### Project Governance Manager
+### Project Manager
 
-`project-governance-manager`
+`project-manager`
 
-**Description:** Creates, merges, audits, and maintains project governance documents such as `AGENTS.md`, while keeping reusable rules separate from project-specific ones.
+**Description:** Coordinates governance, task lifecycle, specialist routing and verification as the mandatory AIPM entry.
 
-**When to Use:** Use it when establishing project-wide agent rules, consolidating existing policies, or checking governance files for gaps and contradictions.
+**When to Use:** Use for every AIPM-managed task interaction, including revisions and reopened work.
 
-**How to Use:** Example: “Use `project-governance-manager` to review these project rules for conflicts and missing requirements.”
+**How to Use:** Example: “Start Project Manager for this task and apply the scope and resource policies.”
 
-**Source:** [View Skill Instructions](../../01-Skills-General/project-governance-manager/SKILL.md)
+**Source:** [View Skill Instructions](../../01-Skills-General/project-manager/SKILL.md)
 
 ---
 
-### Project Orchestrator
+### Resource Optimization
 
-`project-orchestrator`
+`resource-optimization`
 
-**Description:** Selects and coordinates the smallest useful set of specialist Skills for multi-capability work or project-level supervision.
+**Description:** Controls tokens, time, tool calls, limits and owner-approved delegation without reducing quality.
 
-**When to Use:** Use it when a request spans several kinds of work or when help is needed choosing which Skill should handle a task. For a clear, single-specialist task, use that specialist directly.
+**When to Use:** Use continuously under Project Manager for every AIPM-managed task.
 
-**How to Use:** Example: “Use `project-orchestrator` to select and coordinate the appropriate Skills, including `screenshot-to-code` when a screenshot implementation task is requested.”
+**How to Use:** Example: “Apply Resource Optimization while preserving every required check.”
 
-**Source:** [View Skill Instructions](../../01-Skills-General/project-orchestrator/SKILL.md)
+**Source:** [View Skill Instructions](../../01-Skills-General/resource-optimization/SKILL.md)
 
 ---
 
@@ -169,25 +169,25 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 **Description:** Makes long-running project work resumable across sessions or AI agents using task state, verified checkpoints, handoffs, templates, and supporting tools.
 
-**When to Use:** Use it when substantial work may cross sessions, models, agents, or usage limits, or when a task needs durable progress and recovery records.
+**When to Use:** Use only when the owner explicitly requests the separate local PowerShell state tool; ordinary AIPM Core state operations remain separate.
 
-**How to Use:** Example: “Use `shared-project-state-manager` to prepare a verified handoff so another agent can continue this project later.”
+**How to Use:** Example: “Explicitly invoke the local `shared-project-state-manager` through PowerShell to prepare a verified handoff.”
 
 **Source:** [View Skill Instructions](../../01-Skills-General/shared-project-state-manager/SKILL.md)
 
 ---
 
-### Token Optimization
+### Task Scope Contract
 
-`token-optimization`
+`task-scope-contract`
 
-**Description:** Reduces avoidable context use and repeated work while preserving requirements, safety, implementation quality, and verification.
+**Description:** Defines task scope, read tracking, bounded retries and evidence-based quality gates.
 
-**When to Use:** Use it as lightweight support for substantial analysis, implementation handoffs, or multi-step work where redundant reads and output can be reduced safely.
+**When to Use:** Use continuously under Project Manager for every AIPM-managed task.
 
-**How to Use:** Example: “Apply `token-optimization` while you complete this task, keeping every requirement and verification step.”
+**How to Use:** Example: “Establish a Task Scope Contract for the current task.”
 
-**Source:** [View Skill Instructions](../../01-Skills-General/token-optimization/SKILL.md)
+**Source:** [View Skill Instructions](../../01-Skills-General/task-scope-contract/SKILL.md)
 
 ---
 

@@ -1,9 +1,13 @@
 ---
 name: shared-project-state-manager
-description: Manage long-running work across any compatible AI agents with a persistent Shared-Project-State protocol, restartable phases, verified checkpoints/handoffs, optional Node.js and Python automation, quarantine-first file operations, permission/lock diagnostics, templates, schemas, and worked examples. Use when work may cross sessions, usage limits, crashes, models, or agents; when interrupted work must resume safely; or when temporary/cache/test/tool state needs controlled project-local handling.
+description: Use the separate local PowerShell state tool only after an explicit owner request; preserve verified checkpoints and handoffs without automatically initializing task state.
 ---
 
 # Shared Project State Manager
+
+## Explicit Invocation Gate
+
+Use this separate local tool only on an explicit owner request to invoke it through PowerShell for the active local project. Do not automatically activate, initialize, create, import, or update its workspace for any task lifecycle event. Ordinary AIPM Core registry and task-state operations are separate and remain governed by their existing permissions. Internal Node/Python helpers are implementation details, not independent entry points.
 
 ## Role
 
@@ -23,17 +27,7 @@ The Skill does not replace the project's own source code, permanent tests, gover
 
 ## 1. When to Use This Skill
 
-Use this Skill when any of the following is true:
-
-- a task is large enough that one agent session or usage limit may not finish it;
-- the user expects to switch from one AI agent to another while work is in progress;
-- a previous agent stopped because of a limit, crash, disconnect, or interrupted session;
-- a task contains several implementation phases that need independent verification;
-- several sequential agents must share exact progress, decisions, test evidence, and next actions;
-- the user explicitly asks for a shared project state, resumable task state, cross-agent handoff, or equivalent workflow;
-- temporary files, test workspaces, caches, logs, and agent/tool state need a controlled project-local location.
-
-Do not force this Skill on trivial one-step work unless the user explicitly requests it.
+Use this Skill only after an explicit owner request for the local PowerShell tool. Long tasks, resume events, checkpoints, and ordinary project work do not constitute such a request.
 
 ---
 
@@ -56,7 +50,7 @@ If the shared state says a phase is complete but the code, diff, or tests do not
 
 ## 3. Mandatory Root Folder
 
-For long-running work, create or reuse exactly one project-root folder:
+After the explicit owner request and a verified PowerShell invocation, create or reuse exactly one project-root folder:
 
 `Shared-Project-State`
 
@@ -362,11 +356,11 @@ Never skip directly to the next phase solely because an old note says “done.�
 
 ## 20. Programmatic Tooling
 
-The protocol is authoritative; the scripts are optional, repeatable helpers. Do not refuse the workflow merely because Node.js, Python, PowerShell, Git, or another helper runtime is unavailable.
+The protocol is authoritative. On explicit owner request, invoke the local tool through its PowerShell entry points; Node.js and Python are implementation dependencies. If PowerShell or a needed runtime is unavailable, report the operation UNVERIFIED rather than silently changing the entry mechanism.
 
 ### 20.1 Node.js State CLI
 
-When Node.js 18+ is available, use `scripts/sps.mjs` for repeatable state operations:
+The PowerShell entry `scripts/sps.ps1` delegates to the Node.js implementation for these repeatable operations:
 
 - `init` — create/reuse the canonical state tree from templates without overwriting existing state files;
 - `status` — show the recorded state beside a fresh Git snapshot when Git is available;
@@ -380,7 +374,7 @@ The CLI uses Node.js built-in modules only. Do not require `npm install` merely 
 
 ### 20.2 Python State Validation
 
-Use `scripts/validate_state.py` when Python 3.10+ is available to validate the required v2 state tree and core manifest fields. A validator result is evidence about structure, not proof that implementation claims are correct.
+The PowerShell entry `scripts/Validate-State.ps1` delegates to the internal Python validator for the required v2 state tree and core manifest fields. A validator result is evidence about structure, not proof that implementation claims are correct.
 
 ### 20.3 PowerShell Convenience
 
@@ -388,7 +382,7 @@ On Windows, `scripts/sps.ps1` wraps the Node CLI. `scripts/Install-Prerequisites
 
 ### 20.4 Transient State Routing And Sweeper (Route-Transient-State)
 
-Use `scripts/route_transient_state.py` (or PowerShell wrapper `scripts/Route-Transient-State.ps1` / `Route-Transient-State.py` in the state manager root) to centralize operational artifacts into `Shared-Project-State-Manager`:
+Only on an explicit owner request use the PowerShell wrapper `scripts/Route-Transient-State.ps1` to centralize operational artifacts into `Shared-Project-State-Manager`:
 - `--env [powershell|bash|cmd]` — exports `PYTHONPYCACHEPREFIX`, `TEMP`, `TMP`, `PYTEST_ADDOPTS`, `MYPY_CACHE_DIR`, and `RUFF_CACHE_DIR` directly pointing to `Cache/Python`, `Temporary-Files`, and `Test-Workspace`.
 - `--run <command...>` — executes any tool with pre-configured routing variables so created caches and temp files land under `Shared-Project-State-Manager`.
 - `--sweep` — scans the repository and automatically relocates stray `__pycache__`, `.pytest_cache`, scratch files, and temporary test directories into their designated state subfolders.
@@ -496,7 +490,7 @@ A non-Git project can still use this Skill; record Git fields as unavailable/unk
 
 ## 26. Final Operating Instruction
 
-When this Skill is invoked:
+When this Skill is invoked by explicit owner request through PowerShell:
 
 1. inspect the target project's governance and current repository/runtime state;
 2. create or validate `Shared-Project-State`;

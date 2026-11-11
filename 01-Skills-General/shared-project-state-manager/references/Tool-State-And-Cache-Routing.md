@@ -79,7 +79,7 @@ Do not assume every failed move/delete is an ACL problem. Diagnose whether the c
 When the Skill's optional helper is available:
 
 ```powershell
-python .\scripts\safe_file_ops.py diagnose ".\Problem-Path" --project-root .
+.\scripts\sps.ps1 files diagnose ".\Problem-Path" --project-root .
 ```
 
 Prefer a reversible `move` or `quarantine`. Clearing read-only state and resetting Windows ACL inheritance are separate explicit-confirmation operations. The helper does not self-elevate, kill processes, force-close handles, take ownership, grant broad permissions, or disable OS security controls.
@@ -90,7 +90,7 @@ See `File-Operations-Safety.md` and `Permission-And-Lock-Recovery.md`.
 
 ## Shared Project State Helper Tooling
 
-The dependency-free Node.js CLI can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, delegate safe-file operations, and route transient state (`node scripts/sps.mjs route`).
+The dependency-free Node.js CLI can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, delegate safe-file operations, and route transient state (`.\scripts\sps.ps1 route`).
 
 Additionally, `scripts/route_transient_state.py` (and the PowerShell wrapper `scripts/Route-Transient-State.ps1`) provides:
 - `--env`: prints environment variable exports (`PYTHONPYCACHEPREFIX`, `TEMP`, `TMP`, `PYTEST_ADDOPTS`, etc.) for PowerShell, bash, or cmd;

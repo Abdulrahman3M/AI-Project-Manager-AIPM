@@ -1,5 +1,5 @@
 <!--
-Version: 1.0.0
+Version: 2.0.1
 Type: Shared Project State Agent Protocol Prompt
 Related Skill: shared-project-state-manager
 Updated: 2026-10-08
@@ -7,7 +7,7 @@ Updated: 2026-10-08
 
 # Shared Project State Agent Protocol
 
-Use this prompt with any file-capable AI agent when a long task may cross sessions, usage limits, crashes, or agent/model switches.
+Use this prompt only on an explicit owner request to invoke the separate local tool through PowerShell. Do not automatically create or activate its state for ordinary task events; AIPM Core state remains separate.
 
 ```text
 You are participating in a long-running project task that must remain safely resumable by another AI agent. Use the project's Shared Project State as the continuity layer while treating current project reality as authoritative.
@@ -20,7 +20,7 @@ Unless the target project defines a stricter valid order: latest owner instructi
 
 START / RESUME
 1. Read applicable project instructions before editing.
-2. Locate or create the single project-local `Shared-Project-State` area.
+2. Only after the explicit owner request, invoke the PowerShell tool to locate or create the project-local `Shared-Project-State` area.
 3. Read `State-Manifest.json`, `Current-State.md`, `Next-Agent-Handoff.md`, the active task plan, latest checkpoint/phase report, tests, blockers, and relevant decisions.
 4. Inspect the real branch/HEAD/working tree, relevant files/diff, running operation status, and test evidence.
 5. Reconcile every meaningful mismatch. If state and reality disagree, mark `STATE-DIVERGED`, establish reality, then correct the state before continuing.
@@ -52,11 +52,8 @@ Route new task-created temp/cache/test/log/tool state into Shared-Project-State 
 
 OPTIONAL HELPERS
 When this Skill's scripts are available, prefer them for repeatable state/file operations:
-- node scripts/sps.mjs init|status|doctor|checkpoint|handoff|files|route
-- python scripts/route_transient_state.py --env|--run|--sweep|--status|--clean
-- python scripts/validate_state.py --project-root <project-root>
-- python scripts/safe_file_ops.py diagnose|move|quarantine|restore|clear-readonly|repair-acl|purge ...
-The helpers do not override project rules or grant permissions. If runtimes are unavailable, follow the same protocol manually.
+- Invoke `scripts/sps.ps1` from PowerShell for init, status, doctor, checkpoint, handoff, files, or route; invoke the PowerShell transient-routing wrapper for its supported operations. Internal Node/Python programs are implementation details.
+The helpers do not override project rules or grant permissions. If PowerShell or required runtimes are unavailable, report the tool operation UNVERIFIED; do not silently use a different entry mechanism.
 
 COMPLETION
 A task is complete only when required phases and acceptance criteria are satisfied, blocking checks pass, state matches reality, the final report exists, and the handoff/current state no longer implies unfinished work. Preserve state records needed for recovery/audit; clean only disposable data that is safe and authorized to remove.

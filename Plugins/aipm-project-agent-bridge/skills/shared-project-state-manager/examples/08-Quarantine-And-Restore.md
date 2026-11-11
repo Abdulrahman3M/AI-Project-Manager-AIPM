@@ -60,7 +60,7 @@ Inspect current project governance, branch/HEAD/working tree when available, rel
 ## Relevant Helper
 
 ```powershell
-node .\scripts\sps.mjs status --project-root .
-node .\scripts\sps.mjs doctor --project-root .
-python .\scripts\safe_file_ops.py diagnose ".\<target>" --project-root .
+.\scripts\sps.ps1 status --project-root .
+.\scripts\sps.ps1 doctor --project-root .
+.\scripts\sps.ps1 files diagnose ".\<target>" --project-root .
 ```

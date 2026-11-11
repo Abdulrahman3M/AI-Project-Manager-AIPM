@@ -1,3 +1,11 @@
+## [2.0.1] — 2026-11-10
+
+- Route active operational examples and validation through PowerShell entry points.
+
+## [2.0.0] — 2026-11-10
+
+- Make the separate state tool explicitly owner-invoked through PowerShell; preserve Core state operations.
+
 ## [1.0.1] — 2026-10-31
 
 - Added `Route-Transient-State` programmatic CLI (`scripts/route_transient_state.py`, `Route-Transient-State.ps1`) and `sps route` command to automate Section 7 routing of Cache, Temporary Files, and Test Workspaces under `Shared-Project-State-Manager`.

@@ -7,7 +7,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "source_reference": "Owner-authorized AIPM maintenance of the migrated strict handoff Skill lineage; historical source hashes remain in Skill-Migration-Record.json"
     },
     {
@@ -16,7 +16,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "source_reference": "AI Project Manager"
     },
     {
@@ -70,8 +70,44 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "1.0.1",
+      "version": "2.0.1",
       "source_reference": "Owner-authorized AIPM maintenance of the Shared Project State Manager lineage; historical source hashes remain in Skill-Migration-Record.json"
+    },
+    {
+      "slug": "resume-task",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "2.0.0",
+      "source_reference": "Owner-authorized maintenance of imported resume-task; original source hashes remain in Skill-Migration-Record.json"
+    },
+    {
+      "slug": "project-manager",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "2.0.1",
+      "source_reference": "AIPM-maintained merge of project-orchestrator and imported project-governance-manager; historical source hashes retained in Skill-Migration-Record.json"
+    },
+    {
+      "slug": "task-scope-contract",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "1.0.2",
+      "source_reference": "AIPM-authored task scope and evidence policy"
+    },
+    {
+      "slug": "resource-optimization",
+      "owner": "AIPM Project Owner",
+      "origin": "AIPM_FIRST_PARTY",
+      "license": "Apache License 2.0",
+      "license_path": "LICENSE",
+      "version": "2.0.2",
+      "source_reference": "AIPM-maintained expansion of imported token-optimization; historical source hashes retained in Skill-Migration-Record.json"
     }
   ]
 }

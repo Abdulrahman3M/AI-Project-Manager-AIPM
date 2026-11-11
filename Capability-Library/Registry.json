@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.10.3",
+  "platform_version": "1.11.9",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -72,10 +72,10 @@
       "customization": "AIPM-owned Skill",
       "description": "Prepare with user consent, launch with approval, diagnose, maintain, and verify isolated Windows browser environments for AI agents. Use to discover or create dedicated Edge/Chrome profiles, recover closed browsers and CDP sessions, verify agent browser extensions/tools, and check access to project-local web servers before browser workflows.",
       "files": {
-        "CHANGELOG.md": "eee9d63e7677535c4eaf55b4cec58939a67071c830437f6ce39e9dfb20895b47",
+        "CHANGELOG.md": "90925cb7ac08256b68fd5e1a72eb149509480961d6b9066bee05ed409aac1327",
         "PROMPT.md": "ff23094cf936862e9cec5362f637c414b891613dba135658ae6ff5da72948290",
-        "SKILL.md": "2b1236765fac2c51ae6471e992be470cbcba4f1614b324243fe798d4f314b800",
-        "VERSION": "8456accd9a842531ca2aa6832c731ed07597335b35bbdb470044c5365e8fdc82",
+        "SKILL.md": "f16db6c5aca6db9d36123cc80a70451bf6f18f54c2b75ca0c47c7984ef2c1384",
+        "VERSION": "431c43d80e707a979ea9df83e63fba47dfd9ab324911e111c3ffb08c8ad1b253",
         "examples/Usage.md": "e775ca15dbf17b5cf69c08a955ee84d869677a70f13b7ce91c8028dda1693de0",
         "references/Browser-Compatibility.md": "5b65afe12aefd2d7f29e4bbe351bf395cd3be1b34dcdb2aa68f70de96c31ec8e",
         "scripts/Browser-Environment.ps1": "271491a7a3d91881330264d38e3bb4002ae2c495fb09a58cc5e62f835007e20c",
@@ -100,22 +100,22 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "52586b075b091776e6ec709c649176a50d38470dc6739c3349d709b8cfb088a3",
+      "sha256": "6013ce7c959e02eee035b00fccbec4e3880dbeac94fba3dbca6a4f15c71c63f9",
       "skill_owned_prompts": [
         "PROMPT.md"
       ],
       "slug": "browser-environment-manager",
-      "version": "1.1.2"
+      "version": "1.1.3"
     },
     {
       "customization": "AIPM-owned Skill",
       "description": "Create a strict, execution-ready Implementation Handoff Markdown file from the current conversation and the owner's latest decisions. Use when the user asks for an Implementation Handoff, execution-ready handoff, implementation task file, strict coding handoff, or equivalent instructions for another AI coding agent. Do not implement the underlying task; produce the handoff only.",
       "files": {
-        "CHANGELOG.md": "7bc010b6880ec78289e95b5c43b5771547a37327be19cdba13f2be35248adb2f",
-        "SKILL.md": "9a749c9a234de9c26e0d113ca700223123dbc4198347043697caecf5b388cf6e",
-        "VERSION": "f34306bb50e2d2ec59c788b9013c5ac682ef7f7f69345a3e957e38c0b6ba2fdd",
+        "CHANGELOG.md": "00bc9cd1f0f5fca28f2a2ae921ce12a202a40d2fdfbc4c22d90e6384905a1923",
+        "SKILL.md": "15d20239b2fe4a9979f7bd2cbcf90eaeedfe242a97619354b93b2221f393d7d6",
+        "VERSION": "0dc8489f55b24f8c7f12619f9e5e25a3eab2ce5cce7e057413d9c27c26b7d675",
         "prompts/Strict-Impl-Handoff-Execute.md": "4882aa482e2456c208432f55cd824421e39fcd3044d299adaaf567b26b41ab29",
-        "prompts/Strict-Impl-Handoff-Request.md": "7ad5cdc5950bc6b6968cac3ec832acb73f3d49184a66063d9e7921a84b08fbac",
+        "prompts/Strict-Impl-Handoff-Request.md": "dc43f0b1c72d9b74b8437b3194f80989dc71307c399c57beb33be0771e1d59da",
         "references/HOW-TO-VALIDATE-AND-EXECUTE.md": "59362ac274adb02ffb1663aa3e4c8953ac551c3e051213e5bfca139e8c0402c7",
         "scripts/bundle-handoff.py": "3b7a63c6f42b62d3df76d6fbd2ec3445f00bc15ee83df1c00a192c7f36e0203c",
         "scripts/handoff-lint.py": "bef4df90e5eefc1829110b113938c59f688470669e1a1f6b96f95342f625e919",
@@ -138,13 +138,13 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "a84de8c71db9d476d85d0be38a61c2a0643a732e769bbd86b37f8478b8535829",
+      "sha256": "0260ec7cac4b8cd5279ee104287b2c790dcaa6a401851ec8135d24fd4670dfd9",
       "skill_owned_prompts": [
         "prompts/Strict-Impl-Handoff-Execute.md",
         "prompts/Strict-Impl-Handoff-Request.md"
       ],
       "slug": "create-strict-implementation-handoff",
-      "version": "1.0.1"
+      "version": "1.0.2"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -462,17 +462,22 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "description": "Create, merge, audit, and maintain project governance and AI-agent rule files such as AGENTS.md. Use when the user wants to establish project-wide rules, consolidate rules from multiple projects or documents, separate universal rules from project-specific rules, resolve governance conflicts, create a reusable governance baseline, or review an existing rules file for completeness and contradictions.",
+      "description": "Begin each AIPM-managed task interaction with a lightweight, lifecycle-aware management bootstrap; coordinate mandatory task scope and resource policies, governance, specialist selection, quality and truthful evidence.",
       "files": {
-        "CHANGELOG.md": "c96da9fbfccc92371eee55e9c4a0536ee2317d749dd2cff4063affd4a51e0957",
-        "README.md": "c5116188c1c5e1545d2e247c02976b35a860be6bee8bcc51e8f9945de2dd3b65",
-        "SKILL.md": "19e9a025f90cf401dc5b3c4aecf0243988bea70fa27f8b9806dd3dd2590e33d1",
-        "VERSION": "59854984853104df5c353e2f681a15fc7924742f9a2e468c29af248dce45ce03",
-        "references/rule-source-matrix.md": "e4fcda047711b029c242e88627939c2cb7258b96b9f68285cb62d15a581b1956",
-        "references/rule-synthesis-method.md": "a2e5ceac5d0dcca1250783b14c823e58a4ca551c8567652ee030cee08de1e401",
-        "references/source-synthesis.md": "2186c980b58d9903ab318b61a335f00e0d91926debc7cf660b48b4465623a5fc",
-        "references/universal-governance-rules.md": "dd18c6a4a0e525b8abfd3ce290ad0b4cd8f721c2f44b9f514fae71738a643252",
-        "templates/AGENTS-Template.md": "38a8c4a267af892203b64b42e35613da8c303b135819d72a89608d7223a37490"
+        "CHANGELOG.md": "73296ccde7131cfb56af98e1bb0d4401ca308cc87229647a7ff2d7bafd11f752",
+        "README.md": "2088818ff15f717ed7b39e9ef6829e85a20a70796201c0b4fce10409547aac7d",
+        "SKILL.md": "aa2335fe220bb09c93dfee0ed3cfa81afa437309ea3abe28ef4646699a8796e5",
+        "VERSION": "5ec59dc9b30e1df8e3fdae5adc45cd70b414740556237e9c80a9052f88b2d2fe",
+        "references/Governance-Rules.md": "952fba376add921aaae654b28e1e1deb3ae395e8d54db65ae8d45610ad31eda2",
+        "references/Quality-Supervision.md": "f471510ac2ea4241f28e0db746936792a8bbedd3126914dc183c3aba93b7fab4",
+        "references/Skill-Routing.md": "ba4dc321989c96bd7e2e3a68888f58dfb8e6c14be5323f4433c9935e74911dbb",
+        "references/governance/rule-source-matrix.md": "e4fcda047711b029c242e88627939c2cb7258b96b9f68285cb62d15a581b1956",
+        "references/governance/rule-synthesis-method.md": "a2e5ceac5d0dcca1250783b14c823e58a4ca551c8567652ee030cee08de1e401",
+        "references/governance/source-synthesis.md": "2186c980b58d9903ab318b61a335f00e0d91926debc7cf660b48b4465623a5fc",
+        "references/governance/universal-governance-rules.md": "dd18c6a4a0e525b8abfd3ce290ad0b4cd8f721c2f44b9f514fae71738a643252",
+        "scripts/bootstrap.py": "ea0d50d7b07f577bcd0769c2ff840abf0a8bfa8a199e211fd2c4f66625b7526c",
+        "templates/AGENTS-Template.md": "38a8c4a267af892203b64b42e35613da8c303b135819d72a89608d7223a37490",
+        "templates/Orchestration-Brief.md": "500245b10776dd348f82c004b79f9d22c79807f4873ea2a79d77b048877540da"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -481,30 +486,27 @@
         "source_license_path": "LICENSE",
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
-      "name": "project-governance-manager",
-      "path": "01-Skills-General/project-governance-manager",
+      "name": "project-manager",
+      "path": "01-Skills-General/project-manager",
       "provenance": {
         "origin": "AIPM_OWNED",
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "15dc7acbbda6aaee7dbb0ca6f2b7bc2da855dd20e7631a275fb1a9192931ab2b",
+      "sha256": "1e67c9af33c7c597b1ac42934b3296f0ec595241e7e015845e8e45a4b1ba2dde",
       "skill_owned_prompts": [],
-      "slug": "project-governance-manager",
-      "version": "1.0.0"
+      "slug": "project-manager",
+      "version": "2.0.1"
     },
     {
       "customization": "AIPM-owned Skill",
-      "description": "Select and coordinate specialist Skills when the user asks for help choosing a Skill, the request spans multiple capabilities or workstreams, or project-level supervision is needed. Analyze the requested outcome and deliverable before routing; send execution instructions or handoff documents for another AI agent to create-strict-implementation-handoff. For a clear single-specialist deliverable, invoke that specialist directly without adding orchestration overhead. Use project-governance-manager and shared-project-state-manager as foundational assistants when applicable to substantial work.",
+      "description": "Apply mandatory, quality-first token, time, tool and usage-limit efficiency and owner-controlled delegation throughout every AIPM task lifecycle event.",
       "files": {
-        "CHANGELOG.md": "7274927147075415a8899c97a494eb3abab8e50d88623d125c33dd2369bcb636",
-        "README.md": "c93cf7d388b75fd53c52d49db7663baf08929cc22ab19f3293483486185d0981",
-        "SKILL.md": "e6a45cd3ef8f61bd967eea4726bde041f117c3cabbeb9fa0240421de38dd05e7",
-        "VERSION": "2df2bd7011e87351e2e3e296ddb7f2520270a76160f95b2d64b337167294f28c",
-        "references/Orchestration-Model.md": "09ea23ee0dc3844e260ab8fed676f7070f5a69dc84cefb8a71eca29c5be1b094",
-        "references/Skill-Selection-Protocol.md": "5d89b918be48ee82a88196f81e9851dd71a0f10092baf366822952e105b24bdc",
-        "templates/Orchestration-Brief.md": "387acd3fe8eddfa09c6928286b409f3d0de452c80efe0132c7530c34c6349eab",
-        "tests/Test-SkillSelectionContract.py": "827e9c8893f60f1bd140a414e4348cf518d7efafe205afc96bf52e87c22a7ca3"
+        "CHANGELOG.md": "fae08f050e726e14e8960f1d5017b1818915e4c9a2749d244af842f2d42ae350",
+        "README.md": "82ac1708ce2b57c8d1bf4cfc85738e954d5be2bd967997ac5b87651863209f25",
+        "SKILL.md": "9e95ebf71ac4f0f71eedfdb93a5c261b3667d2d75d076d02d278ec1491813158",
+        "VERSION": "8f74f4a02b9f7e225a14ea2a775d0c0ae6e7a683a546e7ecb50af3823f5d6fcc",
+        "scripts/resource_policy.py": "77cf1e3d5009d02cca2e9f548f8a46cffa0721e8bde4d0bbcb5473e40b21c35c"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -513,28 +515,28 @@
         "source_license_path": "LICENSE",
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
-      "name": "project-orchestrator",
-      "path": "01-Skills-General/project-orchestrator",
+      "name": "resource-optimization",
+      "path": "01-Skills-General/resource-optimization",
       "provenance": {
         "origin": "AIPM_OWNED",
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "d505340863f50626575199b50698ee041145073049449451e39c4aab6d37928d",
+      "sha256": "c1ee35bc56cbfa36dd194669dd612924eee0a6aa189dcb0fdf98c63eae992c86",
       "skill_owned_prompts": [],
-      "slug": "project-orchestrator",
-      "version": "1.0.9"
+      "slug": "resource-optimization",
+      "version": "2.0.2"
     },
     {
       "customization": "AIPM-owned Skill",
       "description": "Resume and finish interrupted tasks for any AI agent after usage limits, context exhaustion, session loss, timeout, crash, failure, or takeover. Reconstruct accessible task details, preserve progress, verify actual state before repeating actions, and complete every remaining requirement.",
       "files": {
-        "CHANGELOG.md": "399396a95eba4782f78ecb3f0f7761a9178c7191b5829c185dde2a7747be1313",
+        "CHANGELOG.md": "8e4b5eb0ad8fe9ee927c33b1d13ea39119bf0fc8055c095998f620f311776dcc",
         "PROMPT.md": "91a384f0325fff83f9234d6556429bfa98d9da2984a57b529c0d8cf54b7abba8",
-        "SKILL.md": "582823a73686209f05907ebe1e9965af517fbf2a74d75b769517699c01785708",
+        "SKILL.md": "5b99506d2766fe5cd9cb0f34e100b3e2797d071820234a6d17aeaf5b9f9156ce",
         "Strict-Task-Resume.ar.md": "3fcc7ad8ad7e4851ccbd082b616c4cc640a1766f57ead843349478ec577d0fc4",
         "Strict-Task-Resume.en.md": "c4665a0be01d5c4ae694d4531f9037c74795dec2eea01206d30e5573607c1aab",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+        "VERSION": "efdfae9d0dc9b09f9524df6c401bf7143a882469c6243bfbcb0bbeaefe9aa3c1",
         "examples/Task-Checkpoint.json": "201e101c427f89bf9249b9b2ebbd8c05182de8a07e464208df0f57fb96719da1",
         "prompts/Short-Prompt.md": "a98e3b69ba7258145e38e8504e1884465af01aad40c63c54ec466b49f5d1c666",
         "references/Recovery-Playbook.md": "86c41d18882141b7ca9bdfd8c2766b4f6c2cfb7fe424d811b7d4472b3f2b32f9",
@@ -555,13 +557,13 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "8a31c7b6a9aafd0b747202ddeab0768ac7852ee7b2a4266ed0ef36181e31ce0b",
+      "sha256": "b193c66ba6fd0c0b773f29cbbbb4909107f944b5f6c48399b9e0e3abe078ae9d",
       "skill_owned_prompts": [
         "PROMPT.md",
         "prompts/Short-Prompt.md"
       ],
       "slug": "resume-task",
-      "version": "1.0.0"
+      "version": "2.0.0"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -607,47 +609,48 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "description": "Manage long-running work across any compatible AI agents with a persistent Shared-Project-State protocol, restartable phases, verified checkpoints/handoffs, optional Node.js and Python automation, quarantine-first file operations, permission/lock diagnostics, templates, schemas, and worked examples. Use when work may cross sessions, usage limits, crashes, models, or agents; when interrupted work must resume safely; or when temporary/cache/test/tool state needs controlled project-local handling.",
+      "description": "Use the separate local PowerShell state tool only after an explicit owner request; preserve verified checkpoints and handoffs without automatically initializing task state.",
       "files": {
-        "CHANGELOG.md": "b1031b23f9cb6fa68853d15fb5ceba13c93b5e28ef2bc2536e301065819ad598",
-        "PROMPT.md": "fd4c59f717d43cbf435ae5a3c1c613b243264b522424863a0a9d8b0ad0412386",
-        "README.md": "e7b327e2b1bf173ab0b08d7000a5a849e209e99ac5c18ad2ac030b6abec64b9f",
-        "SKILL.md": "ebf5a26edcb267b5f5bca7e4547a78778635d25231ab36797724683763e9cd1a",
-        "VERSION": "44e161e4495cac2cf7858043e9e6418e9579f0ddcfae826f9a372622968ce066",
-        "examples/01-Claude-To-Codex-Handoff.md": "2f2d9076d514b638788c9fb8885026514d7913fc73c2960995ed16a32f4575b0",
-        "examples/02-Codex-To-Claude-Handoff.md": "0205ddd435d330561f5629401fd04edf7c7c92831df044f80f773d4b145f8aa8",
-        "examples/03-Session-Limit-During-Tests.md": "522d7beb61743d421bebe9ff8b1533ebd3ef8fd7a08aa6d29d675f542922d9b9",
-        "examples/04-Crash-Mid-File-Write.md": "9dc629a76053ff81ccd2f8174c979b2b3509d1d00fee597fc5dfcea4a07e2a5e",
-        "examples/05-Locked-Temporary-Directory.md": "6fcced968ce5e628409aa06beb9a45e201842fb19086bdf4ca13ce015935ef11",
-        "examples/06-Read-Only-Generated-Files.md": "e637e09fbf5abbe6af916197e7a0f4a16c9a75f1d8eb57ec45b9ef24643666fb",
-        "examples/07-Windows-Acl-Access-Denied.md": "e7cae487cf6a8caa67b9ebfd32decb792a4983ee1a018d873eea69a897bf3241",
-        "examples/08-Quarantine-And-Restore.md": "2ab8cf79de633fbb5c5334df572e0e83b72f8dcdacc90276363cc9787578fef0",
-        "examples/09-State-Divergence-After-Manual-Edit.md": "f63559e600ea4248b3147367275600a56bf94bfa2bc52f81556093516ad25c90",
-        "examples/10-Uncommitted-Unrelated-Changes.md": "34c7a851fbd27c45423ce93268ecb025d2edd747c075fdd1ae1bc04152073562",
-        "examples/11-Multi-Phase-Node-Project.md": "aa08e836402a5a2f4ed4e53ecabaab323857777d4fb4dd76b3cd2ccc0015834b",
-        "examples/12-Multi-Phase-Python-Project.md": "700416f2bd5ae7d643530e08ed741068a255d86ea8f8b95c079a705e0cdfd0ea",
-        "examples/13-PowerShell-Project.md": "03849e6db70ec0580bcb6ac50515f674f5343d637f41ed7f81fcf4174420056f",
-        "examples/14-No-Git-Project.md": "c2b12f4325e50d68c95b6126fe94e6c8003c3bf9e16054b26589551c9cd01c00",
-        "examples/15-Monorepo-Task.md": "77195aa424e73e5c0517e429bfe483a4cbd71be1b388aefcfc78d0f17eedb65e",
-        "examples/16-Failed-Verification-Gate.md": "aa1962b5a65553ba0cfdf6e900f038c0c335f45abaefc326812a8402d11304c4",
-        "examples/17-Blocked-External-Dependency.md": "cabf7596a3f6a15bb7fb7cd6b6a159b5102d1a6c0ea3d72ea2550b6298340942",
-        "examples/18-Parallel-Agent-Conflict.md": "99ce07015742209c990cd92f8ea332a6de9c2486079922b06b15462de3609ee5",
-        "examples/19-Required-Root-Tool-Folder.md": "a92709ff4da32b17e9babf9028d6b2ab16987879bc807939ebaf14bd3eea5a6d",
-        "examples/20-Final-Closure-And-Retention.md": "7041a2e86b9c3750876c91845de0d8248edcb1c11f2f10621c166f76af6af28b",
+        "CHANGELOG.md": "596482ae281fff46fbc2edc66abd0dd0252b7690035a998fe90ccb43245bc656",
+        "PROMPT.md": "11b33efe2b1d675a03dea8862365f7e5de58bc8746cf10c3830a759371e7b432",
+        "README.md": "51ea3ae17877ee5dc67e193adbf748b12ee77507dd162401b356876348fa706a",
+        "SKILL.md": "6bdc4b03ea4d35d80bfe834b3c29dfa17894ba0bc428c1ef4f0cf57e38dc22f4",
+        "VERSION": "5ec59dc9b30e1df8e3fdae5adc45cd70b414740556237e9c80a9052f88b2d2fe",
+        "examples/01-Claude-To-Codex-Handoff.md": "dbdbecb22b73e62e8cc18301b3eb808ad40f2ee8f61a809948f2abbe73ad010c",
+        "examples/02-Codex-To-Claude-Handoff.md": "d7c104eef3fa397e8e65c8c062738b9b1c07a3e26e44d8eab40f5143e3845390",
+        "examples/03-Session-Limit-During-Tests.md": "3a513177b49db8f61f42d30df74af0b88ba6751fa7d98263fbd59033363caa1c",
+        "examples/04-Crash-Mid-File-Write.md": "c755e131b2d56f6b5f40b17afc3ea98b0d97a2391ae04ffbcee92a6aee705491",
+        "examples/05-Locked-Temporary-Directory.md": "4e95f3e8525e661e51a4c24b48162aa921c00b40a80d2478093c504a9c8d302b",
+        "examples/06-Read-Only-Generated-Files.md": "e6a095550129ffafa35f1d31f36997ff36b0d6682c78fb6faaac1354458e5b98",
+        "examples/07-Windows-Acl-Access-Denied.md": "025ad191142cbaa99531d11ceff9f1d18eb669dacb6e9608f4bf9bdab9462a6e",
+        "examples/08-Quarantine-And-Restore.md": "1c0cdf663d954ef04015990327265c1cab339ad0064b5f7d7f05247e60fd0310",
+        "examples/09-State-Divergence-After-Manual-Edit.md": "db0c6f48dda9e99c9f2ef49af711959d447e4b57f43ae9f7f315a3bc408ff68c",
+        "examples/10-Uncommitted-Unrelated-Changes.md": "c5170351a643f6951aeffe8b4f3c88a169a8a6a7556911d4a78cdd51a128602c",
+        "examples/11-Multi-Phase-Node-Project.md": "2caaad064e2559ecb92c874d2c177c59965fdccad4cef760a924976f1c0480cb",
+        "examples/12-Multi-Phase-Python-Project.md": "37bd6bc6dacf4fd4cf2c74dcaac97f082d28baf1c0c078ded9babdf04bc940cc",
+        "examples/13-PowerShell-Project.md": "2010e5b21d26065022873cadd0a885d83c6c01ee75a5e329e5fba185c14d1544",
+        "examples/14-No-Git-Project.md": "fa9c83ebde57731532e9e68b52d9a4e5437a232a4c0c8f5356d70cc5c64d9ccd",
+        "examples/15-Monorepo-Task.md": "4b28035ff2ddc70ef8263e8c2725ff53d33d348fc3b65812f5bf25415d9f45e9",
+        "examples/16-Failed-Verification-Gate.md": "f95f266bf21e6948210d0ae7be028b4fcf5ffdd3fca49c4754095f9c4335f264",
+        "examples/17-Blocked-External-Dependency.md": "db52c982b06f9d565032e7bcb0909fcb0b0d75bfd27577e187df5ccfe8e843c3",
+        "examples/18-Parallel-Agent-Conflict.md": "52521d73938cf8ec03ecfc9a18314b29d4d7cca72fe0308d9079564f7bc36fe4",
+        "examples/19-Required-Root-Tool-Folder.md": "be288d28f44deefff094d1190e8790b66b67fcdb6a2866b0b161710a2fe5749a",
+        "examples/20-Final-Closure-And-Retention.md": "57ef15d497cbf6c609153e28e3a00f522a500f065abc6056545db29d34d2e6ec",
         "examples/README.md": "62247c8911ffdea8ffbe9689ca979c74da47b2379fadc3559bfe9734983c663c",
         "package.json": "8dc14b2f798a033a28385de9a2e2e7e25d70e13f31098a65e9df4302ff7a89e2",
         "prompts/RichViz.md": "184dc6e27fabba17d98f24574822f8a04d09cc9502cd8643b2eeb4f8310f3639",
         "references/Agent-Handoff-Protocol.md": "d64c9f3ed0916afae68f1e7134179497e03e1c3a610278a96b23c3722b26ba7c",
-        "references/CLI-Reference.md": "14c21cd36db16368a544ce4c5de0db1fe30d02f2a884d24ccfeb1daa9d18ad73",
+        "references/CLI-Reference.md": "6f23f234b14990aa43fbbc6d91ac2709a68a993b16182cb5d21d25c476043db6",
         "references/Examples-Guide.md": "3b3a2e0f416011440f4e4a706d46a7953ac3f2ad0f1fdd4b523077d5958e03ed",
         "references/File-Operations-Safety.md": "d1e27bb53bfa683f866c2960702ce689ae4ad4e9969ae12cdd15bce1c5ead828",
-        "references/Permission-And-Lock-Recovery.md": "55f381b2d61ddfb56fd8e752cc093d58e92592794d76373afdf9414f757ca110",
+        "references/Permission-And-Lock-Recovery.md": "fda95e5269c0d8f02511f26a3872d208f8c9e9441136871249f3beb9a89f1d84",
         "references/Shared-Project-State-Schema.md": "58f4c01559453c1b6a4775b37def4c77dd264e7d3a4cc11acba0bc9cb036c1de",
-        "references/Tool-State-And-Cache-Routing.md": "2b34453647942689e37b7ab337fa48a064c24b77d74599b487808a6caac9a312",
+        "references/Tool-State-And-Cache-Routing.md": "a151af3eeed32ed1cac65803365e9a35cda544e9255ee9456ee9b0d46bf91cbd",
         "schemas/quarantine-record.schema.json": "81fad76e3d2796bef5e899b5c2148ec77e1fc31379091843fe8883460b083223",
         "schemas/state-manifest.schema.json": "f51badd011ec3e993d48045b82e277ba742309a4ccd6cac0a71475f60bd1aecf",
         "scripts/Install-Prerequisites.ps1": "0b56d771e81fcc546c008afa0d13d1d72ec255eaaef42acca59555f9be255d20",
         "scripts/Route-Transient-State.ps1": "695dfc12a0e2cf61a876117f39be0a0831fc26b77f67e194cb3f34d9df57cc9a",
+        "scripts/Validate-State.ps1": "7979a34414460b98424e4da270015831a06e89fd17395fd1217650735690d5d0",
         "scripts/route_transient_state.py": "da824f648293ed40ba33c54459d55292a46259bc65439325795c8a86ffdcf262",
         "scripts/safe_file_ops.py": "a9f72f9743bbdff075c03751e248eda999a1291e297a646d19c019a5c3cd3a93",
         "scripts/sps.mjs": "635f8fd104dabe2f436fa2035a5e5d31030b5e8c8e04983b502ad62a49ee7545",
@@ -684,22 +687,24 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "cfc876a03d24029eb7dc12a8c0a48fda9751c5e2862e3d424597a007bb075c94",
+      "sha256": "44937c770366eb0d8c28ec9c0eba24a600f194220defe3cdd4099371cf25710d",
       "skill_owned_prompts": [
         "PROMPT.md",
         "prompts/RichViz.md"
       ],
       "slug": "shared-project-state-manager",
-      "version": "1.0.1"
+      "version": "2.0.1"
     },
     {
       "customization": "AIPM-owned Skill",
-      "description": "Optimize unnecessary token/context consumption across analysis, strict implementation handoff Markdown and implementation. Apply independent, lightweight support without dropping requirements, safety, tests or verification; prevent redundant reads, repeated output and unnecessary multi-agent fan-out.",
+      "description": "Maintain the mandatory AIPM task scope, evidence-based reads, bounded retries and quality contract throughout every task lifecycle event under Project Manager supervision.",
       "files": {
-        "CHANGELOG.md": "c999b1f7564f1d89caa43c9fd0ad5abeea4d8f9095eec373e6e728aec1b9de67",
-        "README.md": "217bdbe122374a8895a23c95f7ff41a159b8bf50fe4f9d893d7bc4c055683e15",
-        "SKILL.md": "16b9ce206219a7aa47ed686c5aed958bce429c60b38d43e9f7e93faa6de3aa61",
-        "VERSION": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1"
+        "CHANGELOG.md": "8f7bdb308e935e622b8531d931dbf58a0c9637a5e0c112f7cbac59de1a17d1f8",
+        "README.md": "15b8c208b00371e6ca927066ea9fa84a7b04706d4fd94dc57fe74962561fb335",
+        "SKILL.md": "30286503179ddb15741e68b744bc0bb46d16e6c00fc4fa1317b1fd0f3d4e709b",
+        "VERSION": "0dc8489f55b24f8c7f12619f9e5e25a3eab2ce5cce7e057413d9c27c26b7d675",
+        "references/Contract-Template.md": "dc69e296e866f72bf553d9fc73bb4062263f435ab3f03467cc21207e1809957f",
+        "scripts/scope_check.py": "b10e8c6c22f10c5536589b7a5059bd615ffd021c3e42b6e26d6c127fa7b4548a"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -708,17 +713,17 @@
         "source_license_path": "LICENSE",
         "source_license_sha256": "027cd76903cac9d315247201a122ef55ab54ef179da52790e92623cddd358c2a"
       },
-      "name": "token-optimization",
-      "path": "01-Skills-General/token-optimization",
+      "name": "task-scope-contract",
+      "path": "01-Skills-General/task-scope-contract",
       "provenance": {
         "origin": "AIPM_OWNED",
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "7f244c62d91157e1ff077261a5585dd9552a7f7e1350734b8f6c5c23d7a11f4f",
+      "sha256": "74ec4cff212d47e49908a89ade72d7004af8543622fb5bd44827c1826e46be57",
       "skill_owned_prompts": [],
-      "slug": "token-optimization",
-      "version": "1.0.0"
+      "slug": "task-scope-contract",
+      "version": "1.0.2"
     },
     {
       "customization": "AIPM-owned Skill",

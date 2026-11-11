@@ -5,7 +5,7 @@ Use this sequence when Windows or another OS refuses a file operation.
 ## 1. Diagnose
 
 ```powershell
-python .\scripts\safe_file_ops.py diagnose ".\Problem-Path" --project-root .
+.\scripts\sps.ps1 files diagnose ".\Problem-Path" --project-root .
 ```
 
 Check whether the path exists, is readable/writable, appears read-only, and—on Windows—the `icacls` output.
@@ -15,7 +15,7 @@ Check whether the path exists, is readable/writable, appears read-only, and—on
 If the target belongs to the project and only writability is wrong:
 
 ```powershell
-python .\scripts\safe_file_ops.py clear-readonly ".\Problem-Path" --project-root . --confirm CLEAR-READONLY
+.\scripts\sps.ps1 files clear-readonly ".\Problem-Path" --project-root . --confirm CLEAR-READONLY
 ```
 
 ## 3. Live Process Lock
@@ -27,7 +27,7 @@ If ACLs look valid, stop/release the specific authorized watcher/editor/agent/te
 For a project-owned path, after authorization:
 
 ```powershell
-python .\scripts\safe_file_ops.py repair-acl ".\Problem-Path" --project-root . --confirm REPAIR-ACL
+.\scripts\sps.ps1 files repair-acl ".\Problem-Path" --project-root . --confirm REPAIR-ACL
 ```
 
 This resets ACLs to inherited defaults and can remove custom explicit entries, so it is not a routine cleanup command. If elevation is required, the helper does not bypass it.

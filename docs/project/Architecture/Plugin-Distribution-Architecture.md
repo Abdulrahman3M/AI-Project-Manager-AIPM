@@ -11,6 +11,8 @@ The Plugin path complements the platform; it does not replace the Core Engine or
 
 ## Architecture At A Glance
 
+See the [Golden Triangle Operating Model](Golden-Triangle-Operating-Model.md) for task entry, scope and resource responsibilities, and host enforcement limits.
+
 ```text
 Project Owner
     │

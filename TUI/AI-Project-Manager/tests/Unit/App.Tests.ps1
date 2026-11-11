@@ -187,3 +187,67 @@ Assert-True 'Get-AipmField safely handles objects lacking cause and remedy under
 $recoveryUi = Invoke-Ui { Invoke-AipmStateRecovery -Root (Get-TestRoot) -RegistryPath $taskRegRegistry -ProjectId $taskRegProjectId } '{Enter}'
 Assert-True 'Invoke-AipmStateRecovery completes under strict mode without PropertyNotFoundException' ($recoveryUi.Error -eq '') ($recoveryUi.Error + $recoveryUi.Output)
 Assert-Equal 'Invoke-AipmStateRecovery returns false when state has no pending repair' $false $recoveryUi.Value
+
+$strictNullFieldBlock = {
+    Set-StrictMode -Version 2.0
+    $nullFieldObj = [pscustomobject]@{ cause = $null }
+    return ((Get-AipmField $nullFieldObj 'cause' 'Default Cause') -eq 'Default Cause')
+}
+Assert-True 'Get-AipmField falls back to Default when an existing property has a null value' (& $strictNullFieldBlock)
+
+$strictCountBlock = {
+    Set-StrictMode -Version 2.0
+    $emptySubpipeline = if ($false) { 'never' }
+    $cNull = Get-AipmCount $null
+    $cAutoNull = Get-AipmCount $emptySubpipeline
+    $cEmpty = Get-AipmCount @()
+    $cScalarString = Get-AipmCount 'Task-2026-11-06-Single-Item-1ea6ea74c96a'
+    $cScalarObj = Get-AipmCount ([pscustomobject]@{ task_id = 'Task-One' })
+    $cArray = Get-AipmCount @('Task-One', 'Task-Two')
+    $cHash = Get-AipmCount @{ first = 1; second = 2 }
+    return (
+        $cNull -eq 0 -and
+        $cAutoNull -eq 0 -and
+        $cEmpty -eq 0 -and
+        $cScalarString -eq 1 -and
+        $cScalarObj -eq 1 -and
+        $cArray -eq 2 -and
+        $cHash -eq 2
+    )
+}
+Assert-True 'Get-AipmCount safely counts null, scalar string, scalar object, array, and dictionary under strict mode' (& $strictCountBlock)
+
+$singleDriftRoot = Join-Path (Get-TestWork) 'Single Drift Project'
+[void](New-Item -ItemType Directory -Path $singleDriftRoot -Force)
+$singleDriftProjectId = 'Single-Drift-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+$singleDriftReg = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $taskRegRegistry -ProjectRoot $singleDriftRoot -ProjectId $singleDriftProjectId -Alias 'Single Drift Fixture'
+Assert-Equal 'single-task drift fixture registers cleanly' 'PASS' $singleDriftReg.Status
+$singleDriftCreated = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-create' -RegistryPath $taskRegRegistry -ProjectId $singleDriftProjectId -Title 'Single Reconciled Task' -Scope 'Reproduce single-element array unrolling under Set-StrictMode 2.0.'
+Assert-Equal 'single-task drift fixture creates initial task' 'PASS' $singleDriftCreated.Status
+$singleDriftManifestPath = Join-Path (Join-Path $singleDriftRoot 'Shared-Project-State-Manager') 'State-Manifest.json'
+$singleDriftRaw = [System.IO.File]::ReadAllText($singleDriftManifestPath, [System.Text.Encoding]::UTF8)
+$singleDriftParsed = $singleDriftRaw | ConvertFrom-Json
+$singleDriftTaskId = [string](@($singleDriftParsed.tasks.PSObject.Properties)[0].Name)
+$singleDriftMutated = [regex]::Replace($singleDriftRaw, '"revision"\s*:\s*(\d+)', { param($m) '"revision": ' + ([int]$m.Groups[1].Value + 1) }, 1)
+$singleDriftMutated = [regex]::Replace($singleDriftMutated, '"report"\s*:\s*""', '"report": "Direct manifest edit without event file."', 1)
+[System.IO.File]::WriteAllText($singleDriftManifestPath, $singleDriftMutated, (New-Object System.Text.UTF8Encoding($false)))
+
+$singleDriftCancelUi = Invoke-Ui { Invoke-AipmStateRecovery -Root (Get-TestRoot) -RegistryPath $taskRegRegistry -ProjectId $singleDriftProjectId -FailureReason 'INVALID_HISTORY' } '{Enter}02'
+Assert-True 'Invoke-AipmStateRecovery handles 1-element reconciled_tasks without Count PropertyNotFoundException' ($singleDriftCancelUi.Error -eq '' -and $singleDriftCancelUi.Output.Contains('Task State Problem Diagnosed') -and $singleDriftCancelUi.Output.Contains($singleDriftTaskId)) ($singleDriftCancelUi.Error + $singleDriftCancelUi.Output)
+Assert-Equal 'cancelling 1-element drift recovery leaves state untouched and returns false' $false $singleDriftCancelUi.Value
+
+$singleDriftRepairUi = Invoke-Ui { Invoke-AipmStateRecovery -Root (Get-TestRoot) -RegistryPath $taskRegRegistry -ProjectId $singleDriftProjectId -FailureReason 'INVALID_HISTORY' } '{Enter}01{Enter}'
+Assert-True 'confirming 1-element drift recovery repairs state cleanly under strict mode' ($singleDriftRepairUi.Error -eq '' -and $singleDriftRepairUi.Output.Contains('Task State Repaired') -and $singleDriftRepairUi.Value -eq $true) ($singleDriftRepairUi.Error + $singleDriftRepairUi.Output)
+$singleDriftAfter = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskRegRegistry -ProjectId $singleDriftProjectId -TaskId $singleDriftTaskId
+Assert-Equal 'repaired 1-element drift preserves direct manifest task edits' 'Direct manifest edit without event file.' $(if ($singleDriftAfter.Status -eq 'PASS') { [string]$singleDriftAfter.Data.task.report } else { $singleDriftAfter.Reason })
+
+$zeroDriftRoot = Join-Path (Get-TestWork) 'Zero Task Drift Project'
+[void](New-Item -ItemType Directory -Path $zeroDriftRoot -Force)
+$zeroDriftProjectId = 'Zero-Drift-' + [guid]::NewGuid().ToString('N').Substring(0, 8)
+[void](Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'registry-register' -RegistryPath $taskRegRegistry -ProjectRoot $zeroDriftRoot -ProjectId $zeroDriftProjectId -Alias 'Zero Drift Fixture')
+$zeroDriftManifestPath = Join-Path (Join-Path $zeroDriftRoot 'Shared-Project-State-Manager') 'State-Manifest.json'
+$zeroDriftRaw = [System.IO.File]::ReadAllText($zeroDriftManifestPath, [System.Text.Encoding]::UTF8)
+$zeroDriftMutated = [regex]::Replace($zeroDriftRaw, '"revision"\s*:\s*(\d+)', { param($m) '"revision": ' + ([int]$m.Groups[1].Value + 1) }, 1)
+[System.IO.File]::WriteAllText($zeroDriftManifestPath, $zeroDriftMutated, (New-Object System.Text.UTF8Encoding($false)))
+$zeroDriftRepairUi = Invoke-Ui { Invoke-AipmStateRecovery -Root (Get-TestRoot) -RegistryPath $taskRegRegistry -ProjectId $zeroDriftProjectId -FailureReason 'INVALID_HISTORY' } '{Enter}01{Enter}'
+Assert-True 'Invoke-AipmStateRecovery handles 0-element reconciled_tasks without Count PropertyNotFoundException' ($zeroDriftRepairUi.Error -eq '' -and $zeroDriftRepairUi.Output.Contains('Task State Repaired') -and $zeroDriftRepairUi.Value -eq $true) ($zeroDriftRepairUi.Error + $zeroDriftRepairUi.Output)

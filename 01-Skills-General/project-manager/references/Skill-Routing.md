@@ -1,0 +1,11 @@
+# Skill Routing
+
+Start with the Project Manager micro-bootstrap on every AIPM-managed interaction, including an unambiguous single-specialist task. Then route directly to the smallest sufficient specialist set, retaining both mandatory policies. Parse outcome, work mode, deliverable, recipient and constraints before selecting by capability, prerequisites, permissions, verification and overlap. Use the current registry as the catalog; never assume a stale summary is authoritative.
+
+An execution-ready handoff for another agent routes to `create-strict-implementation-handoff`; a generic README or explanation does not. A PowerShell TUI routes to its relevant designer; screenshot reconstruction to `screenshot-to-code`; audio alignment to `audio-timing-author`. Honor explicit owner Skill selection. If no suitable Skill exists, investigate trusted discovery sources when useful, check provenance and permissions, and use a competent verified native fallback when available. Discovery never authorizes installation or execution of external content.
+
+For substantial work define a Team Map of logical workstreams with objective, one lead, optional distinct support, inputs, dependencies, allowed scope, deliverable and verification. Classify candidates as lead, support, reserve or excluded; the two mandatory operational policies remain active regardless of specialist selection. Retire completed specialist workstreams instead of continually loading them. A logical team is not a running agent. Single-agent execution is the default; delegation requires explicit owner permission and non-overlapping assignments.
+
+When a written coordination brief is useful, adapt the [Orchestration Brief](../templates/Orchestration-Brief.md) in an authorized location. The template does not initialize the optional state tool.
+
+The Manager owns priorities, capability selection, dependencies and escalation. The Team Leader prepares bounded assignments, coordinates outputs and integration, and reports progress. The Supervisor independently challenges relevance, scope, governance, tests and integration before accepting each workstream. When Skills conflict, distinguish authority, product behavior and narrow specialist ownership; apply current owner and project rules first, and escalate unresolved product-level decisions rather than blending incompatible rules.

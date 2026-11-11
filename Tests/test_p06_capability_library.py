@@ -34,12 +34,12 @@ EXPECTED_SKILLS = {
     "doc-to-md",
     "powershell-tui-app-designer",
     "professional-word-designer",
-    "project-governance-manager",
-    "project-orchestrator",
+    "project-manager",
+    "task-scope-contract",
     "resume-task",
     "screenshot-to-code",
     "shared-project-state-manager",
-    "token-optimization",
+    "resource-optimization",
     "tui-intelligence",
     "web-design-engineering",
 }
@@ -123,15 +123,15 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_owner_can_remove_a_general_skill_without_a_hardcoded_denylist(self) -> None:
         fixture = copy_library_fixture(self.workspace / "owner-removal", include_registry=False)
         shutil.rmtree(fixture / "01-Skills-General" / "audio-timing-author")
-        shutil.rmtree(fixture / "01-Skills-General" / "project-orchestrator")
+        shutil.rmtree(fixture / "01-Skills-General" / "project-manager")
         shutil.rmtree(fixture / "01-Skills-General" / "tui-intelligence")
         manifest_path = fixture / "Capability-Library" / "First-Party-Skills.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest["skills"] = [item for item in manifest["skills"] if item["slug"] != "tui-intelligence"]
+        manifest["skills"] = [item for item in manifest["skills"] if item["slug"] not in {"tui-intelligence", "project-manager"}]
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         catalog = scan_library(fixture)
         active = {item["slug"] for item in catalog["skills"]}
-        self.assertFalse({"audio-timing-author", "project-orchestrator", "tui-intelligence"} & active)
+        self.assertFalse({"audio-timing-author", "project-manager", "tui-intelligence"} & active)
 
     def test_owner_can_add_a_declared_first_party_skill(self) -> None:
         fixture = copy_library_fixture(self.workspace / "owner-addition", include_registry=False)
@@ -155,7 +155,7 @@ class CapabilityLibraryTests(unittest.TestCase):
         bridge = (package / "AIPM-Agent-Bridge.md").read_text(encoding="utf-8")
         self.assertEqual(manifest["plugin_name"], "aipm-project-agent-bridge")
         self.assertIn("AIPM Core", bridge)
-        self.assertIn("does not install", bridge)
+        self.assertIn("does not enforce host invocation, install or publish itself", bridge)
 
     def test_generated_plugin_manifests_publish_the_project_website(self) -> None:
         package = ROOT / "Plugins" / "aipm-project-agent-bridge"
@@ -249,7 +249,7 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_baseline_refresh_requires_confirmation_reason_and_version_policy(self) -> None:
         fixture = copy_library_fixture(self.workspace / "refresh", include_registry=False)
         initialize_registry(fixture)
-        skill = fixture / "01-Skills-General" / "project-orchestrator"
+        skill = fixture / "01-Skills-General" / "project-manager"
         skill_doc = skill / "SKILL.md"
         skill_doc.write_text(skill_doc.read_text(encoding="utf-8") + "\nApproved test edit.\n", encoding="utf-8")
         registry_path = fixture / "Capability-Library" / "Registry.json"
@@ -261,9 +261,14 @@ class CapabilityLibraryTests(unittest.TestCase):
             refresh_registry(fixture, confirmed=True, reason="Test authorization without version updates")
         self.assertEqual(registry_path.read_bytes(), before)
         skill_version = skill / "VERSION"
-        skill_version.write_text("1.3.11\n", encoding="utf-8")
+        next_skill_version = bump_semver(skill_version.read_text(encoding="utf-8").strip(), "patch")
+        skill_version.write_text(next_skill_version + "\n", encoding="utf-8")
         changelog = skill / "CHANGELOG.md"
-        changelog.write_text("## 1.3.11 — Approved Test Edit\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
+        changelog.write_text(f"## {next_skill_version} — Approved Test Edit\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
+        manifest_path = fixture / "Capability-Library/First-Party-Skills.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        next(item for item in manifest["skills"] if item["slug"] == "project-manager")["version"] = next_skill_version
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         version = fixture / "VERSION"
         next_project_version = bump_semver(version.read_text(encoding="utf-8").strip(), "patch", project=True)
         version.write_text(next_project_version + "\n", encoding="utf-8")
@@ -277,6 +282,8 @@ class CapabilityLibraryTests(unittest.TestCase):
         fixture = copy_library_fixture(self.workspace / "release-baseline", include_registry=True)
         for version_path in (fixture / "01-Skills-General").glob("*/VERSION"):
             version_path.write_text("1.0.0\n", encoding="utf-8")
+            changelog = version_path.parent / "CHANGELOG.md"
+            changelog.write_text("## [1.0.0] — Test Baseline Reset\n\n- Test fixture only.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
         first_party_path = fixture / "Capability-Library" / "First-Party-Skills.json"
         first_party = json.loads(first_party_path.read_text(encoding="utf-8"))
         for skill in first_party["skills"]:

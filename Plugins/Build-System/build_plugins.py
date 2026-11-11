@@ -240,6 +240,7 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
     (stage / "README.md").write_text(
         f"# AI Project Manager {profile['display_name']}\n\n"
         "This local archive contains approved AIPM Skills and Prompts. It is not installed or published and does not grant automatic access to local AIPM projects.\n\n"
+        "For each AIPM-managed task event, begin with `project-manager`, then keep `task-scope-contract` and `resource-optimization` active. This is INSTRUCTION_ONLY guidance, not proof of host interception or actual Skill activation. The separate Shared Project State Manager requires an explicit owner request and local PowerShell invocation; Core task state remains separately permission-gated.\n\n"
         f"Project Website: [{PROJECT_URL}]({PROJECT_URL})\n" + placement,
         encoding="utf-8",
     )
@@ -322,8 +323,11 @@ def build_archives(root: Path | str, platforms: Iterable[str], output: Path | st
     if not requested:
         raise PluginBuildError("At least one Plugin platform is required")
     results = []
-    workspace = project_root / ".test-workspace"
-    workspace.mkdir(exist_ok=True)
+    from aipm_core.capabilities import CapabilityError, plugin_workspace  # noqa: PLC0415
+    try:
+        workspace = plugin_workspace(project_root)
+    except CapabilityError as exc:
+        raise PluginBuildError(str(exc)) from exc
     for name in requested:
         profile = _profile(project_root, name)
         with tempfile.TemporaryDirectory(prefix=f"plugin-{name}-", dir=workspace) as raw_stage:
