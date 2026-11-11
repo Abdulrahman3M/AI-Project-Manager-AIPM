@@ -29,6 +29,8 @@ class ReleasePackagingTests(unittest.TestCase):
 
     def _write_fixture(self) -> None:
         for relative, text in {
+            "Versioning/VERSION": "1.0.2\n",
+            "Versioning/CHANGELOG.md": "# Product Versions\n\n## [1.0.2] — Test Release\n",
             "VERSION": "1.0.2\n",
             "CHANGELOG.md": "# Change Log\n\n## [1.0.2] — Test Release\n",
             "LICENSE": "Apache License 2.0\n",
@@ -41,8 +43,10 @@ class ReleasePackagingTests(unittest.TestCase):
             "TUI/AI-Project-Manager/VERSION": "1.0.2\n",
             "TUI/AI-Project-Manager/CHANGELOG.md": "# TUI\n\n## [1.0.2] — Test Release\n",
             "TUI/AI-Project-Manager/Start-AIPM.ps1": "Write-Output 'AIPM'\n",
-            "Plugins/aipm-project-agent-bridge/VERSION": "1.0.0\n",
-            "Plugins/aipm-project-agent-bridge/CHANGELOG.md": "# Bridge\n\n## [1.0.0] — Initial\n",
+            "Plugins/aipm-project-agent-bridge/VERSION": "1.0.2\n",
+            "Plugins/aipm-project-agent-bridge/CHANGELOG.md": "# Bridge\n\n## [1.0.2] — Test Release\n",
+            "Plugins/VERSION": "1.0.2\n",
+            "Plugins/CHANGELOG.md": "# Plugin Releases\n\n## [1.0.2] — Test Release\n",
             "Plugins/README.md": "# Plugins\n",
             "Plugins/Build-System/build_plugins.py": "# Builder source\n",
             "Plugins/Adapters/Host-Adapter-Contract.md": "# Adapter Contract\n",
@@ -70,6 +74,8 @@ class ReleasePackagingTests(unittest.TestCase):
             names = archive.namelist()
             self.assertIn("AI-Project-Manager-v1.0.2/Release-Manifest.json", names)
             self.assertIn("AI-Project-Manager-v1.0.2/.gitattributes", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Versioning/VERSION", names)
+            self.assertIn("AI-Project-Manager-v1.0.2/Versioning/CHANGELOG.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/docs/research/Screenshot-To-Code-Verification.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/docs/project/Architecture/Plugin-Distribution-Architecture.md", names)
             self.assertIn("AI-Project-Manager-v1.0.2/Templates/Shared-Project-State-Manager-Example/README.md", names)

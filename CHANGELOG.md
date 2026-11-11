@@ -1,5 +1,11 @@
 # AIPM Change Log
 
+## [1.11.10] — Unified Product And Plugin Version
+
+- Unify AIPM platform, PowerShell TUI, and multi-host Plugin distribution versions.
+- Move the authoritative product version and release changelog into `Versioning/`.
+- Preserve the existing GitHub Release page while updating its tag and assets to v1.11.10.
+
 ## [1.11.9] — Orchestration Brief Restoration (Repository Update; Not Published)
 
 - Restore the Project Manager coordination brief without automatically initializing the optional state tool.
@@ -443,3 +449,8 @@
 - Established independent platform, Skill, and Plugin version handling; no imported Skill master was edited.
 - Verified the read-only Universal AI ToolKit `main` source commit and preserved its Personal Use License alongside per-Skill notices.
 - The generated Plugin remains unpublished and uninstalled; no remote write was performed.
+# Product 1.11.10 — Unified Versioning
+
+- Align the AIPM platform, PowerShell TUI, legacy Project Agent Bridge, and ChatGPT, Claude, and Antigravity Plugin package versions at 1.11.10.
+- Establish `Versioning/VERSION` and `Versioning/CHANGELOG.md` as the canonical product release source; compatibility files are synchronized from it.
+- Retain the existing GitHub Release page and update its tag/assets to the unified version.

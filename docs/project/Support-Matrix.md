@@ -1,3 +1,12 @@
+# Support Matrix — v1.11.10 Unified Release
+
+| Component | Version | Release Source |
+|---|---:|---|
+| AIPM Platform | 1.11.10 | `Versioning/VERSION` |
+| PowerShell TUI | 1.11.10 | Generated compatibility mirror |
+| ChatGPT, Claude, Antigravity Plugins | 1.11.10 | Generated from canonical product version |
+| Independently versioned Skills | Per-Skill SemVer | Each Skill `VERSION` |
+
 # AI Project Manager Support Matrix
 
 ## v1.11.9 Orchestration Brief Update

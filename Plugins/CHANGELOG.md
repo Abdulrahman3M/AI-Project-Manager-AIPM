@@ -1,5 +1,7 @@
 # Plugin Distribution Changelog
 
-## 1.11.10
+## [1.11.10] — Unified Product And Plugin Version
 
-- Separate the Plugin release version from the source platform version so an existing host release can be updated without changing the AIPM platform version.
+- Unify AIPM platform, PowerShell TUI, and multi-host Plugin distribution versions.
+- Move the authoritative product version and release changelog into `Versioning/`.
+- Preserve the existing GitHub Release page while updating its tag and assets to v1.11.10.

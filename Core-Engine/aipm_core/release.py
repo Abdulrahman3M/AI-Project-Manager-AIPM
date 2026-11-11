@@ -27,6 +27,7 @@ PUBLIC_DIRECTORIES = (
     "Plugins/Build-System",
     "Plugins/aipm-project-agent-bridge",
     "TUI",
+    "Versioning",
     "Templates/Shared-Project-State-Manager-Example",
     "Templates/FIRG",
     "UX-TUI",
@@ -61,11 +62,16 @@ def _read_version(path: Path, changelog: Path) -> str:
 
 
 def _validate_versions(root: Path) -> tuple[str, str]:
-    version = _read_version(root / "VERSION", root / "CHANGELOG.md")
+    version = _read_version(root / "Versioning" / "VERSION", root / "Versioning" / "CHANGELOG.md")
+    if (root / "VERSION").read_text(encoding="utf-8").strip() != version:
+        raise ReleaseError("Root compatibility VERSION is out of sync")
     tui_version = _read_version(root / "TUI" / "AI-Project-Manager" / "VERSION", root / "TUI" / "AI-Project-Manager" / "CHANGELOG.md")
     if tui_version != version:
         raise ReleaseError("Platform and TUI versions must match")
     plugin_version = _read_version(root / "Plugins" / "aipm-project-agent-bridge" / "VERSION", root / "Plugins" / "aipm-project-agent-bridge" / "CHANGELOG.md")
+    distribution_version = _read_version(root / "Plugins" / "VERSION", root / "Plugins" / "CHANGELOG.md")
+    if plugin_version != version or distribution_version != version:
+        raise ReleaseError("Platform, TUI, Plugin distributions and Project Agent Bridge versions must match")
     return version, plugin_version
 
 

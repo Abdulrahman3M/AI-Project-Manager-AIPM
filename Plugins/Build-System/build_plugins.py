@@ -98,9 +98,16 @@ def load_profiles(root: Path | str = DEFAULT_ROOT) -> list[dict[str, Any]]:
 
 
 def _plugin_version(root: Path) -> str:
-    version = (root / "Plugins" / "VERSION").read_text(encoding="utf-8").strip()
+    version = (root / "Versioning" / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
         raise PluginBuildError("Plugin version must be a valid three-part SemVer")
+    return version
+
+
+def _distribution_version(catalog: dict[str, Any]) -> str:
+    version = catalog.get("plugin_version", catalog.get("platform_version"))
+    if not isinstance(version, str) or version != catalog.get("platform_version"):
+        raise PluginBuildError("Plugin distribution version must match the canonical platform version")
     return version
 
 
@@ -181,9 +188,10 @@ def _chatgpt_interface() -> dict[str, Any]:
 
 
 def _host_manifest(profile: dict[str, Any], catalog: dict[str, Any], path: str) -> dict[str, Any]:
+    version = _distribution_version(catalog)
     base = {
         "name": f"aipm-{profile['id']}-capabilities",
-        "version": catalog["plugin_version"],
+        "version": version,
         "description": "Approved AIPM project-management Skills and Prompts; it does not grant automatic local project access.",
     }
     if profile["id"] == "chatgpt":
@@ -240,7 +248,7 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
         icon = stage / "assets" / "aipm-icon.svg"
         icon.parent.mkdir(parents=True, exist_ok=True)
         icon.write_bytes(CHATGPT_ICON.encode("utf-8"))
-    (stage / "VERSION").write_text(catalog["plugin_version"] + "\n", encoding="utf-8")
+    (stage / "VERSION").write_text(_distribution_version(catalog) + "\n", encoding="utf-8")
     placement = "" if not profile.get("skill_root") else (
         f"\nFor Antigravity, extract `.agents/skills/` into the workspace root so the agent discovers each Skill. "
         "This bundle has no native Plugin installer; runtime discovery must be checked in Antigravity.\n"

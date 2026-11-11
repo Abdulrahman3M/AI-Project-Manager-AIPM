@@ -67,6 +67,7 @@ def copy_library_fixture(destination: Path, *, include_registry: bool) -> Path:
         shutil.copy2(ROOT / "docs/project" / "Provenance" / name, provenance / name)
     shutil.copy2(ROOT / "VERSION", destination / "VERSION")
     shutil.copy2(ROOT / "CHANGELOG.md", destination / "CHANGELOG.md")
+    shutil.copytree(ROOT / "Versioning", destination / "Versioning")
     shutil.copy2(ROOT / "LICENSE", destination / "LICENSE")
     shutil.copy2(ROOT / "NOTICE", destination / "NOTICE")
     if include_registry:
@@ -209,9 +210,11 @@ class CapabilityLibraryTests(unittest.TestCase):
         (skill / "VERSION").write_text("1.0.1\n", encoding="utf-8")
         changelog = skill / "CHANGELOG.md"
         changelog.write_text("## 1.0.1 — Test Edit\n\n- Test fixture.\n\n" + changelog.read_text(encoding="utf-8"), encoding="utf-8")
-        (fixture / "VERSION").write_text("0.1.1\n", encoding="utf-8")
+        (fixture / "Versioning" / "VERSION").write_text("0.1.1\n", encoding="utf-8")
         project_log = fixture / "CHANGELOG.md"
         project_log.write_text("## [0.1.1] — Test Edit\n\n- Test fixture.\n\n" + project_log.read_text(encoding="utf-8"), encoding="utf-8")
+        versioning_log = fixture / "Versioning" / "CHANGELOG.md"
+        versioning_log.write_text("## [0.1.1] — Test Edit\n\n- Test fixture.\n\n" + versioning_log.read_text(encoding="utf-8"), encoding="utf-8")
         with self.assertRaises(CapabilityError):
             refresh_registry(fixture, confirmed=True, reason="An import-byte mutation must stay prohibited")
 
@@ -269,11 +272,13 @@ class CapabilityLibraryTests(unittest.TestCase):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         next(item for item in manifest["skills"] if item["slug"] == "project-manager")["version"] = next_skill_version
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        version = fixture / "VERSION"
+        version = fixture / "Versioning" / "VERSION"
         next_project_version = bump_semver(version.read_text(encoding="utf-8").strip(), "patch", project=True)
         version.write_text(next_project_version + "\n", encoding="utf-8")
         root_log = fixture / "CHANGELOG.md"
         root_log.write_text(f"## [{next_project_version}] — Test Fixture\n\n- Approved test edit.\n\n" + root_log.read_text(encoding="utf-8"), encoding="utf-8")
+        versioning_log = fixture / "Versioning" / "CHANGELOG.md"
+        versioning_log.write_text(f"## [{next_project_version}] — Test Fixture\n\n- Approved test edit.\n\n" + versioning_log.read_text(encoding="utf-8"), encoding="utf-8")
         refreshed = refresh_registry(fixture, confirmed=True, reason="Test-only confirmed edit with required versions")
         self.assertEqual(refreshed["status"], "PASS")
         self.assertEqual(validate_registry(fixture)["status"], "PASS")
@@ -387,8 +392,8 @@ class CapabilityLibraryTests(unittest.TestCase):
         rebuilt = build_plugin(ROOT, target, replace_generated=True)
         self.assertEqual(rebuilt["status"], "PASS")
         manifest = json.loads((target / "AIPM-Distribution-Manifest.json").read_text(encoding="utf-8"))
-        self.assertEqual(manifest["plugin_version"], "1.0.1")
-        self.assertEqual(manifest["previous_plugin_version"], "1.0.0")
+        self.assertEqual(manifest["plugin_version"], json.loads((ROOT / "Capability-Library/Registry.json").read_text(encoding="utf-8"))["platform_version"])
+        self.assertEqual(manifest["previous_plugin_version"], (ROOT / "Versioning" / "VERSION").read_text(encoding="utf-8").strip())
         self.assertEqual(validate_plugin(ROOT, target)["status"], "PASS")
         portable = json.loads((target / "plugin.json").read_text(encoding="utf-8"))
         codex = json.loads((target / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8"))

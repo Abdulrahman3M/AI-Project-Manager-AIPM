@@ -31,7 +31,7 @@ An owner-authorized release-baseline reset also requires `--confirm-release-base
 
 ## Version Policy
 
-Skills use independent SemVer streams. Edits require PATCH, additions/removals require MINOR, and breaking capability changes require MAJOR. The platform follows the owner's established MINOR carry-forward convention (`0.9.5` → `0.10.5`) for MINOR changes. The generated Plugin has an independent standard SemVer stream.
+Skills use independent SemVer streams. Edits require PATCH, additions/removals require MINOR, and breaking capability changes require MAJOR. The product version is owned by `Versioning/VERSION` with its canonical history in `Versioning/CHANGELOG.md`; run `python Maintenance-Tools/Sync-Product-Version.py` to synchronize compatibility files. Platform, TUI, generated legacy bridge, and host Plugin distributions share this release version. Skills retain independent SemVer streams.
 
 ## License Boundaries
 

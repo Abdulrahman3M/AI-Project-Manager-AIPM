@@ -335,7 +335,7 @@ def _catalog(root: Path) -> dict[str, Any]:
     # a registry refresh must never legitimize edits to the 16 byte-preserved imports.
     _initial_migration_check(root, active_slugs, migration)
     _check_sensitive_files(skills_root)
-    project_version = _read_version(root / "VERSION", changelog=root / "CHANGELOG.md")
+    project_version = _read_version(root / "Versioning" / "VERSION", changelog=root / "Versioning" / "CHANGELOG.md")
     source = _source_revision(root)
     skills = []
     owned: dict[str, list[str]] = {}
@@ -744,7 +744,7 @@ def _validate_embedded_plugin(target: Path) -> dict[str, Any]:
     _semver_tuple(version)
     manifest_skills = manifest.get("skills")
     previous_version = manifest.get("previous_plugin_version")
-    if previous_version is not None and (not isinstance(previous_version, str) or not _at_least_version(version, bump_semver(previous_version, "patch"))):
+    if previous_version is not None and (not isinstance(previous_version, str) or not _at_least_version(version, previous_version)):
         raise CapabilityError("Generated Plugin release history is invalid")
     changelog_hash = manifest.get("changelog_sha256")
     if not isinstance(changelog_hash, str) or not re.fullmatch(r"[0-9a-f]{64}", changelog_hash):
@@ -1016,7 +1016,7 @@ def validate_plugin(root: str | Path, target: str | Path) -> dict[str, Any]:
 
 
 def plugin_workspace(root: str | Path) -> Path:
-    """Select an optional existing in-project staging directory without crossing a link."""
+    """Select the existing project-local Plugin staging directory without crossing a link."""
     root = _root(root)
     override = os.environ.get("AIPM_BUILD_WORKSPACE")
     if override:
@@ -1038,8 +1038,9 @@ def plugin_workspace(root: str | Path) -> Path:
         if workspace == root or not workspace.is_relative_to(root):
             raise CapabilityError("Build workspace must be inside the AIPM project")
         return workspace
-    workspace = root / ".test-workspace"
-    workspace.mkdir(parents=True, exist_ok=True)
+    workspace = root / "Shared-Project-State-Manager" / "Test-Workspace"
+    if not workspace.is_dir():
+        raise CapabilityError("Plugin staging workspace must already exist at Shared-Project-State-Manager/Test-Workspace")
     if _has_reparse_point(workspace):
         raise CapabilityError("Build workspace must not be a linked directory")
     return workspace
@@ -1058,7 +1059,12 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
     if target_path.exists():
         try:
             validate_plugin(root, target_path)
-            return {"status": "UNCHANGED", "skill_count": len(catalog["skills"]), "path": target_path.relative_to(root).as_posix()}
+            current_manifest = _manifest_from_plugin(target_path)
+            if current_manifest.get("plugin_version") == catalog["platform_version"]:
+                return {"status": "UNCHANGED", "skill_count": len(catalog["skills"]), "path": target_path.relative_to(root).as_posix()}
+            previous_version = current_manifest["plugin_version"]
+            version = catalog["platform_version"]
+            previous_changelog = (target_path / "CHANGELOG.md").read_text(encoding="utf-8")
         except CapabilityError:
             if replace_generated is not True:
                 raise CapabilityError("Existing Plugin is stale; explicit --replace-generated is required")
@@ -1069,13 +1075,12 @@ def build_plugin(root: str | Path, target: str | Path, *, replace_generated: boo
                 old_manifest = _validate_legacy_embedded_plugin(target_path)
             old_hashes = {item["slug"]: item["source_sha256"] for item in old_manifest["skills"]}
             new_hashes = {item["slug"]: item["sha256"] for item in catalog["skills"]}
-            change = classify_version_change(old_hashes, new_hashes)
             previous_version = old_manifest["plugin_version"]
-            version = bump_semver(previous_version, change if change != "none" else "patch")
+            version = catalog["platform_version"]
             previous_changelog = (target_path / "CHANGELOG.md").read_text(encoding="utf-8")
         backup: Path | None = None
     else:
-        version, backup = PLUGIN_VERSION_INITIAL, None
+        version, backup = catalog["platform_version"], None
     workspace = plugin_workspace(root)
     stage = Path(tempfile.mkdtemp(prefix="p06-plugin-stage-", dir=workspace))
     preserve_backup = False
