@@ -14,8 +14,13 @@ TEST_WORKSPACE = REPOSITORY_ROOT / "Shared-Project-State-Manager/Test-Workspace"
 RUNTIME_ROOT = TEST_WORKSPACE / f"aipm-test-runtime-{os.getpid()}"
 
 
+def _ensure_test_workspace(path: Path = TEST_WORKSPACE) -> None:
+    """Create only the disposable test path, including absent parent folders."""
+    path.mkdir(parents=True, exist_ok=True)
+
+
 def _prepare_runtime() -> None:
-    TEST_WORKSPACE.mkdir(exist_ok=True)
+    _ensure_test_workspace()
     if RUNTIME_ROOT.exists():
         shutil.rmtree(RUNTIME_ROOT)
     RUNTIME_ROOT.mkdir()
