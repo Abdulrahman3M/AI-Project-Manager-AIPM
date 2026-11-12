@@ -103,6 +103,10 @@ def _tree_files(root: Path, *, include_bytecode: bool = False) -> dict[str, str]
     return dict(sorted(result.items()))
 
 
+def _is_bytecode_path(relative: str) -> bool:
+    return any(part.casefold() == "__pycache__" for part in Path(relative).parts) or relative.casefold().endswith((".pyc", ".pyo"))
+
+
 def _tree_hash(files: dict[str, str]) -> str:
     digest = hashlib.sha256()
     for relative, file_hash in sorted(files.items()):
@@ -723,7 +727,13 @@ def _materialize_plugin(root: Path, stage: Path, catalog: dict[str, Any], versio
     for item in catalog["skills"]:
         source = root / item["path"]
         destination = stage / "skills" / item["slug"]
-        shutil.copytree(source, destination, copy_function=shutil.copy2, symlinks=False)
+        shutil.copytree(
+            source,
+            destination,
+            copy_function=shutil.copy2,
+            symlinks=False,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"),
+        )
         if _tree_files(destination) != item["files"]:
             raise CapabilityError(f"Generated Skill copy failed byte-parity check: {item['slug']}")
     for relative, content in _plugin_expected_files(root, catalog, version, previous_version=previous_version, previous_changelog=previous_changelog).items():
@@ -883,15 +893,12 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
             raise CapabilityError(f"Generated Plugin Skill license metadata is invalid: {slug}")
         skill_root = target / "skills" / slug
         copied = _tree_files(skill_root, include_bytecode=True)
-        bytecode_paths = {
-            path for path in files
-            if "__pycache__" in Path(path).parts or path.casefold().endswith((".pyc", ".pyo"))
-        }
+        bytecode_paths = {path for path in files if _is_bytecode_path(path)}
         canonical_files = {path: digest for path, digest in files.items() if path not in bytecode_paths}
         if (
             _tree_hash(files) != source_sha256
-            or any(path not in files or files[path] != digest for path, digest in copied.items())
-            or {path: digest for path, digest in copied.items() if path not in bytecode_paths} != canonical_files
+            or any(path in files and files[path] != digest for path, digest in copied.items())
+            or {path: digest for path, digest in copied.items() if not _is_bytecode_path(path)} != canonical_files
             or any(copied[path] != files[path] for path in bytecode_paths if path in copied)
         ):
             raise CapabilityError(f"Generated Plugin Skill bytes are changed: {slug}")
@@ -899,9 +906,9 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
 
     actual_by_path = _tree_files(target, include_bytecode=True)
     actual_files = set(actual_by_path)
-    if actual_files - expected_paths or (expected_paths - actual_files) - {
+    if {path for path in actual_files - expected_paths if not _is_bytecode_path(path)} or (expected_paths - actual_files) - {
         path for path in expected_paths
-        if "__pycache__" in Path(path).parts or path.casefold().endswith((".pyc", ".pyo"))
+        if _is_bytecode_path(path)
     }:
         raise CapabilityError("Generated Plugin contains missing or unexpected files")
     actual_directories = {

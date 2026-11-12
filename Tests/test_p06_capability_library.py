@@ -141,6 +141,30 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertEqual(plugin["status"], "PASS")
         self.assertEqual(plugin["skill_count"], 14)
 
+    def test_plugin_generation_excludes_and_upgrade_validation_tolerates_bytecode_cache(self) -> None:
+        source_cache = ROOT / "01-Skills-General/project-manager/scripts/__pycache__"
+        created_source_cache = not source_cache.exists()
+        source_cache.mkdir(exist_ok=True)
+        source_bytecode = source_cache / f"aipm-regression-{os.getpid()}.pyc"
+        source_bytecode.write_bytes(b"test-only bytecode")
+        target = self.workspace / "Bytecode-Cache-Sample"
+        try:
+            build_plugin(ROOT, target)
+            copied_skill = target / "skills/project-manager"
+            self.assertFalse((copied_skill / "scripts/__pycache__").exists())
+
+            generated_cache = copied_skill / "scripts/__pycache__"
+            generated_cache.mkdir()
+            (generated_cache / "bootstrap.cpython-312.pyc").write_bytes(b"runtime cache")
+            self.assertEqual(
+                capabilities._validate_upgradeable_embedded_plugin(ROOT, target)["plugin_name"],
+                "aipm-project-agent-bridge",
+            )
+        finally:
+            source_bytecode.unlink(missing_ok=True)
+            if created_source_cache:
+                source_cache.rmdir()
+
     def test_owner_can_remove_a_general_skill_without_a_hardcoded_denylist(self) -> None:
         fixture = copy_library_fixture(self.workspace / "owner-removal", include_registry=False)
         shutil.rmtree(fixture / "01-Skills-General" / "audio-timing-author")
