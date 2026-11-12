@@ -1,0 +1,114 @@
+name: Verified Completion Attestation
+
+on:
+  push:
+    branches:
+      - main
+      - codex/aipm-verified-completion-*
+
+permissions:
+  contents: read
+
+jobs:
+  posix-safe-move-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Exact Source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set Up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Verify POSIX Fail-Closed Compatibility
+        run: python -m unittest Tests.test_posix_safe_move_compatibility -v
+
+  verify-and-attest:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Check Out Exact Source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set Up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Run Full Python Test Suite
+        shell: pwsh
+        run: |
+          $output = & python -m unittest discover -s Tests -p 'test_*.py' -v 2>&1
+          $testExitCode = $LASTEXITCODE
+          $output | ForEach-Object { Write-Host $_ }
+          $output | Set-Content -LiteralPath test-output.txt -Encoding utf8
+          if ($testExitCode -ne 0) { throw "The required Python test suite failed with exit code $testExitCode." }
+          $summary = $output | Select-String -Pattern '^Ran (?<count>[0-9]+) tests? in '
+          if (-not $summary) { throw 'The Python test runner did not emit a test-count summary.' }
+          $count = [int]$summary.Matches[0].Groups['count'].Value
+          if ($count -lt 1) { throw 'The Python test suite ran no tests.' }
+          $pythonSummary = $output | Select-String -Pattern '^OK(?: \(skipped=(?<skipped>[0-9]+)\))?$'
+          if (-not $pythonSummary) { throw 'The Python test runner did not emit a successful result summary.' }
+          $pythonSkipped = if ($pythonSummary.Matches[0].Groups['skipped'].Success) { [int]$pythonSummary.Matches[0].Groups['skipped'].Value } else { 0 }
+          $tuiOutput = & pwsh -NoProfile -File TUI/AI-Project-Manager/tests/Run-Tests.ps1 2>&1
+          $tuiExitCode = $LASTEXITCODE
+          $tuiOutput | ForEach-Object { Write-Host $_ }
+          if ($tuiExitCode -ne 0) { throw "The PowerShell TUI test suite failed with exit code $tuiExitCode." }
+          $tuiSummary = $tuiOutput | Select-String -Pattern 'SUMMARY: (?<passed>[0-9]+) PASS, (?<failed>[0-9]+) FAIL, (?<unverified>[0-9]+) UNVERIFIED'
+          if (-not $tuiSummary) { throw 'The PowerShell test runner did not emit a result summary.' }
+          $tuiPassed = [int]$tuiSummary.Matches[0].Groups['passed'].Value
+          $tuiFailed = [int]$tuiSummary.Matches[0].Groups['failed'].Value
+          $tuiUnverified = [int]$tuiSummary.Matches[0].Groups['unverified'].Value
+          if ($tuiPassed -lt 1 -or $tuiFailed -ne 0 -or $tuiUnverified -ne 0) { throw 'The PowerShell test suite contains failed, unverified, or no tests.' }
+          $receipt = @{
+            task_id = 'Task-AIPM-Verified-Completion'
+            source_commit = $env:GITHUB_SHA
+            test_suite = 'AIPM-Python-Unittest-Discover'
+            test_command = 'python -m unittest discover -s Tests -p test_*.py -v && pwsh -NoProfile -File TUI/AI-Project-Manager/tests/Run-Tests.ps1'
+            result = 'PASS'
+            tests_run = $count
+            failures = 0
+            python_skipped = $pythonSkipped
+            powershell_tests_run = $tuiPassed
+            powershell_failures = $tuiFailed
+            powershell_unverified = $tuiUnverified
+          }
+          $receipt | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath Completion-Receipt.json -Encoding utf8
+      - name: Attest Test Receipt
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: Completion-Receipt.json
+          predicate-type: https://aipm.dev/attestations/verified-completion/v1
+          predicate-path: Completion-Receipt.json
+      - name: Verify Signed Receipt
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify Completion-Receipt.json `
+            --repo $env:GITHUB_REPOSITORY `
+            --signer-workflow "github.com/$env:GITHUB_REPOSITORY/.github/workflows/verified-completion.yml" `
+            --source-digest $env:GITHUB_SHA `
+            --predicate-type https://aipm.dev/attestations/verified-completion/v1 `
+            --format json | Set-Content -LiteralPath Completion-Attestation-Verification.json -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub CLI rejected the signed completion receipt.' }
+      - name: Verify Task Completion Through Core
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python Tests/verify_attested_completion.py
+          --receipt Completion-Receipt.json
+          --source-digest $env:GITHUB_SHA
+          --temp-root $env:RUNNER_TEMP
+      - name: Preserve Receipt And Verification Output
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: aipm-verified-completion-receipt
+          path: |
+            Completion-Receipt.json
+            Completion-Attestation-Verification.json
+            test-output.txt
+          if-no-files-found: error
+          retention-days: 7

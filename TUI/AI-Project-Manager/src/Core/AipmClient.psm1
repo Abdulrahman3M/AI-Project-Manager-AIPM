@@ -99,6 +99,7 @@ function Invoke-AipmCore {
         [string]$Text = '',
         [string]$Result = '',
         [string]$Evidence = '',
+        [string]$AttestationSourceDigest = '',
         [string]$LastVerifiedAction = '',
         [string]$NextAction = '',
         [string]$RelativePath = '',
@@ -132,6 +133,7 @@ function Invoke-AipmCore {
     if ($Text) { $arguments += @('--text', $Text) }
     if ($Result) { $arguments += @('--result', $Result) }
     if ($Evidence) { $arguments += @('--evidence', $Evidence) }
+    if ($AttestationSourceDigest) { $arguments += @('--attestation-source-digest', $AttestationSourceDigest) }
     if ($LastVerifiedAction) { $arguments += @('--last-verified-action', $LastVerifiedAction) }
     if ($NextAction) { $arguments += @('--next-action', $NextAction) }
     if ($RelativePath) { $arguments += @('--relative-path', $RelativePath) }

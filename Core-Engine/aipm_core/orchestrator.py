@@ -8,7 +8,7 @@ VALID_RESULTS = {"PASS", "FAIL", "UNVERIFIED"}
 class VerificationError(ValueError): pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class Acceptance:
     identifier: str
     weight: int
@@ -16,6 +16,10 @@ class Acceptance:
     def __post_init__(self) -> None:
         if self.weight <= 0 or self.result not in VALID_RESULTS:
             raise VerificationError("acceptance requires positive weight and PASS, FAIL, or UNVERIFIED")
+        # This planning model has no trusted attestation verifier. Treat a
+        # caller-provided PASS as a report, never as an authenticated result.
+        if self.result == "PASS":
+            object.__setattr__(self, "result", "UNVERIFIED")
 
 
 @dataclass

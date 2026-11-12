@@ -78,7 +78,7 @@ class IntegratedSecurityAndCrossSessionTests(unittest.TestCase):
             ("task.create", 0, "create", {"task_id": "Task-P09-Alpha", "title": "Alpha Private Task", "scope": "Validate exact handoff boundary"}),
             ("task.plan", 1, "plan", {"task_id": "Task-P09-Alpha", "text": "Read current state before continuation."}),
             ("task.verify", 2, "verify", {"task_id": "Task-P09-Alpha", "result": "PASS", "evidence": "P09 integration assertions passed."}),
-            ("task.report", 3, "report", {"task_id": "Task-P09-Alpha", "text": "Task lifecycle reached verified completion."}),
+            ("task.report", 3, "report", {"task_id": "Task-P09-Alpha", "text": "Task lifecycle received a caller-reported result."}),
         ]
         for command, revision, key, payload in commands:
             with self.subTest(command=command):
@@ -90,8 +90,8 @@ class IntegratedSecurityAndCrossSessionTests(unittest.TestCase):
         projection = json.loads(dashboard.stdout)
         projects = {item["project_id"]: item for item in projection["projects"]}
         self.assertEqual(set(projects), {"P09-Alpha", "P09-Beta"})
-        self.assertEqual(projects["P09-Alpha"]["state"]["tasks"]["Task-P09-Alpha"]["verification"]["result"], "PASS")
-        self.assertEqual(projects["P09-Alpha"]["state"]["task_status"], "COMPLETE")
+        self.assertEqual(projects["P09-Alpha"]["state"]["tasks"]["Task-P09-Alpha"]["verification"]["result"], "UNVERIFIED")
+        self.assertEqual(projects["P09-Alpha"]["state"]["task_status"], "UNVERIFIED")
         self.assertEqual(projects["P09-Beta"]["state"]["tasks"], {})
         self.assertNotIn(str(self.alpha.root), dashboard.stdout)
         self.assertNotIn(str(self.beta.root), dashboard.stdout)
@@ -111,7 +111,7 @@ class IntegratedSecurityAndCrossSessionTests(unittest.TestCase):
         self.assertEqual(refused["reason"], "MANUAL_HANDOFF_REQUIRES_LOCAL_REVALIDATION")
         fresh = receiving_agent.execute("state.read")
         self.assertEqual((fresh["status"], fresh["revision"]), ("PASS", 4))
-        self.assertEqual(fresh["state"]["tasks"]["Task-P09-Alpha"]["report"], "Task lifecycle reached verified completion.")
+        self.assertEqual(fresh["state"]["tasks"]["Task-P09-Alpha"]["report"], "Task lifecycle received a caller-reported result.")
         fresh_process = self._cli_state_read(self.alpha.project_id)
         self.assertEqual(fresh_process.returncode, 0, fresh_process.stderr)
         process_state = json.loads(fresh_process.stdout)

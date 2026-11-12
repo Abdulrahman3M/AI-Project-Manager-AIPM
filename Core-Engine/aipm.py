@@ -31,6 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text")
     parser.add_argument("--result")
     parser.add_argument("--evidence")
+    parser.add_argument("--attestation-source-digest")
     parser.add_argument("--last-verified-action")
     parser.add_argument("--next-action")
     parser.add_argument("--completed-work", action="append", default=[])
@@ -156,7 +157,10 @@ def _task_cli(args: argparse.Namespace, registry_path: Path) -> dict:
         if args.command == "task-verify":
             if not args.result or not args.evidence:
                 raise StateError("VERIFICATION_RESULT_AND_EVIDENCE_REQUIRED")
-            operations.verify(task, args.result, args.evidence)
+            attestation = None
+            if args.attestation_source_digest:
+                attestation = {"receipt": "References/Completion-Receipt.json", "source_digest": args.attestation_source_digest}
+            operations.verify(task, args.result, args.evidence, attestation=attestation)
             return {"schema_version": "1.0", "status": "PASS", "task": operations.read_task(task)}
         if args.command == "task-report":
             if not args.text:

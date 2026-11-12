@@ -49,7 +49,7 @@ class CoreDashboardCliTests(unittest.TestCase):
         ))
         verified = engine.execute(CommandEnvelope(
             "verify-task", "task.verify", "test", project.project_id, 1, "verify-task",
-            {"task_id": "Task-P08", "result": "PASS", "evidence": "Unit test passed."},
+            {"task_id": "Task-P08", "result": "PASS", "evidence": "Caller reported a unit test passed."},
         ))
         self.assertEqual((created["status"], verified["status"]), ("PASS", "PASS"))
 
@@ -62,7 +62,8 @@ class CoreDashboardCliTests(unittest.TestCase):
         self.assertEqual(len(response["projects"]), 1)
         item = response["projects"][0]
         self.assertEqual((item["project_id"], item["alias"], item["state_status"]), ("P08-Dashboard", "Dashboard Fixture", "PASS"))
-        self.assertEqual(item["state"]["tasks"]["Task-P08"]["verification"]["result"], "PASS")
+        self.assertEqual(item["state"]["tasks"]["Task-P08"]["verification"]["result"], "UNVERIFIED")
+        self.assertEqual(item["state"]["task_status"], "UNVERIFIED")
         self.assertNotIn(str(project.root), result.stdout)
         self.assertNotIn("state_root", item)
 
