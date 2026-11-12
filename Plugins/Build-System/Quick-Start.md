@@ -16,7 +16,7 @@ Use one of these platform values:
 
 The command writes a ZIP and its `.sha256` checksum sidecar to `Plugins/Dist/`, then validates the archive before reporting success. It includes every AIPM-approved General Skill, all Skill-owned Prompts, and each approved standalone Prompt.
 
-The archive release version comes from `Plugins/VERSION` and is independent of the source platform version recorded in the distribution manifest. Increment the Plugin version before uploading an update to an existing host release.
+The archive release version comes from `Plugins/VERSION`, which is synchronized with the AIPM Platform and TUI release through `Maintenance-Tools/Sync-Product-Version.py`. The builder rejects a Plugin version that differs from the current platform release. Skill versions remain independently governed.
 
 The archives are local build products: this command does not install, publish, or grant any Plugin access to your local project files. For ChatGPT/Codex, use the import or marketplace workflow provided by your account or workspace. For Claude, use its available Plugin installation workflow. The Antigravity archive is a Skills bundle; extract its `.agents/skills/` folder into the workspace root. This follows Google's documented Skill discovery layout but does not claim a native ZIP installer or runtime acceptance.
 

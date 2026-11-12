@@ -19,7 +19,9 @@ def main() -> int:
         raise SystemExit(f"Versioning/CHANGELOG.md lacks [{version}] entry")
     _, _, tail = entry.partition(f"## [{version}]")
     section = f"## [{version}]" + tail.split("\n## ", 1)[0]
-    mirrors = ("VERSION", "TUI/AI-Project-Manager/VERSION", "Plugins/VERSION", "Plugins/aipm-project-agent-bridge/VERSION")
+    # Product, TUI, and Plugin releases share one synchronized release version.
+    # Skill VERSION files remain independently governed by their own SemVer.
+    mirrors = ("VERSION", "TUI/AI-Project-Manager/VERSION", "Plugins/VERSION")
     for relative in mirrors:
         (ROOT / relative).write_text(version + "\n", encoding="utf-8", newline="\n")
     changelogs = ("CHANGELOG.md", "TUI/AI-Project-Manager/CHANGELOG.md", "Plugins/CHANGELOG.md")
@@ -37,7 +39,7 @@ def main() -> int:
     notes = ROOT / "Versioning" / "Release-Notes" / f"v{version}.md"
     if notes.is_file():
         (ROOT / "docs" / "project" / "Release-Notes" / f"Release-Notes-v{version}.md").write_bytes(notes.read_bytes())
-    print(f"Synchronized product version {version} to {len(mirrors)} compatibility files and {len(changelogs)} component changelogs")
+    print(f"Synchronized shared AIPM/TUI/Plugin version {version} to {len(mirrors)} version files and {len(changelogs)} component changelogs")
     return 0
 
 

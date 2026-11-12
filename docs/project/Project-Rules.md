@@ -22,7 +22,7 @@ AIPM organizes project/task context, task-scoped supporting artifacts, progress,
 
 Each task is isolated beneath the managed project's `Shared-Project-State-Manager/Operations/Tasks/<Task-ID>/`. A task folder inside an already registered project is not registered as a separate project; create a task under the parent project's ID and reference the existing working folder in the scope or instructions. Core's task record is authoritative for task status and checkpoint fields; `Task-State.md`, plan, test-status, and handoff files are generated readable projections. Instructions, handoffs, reports, helper scripts, examples, and references belong in their declared categories. Import only supporting files needed to understand or resume the task. Record implementation paths as references to the originals; do not use task folders as a second working tree. A new agent reads the handoff, then checks current project files, Git state, and actual test evidence before continuing.
 
-For multiple tasks, use one independent ID and artifact folder per task. Updating one task must not overwrite another task's artifacts or source files. AIPM records agent-reported test results; a label such as `PASS` is only as trustworthy as the cited evidence and does not mean Core ran the target-project test suite.
+For multiple tasks, use one independent ID and artifact folder per task. Updating one task must not overwrite another task's artifacts or source files. Core never runs project tests. A caller-reported `PASS` is not proof: verified completion requires the signed GitHub Actions receipt at `References/Completion-Receipt.json`, exact task ID and recorded source commit matches, the configured repository/workflow identity, and the fixed Python plus PowerShell suite contract. Missing or invalid evidence remains `UNVERIFIED`; manual close remains `CLOSED-UNVERIFIED`. Historic records are not retroactively promoted. The current verifier requires the official GitHub CLI; it fails closed if the CLI trust check or signature verification is unavailable.
 
 ## Authoritative Sources
 
@@ -37,7 +37,7 @@ Do not add `02-Skills-Personal`, `import-memory`, or `morning`. The owner may ot
 
 ## Versioning
 
-Use SemVer. Skill edits require PATCH, capability additions/removals require MINOR, and breaking changes require MAJOR. AIPM's platform MINOR version carries the current patch component forward (for example, `0.9.5` to `0.10.5`); Plugin versions are independent standard SemVer. Each release needs matching `VERSION` and changelog metadata.
+Use SemVer. Skill edits require PATCH, capability additions/removals require MINOR, and breaking changes require MAJOR. AIPM Platform, PowerShell TUI, generated legacy bridge, and multi-host Plugin distributions share one synchronized release version. `Versioning/VERSION` is authoritative; `Maintenance-Tools/Sync-Product-Version.py` synchronizes platform, TUI, and Plugin version files and changelogs, while the Capability Library CLI regenerates the legacy bridge from that version. Skill versions remain independently governed by their own `VERSION` files. Each release needs matching `VERSION` and changelog metadata.
 
 The capability registry is a protected integrity baseline. Its initial creation is one-time. A refresh requires explicit confirmation, a nonempty reason, valid metadata, and all required project/Skill version and changelog updates. Refresh through the maintenance CLI only.
 

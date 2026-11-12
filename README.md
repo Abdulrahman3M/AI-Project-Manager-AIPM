@@ -1,7 +1,7 @@
 <div align="center">
   <img src="UX-TUI/Branding/AIPM-Project-Cover.png" alt="AI Project Manager — AIPM project cover" width="100%" />
 
-  <h1>AI Project Manager v1.11.10</h1>
+  <h1>AI Project Manager v1.11.15</h1>
   <p><strong>A governed, local-first workspace for AI-assisted project execution.</strong></p>
 
   <p>
@@ -109,7 +109,7 @@ Read the [Host Adapter Contract](Plugins/Adapters/Host-Adapter-Contract.md) and 
 
 AIPM includes a Python Core Engine, an owner-managed Skill and Prompt library, a generated local Agent Bridge, host capability declarations, and a PowerShell terminal interface. Automated regression suites cover the Core, capability library, and TUI.
 
-The current AIPM repository, PowerShell TUI, and Plugin distributions are `v1.11.10`; the latest published GitHub Release is `v1.11.10`. See the [v1.11.10 release notes](docs/project/Release-Notes/Release-Notes-v1.11.10.md), the [v1.11.9 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.9.md), [v1.11.8 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.8.md), [v1.11.7 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.7.md), [v1.11.6 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.6.md), [v1.11.5 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.5.md), [v1.10.5 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.10.5.md), [v1.10.4 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.10.4.md), [v1.8.2 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.2.md), [v1.8.1 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.1.md), [v1.8.0 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.0.md), [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
+The AIPM Platform, PowerShell TUI, local legacy bridge, and multi-host Plugin distributions share version `v1.11.15`. The latest published GitHub Release remains `v1.11.10`; this repository update is not a formal release. See the [v1.11.15 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.15.md), [v1.11.14 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.14.md), [v1.11.13 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.13.md), [v1.11.12 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.12.md), [v1.11.11 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.11.md), [v1.11.10 release notes](docs/project/Release-Notes/Release-Notes-v1.11.10.md), [v1.11.9 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.9.md), [v1.11.8 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.8.md), [v1.11.7 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.7.md), [v1.11.6 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.6.md), [v1.11.5 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.11.5.md), [v1.10.5 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.10.5.md), [v1.10.4 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.10.4.md), [v1.8.2 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.2.md), [v1.8.1 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.1.md), [v1.8.0 repository-update notes](docs/project/Release-Notes/Release-Notes-v1.8.0.md), [v1.6.13 release notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md), [P00–P10 completion record](docs/project/Project-Completion-Record-v1.4.8.md), and [completion archive](AIPM-Project-Completion-Archive-v1.4.8.zip). All project phases are closed by owner acceptance; P09 includes owner-confirmed real-project and cross-agent use. Optional host Plugin installation and native Antigravity runtime acceptance remain separate, unverified capabilities.
 
 See the [Support Matrix](docs/project/Support-Matrix.md) for verified environments and outstanding host gates, and the [AIPM Architecture And Plugin Distribution](docs/project/Architecture/Plugin-Distribution-Architecture.md) for the current structure and package workflow.
 
@@ -164,7 +164,7 @@ python Maintenance-Tools\Invoke-Capability-Library.py validate-plugin --output P
 - [Intelligent TUI Design System](UX-TUI/README.md)
 - [TUI User Guide](TUI/AI-Project-Manager/README.md)
 - [Support Matrix](docs/project/Support-Matrix.md)
-- [Latest Release Notes](docs/project/Release-Notes/Release-Notes-v1.6.13.md)
+- [Latest Release Notes](docs/project/Release-Notes/Release-Notes-v1.11.10.md)
 
 ## License
 

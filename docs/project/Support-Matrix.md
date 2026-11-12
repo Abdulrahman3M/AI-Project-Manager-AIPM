@@ -1,11 +1,27 @@
-# Support Matrix — v1.11.10 Unified Release
+# Support Matrix — v1.11.15 Repository Update (Unpublished)
 
 | Component | Version | Release Source |
 |---|---:|---|
-| AIPM Platform | 1.11.10 | `Versioning/VERSION` |
-| PowerShell TUI | 1.11.10 | Generated compatibility mirror |
-| ChatGPT, Claude, Antigravity Plugins | 1.11.10 | Generated from canonical product version |
+| AIPM Platform | 1.11.15 | `Versioning/VERSION` |
+| PowerShell TUI | 1.11.15 | Generated compatibility mirror |
+| Legacy Project Agent Bridge | 1.11.15 | Capability Library generated package |
+| ChatGPT, Claude, Antigravity Plugins | 1.11.15 | Shared release version, built from the governed capability sources |
 | Independently versioned Skills | Per-Skill SemVer | Each Skill `VERSION` |
+
+## v1.11.15 Host Runtime And Local Package Status
+
+| Host / Component | Package / Access | Runtime Status | Evidence |
+| --- | --- | --- | --- |
+| Local CLI | In-process Core API; explicit write grant and revision checks | Implemented and tested | Host adapter suite `9/9`; Core does not expose project-source mutation APIs. |
+| Codex Plugin | `Plugins/Dist/AIPM-ChatGPT-Plugin-v1.11.15.zip` | Format verified; runtime unverified | Skill package only; no Core bridge, installation, or host interception. |
+| Claude Code Plugin | `Plugins/Dist/AIPM-Claude-Plugin-v1.11.15.zip` | Format verified; runtime unverified | Skill package only; host tools and permissions remain host-controlled. |
+| Gemini CLI / Antigravity | `Plugins/Dist/AIPM-Antigavity-Plugin-v1.11.15.zip` | Format verified; runtime unverified | Extension package only; Gemini CLI runtime was unavailable for validation. |
+| ChatGPT text conversation | Manual structured handoff | Conversation only; local file access unavailable | Pasted state and evidence remain unverified. |
+| Windows PowerShell 7 | Explicit local PowerShell state-tool invocation | Integration tested | PowerShell 7.6.9 copied-router integration passed `1/1`; current workflow suite reports `278 PASS, 0 FAIL, 0 UNVERIFIED`. |
+| Windows PowerShell 5.1 | Explicit local PowerShell state-tool invocation | Unverified | AuthorizationManager/registry access blocked invocation before script execution. |
+| Ubuntu POSIX | Guarded state mutations | Fail-closed contract tested | `2/2` tests confirm writes/moves/deletes are rejected without changing data; diagnostics and dry-run remain available. POSIX mutation support is not implemented. |
+
+The Plugin archives were not changed by this Core/TUI update; their v1.11.13 hashes remain the current local package evidence. Package-format validation does not establish installation, runtime Skill activation, or lifecycle interception. Core requires a signed GitHub Actions receipt bound to the task and recorded source commit; the authorized temporary-branch run verified the signature and returned `COMPLETE` for its bound test task. Caller-reported `PASS` remains `UNVERIFIED`. Performance and provider token use are `NOT_MEASURED`.
 
 # AI Project Manager Support Matrix
 
