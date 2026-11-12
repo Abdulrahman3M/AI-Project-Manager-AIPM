@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["schema_version","operation","created_at","original_path","quarantined_path","restored","purged"],
   "properties": {
-    "schema_version": {"const": "1.0"},
+    "schema_version": {"enum": ["1.0", "1.1"]},
     "operation": {"const": "quarantine"},
     "created_at": {"type": "string", "format": "date-time"},
     "original_path": {"type": "string", "minLength": 1},

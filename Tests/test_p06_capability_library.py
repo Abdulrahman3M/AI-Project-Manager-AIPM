@@ -98,6 +98,26 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
         self.assertNotIn("morning", {item["slug"] for item in catalog["skills"]})
 
+    def test_capability_inventory_excludes_python_bytecode_and_cache_directories(self) -> None:
+        source = self.workspace / "skill-source"
+        cache = source / "scripts" / "__pycache__"
+        cache.mkdir(parents=True)
+        (source / "scripts" / "policy.py").write_text("# canonical source\n", encoding="utf-8")
+        (source / "scripts" / "policy.pyc").write_bytes(b"compiled cache")
+        (source / "scripts" / "policy.pyo").write_bytes(b"optimized cache")
+        (cache / "policy.cpython-314.pyc").write_bytes(b"bytecode")
+
+        files = capabilities._tree_files(source)
+        complete_tree = capabilities._tree_files(source, include_bytecode=True)
+
+        self.assertEqual(set(files), {"scripts/policy.py"})
+        self.assertEqual(set(complete_tree), {
+            "scripts/__pycache__/policy.cpython-314.pyc",
+            "scripts/policy.py",
+            "scripts/policy.pyc",
+            "scripts/policy.pyo",
+        })
+
     def test_aipm_owned_browser_environment_manager_is_not_byte_preserved_import(self) -> None:
         migration = json.loads((ROOT / "docs" / "project" / "Provenance" / "Skill-Migration-Record.json").read_text(encoding="utf-8"))
         first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))
@@ -120,6 +140,30 @@ class CapabilityLibraryTests(unittest.TestCase):
         plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")
         self.assertEqual(plugin["status"], "PASS")
         self.assertEqual(plugin["skill_count"], 14)
+
+    def test_plugin_generation_excludes_and_upgrade_validation_tolerates_bytecode_cache(self) -> None:
+        source_cache = ROOT / "01-Skills-General/project-manager/scripts/__pycache__"
+        created_source_cache = not source_cache.exists()
+        source_cache.mkdir(exist_ok=True)
+        source_bytecode = source_cache / f"aipm-regression-{os.getpid()}.pyc"
+        source_bytecode.write_bytes(b"test-only bytecode")
+        target = self.workspace / "Bytecode-Cache-Sample"
+        try:
+            build_plugin(ROOT, target)
+            copied_skill = target / "skills/project-manager"
+            self.assertFalse((copied_skill / "scripts/__pycache__").exists())
+
+            generated_cache = copied_skill / "scripts/__pycache__"
+            generated_cache.mkdir()
+            (generated_cache / "bootstrap.cpython-312.pyc").write_bytes(b"runtime cache")
+            self.assertEqual(
+                capabilities._validate_upgradeable_embedded_plugin(ROOT, target)["plugin_name"],
+                "aipm-project-agent-bridge",
+            )
+        finally:
+            source_bytecode.unlink(missing_ok=True)
+            if created_source_cache:
+                source_cache.rmdir()
 
     def test_owner_can_remove_a_general_skill_without_a_hardcoded_denylist(self) -> None:
         fixture = copy_library_fixture(self.workspace / "owner-removal", include_registry=False)

@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.11.10",
+  "platform_version": "1.11.15",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -502,11 +502,11 @@
       "customization": "AIPM-owned Skill",
       "description": "Apply mandatory, quality-first token, time, tool and usage-limit efficiency and owner-controlled delegation throughout every AIPM task lifecycle event.",
       "files": {
-        "CHANGELOG.md": "fae08f050e726e14e8960f1d5017b1818915e4c9a2749d244af842f2d42ae350",
-        "README.md": "82ac1708ce2b57c8d1bf4cfc85738e954d5be2bd967997ac5b87651863209f25",
-        "SKILL.md": "9e95ebf71ac4f0f71eedfdb93a5c261b3667d2d75d076d02d278ec1491813158",
-        "VERSION": "8f74f4a02b9f7e225a14ea2a775d0c0ae6e7a683a546e7ecb50af3823f5d6fcc",
-        "scripts/resource_policy.py": "77cf1e3d5009d02cca2e9f548f8a46cffa0721e8bde4d0bbcb5473e40b21c35c"
+        "CHANGELOG.md": "9dd25ad3dd54559f4a92ef3f8a90397eab2eb08e0d688cd062f939b8842e36b6",
+        "README.md": "711fd09112cb5489e11cbbf39eaa78282c0ce1deecb087415e42429492684970",
+        "SKILL.md": "3a3347839d2df32546cf914cfc023a967537b56e3218c9759691502412f78ca8",
+        "VERSION": "2ba6fd74b89fc9b132bedccf4d179978eef150b2d80aa8bd0b54fdcf3bcd70ca",
+        "scripts/resource_policy.py": "28cc42ebcc1637714384f41730f9fd1e506ab8b529d8297383c30411a7f87a6d"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -522,10 +522,10 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "c1ee35bc56cbfa36dd194669dd612924eee0a6aa189dcb0fdf98c63eae992c86",
+      "sha256": "cb0f4863883fa8673635f965e1f51f7636639717e5c1f7fbc4fcbed66f431e2b",
       "skill_owned_prompts": [],
       "slug": "resource-optimization",
-      "version": "2.0.2"
+      "version": "2.0.3"
     },
     {
       "customization": "AIPM-owned Skill",
@@ -611,11 +611,11 @@
       "customization": "AIPM-owned Skill",
       "description": "Use the separate local PowerShell state tool only after an explicit owner request; preserve verified checkpoints and handoffs without automatically initializing task state.",
       "files": {
-        "CHANGELOG.md": "596482ae281fff46fbc2edc66abd0dd0252b7690035a998fe90ccb43245bc656",
+        "CHANGELOG.md": "da0aa7130848f87103804e719de66c0e09aa0f7d2848638ec30db6bb4fb35cd4",
         "PROMPT.md": "11b33efe2b1d675a03dea8862365f7e5de58bc8746cf10c3830a759371e7b432",
-        "README.md": "51ea3ae17877ee5dc67e193adbf748b12ee77507dd162401b356876348fa706a",
-        "SKILL.md": "6bdc4b03ea4d35d80bfe834b3c29dfa17894ba0bc428c1ef4f0cf57e38dc22f4",
-        "VERSION": "5ec59dc9b30e1df8e3fdae5adc45cd70b414740556237e9c80a9052f88b2d2fe",
+        "README.md": "b0ffa218b7dbb81f503c5be2db1c91a5097bf52cc17b9a7f78937879193e37a3",
+        "SKILL.md": "47a27b7aa79cfaa93dc58f77a385bd2dc38ab98b072c25c233284edd4bdcd693",
+        "VERSION": "fe1c719f2145676b5256737fbbab0de27ba335231497f4cb6e07a67ecc1a515b",
         "examples/01-Claude-To-Codex-Handoff.md": "dbdbecb22b73e62e8cc18301b3eb808ad40f2ee8f61a809948f2abbe73ad010c",
         "examples/02-Codex-To-Claude-Handoff.md": "d7c104eef3fa397e8e65c8c062738b9b1c07a3e26e44d8eab40f5143e3845390",
         "examples/03-Session-Limit-During-Tests.md": "3a513177b49db8f61f42d30df74af0b88ba6751fa7d98263fbd59033363caa1c",
@@ -640,20 +640,22 @@
         "package.json": "8dc14b2f798a033a28385de9a2e2e7e25d70e13f31098a65e9df4302ff7a89e2",
         "prompts/RichViz.md": "184dc6e27fabba17d98f24574822f8a04d09cc9502cd8643b2eeb4f8310f3639",
         "references/Agent-Handoff-Protocol.md": "d64c9f3ed0916afae68f1e7134179497e03e1c3a610278a96b23c3722b26ba7c",
-        "references/CLI-Reference.md": "6f23f234b14990aa43fbbc6d91ac2709a68a993b16182cb5d21d25c476043db6",
+        "references/CLI-Reference.md": "0fbb98701b0fe746f9c8b7aa7d0bbcced27fdedd3e9a5856e25a846b34f4e052",
         "references/Examples-Guide.md": "3b3a2e0f416011440f4e4a706d46a7953ac3f2ad0f1fdd4b523077d5958e03ed",
-        "references/File-Operations-Safety.md": "d1e27bb53bfa683f866c2960702ce689ae4ad4e9969ae12cdd15bce1c5ead828",
+        "references/File-Operations-Safety.md": "29652b94b61030bc6f69dce5e4441a4cb45578cd03d0834dd055d98ccd905dc6",
         "references/Permission-And-Lock-Recovery.md": "fda95e5269c0d8f02511f26a3872d208f8c9e9441136871249f3beb9a89f1d84",
         "references/Shared-Project-State-Schema.md": "58f4c01559453c1b6a4775b37def4c77dd264e7d3a4cc11acba0bc9cb036c1de",
-        "references/Tool-State-And-Cache-Routing.md": "a151af3eeed32ed1cac65803365e9a35cda544e9255ee9456ee9b0d46bf91cbd",
-        "schemas/quarantine-record.schema.json": "81fad76e3d2796bef5e899b5c2148ec77e1fc31379091843fe8883460b083223",
+        "references/Tool-State-And-Cache-Routing.md": "bf6d7c38d92dfcf48bc5822d1685f976b1910ebbdfe99b2eb3c11cab15c48dec",
+        "schemas/quarantine-record.schema.json": "cf415770afa86d404c1fd46f4afe34c288fdc7bd1310f08bea778beacfeb2f4f",
         "schemas/state-manifest.schema.json": "f51badd011ec3e993d48045b82e277ba742309a4ccd6cac0a71475f60bd1aecf",
         "scripts/Install-Prerequisites.ps1": "0b56d771e81fcc546c008afa0d13d1d72ec255eaaef42acca59555f9be255d20",
         "scripts/Route-Transient-State.ps1": "695dfc12a0e2cf61a876117f39be0a0831fc26b77f67e194cb3f34d9df57cc9a",
         "scripts/Validate-State.ps1": "7979a34414460b98424e4da270015831a06e89fd17395fd1217650735690d5d0",
-        "scripts/route_transient_state.py": "da824f648293ed40ba33c54459d55292a46259bc65439325795c8a86ffdcf262",
-        "scripts/safe_file_ops.py": "a9f72f9743bbdff075c03751e248eda999a1291e297a646d19c019a5c3cd3a93",
-        "scripts/sps.mjs": "635f8fd104dabe2f436fa2035a5e5d31030b5e8c8e04983b502ad62a49ee7545",
+        "scripts/guarded_state_io.py": "dc2f555c1028b8aa5c3fc85379665565bd06f8adbe6be27d6511e0d07ab66e69",
+        "scripts/route_transient_state.py": "17a75fd105591e62d690a2733d974d064f5825731647a19fc46701a7d2d701a7",
+        "scripts/safe_file_ops.py": "5d8e85bfac68ce7c80d727fddbdd88cb81555c6e470a65c1a1a7476dfc02db3c",
+        "scripts/safe_move.py": "cb43269f68009f15bf2fff267d0c11b9ef3a919f0d2b4ea2c4ae3f61fbf5b6f0",
+        "scripts/sps.mjs": "fa455d864d35eaf67eea09fba9d4ecdeb68527d666ca2e74502f310fd6992cbd",
         "scripts/sps.ps1": "b12ee30a141ae5b882876ae783315271fdd2823acae0f957a711590ea09ffbf0",
         "scripts/validate_state.py": "20742ffa35fa97272c5127ad272a1ff3a5ed93e0af01d2d78b066659fcc2d974",
         "templates/Blockers.md": "08034ea7ce6b539d6b3568dfa0f4024d3b36b64e509b8aa4291ddd6b99cb4b99",
@@ -665,12 +667,16 @@
         "templates/Project-State.md": "e9d62515e1c8f3e143fe59be71fbbedf8d8503eb375c5d4036fa09b94bb79afa",
         "templates/Root-Exceptions.md": "1a641b0bb995851e102e7f7cdbb688d6231ee49058f6b3d0e3b300b304ab92dc",
         "templates/Route-Transient-State.ps1": "695dfc12a0e2cf61a876117f39be0a0831fc26b77f67e194cb3f34d9df57cc9a",
-        "templates/Route-Transient-State.py": "da824f648293ed40ba33c54459d55292a46259bc65439325795c8a86ffdcf262",
+        "templates/Route-Transient-State.py": "17a75fd105591e62d690a2733d974d064f5825731647a19fc46701a7d2d701a7",
         "templates/State-Manifest.json": "5c5ebf4870e59fcb3138840c8ccf10559244a6e8021298568cf576b58d7c4b0f",
         "templates/Task-State.md": "1647f4fbc5ffbb425d2e1d730db99daf83d11ce229e4b9217c53b575bce4ae46",
         "templates/Verification.md": "71994b006373a1906da23de3ef87656883baf7438f98bd6464384c70ef34b23a",
-        "tests/sps.test.mjs": "38260a305c9c0771318414342d6db30ac01cc7bc99e2e538e0ecb4272e3ba94c",
-        "tests/test_safe_file_ops.py": "83810a19e91a6198b9cb6a2ee23147ee2642e8e2cd1c4785b12e518a9604ab07",
+        "templates/safe_move.py": "cb43269f68009f15bf2fff267d0c11b9ef3a919f0d2b4ea2c4ae3f61fbf5b6f0",
+        "tests/sps.test.mjs": "b6cc292be0df5857e8bcc0ef1d4bfab4d95e43172e45d76dcc9689c763d11a0b",
+        "tests/test_guarded_state_io.py": "84c8d5330031d74939ca5ee8a632f5a2dd56503178d1d66b9323bb2e0516850a",
+        "tests/test_powershell_state_tool.py": "12919e0cecef218879f0daf8064a5139c5ac919187ab4d4a1d3abab11f305652",
+        "tests/test_route_transient_state.py": "85c34c03a59e0ef8fd59c4e0a8e98353141bdcaf640ff7671f5f3cbd3cb786cb",
+        "tests/test_safe_file_ops.py": "1b8a92ef7b1cd6ebd277c1c058a03a659a2ac7a5e3ae31002da5fc86c7f9a97d",
         "tests/test_validate_state.py": "09eb96ef54aa036bdbf5c29b4f262d4fdd4938fef34af93ea8d0e021f0934cd1"
       },
       "license": {
@@ -687,24 +693,24 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "44937c770366eb0d8c28ec9c0eba24a600f194220defe3cdd4099371cf25710d",
+      "sha256": "3ba6dd8f45c6b724a65703d5b40bd5d505b3a9570dead54ab3a3852235d4dd39",
       "skill_owned_prompts": [
         "PROMPT.md",
         "prompts/RichViz.md"
       ],
       "slug": "shared-project-state-manager",
-      "version": "2.0.1"
+      "version": "2.0.4"
     },
     {
       "customization": "AIPM-owned Skill",
       "description": "Maintain the mandatory AIPM task scope, evidence-based reads, bounded retries and quality contract throughout every task lifecycle event under Project Manager supervision.",
       "files": {
-        "CHANGELOG.md": "8f7bdb308e935e622b8531d931dbf58a0c9637a5e0c112f7cbac59de1a17d1f8",
-        "README.md": "15b8c208b00371e6ca927066ea9fa84a7b04706d4fd94dc57fe74962561fb335",
-        "SKILL.md": "30286503179ddb15741e68b744bc0bb46d16e6c00fc4fa1317b1fd0f3d4e709b",
-        "VERSION": "0dc8489f55b24f8c7f12619f9e5e25a3eab2ce5cce7e057413d9c27c26b7d675",
+        "CHANGELOG.md": "55ac0f62538ad29ee3456e604f745565a08173d29c504110c8ac25d3dbb0ecab",
+        "README.md": "21d8b5ed37ef98dd162cba517226f41f46e5d5a7471f500887b240546eef4f74",
+        "SKILL.md": "bddd7c60c71daa867e10e14b68d2402d78844a3ceb3b4d1a2b65ac583f43f5a5",
+        "VERSION": "fc1c281f1d0879bb81d24496eb278296d469a4c7d78565b035a14b51eab620b3",
         "references/Contract-Template.md": "dc69e296e866f72bf553d9fc73bb4062263f435ab3f03467cc21207e1809957f",
-        "scripts/scope_check.py": "b10e8c6c22f10c5536589b7a5059bd615ffd021c3e42b6e26d6c127fa7b4548a"
+        "scripts/scope_check.py": "d601f38f7631b7d9585714a4dcec111b689a7f29c69c842dc867d2073640d931"
       },
       "license": {
         "aipm_personal_license_applies": true,
@@ -720,10 +726,10 @@
         "owner": "Abdulrahman Elbatrah",
         "source_reference": "AI Project Manager"
       },
-      "sha256": "74ec4cff212d47e49908a89ade72d7004af8543622fb5bd44827c1826e46be57",
+      "sha256": "4d3d28ad181bb0d71db6f8881d8aab633cc9cadb32fe8cf74b76ca940d30ea00",
       "skill_owned_prompts": [],
       "slug": "task-scope-contract",
-      "version": "1.0.2"
+      "version": "1.0.3"
     },
     {
       "customization": "AIPM-owned Skill",

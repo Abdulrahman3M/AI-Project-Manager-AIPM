@@ -35,4 +35,4 @@ Adapt targets and observations for tokens, calls, elapsed time, limits, risk, de
 
 ## Reporting/Evidence
 
-Report actual measured calls, time and tokens only where reliably available, and distinguish measurements from estimates and `NOT_MEASURED`. List meaningful remaining limits and required checks. Never claim that the [decision checker](scripts/resource_policy.py) launches agents, queries a provider or enforces a host's tools; it only assesses supplied records.
+Report actual measured calls, time and tokens only where reliably available, and distinguish measurements from estimates and `NOT_MEASURED`. List meaningful remaining limits and required checks. Never claim that the [decision checker](scripts/resource_policy.py) launches agents, queries a provider or enforces a host's tools; it only assesses supplied records. Its boundary comparison normalizes Unicode, checks lexical overlap and conservatively rejects names resembling Windows short aliases, including potentially legitimate names of that form. `ALLOW_PLAN` does not resolve links or establish actual filesystem separation. Verify real boundaries independently before any authorized delegation.

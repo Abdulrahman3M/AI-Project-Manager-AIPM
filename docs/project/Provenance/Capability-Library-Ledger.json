@@ -117,8 +117,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "c1ee35bc56cbfa36dd194669dd612924eee0a6aa189dcb0fdf98c63eae992c86",
-      "local_version": "2.0.2",
+      "local_sha256": "cb0f4863883fa8673635f965e1f51f7636639717e5c1f7fbc4fcbed66f431e2b",
+      "local_version": "2.0.3",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],
@@ -165,8 +165,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "44937c770366eb0d8c28ec9c0eba24a600f194220defe3cdd4099371cf25710d",
-      "local_version": "2.0.1",
+      "local_sha256": "3ba6dd8f45c6b724a65703d5b40bd5d505b3a9570dead54ab3a3852235d4dd39",
+      "local_version": "2.0.4",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],
@@ -181,8 +181,8 @@
     },
     {
       "customization": "AIPM-owned Skill",
-      "local_sha256": "74ec4cff212d47e49908a89ade72d7004af8543622fb5bd44827c1826e46be57",
-      "local_version": "1.0.2",
+      "local_sha256": "4d3d28ad181bb0d71db6f8881d8aab633cc9cadb32fe8cf74b76ca940d30ea00",
+      "local_version": "1.0.3",
       "origin": "AIPM_OWNED",
       "original_author": "Abdulrahman Elbatrah",
       "retained_skill_notices": [],

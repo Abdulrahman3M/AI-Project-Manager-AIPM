@@ -14,11 +14,13 @@ The file helper solves project-local cleanup and relocation problems without bec
 
 ## Project Root Boundary
 
-Every helper operation resolves against `--project-root` and refuses paths that escape it.
+Every helper operation resolves against `--project-root` and refuses paths that escape it. Mutating file operations also refuse project metadata directories (`.git`, `.agents`, `.codex`) and both project-state directory names, including nested occurrences. Use the owning state tool for its own records.
 
 ## Quarantine
 
 `quarantine` moves a path to `Shared-Project-State/Quarantine/Items` and writes a recovery record under `Quarantine/Records`. `restore` refuses to overwrite an occupied original path.
+
+New `1.1` records bind the original relative path to the item name and are opened exclusively during restore or purge. This detects a changed record path; it does not authenticate data against someone who can alter both the record and the item. Older `1.0` records remain intact but require manual review before recovery. Previous record bytes are saved beside the record before a state change. Guarded mutations use Windows handles and fail closed on other platforms until equivalent protection is implemented and tested.
 
 ## Destructive Cleanup
 
@@ -27,6 +29,7 @@ Every helper operation resolves against `--project-root` and refuses paths that 
 ## Permission Changes
 
 `clear-readonly` requires `--confirm CLEAR-READONLY`.
+On Windows it inspects and holds the target tree before changing attributes, and rejects any link or reparse point; the guarded implementation currently fails closed on other platforms pending equivalent verified support.
 
 `repair-acl` is Windows-only and runs `icacls <path> /inheritance:e /reset` (recursively for directories unless disabled). It requires `--confirm REPAIR-ACL`. It does not run `takeown`, grant Everyone/full control, self-elevate, or disable security controls.
 

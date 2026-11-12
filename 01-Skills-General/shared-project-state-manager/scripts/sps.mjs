@@ -9,6 +9,10 @@ const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_ROOT = path.resolve(SCRIPT_DIR, '..');
 const TEMPLATE_ROOT = path.join(SKILL_ROOT, 'templates');
 const STATE_ROOT_NAME = 'Shared-Project-State';
+const GUARDED_IO = path.join(SCRIPT_DIR, 'guarded_state_io.py');
+let activeRoot = null;
+let activeRootIdentity = null;
+const manifestBaselines = new WeakMap();
 const REQUIRED_ROOT_FILES = [
   'README.md',
   'State-Manifest.json',
@@ -49,11 +53,41 @@ function parseArgs(argv) {
 }
 
 function projectRoot(flags) {
-  return path.resolve(String(flags['project-root'] || process.cwd()));
+  const root = path.resolve(String(flags['project-root'] || process.cwd()));
+  rejectLinks(root);
+  const rootStat = fs.statSync(root, { bigint: true });
+  const identity = [String(rootStat.dev & 0xffffffffn), String(rootStat.ino)];
+  if (activeRoot && (activeRoot !== root || identity.some((value, index) => value !== activeRootIdentity[index]))) {
+    fail('Project root identity changed since it was selected.');
+  }
+  activeRoot = root;
+  activeRootIdentity = identity;
+  return root;
 }
 
 function stateRoot(flags) {
-  return path.join(projectRoot(flags), STATE_ROOT_NAME);
+  const root = projectRoot(flags);
+  const shared = path.join(root, STATE_ROOT_NAME);
+  ensureWithin(root, shared);
+  return shared;
+}
+
+function rejectLinks(target) {
+  const absolute = path.resolve(target);
+  const parsed = path.parse(absolute);
+  let current = parsed.root;
+  for (const part of absolute.slice(parsed.root.length).split(path.sep).filter(Boolean)) {
+    current = path.join(current, part);
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink()) fail(`Linked path is not allowed: ${current}`);
+      const real = fs.realpathSync.native(current);
+      const normalize = (value) => process.platform === 'win32' ? path.normalize(value).toLowerCase() : path.normalize(value);
+      if (normalize(real) !== normalize(current)) fail(`Redirected path is not allowed: ${current}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+  }
 }
 
 function ensureWithin(root, target) {
@@ -61,6 +95,7 @@ function ensureWithin(root, target) {
   if (rel.startsWith('..') || path.isAbsolute(rel)) {
     fail(`Path escapes project root: ${target}`);
   }
+  rejectLinks(target);
 }
 
 function nowIso() {
@@ -75,15 +110,37 @@ function slug(value) {
     .replace(/^-|-$/g, '') || 'Task';
 }
 
+function validTaskId(value) {
+  return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(value)
+    && !value.endsWith('.') && !/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)/i.test(value);
+}
+
 function readText(file) {
   return fs.readFileSync(file, 'utf8');
 }
 
+function guardedIo(action, target, data, baseline) {
+  if (!activeRoot) fail('Project root has not been selected.');
+  const request = { action, project_root: activeRoot, root_identity: activeRootIdentity, path: target };
+  if (data !== undefined) request.data = Buffer.from(data).toString('base64');
+  if (baseline) Object.assign(request, { sha256: baseline.sha256, identity: baseline.identity });
+  const python = process.platform === 'win32' ? 'python' : 'python3';
+  const result = spawnSync(python, [GUARDED_IO], { input: JSON.stringify(request), encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+  if (result.error) fail(`Secure state I/O is unavailable: ${result.error.message}`);
+  let reply;
+  try { reply = JSON.parse(result.stdout); } catch { fail('Secure state I/O returned an invalid response.'); }
+  if (result.status !== 0 || !['PASS', 'EXISTS'].includes(reply.status)) fail(`Secure state I/O failed: ${reply.reason || result.stderr}`);
+  return reply;
+}
+
 function writeText(file, content, { overwrite = false } = {}) {
-  if (fs.existsSync(file) && !overwrite) return false;
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, content, 'utf8');
-  return true;
+  rejectLinks(file);
+  if (overwrite) {
+    const baseline = guardedIo('read', file);
+    guardedIo('update', file, content, baseline);
+    return true;
+  }
+  return guardedIo('create', file, content).status === 'PASS';
 }
 
 function renderTemplate(name, values) {
@@ -93,9 +150,16 @@ function renderTemplate(name, values) {
 
 function loadManifest(root) {
   const file = path.join(root, 'State-Manifest.json');
+  rejectLinks(file);
   if (!fs.existsSync(file)) fail(`Missing ${file}. Run 'sps init' first.`);
   try {
-    return JSON.parse(readText(file));
+    const baseline = guardedIo('read', file);
+    const manifest = JSON.parse(Buffer.from(baseline.data, 'base64').toString('utf8'));
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) || !validTaskId(manifest.task_id)) {
+      throw new Error('Invalid task identity');
+    }
+    manifestBaselines.set(manifest, baseline);
+    return manifest;
   } catch (error) {
     fail(`State-Manifest.json is invalid JSON: ${error.message}`);
   }
@@ -103,7 +167,11 @@ function loadManifest(root) {
 
 function saveManifest(root, manifest) {
   manifest.updated_at = nowIso();
-  fs.writeFileSync(path.join(root, 'State-Manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  const target = path.join(root, 'State-Manifest.json');
+  rejectLinks(target);
+  const baseline = manifestBaselines.get(manifest);
+  if (!baseline) fail('Manifest was not read through guarded state I/O.');
+  guardedIo('update', target, `${JSON.stringify(manifest, null, 2)}\n`, baseline);
 }
 
 function gitSnapshot(root) {
@@ -127,6 +195,7 @@ function commandInit(flags) {
   ensureWithin(root, shared);
   const title = String(flags.title || 'Untitled Task');
   const taskId = slug(flags['task-id'] || `Task-${new Date().toISOString().slice(0, 10)}-${title}`);
+  if (!validTaskId(taskId)) fail('Invalid task identity.');
   const agent = String(flags.agent || 'Unknown-Agent');
   const git = gitSnapshot(root);
   const values = {
@@ -153,7 +222,8 @@ function commandInit(flags) {
     path.join(shared, 'Quarantine', 'Items'),
     path.join(shared, 'Quarantine', 'Records')
   ];
-  dirs.forEach((d) => fs.mkdirSync(d, { recursive: true }));
+  dirs.forEach((d) => ensureWithin(root, d));
+  dirs.forEach((d) => { guardedIo('mkdir', d); ensureWithin(root, d); });
 
   const mappings = [
     ['Project-State.md', path.join(shared, 'Current-State.md')],
@@ -177,19 +247,21 @@ function commandInit(flags) {
   const manifestPath = path.join(shared, 'State-Manifest.json');
   if (!fs.existsSync(manifestPath)) {
     const manifest = JSON.parse(renderTemplate('State-Manifest.json', values));
-    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    created += 1;
+    if (writeText(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)) created += 1;
   }
 
   const routePy = path.join(SCRIPT_DIR, 'route_transient_state.py');
   const routePs1 = path.join(SCRIPT_DIR, 'Route-Transient-State.ps1');
-  if (fs.existsSync(routePy)) {
-    fs.copyFileSync(routePy, path.join(shared, 'Route-Transient-State.py'));
-    created += 1;
-  }
-  if (fs.existsSync(routePs1)) {
-    fs.copyFileSync(routePs1, path.join(shared, 'Route-Transient-State.ps1'));
-    created += 1;
+  const safeMove = path.join(SCRIPT_DIR, 'safe_move.py');
+  for (const [source, name] of [[routePy, 'Route-Transient-State.py'], [routePs1, 'Route-Transient-State.ps1'], [safeMove, 'safe_move.py']]) {
+    if (!fs.existsSync(source)) continue;
+    try {
+      const target = path.join(shared, name);
+      ensureWithin(root, target);
+      if (guardedIo('create', target, fs.readFileSync(source)).status === 'PASS') created += 1;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
   }
 
   info(`Initialized ${shared}`);
@@ -256,7 +328,7 @@ function commandDoctor(flags) {
 
 function nextCheckpointNumber(dir) {
   if (!fs.existsSync(dir)) return 1;
-  const nums = fs.readdirSync(dir)
+  const nums = guardedIo('list', dir).names
     .map((n) => /^CP-(\d+)\.md$/.exec(n))
     .filter(Boolean)
     .map((m) => Number(m[1]));
@@ -269,7 +341,9 @@ function commandCheckpoint(flags) {
   const manifest = loadManifest(shared);
   const taskId = manifest.task_id;
   const dir = path.join(shared, 'Tasks', taskId, 'Checkpoints');
-  fs.mkdirSync(dir, { recursive: true });
+  ensureWithin(root, dir);
+  guardedIo('mkdir', dir);
+  ensureWithin(root, dir);
   const n = nextCheckpointNumber(dir);
   const file = path.join(dir, `CP-${String(n).padStart(3, '0')}.md`);
   const git = gitSnapshot(root);
@@ -286,7 +360,7 @@ function commandCheckpoint(flags) {
     NEXT_ACTION: String(flags['next-action'] || manifest.next_action || 'Not provided'),
     NOTE: String(flags.note || '')
   };
-  writeText(file, renderTemplate('Checkpoint.md', values), { overwrite: true });
+  if (!writeText(file, renderTemplate('Checkpoint.md', values))) fail('Checkpoint already exists; refusing overwrite.');
   manifest.updated_by = values.AGENT;
   manifest.branch = git.branch;
   manifest.head_sha = git.head_sha;
@@ -317,7 +391,13 @@ function commandHandoff(flags) {
     LAST_VERIFIED: lastVerified,
     NEXT_ACTION: nextAction
   };
-  fs.writeFileSync(path.join(shared, 'Next-Agent-Handoff.md'), renderTemplate('Handoff.md', values), 'utf8');
+  const handoff = path.join(shared, 'Next-Agent-Handoff.md');
+  ensureWithin(root, handoff);
+  if (fs.existsSync(handoff)) {
+    writeText(handoff, renderTemplate('Handoff.md', values), { overwrite: true });
+  } else if (!writeText(handoff, renderTemplate('Handoff.md', values))) {
+    fail('Handoff appeared concurrently; refusing overwrite.');
+  }
   manifest.updated_by = fromAgent;
   manifest.next_agent = toAgent;
   manifest.next_action = nextAction;

@@ -9,21 +9,38 @@ Enforces Section 7 of Global Agent Directives & Operating Rules:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 from pathlib import Path
-import shutil
+import stat
 import subprocess
 import sys
 from typing import Any
 
-STATE_ROOT_NAME = "Shared-Project-State-Manager"
-LEGACY_STATE_ROOT_NAME = "Shared-Project-State"
+STATE_ROOT_NAME = "Shared-Project-State"
+LEGACY_STATE_ROOT_NAME = "Shared-Project-State-Manager"
+_spec = importlib.util.spec_from_file_location("_aipm_safe_move", Path(__file__).with_name("safe_move.py"))
+if _spec is None or _spec.loader is None:
+    raise RuntimeError("Safe move helper is unavailable")
+_safe_move = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_safe_move)
+move_noreplace = _safe_move.move_noreplace
 
 
 def resolve_roots(start_path: Path | None = None) -> tuple[Path, Path]:
     """Dynamically resolve the project root and its Shared-Project-State-Manager directory."""
     if start_path is not None:
-        current = start_path.resolve()
+        raw = start_path.absolute()
+        if any(_linked(part) for part in (*reversed(raw.parents), raw)):
+            raise ValueError("Project root must not traverse a linked path.")
+        current = raw.resolve()
+        if not current.is_dir():
+            raise ValueError("Explicit project root must be an existing directory.")
+        candidates = [current / name for name in (STATE_ROOT_NAME, LEGACY_STATE_ROOT_NAME)
+                      if (current / name).is_dir()]
+        if len(candidates) > 1:
+            raise ValueError("Both state roots exist; select and reconcile them explicitly.")
+        return current, candidates[0] if candidates else current / STATE_ROOT_NAME
     else:
         # Check script location first: if script is in Shared-Project-State-Manager, anchor to its owning project
         script_parent = Path(__file__).resolve().parent
@@ -56,9 +73,9 @@ def resolve_roots(start_path: Path | None = None) -> tuple[Path, Path]:
     return current, state_root
 
 
-def ensure_transient_structure(state_root: Path) -> dict[str, Path]:
-    """Ensure standard transient directories exist inside Shared-Project-State-Manager."""
-    dirs = {
+def transient_paths(state_root: Path) -> dict[str, Path]:
+    """Describe transient locations without creating them."""
+    return {
         "cache": state_root / "Cache",
         "cache_python": state_root / "Cache" / "Python",
         "cache_pytest": state_root / "Cache" / "pytest",
@@ -69,14 +86,41 @@ def ensure_transient_structure(state_root: Path) -> dict[str, Path]:
         "logs": state_root / "Logs",
         "locks": state_root / "Locks",
     }
+
+
+def _linked(path: Path) -> bool:
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return False
+    return bool(stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+
+
+def _safe_path(state_root: Path, path: Path) -> None:
+    current = state_root
+    if _linked(current):
+        raise ValueError(f"Linked state root is not allowed: {current}")
+    for part in path.relative_to(state_root).parts:
+        current = current / part
+        if _linked(current):
+            raise ValueError(f"Linked transient path is not allowed: {current}")
+
+
+def ensure_transient_structure(state_root: Path) -> dict[str, Path]:
+    """Create transient subdirectories only in an existing state root."""
+    if not state_root.is_dir():
+        raise ValueError("An existing state root is required for mutation.")
+    dirs = transient_paths(state_root)
     for directory in dirs.values():
-        directory.mkdir(parents=True, exist_ok=True)
+        _safe_path(state_root, directory)
+        _safe_move.ensure_directory(directory)
+        _safe_path(state_root, directory)
     return dirs
 
 
 def get_transient_env(state_root: Path) -> dict[str, str]:
     """Return dictionary of environment variables routing all tool caches and temps."""
-    dirs = ensure_transient_structure(state_root)
+    dirs = transient_paths(state_root)
     return {
         "PYTHONPYCACHEPREFIX": str(dirs["cache_python"]),
         "TEMP": str(dirs["temp"]),
@@ -110,6 +154,7 @@ def run_command(state_root: Path, command: list[str]) -> int:
     if not command:
         print("Error: No command specified to run.", file=sys.stderr)
         return 1
+    ensure_transient_structure(state_root)
     env = os.environ.copy()
     env.update(get_transient_env(state_root))
     try:
@@ -129,11 +174,12 @@ def get_dir_size_and_count(path: Path) -> tuple[int, int]:
     total_count = 0
     if not path.is_dir():
         return 0, 0
-    for root, _, files in os.walk(path):
+    for root, directories, files in os.walk(path, followlinks=False):
+        directories[:] = [name for name in directories if not _linked(Path(root) / name)]
         for name in files:
             file_path = Path(root) / name
             try:
-                if not file_path.is_symlink():
+                if not _linked(file_path):
                     total_size += file_path.stat().st_size
                     total_count += 1
             except OSError:
@@ -154,7 +200,6 @@ def format_size(bytes_count: int) -> str:
 
 def status_report(project_root: Path, state_root: Path) -> None:
     """Print transient storage status."""
-    ensure_transient_structure(state_root)
     print("=" * 70)
     print(" Shared Project State — Transient Storage Status")
     print(f" Project Root: {project_root}")
@@ -171,6 +216,7 @@ def status_report(project_root: Path, state_root: Path) -> None:
     total_bytes = 0
     total_files = 0
     for label, path in categories:
+        _safe_path(state_root, path)
         size, count = get_dir_size_and_count(path)
         total_bytes += size
         total_files += count
@@ -181,13 +227,31 @@ def status_report(project_root: Path, state_root: Path) -> None:
 
 
 def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -> int:
+    if dry_run:
+        return _sweep_project(project_root, state_root, dry_run=True)
+    root = Path(project_root).absolute()
+    before = root.lstat()
+    state_before = Path(state_root).lstat()
+    with _safe_move.locked_directories(root, state_root):
+        after = root.lstat()
+        state_after = Path(state_root).lstat()
+        if (not before.st_ino or not state_before.st_ino
+                or (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino)
+                or (state_before.st_dev, state_before.st_ino) != (state_after.st_dev, state_after.st_ino)):
+            raise OSError("Project or state root identity changed during preflight")
+        return _sweep_project(root, state_root, dry_run=False)
+
+
+def _sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -> int:
     """Scan project root for stray temporary files, __pycache__, test sandboxes and move them."""
-    dirs = ensure_transient_structure(state_root)
+    dirs = transient_paths(state_root) if dry_run else ensure_transient_structure(state_root)
     ignore_dirs = {
         state_root.name,
         STATE_ROOT_NAME,
         LEGACY_STATE_ROOT_NAME,
         ".git",
+        ".agents",
+        ".codex",
         "node_modules",
         "venv",
         ".venv",
@@ -196,10 +260,14 @@ def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -
     }
 
     moved_count = 0
+    failures = 0
     print(f"Scanning {project_root} for stray temporary/cache artifacts...")
 
     for root, dirnames, filenames in os.walk(project_root, topdown=True):
         rel_root = Path(root).relative_to(project_root)
+        ignored = {name.casefold() for name in ignore_dirs}
+        dirnames[:] = [name for name in dirnames
+                       if name.casefold() not in ignored and not _linked(Path(root) / name)]
 
         # Do not descend into ignored top-level or state directories
         if rel_root.parts and rel_root.parts[0] in ignore_dirs:
@@ -214,12 +282,17 @@ def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -
                 print(f" [PYCACHE] {'Would move' if dry_run else 'Moving'} {source_dir.relative_to(project_root)} -> {dest_dir.relative_to(state_root)}")
                 if not dry_run:
                     try:
-                        if dest_dir.exists():
-                            shutil.rmtree(dest_dir, ignore_errors=True)
-                        shutil.move(str(source_dir), str(dest_dir))
+                        _safe_path(state_root, dest_dir)
+                        if os.path.lexists(dest_dir):
+                            print(f"   Warning: destination exists; preserving {dest_dir}", file=sys.stderr)
+                            failures += 1
+                            dirnames.remove(dname)
+                            continue
+                        move_noreplace(source_dir, dest_dir, source_dir.lstat())
                         moved_count += 1
                     except Exception as err:
                         print(f"   Warning: could not move {source_dir}: {err}", file=sys.stderr)
+                        failures += 1
                 else:
                     moved_count += 1
                 dirnames.remove(dname)
@@ -227,16 +300,22 @@ def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -
                 source_dir = Path(root) / dname
                 tool_name = dname.lstrip(".").replace("_cache", "")
                 dest_dir = dirs["cache"] / tool_name / rel_root.as_posix().replace("/", "_")
-                dest_dir.parent.mkdir(parents=True, exist_ok=True)
                 print(f" [TOOL-CACHE] {'Would move' if dry_run else 'Moving'} {source_dir.relative_to(project_root)} -> {dest_dir.relative_to(state_root)}")
                 if not dry_run:
                     try:
-                        if dest_dir.exists():
-                            shutil.rmtree(dest_dir, ignore_errors=True)
-                        shutil.move(str(source_dir), str(dest_dir))
+                        _safe_path(state_root, dest_dir)
+                        if os.path.lexists(dest_dir):
+                            print(f"   Warning: destination exists; preserving {dest_dir}", file=sys.stderr)
+                            failures += 1
+                            dirnames.remove(dname)
+                            continue
+                        _safe_move.ensure_directory(dest_dir.parent)
+                        _safe_path(state_root, dest_dir)
+                        move_noreplace(source_dir, dest_dir, source_dir.lstat())
                         moved_count += 1
                     except Exception as err:
                         print(f"   Warning: could not move {source_dir}: {err}", file=sys.stderr)
+                        failures += 1
                 else:
                     moved_count += 1
                 dirnames.remove(dname)
@@ -246,12 +325,17 @@ def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -
                 print(f" [TEST-WS] {'Would move' if dry_run else 'Moving'} {source_dir.relative_to(project_root)} -> {dest_dir.relative_to(state_root)}")
                 if not dry_run:
                     try:
-                        if dest_dir.exists():
-                            shutil.rmtree(dest_dir, ignore_errors=True)
-                        shutil.move(str(source_dir), str(dest_dir))
+                        _safe_path(state_root, dest_dir)
+                        if os.path.lexists(dest_dir):
+                            print(f"   Warning: destination exists; preserving {dest_dir}", file=sys.stderr)
+                            failures += 1
+                            dirnames.remove(dname)
+                            continue
+                        move_noreplace(source_dir, dest_dir, source_dir.lstat())
                         moved_count += 1
                     except Exception as err:
                         print(f"   Warning: could not move {source_dir}: {err}", file=sys.stderr)
+                        failures += 1
                 else:
                     moved_count += 1
                 dirnames.remove(dname)
@@ -271,43 +355,77 @@ def sweep_project(project_root: Path, state_root: Path, dry_run: bool = False) -
                 print(f" [FILE] {'Would move' if dry_run else 'Moving'} {source_file.relative_to(project_root)} -> {dest_file.relative_to(state_root)}")
                 if not dry_run:
                     try:
-                        shutil.move(str(source_file), str(dest_file))
+                        if _linked(source_file):
+                            failures += 1
+                            continue
+                        _safe_path(state_root, dest_file)
+                        if os.path.lexists(dest_file):
+                            print(f"   Warning: destination exists; preserving {dest_file}", file=sys.stderr)
+                            failures += 1
+                            continue
+                        move_noreplace(source_file, dest_file, source_file.lstat())
                         moved_count += 1
                     except Exception as err:
                         print(f"   Warning: could not move {source_file}: {err}", file=sys.stderr)
+                        failures += 1
                 else:
                     moved_count += 1
 
     action = "Identified" if dry_run else "Successfully moved"
     print(f"Done: {action} {moved_count} stray item(s).")
+    if failures:
+        print(f"Sweep incomplete: {failures} item(s) could not be moved.", file=sys.stderr)
+        return -1
     return moved_count
 
 
-def clean_transient(state_root: Path, dry_run: bool = False) -> None:
+def clean_transient(state_root: Path, dry_run: bool = False) -> int:
+    if dry_run:
+        return _clean_transient(state_root, dry_run=True)
+    root = Path(state_root).absolute().parent
+    before = root.lstat()
+    state_before = Path(state_root).lstat()
+    with _safe_move.locked_directories(root, state_root):
+        after = root.lstat()
+        state_after = Path(state_root).lstat()
+        if (not before.st_ino or not state_before.st_ino
+                or (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino)
+                or (state_before.st_dev, state_before.st_ino) != (state_after.st_dev, state_after.st_ino)):
+            raise OSError("Project or state root identity changed during preflight")
+        return _clean_transient(state_root, dry_run=False)
+
+
+def _clean_transient(state_root: Path, dry_run: bool = False) -> int:
     """Safely purge disposable transient items from Cache, Temporary-Files, and Test-Workspace."""
-    dirs = ensure_transient_structure(state_root)
+    if not dry_run and not state_root.is_dir():
+        raise ValueError("An existing state root is required for cleanup.")
+    dirs = transient_paths(state_root)
+    failures = 0
     purge_targets = [
         ("Python Bytecode Cache", dirs["cache_python"]),
         ("Temporary Files", dirs["temp"]),
         ("Test Workspace", dirs["test_workspace"]),
     ]
     for label, directory in purge_targets:
+        _safe_path(state_root, directory)
         if not directory.is_dir():
             continue
         print(f"Cleaning {label} at {directory.relative_to(state_root)}...")
         for item in directory.iterdir():
-            if item.is_dir():
-                print(f" {'Would delete' if dry_run else 'Deleting'} directory: {item.name}")
-                if not dry_run:
-                    shutil.rmtree(item, ignore_errors=True)
-            elif item.is_file():
-                print(f" {'Would delete' if dry_run else 'Deleting'} file: {item.name}")
+            if _linked(item):
+                print(f" Skipping linked item: {item.name}", file=sys.stderr)
+                failures += 1
+                continue
+            if item.is_dir() or item.is_file():
+                print(f" {'Would delete' if dry_run else 'Deleting'} item: {item.name}")
                 if not dry_run:
                     try:
-                        item.unlink()
-                    except OSError:
-                        pass
-    print("Cleanup complete.")
+                        _safe_move.delete_nofollow(item, item.lstat())
+                    except OSError as error:
+                        print(f" Unable to clean {item.name}: {error}", file=sys.stderr)
+                        failures += 1
+    print("Cleanup complete." if not failures else f"Cleanup incomplete: {failures} item(s) preserved.")
+    return 0 if not failures else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -365,12 +483,10 @@ def main() -> int:
         return 0
 
     if args.sweep:
-        sweep_project(project_root, state_root, dry_run=args.dry_run)
-        return 0
+        return 1 if sweep_project(project_root, state_root, dry_run=args.dry_run) < 0 else 0
 
     if args.clean:
-        clean_transient(state_root, dry_run=args.dry_run)
-        return 0
+        return clean_transient(state_root, dry_run=args.dry_run)
 
     if args.status or len(sys.argv) == 1:
         status_report(project_root, state_root)

@@ -33,8 +33,13 @@ class StateStorageTests(unittest.TestCase):
         denial = subprocess.run(["icacls", str(directory), "/deny", f"*{sid}:(OI)(CI)(WD)"], capture_output=True, text=True)
         try:
             self.assertEqual(denial.returncode, 0, f"UNVERIFIED: Windows ACL denial failed: {denial.stdout} {denial.stderr}")
-            with self.assertRaises(PermissionError, msg="UNVERIFIED: ACL did not deny real file creation"):
+            try:
                 (directory / "Denied-Probe.txt").write_text("Denied", encoding="utf-8")
+            except PermissionError:
+                pass
+            else:
+                (directory / "Denied-Probe.txt").unlink(missing_ok=True)
+                self.skipTest("UNVERIFIED: host token bypassed the explicit ACL denial")
             yield
         finally:
             restore = subprocess.run(["icacls", str(directory), "/remove:d", f"*{sid}", "/t", "/c"], capture_output=True, text=True)
@@ -68,8 +73,13 @@ class StateStorageTests(unittest.TestCase):
                 permitted_file = access_check / "Permitted.txt"
                 permitted_file.write_text("File Creation Is Allowed", encoding="utf-8")
                 permitted_file.unlink()
-                with self.assertRaises(PermissionError, msg="UNVERIFIED: ACL did not deny real child-directory creation"):
+                try:
                     (access_check / "Denied-Directory").mkdir()
+                except PermissionError:
+                    pass
+                else:
+                    (access_check / "Denied-Directory").rmdir()
+                    self.skipTest("UNVERIFIED: host token bypassed the inherited ACL denial")
                 try:
                     with self.assertRaisesRegex(StateError, "access denied"):
                         initialize_project_state(project, "project", "Project")

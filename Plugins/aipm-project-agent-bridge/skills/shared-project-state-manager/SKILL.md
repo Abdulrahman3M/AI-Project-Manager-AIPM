@@ -416,6 +416,8 @@ The Python helper `scripts/safe_file_ops.py` is project-root scoped and provides
 
 It must refuse destination overwrites and path escape outside the selected project root.
 
+The guarded implementation uses Windows handles for mutations and fails closed on other platforms until equivalent protection is verified. It rejects automatic restore or purge of legacy `1.0` quarantine records; preserve them for manual owner review. New `1.1` records bind their original path to the item name, but that binding is not authentication against an actor able to alter both. Keep the prior-record backup if an update is interrupted.
+
 ### 21.1 Permission and Lock Safety
 
 A failed move/delete is not automatically an ACL problem. Distinguish:
