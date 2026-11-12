@@ -21,7 +21,7 @@
 | Windows PowerShell 5.1 | Explicit local PowerShell state-tool invocation | Unverified | AuthorizationManager/registry access blocked invocation before script execution. |
 | Ubuntu POSIX | Guarded state mutations | Fail-closed contract tested | `2/2` tests confirm writes/moves/deletes are rejected without changing data; diagnostics and dry-run remain available. POSIX mutation support is not implemented. |
 
-The Plugin archives were not changed by this Core/TUI update; their v1.11.13 hashes remain the current local package evidence. Package-format validation does not establish installation, runtime Skill activation, or lifecycle interception. Core requires a signed GitHub Actions receipt bound to the task and recorded source commit; the authorized temporary-branch run verified the signature and returned `COMPLETE` for its bound test task. Caller-reported `PASS` remains `UNVERIFIED`. Performance and provider token use are `NOT_MEASURED`.
+The Plugin archives were rebuilt and validated at v1.11.15; their current package hashes are recorded in the local build outputs. Package-format validation does not establish installation, runtime Skill activation, or lifecycle interception. Core requires a signed GitHub Actions receipt bound to the task and recorded source commit; the authorized temporary-branch run verified the signature and returned `COMPLETE` for its bound test task. Caller-reported `PASS` remains `UNVERIFIED`. Performance and provider token use are `NOT_MEASURED`.
 
 # AI Project Manager Support Matrix
 
