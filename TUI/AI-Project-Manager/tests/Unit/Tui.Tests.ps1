@@ -416,7 +416,7 @@ $afterUnregister = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' 
 Assert-True 'TUI offers registry removal after folder deletion and keeps the archive' ($unregUi.Error -eq '' -and $unregUi.Output.Contains('Remove Task From AIPM Registry') -and $unregUi.Output.Contains('Task Removed From Registry') -and $afterUnregister.Status -ne 'PASS' -and (Test-Path -LiteralPath $archiveFolderToDelete)) ($unregUi.Error + $unregUi.Output)
 $importResult = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-import-archive' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -Source $archiveFolderToDelete
 $afterImport = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-read' -RegistryPath $taskEditRegistry -ProjectId $taskEditProjectId -TaskId $taskEditId
-Assert-True 'Core imports an archived task ZIP back into the registry with its folder' ($importResult.Status -eq 'PASS' -and $afterImport.Status -eq 'PASS' -and $afterImport.Data.task.task_status -eq 'COMPLETE' -and (Test-Path -LiteralPath $liveTaskDir)) ([string]$importResult.Reason)
+Assert-True 'Core imports an archived task ZIP without promoting its legacy status to verified completion' ($importResult.Status -eq 'PASS' -and $afterImport.Status -eq 'PASS' -and $afterImport.Data.task.task_status -ne 'COMPLETE' -and (Test-Path -LiteralPath $liveTaskDir)) ([string]$importResult.Reason)
 $longArtifactLines = @('Task: GitHub Learning Series', 'Status: IN-PROGRESS', '') + @(1..12 | ForEach-Object { 'Artifact Entry {0:D2}' -f $_ })
 $pagedArtifactUi = Invoke-Ui {
     Initialize-Renderer -Ansi $false -Sink Capture -CaptureWidth 100 -CaptureHeight 14
@@ -456,7 +456,7 @@ $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $managedTaskRe
 $afterFolderTaskList = Invoke-AipmCore -AppRoot (Get-TestRoot) -Command 'task-list' -RegistryPath $managedTaskRegistry -ProjectId $managedTaskProjectId
 Assert-True 'existing work folder is added as task context without moving its files' ($ui.Error -eq '' -and $afterFolderTaskList.Status -eq 'PASS' -and $afterFolderTaskList.Data.tasks.Count -eq 2 -and (Test-Path -LiteralPath (Join-Path $existingWorkFolder 'notes.md') -PathType Leaf) -and (($ui.Output -replace '\s','').Contains(($existingWorkFolder -replace '\s','')))) ($ui.Error + $ui.Output)
 $ui = Invoke-Ui { Start-TuiApp -Root (Get-TestRoot) -RegistryPath $registeredPath } '04{Enter}14'
-Assert-True 'evidence view shows bounded coverage and does not infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 100% (1/1 Verified Tasks)') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)
+Assert-True 'evidence view does not count caller-reported PASS as verified or infer test execution' ($ui.Error -eq '' -and $ui.Output.Contains('Evidence Coverage: 0% (0/1 Verified Tasks)') -and $ui.Output.Contains('Unverified Evidence: 1') -and $ui.Output.Contains('No Test Run Count Is Inferred')) ($ui.Error + $ui.Output)
 $registrationRegistry = Join-Path (Get-TestWork) 'registration-message-registry.json'
 $newProjectRoot = Join-Path (Get-TestWork) 'New Project Fixture'
 [void](New-Item -ItemType Directory -Path $newProjectRoot -Force)

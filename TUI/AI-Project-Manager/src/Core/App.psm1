@@ -128,6 +128,8 @@ function ConvertTo-AipmDisplayStatus {
     param([string]$Status)
     switch ($Status) {
         'COMPLETE' { return 'Complete' }
+        'CLOSED-UNVERIFIED' { return 'Closed, Unverified' }
+        'UNVERIFIED' { return 'Unverified' }
         'IN-PROGRESS' { return 'In Progress' }
         'BLOCKED' { return 'Blocked' }
         'NOT-STARTED' { return 'Not Started' }
@@ -1426,7 +1428,12 @@ function Show-AipmTaskRecord {
             if (-not $verificationResult -or $verificationResult -in @('__HELP__','__QUIT__')) { continue }
             $evidence = Read-ValidatedInput -Prompt 'Verification Evidence' -Help 'Record What Was Checked And The Actual Result. AIPM Does Not Run The Check.' -Example 'PowerShell unit suite passed; 12 tests.' -Default '' -Validate { param($text) if (-not $text.Trim()) { return 'Enter The Evidence Or Observation.' }; return $null }
             if (-not $evidence) { continue }
-            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-verify' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Result ([string]$verificationResult) -Evidence $evidence.Trim()
+            $attestedSourceDigest = ''
+            if ($verificationResult -eq 'PASS') {
+                $attestedSourceDigest = Read-ValidatedInput -Prompt 'Attested Source Commit SHA (Optional)' -Help 'To earn verified COMPLETE, place the signed receipt at References/Completion-Receipt.json and enter its exact 40-character source commit SHA. Blank keeps this result UNVERIFIED.' -Example '0123456789abcdef0123456789abcdef01234567' -Default '' -Validate { param($text) if ($text.Trim() -and $text.Trim() -notmatch '^[0-9a-fA-F]{40}$') { return 'Enter A 40-Character Commit SHA Or Leave Blank.' }; return $null }
+                if ($null -eq $attestedSourceDigest) { continue }
+            }
+            $updated = Invoke-AipmCore -AppRoot $Root -Command 'task-verify' -RegistryPath $RegistryPath -ProjectId $ProjectId -TaskId ([string]$TaskRow.task_id) -Result ([string]$verificationResult) -Evidence $evidence.Trim() -AttestationSourceDigest ([string]$attestedSourceDigest).Trim().ToLowerInvariant()
         } else { continue }
         if ($updated.Status -eq 'PASS') {
             Show-Notice -Title 'Task Updated' -Lines @('AIPM Task State Was Updated Successfully.', 'Project Source Files Were Not Changed.') -Kind Success

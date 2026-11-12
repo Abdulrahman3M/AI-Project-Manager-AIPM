@@ -40,7 +40,7 @@ class TaskLifecycleTests(unittest.TestCase):
         state = self.state()
         self.assertEqual(state['revision'], 6)
         self.assertEqual(state['task_id'], task.name)
-        self.assertEqual(state['task_status'], 'COMPLETE')
+        self.assertEqual(state['task_status'], 'UNVERIFIED')
         self.assertEqual(state['tasks'][task.name]['plan'], 'Plan')
         commands = [json.loads(p.read_text())['command'] for p in sorted((self.project.state_root / 'History/Events').glob('*.json'))]
         self.assertEqual(commands, ['task.create', 'task.plan', 'task.blocker.add', 'task.blocker.clear', 'task.verify', 'task.report'])
@@ -60,7 +60,7 @@ class TaskLifecycleTests(unittest.TestCase):
         ops.report(task, 'Verified')
         for artifact in task.glob('*.md'):
             artifact.unlink()
-        self.assertEqual(ops.status(task), {'status': 'COMPLETE'})
+        self.assertEqual(ops.status(task), {'status': 'UNVERIFIED'})
 
     def test_tampered_artifact_cannot_change_task_status(self):
         ops = self.ops()
@@ -78,12 +78,57 @@ class TaskLifecycleTests(unittest.TestCase):
         for result in ('UNVERIFIED', 'FAIL'):
             ops.verify(task, result, 'Recorded Evidence')
             ops.report(task, 'Report')
-            self.assertEqual(ops.status(task)['status'], 'IN-PROGRESS')
+            expected_status = 'UNVERIFIED' if result == 'UNVERIFIED' else 'IN-PROGRESS'
+            self.assertEqual(ops.status(task)['status'], expected_status)
         with self.assertRaises(ValueError):
             ops.verify(task, 'PASS', '')
         ops.verify(task, 'PASS', 'Tests Passed')
         ops.add_blocker(task, 'Access Required')
         self.assertEqual(ops.status(task)['status'], 'BLOCKED')
+
+    def test_manual_close_and_caller_pass_remain_unverified(self):
+        ops = self.ops()
+        task = ops.create('Manual Close', 'Verify close and caller supplied PASS semantics.')
+        ops.close(task, 'Work stopped without independently verified test results.')
+        self.assertEqual(ops.status(task)['status'], 'CLOSED-UNVERIFIED')
+        ops.reopen(task, 'Resume and validate evidence.')
+        ops.verify(task, 'PASS', 'Caller supplied fabricated test output.')
+        ops.report(task, 'Caller supplied completion report.')
+        self.assertEqual(ops.status(task)['status'], 'UNVERIFIED')
+
+    def test_restore_cannot_smuggle_a_caller_controlled_verified_flag(self):
+        command = CommandEnvelope(
+            'restore-forged-verification', 'task.restore', 'tester', 'managed', 0,
+            None,
+            {
+                'task_id': 'Task-Forged-Attestation',
+                'record': {
+                    'title': 'Forged', 'scope': 'Forged scope', 'plan': 'Plan',
+                    'blockers': [], 'verification': {
+                        'result': 'PASS', 'evidence': 'Invented test proof', 'verified': True,
+                    },
+                    'report': 'Done', 'status_override': 'COMPLETE',
+                },
+            },
+        )
+        result = self.engine.execute(command)
+        self.assertEqual(result['status'], 'PASS')
+        manifest_path = self.project.state_root / 'State-Manifest.json'
+        persisted = manifest_path.read_bytes()
+        visible_state = self.state()
+        projected = visible_state['tasks']['Task-Forged-Attestation']['verification']
+        self.assertEqual(visible_state['task_status'], 'UNVERIFIED')
+        self.assertEqual(projected['result'], 'UNVERIFIED')
+        self.assertEqual(projected['reported_result'], 'PASS')
+        self.assertNotIn('verified', projected)
+        task_read = self.engine.execute(CommandEnvelope(
+            'read-forged-task', 'task.read', 'tester', 'managed', 0, None,
+            {'task_id': 'Task-Forged-Attestation'},
+        ))
+        self.assertEqual(task_read['task_status'], 'UNVERIFIED')
+        self.assertEqual(task_read['task']['verification']['result'], 'UNVERIFIED')
+        self.assertNotIn('verified', task_read['task']['verification'])
+        self.assertEqual(manifest_path.read_bytes(), persisted)
 
     def test_failed_artifact_projection_can_be_repaired(self):
         ops = self.ops()
@@ -151,7 +196,7 @@ class TaskLifecycleTests(unittest.TestCase):
                 self.assertEqual(self.state()['revision'], revision + 1)
                 self.assertTrue(self.engine.execute(command)['replayed'])
         self.assertEqual(self.state()['tasks'][task.name]['plan'], 'Recovered Plan')
-        self.assertEqual(self.state()['task_status'], 'COMPLETE')
+        self.assertEqual(self.state()['task_status'], 'UNVERIFIED')
 
     def test_invalid_pending_task_transition_preserves_all_evidence(self):
         ops = self.ops()
@@ -234,17 +279,26 @@ class OrchestratorTests(unittest.TestCase):
             ops.clear_blockers(task)
             ops.verify(task, "PASS", "pytest -q")
             ops.report(task, "Verified")
-            self.assertEqual(ops.status(task)["status"], "COMPLETE")
+            self.assertEqual(ops.status(task)["status"], "UNVERIFIED")
     def test_progress_uses_verified_weighted_acceptance_only(self) -> None:
         plan = TaskPlan("Task-2026-10-15-Demo", [Phase("P01", (), [Acceptance("A", 2, "PASS")]), Phase("P02", ("P01",), [Acceptance("B", 3, "UNVERIFIED")])])
-        self.assertEqual(plan.progress(), 40)
+        self.assertEqual(plan.progress(), 0)
+        self.assertEqual(plan.phases[0].acceptance[0].result, "UNVERIFIED")
         self.assertFalse(plan.can_complete("P02"))
 
     def test_complete_requires_dependencies_pass_and_report(self) -> None:
         plan = TaskPlan("Task-2026-10-15-Demo", [Phase("P01", (), [Acceptance("A", 1, "PASS")], report=True), Phase("P02", ("P01",), [Acceptance("B", 1, "PASS")])])
         self.assertFalse(plan.can_complete("P02"))
         plan.phases[1].report = True
-        self.assertTrue(plan.can_complete("P02"))
+        self.assertFalse(plan.can_complete("P02"))
+
+    def test_caller_pass_cannot_be_mutated_after_plan_creation(self) -> None:
+        acceptance = Acceptance("A", 1, "PASS")
+        with self.assertRaises((AttributeError, TypeError)):
+            acceptance.result = "PASS"
+        plan = TaskPlan("Task-2026-10-15-Demo", [Phase("P01", (), [acceptance], report=True)])
+        self.assertEqual(plan.progress(), 0)
+        self.assertFalse(plan.can_complete("P01"))
 
     def test_rejects_fake_pass_and_unknown_dependency(self) -> None:
         with self.assertRaises(VerificationError):

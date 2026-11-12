@@ -81,7 +81,7 @@ def _has_reparse_point(path: Path) -> bool:
     return bool(attributes & reparse)
 
 
-def _tree_files(root: Path) -> dict[str, str]:
+def _tree_files(root: Path, *, include_bytecode: bool = False) -> dict[str, str]:
     if _has_reparse_point(root):
         raise CapabilityError(f"Linked or reparse-point directory is not allowed: {root}")
     result: dict[str, str] = {}
@@ -91,7 +91,11 @@ def _tree_files(root: Path) -> dict[str, str]:
             child = current_path / name
             if _has_reparse_point(child):
                 raise CapabilityError(f"Linked or reparse-point directory is not allowed: {child}")
+            if not include_bytecode and name.casefold() == "__pycache__":
+                directories.remove(name)
         for name in filenames:
+            if not include_bytecode and name.casefold().endswith((".pyc", ".pyo")):
+                continue
             child = current_path / name
             if _has_reparse_point(child) or not child.is_file():
                 raise CapabilityError(f"Linked or non-regular file is not allowed: {child}")
@@ -878,26 +882,39 @@ def _validate_upgradeable_embedded_plugin(root: Path, target: Path) -> dict[str,
         ):
             raise CapabilityError(f"Generated Plugin Skill license metadata is invalid: {slug}")
         skill_root = target / "skills" / slug
-        copied = _tree_files(skill_root)
-        if copied != files or _tree_hash(copied) != source_sha256:
+        copied = _tree_files(skill_root, include_bytecode=True)
+        bytecode_paths = {
+            path for path in files
+            if "__pycache__" in Path(path).parts or path.casefold().endswith((".pyc", ".pyo"))
+        }
+        canonical_files = {path: digest for path, digest in files.items() if path not in bytecode_paths}
+        if (
+            _tree_hash(files) != source_sha256
+            or any(path not in files or files[path] != digest for path, digest in copied.items())
+            or {path: digest for path, digest in copied.items() if path not in bytecode_paths} != canonical_files
+            or any(copied[path] != files[path] for path in bytecode_paths if path in copied)
+        ):
             raise CapabilityError(f"Generated Plugin Skill bytes are changed: {slug}")
         expected_paths.update(f"skills/{slug}/{relative}" for relative in files)
 
-    actual_files = set(_tree_files(target))
-    if actual_files != expected_paths:
+    actual_by_path = _tree_files(target, include_bytecode=True)
+    actual_files = set(actual_by_path)
+    if actual_files - expected_paths or (expected_paths - actual_files) - {
+        path for path in expected_paths
+        if "__pycache__" in Path(path).parts or path.casefold().endswith((".pyc", ".pyo"))
+    }:
         raise CapabilityError("Generated Plugin contains missing or unexpected files")
-    expected_directories = {
-        "/".join(parts[:index])
-        for path in expected_paths
-        for parts in [path.split("/")]
-        for index in range(1, len(parts))
-    }
     actual_directories = {
         (Path(current) / name).relative_to(target).as_posix()
         for current, directories, _ in os.walk(target, followlinks=False)
         for name in directories
     }
-    if actual_directories != expected_directories:
+    if actual_directories != {
+        "/".join(parts[:index])
+        for path in actual_by_path
+        for parts in [path.split("/")]
+        for index in range(1, len(parts))
+    }:
         raise CapabilityError("Generated Plugin contains missing or unexpected directories")
 
     version_file = target / "VERSION"

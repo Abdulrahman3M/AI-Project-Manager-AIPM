@@ -69,6 +69,26 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertEqual(source.read_bytes(), original_source)
         self.assertEqual([second_agent.status(task)["status"] for task in tasks], ["IN-PROGRESS"] * 3)
 
+    def test_state_read_projects_legacy_complete_as_unverified_without_rewriting_history(self) -> None:
+        operations = TaskOperations(self.engine, self.project)
+        task_path = operations.create("Legacy Completion", "Caller supplied completion must not be trusted.")
+        manifest_path = self.project.state_root / "State-Manifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        record = manifest["tasks"][task_path.name]
+        record["verification"] = {"result": "PASS", "evidence": "PASS: caller supplied text"}
+        record["status_override"] = "COMPLETE"
+        record["report"] = "Task was marked complete by a legacy caller."
+        manifest["task_status"] = "COMPLETE"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        persisted_before_read = manifest_path.read_bytes()
+
+        result = self.engine.execute(CommandEnvelope("state-read-legacy", "state.read", "test", self.project.project_id, 0, None, {}))
+
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["state"]["task_status"], "UNVERIFIED")
+        self.assertEqual(result["state"]["tasks"][task_path.name]["status_override"], "COMPLETE")
+        self.assertEqual(manifest_path.read_bytes(), persisted_before_read)
+
     def test_task_artifacts_confine_paths_and_require_matching_hash_for_updates(self) -> None:
         operations = TaskOperations(self.engine, self.project)
         task = operations.create("Artifact Safety", "Keep all task context under the state root.")
@@ -164,7 +184,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         record["status_override"] = "COMPLETED"
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         read = operations.read_task(task)
-        self.assertEqual(read["task_status"], "COMPLETE")
+        self.assertEqual(read["task_status"], "UNVERIFIED")
         self.assertIsInstance(read["verification"], dict)
         self.assertEqual(read["verification"]["result"], "UNVERIFIED")
         self.assertEqual(read["verification"]["evidence"], "Source review completed; git diff --check passed.")
@@ -175,7 +195,10 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         read_pass = operations.read_task(task)
         self.assertIsInstance(read_pass["verification"], dict)
-        self.assertEqual(read_pass["verification"]["result"], "PASS")
+        self.assertEqual(read_pass["verification"]["reported_result"], "PASS")
+        self.assertEqual(read_pass["verification"]["result"], "UNVERIFIED")
+        persisted = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(persisted["tasks"][task.name]["verification"], "PASS: all unit tests passed.")
 
     def test_legacy_verification_normalization_does_not_block_next_task_creation(self) -> None:
         """A normalized legacy record must not make the next state commit unrecoverable."""
@@ -239,7 +262,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         operations.clear_blockers(task)
 
         operations.close(task, "The task is complete and its evidence is recorded.")
-        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+        self.assertEqual(operations.read_task(task)["task_status"], "CLOSED-UNVERIFIED")
         archive = operations.archive(task)
         self.assertTrue(archive["archive_path"].is_file())
         self.assertTrue(archive["checksum_path"].is_file())
@@ -256,7 +279,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
         operations.verify(task, "PASS", "All checks passed.")
         operations.report(task, "Verified and reported complete.")
-        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+        self.assertEqual(operations.read_task(task)["task_status"], "UNVERIFIED")
         operations.reopen(task, "Reopen after verification pass.")
         self.assertEqual(operations.read_task(task)["task_status"], "IN-PROGRESS")
 
@@ -266,7 +289,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
         operations.write_artifact(task, "Reports/Report.md", b"Sample report content.\n")
         operations.checkpoint(task, last_verified_action="Action 1", next_action="Action 2", completed_work=["Step 1", "Step 2"])
         operations.close(task, "Task is verified and closed.")
-        self.assertEqual(operations.read_task(task)["task_status"], "COMPLETE")
+        self.assertEqual(operations.read_task(task)["task_status"], "CLOSED-UNVERIFIED")
 
         archive = operations.archive(task, delete_folder=True)
         self.assertTrue(archive["verified"])
@@ -332,12 +355,12 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
 
         result = operations.import_archive(external)
         self.assertEqual(result["task_id"], task.name)
-        self.assertEqual(result["task_status"], "COMPLETE")
+        self.assertEqual(result["task_status"], "CLOSED-UNVERIFIED")
         restored = operations.read_task(task)
         self.assertEqual(restored["completed_work"], ["Step A"])
         self.assertEqual(restored["changed_files"], ["src/a.py"])
         self.assertEqual(restored["test_results"], ["12 passed"])
-        self.assertEqual(restored["verification"], {"result": "PASS", "evidence": "Verified by test."})
+        self.assertEqual(restored["verification"], {"result": "UNVERIFIED", "evidence": "Verified by test."})
         self.assertEqual((task / "Reports" / "Report.md").read_bytes(), b"Round trip content.\n")
         self.assertTrue((self.project.state_root / "Archive" / f"{task.name}.zip").is_file())
         with self.assertRaises(StateError):
@@ -356,7 +379,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
             package.writestr("Metadata.json", json.dumps(legacy))
             package.writestr("Metadat.json", json.dumps(legacy))
         result = operations.import_archive(legacy_zip)
-        self.assertEqual(result["task_status"], "COMPLETE")
+        self.assertEqual(result["task_status"], "UNVERIFIED")
         self.assertTrue((self.project.state_root / "Operations" / "Tasks" / task_id / "Task-Plan.md").is_file())
 
     def test_existing_work_folder_is_registered_with_an_inventory_artifact(self) -> None:
@@ -583,7 +606,7 @@ class TaskArtifactLifecycleTests(unittest.TestCase):
             }
         }
         CoreEngine._validate_manifest(manifest, self.project)
-        self.assertEqual(manifest["task_status"], "IN-PROGRESS")
+        self.assertEqual(manifest["task_status"], "UNVERIFIED")
 
     def test_diagnose_and_repair_manifest_history_drift_without_pending_commit(self) -> None:
         operations = TaskOperations(self.engine, self.project)

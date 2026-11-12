@@ -1,6 +1,8 @@
 """Evaluate resource records; never spawn an agent or query a provider."""
 
 import math
+import re
+import unicodedata
 from copy import deepcopy
 
 
@@ -30,10 +32,15 @@ def delegation_decision(size, approved, plan):
     boundaries = []
     for value in plan["boundaries"]:
         path = value.rstrip("/")
+        parts = path.split("/")
         if (not path or path.startswith("/") or any(c in path for c in "\\:*?[]")
-                or any(part in ("", ".", "..") for part in path.split("/"))):
+                or re.search(r"%(?:2e|2f|5c)", path, re.IGNORECASE)
+                or any(part in ("", ".", "..") or part.endswith((".", " "))
+                       or re.match(r"^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)", part, re.IGNORECASE)
+                       or re.search(r"~[0-9]+(?:\.|$)", part)
+                       for part in parts)):
             return "DENY"
-        boundaries.append(path.casefold())
+        boundaries.append(unicodedata.normalize("NFC", path).casefold())
     for index, left in enumerate(boundaries):
         for right in boundaries[index + 1:]:
             if left == right or left.startswith(right + "/") or right.startswith(left + "/"):

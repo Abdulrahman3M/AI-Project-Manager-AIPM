@@ -8,6 +8,10 @@
 
 # Changelog
 
+## [1.0.3] — 2026-11-11
+
+- Distinguish caller-reported success from verified results and explicitly limit path preflight to provisional policy checks.
+
 ## 1.0.0
 
 - Introduce mandatory lifecycle scope, evidence-based discovery, read tracking, bounded retries and quality controls.

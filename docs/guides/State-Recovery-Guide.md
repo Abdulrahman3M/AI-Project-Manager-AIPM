@@ -82,7 +82,7 @@ What this does atomically:
 |---|---|---|
 | `TASK_FIELD_MISSING` | ERROR | A mandatory field (`title`, `scope`, `verification`) is absent. `state-normalize` will attempt to derive it from `Metadata.json`. |
 | `TASK_FIELD_INVALID` | ERROR | A field has an invalid type or empty string. Inspect task metadata. |
-| `TASK_STATUS_OVERRIDE_INVALID` | WARNING | `status_override` contains an unsupported status string. Core normalizes `COMPLETED` and `COMPLETED & VERIFIED` to `COMPLETE`. |
+| `TASK_STATUS_OVERRIDE_INVALID` | WARNING | `status_override` contains an unsupported status string. Core keeps the documented legacy `COMPLETE` value readable, but legacy overrides and caller-reported `PASS` do not prove verified completion. Manual close is recorded as `CLOSED-UNVERIFIED`; only a future trusted test certificate may establish a new verified completion. |
 | `MANIFEST_AHEAD_OF_HISTORY` | WARNING | The manifest revision is higher than committed events in `History/Events`. Reconciled by `state-normalize` or `state-repair`. |
 | `TASK_DRIFTED_FROM_HISTORY` | WARNING | A task record was updated directly in the manifest without an event. Preserved and reconciled into history. |
 | `PENDING_COMMIT_PRESENT` | WARNING | An interrupted pending transaction exists. Run `state-diagnose` and `state-repair` first. |

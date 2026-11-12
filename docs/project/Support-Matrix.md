@@ -1,11 +1,25 @@
-# Support Matrix — v1.11.10 Unified Release
+# Support Matrix — v1.11.14 Repository Update (Unpublished)
 
 | Component | Version | Release Source |
 |---|---:|---|
-| AIPM Platform | 1.11.10 | `Versioning/VERSION` |
-| PowerShell TUI | 1.11.10 | Generated compatibility mirror |
-| ChatGPT, Claude, Antigravity Plugins | 1.11.10 | Generated from canonical product version |
+| AIPM Platform | 1.11.14 | `Versioning/VERSION` |
+| PowerShell TUI | 1.11.14 | Generated compatibility mirror |
+| ChatGPT, Claude, Antigravity Plugins | 1.11.13 | Independently versioned Plugin distributions |
 | Independently versioned Skills | Per-Skill SemVer | Each Skill `VERSION` |
+
+## v1.11.14 Host Runtime And Local Package Status
+
+| Host / Component | Package / Access | Runtime Status | Evidence |
+| --- | --- | --- | --- |
+| Local CLI | In-process Core API; explicit write grant and revision checks | Implemented and tested | Host adapter suite `9/9`; Core does not expose project-source mutation APIs. |
+| Codex Plugin | `Plugins/Dist/AIPM-ChatGPT-Plugin-v1.11.13.zip` | Format verified; runtime unverified | Skill package only; no Core bridge, installation, or host interception. |
+| Claude Code Plugin | `Plugins/Dist/AIPM-Claude-Plugin-v1.11.13.zip` | Format verified; runtime unverified | Skill package only; host tools and permissions remain host-controlled. |
+| Gemini CLI / Antigravity | `Plugins/Dist/AIPM-Antigavity-Plugin-v1.11.13.zip` | Format verified; runtime unverified | Extension package only; Gemini CLI runtime was unavailable for validation. |
+| ChatGPT text conversation | Manual structured handoff | Conversation only; local file access unavailable | Pasted state and evidence remain unverified. |
+| Windows PowerShell 7 | Explicit local PowerShell state-tool invocation | Integration tested | PowerShell 7.6.9 copied-router integration passed `1/1`. |
+| Windows PowerShell 5.1 | Explicit local PowerShell state-tool invocation | Unverified | AuthorizationManager/registry access blocked invocation before script execution. |
+
+The Plugin archives were not changed by this Core/TUI update; their v1.11.13 hashes remain the current local package evidence. Package-format validation does not establish installation, runtime Skill activation, or lifecycle interception. Core now requires a signed GitHub Actions receipt bound to the task and recorded source commit; the live positive-path CI run is pending on the authorized temporary branch. Until that run succeeds, local caller-reported `PASS` remains `UNVERIFIED`. Performance and provider token use are `NOT_MEASURED`.
 
 # AI Project Manager Support Matrix
 

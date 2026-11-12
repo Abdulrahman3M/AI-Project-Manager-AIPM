@@ -70,7 +70,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "2.0.1",
+      "version": "2.0.4",
       "source_reference": "Owner-authorized AIPM maintenance of the Shared Project State Manager lineage; historical source hashes remain in Skill-Migration-Record.json"
     },
     {
@@ -97,7 +97,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "source_reference": "AIPM-authored task scope and evidence policy"
     },
     {
@@ -106,7 +106,7 @@
       "origin": "AIPM_FIRST_PARTY",
       "license": "Apache License 2.0",
       "license_path": "LICENSE",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "source_reference": "AIPM-maintained expansion of imported token-optimization; historical source hashes retained in Skill-Migration-Record.json"
     }
   ]

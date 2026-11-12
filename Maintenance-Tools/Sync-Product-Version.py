@@ -19,10 +19,12 @@ def main() -> int:
         raise SystemExit(f"Versioning/CHANGELOG.md lacks [{version}] entry")
     _, _, tail = entry.partition(f"## [{version}]")
     section = f"## [{version}]" + tail.split("\n## ", 1)[0]
-    mirrors = ("VERSION", "TUI/AI-Project-Manager/VERSION", "Plugins/VERSION", "Plugins/aipm-project-agent-bridge/VERSION")
+    # Product and TUI version together; Plugin distributions are independently
+    # versioned and must change only when their shipped content changes.
+    mirrors = ("VERSION", "TUI/AI-Project-Manager/VERSION")
     for relative in mirrors:
         (ROOT / relative).write_text(version + "\n", encoding="utf-8", newline="\n")
-    changelogs = ("CHANGELOG.md", "TUI/AI-Project-Manager/CHANGELOG.md", "Plugins/CHANGELOG.md")
+    changelogs = ("CHANGELOG.md", "TUI/AI-Project-Manager/CHANGELOG.md")
     for relative in changelogs:
         path = ROOT / relative
         text = path.read_text(encoding="utf-8")

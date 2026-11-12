@@ -98,7 +98,7 @@ def load_profiles(root: Path | str = DEFAULT_ROOT) -> list[dict[str, Any]]:
 
 
 def _plugin_version(root: Path) -> str:
-    version = (root / "Versioning" / "VERSION").read_text(encoding="utf-8").strip()
+    version = (root / "Plugins" / "VERSION").read_text(encoding="utf-8").strip()
     if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
         raise PluginBuildError("Plugin version must be a valid three-part SemVer")
     return version
@@ -106,8 +106,8 @@ def _plugin_version(root: Path) -> str:
 
 def _distribution_version(catalog: dict[str, Any]) -> str:
     version = catalog.get("plugin_version", catalog.get("platform_version"))
-    if not isinstance(version, str) or version != catalog.get("platform_version"):
-        raise PluginBuildError("Plugin distribution version must match the canonical platform version")
+    if not isinstance(version, str) or not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
+        raise PluginBuildError("Plugin distribution version must be a valid three-part SemVer")
     return version
 
 
@@ -162,7 +162,10 @@ def _manifest_payload(profile: dict[str, Any], catalog: dict[str, Any]) -> dict[
         "display_name": f"AI Project Manager — {profile['display_name']}",
         "source_project_version": catalog["platform_version"],
         "source_commit_sha": catalog["source"]["commit_sha"],
+        "source_commit_repository": catalog["source"]["repository"],
+        "source_commit_scope": "UPSTREAM_CAPABILITY_PROVENANCE",
         "status": "LOCAL_ARCHIVE_NOT_PUBLISHED_OR_INSTALLED",
+        "status_scope": "BUILD_TIME_ONLY",
         "format_status": profile["format_status"],
         "runtime_status": profile["runtime_status"],
         "personal_skills_included": False,
@@ -255,7 +258,7 @@ def _materialize(root: Path, stage: Path, profile: dict[str, Any], catalog: dict
     )
     (stage / "README.md").write_text(
         f"# AI Project Manager {profile['display_name']}\n\n"
-        "This local archive contains approved AIPM Skills and Prompts. It is not installed or published and does not grant automatic access to local AIPM projects.\n\n"
+        "This archive contains approved AIPM Skills and Prompts. Its manifest status describes the local build at creation time; later publication or installation must be checked in the host. The manifest's source commit identifies the upstream capability repository, not an AIPM project commit. The archive does not grant automatic access to local AIPM projects.\n\n"
         "For each AIPM-managed task event, begin with `project-manager`, then keep `task-scope-contract` and `resource-optimization` active. This is INSTRUCTION_ONLY guidance, not proof of host interception or actual Skill activation. The separate Shared Project State Manager requires an explicit owner request and local PowerShell invocation; Core task state remains separately permission-gated.\n\n"
         f"Project Website: [{PROJECT_URL}]({PROJECT_URL})\n" + placement,
         encoding="utf-8",

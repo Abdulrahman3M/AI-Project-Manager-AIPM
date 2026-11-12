@@ -125,7 +125,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `resource-optimization`
 
-**Description:** Controls tokens, time, tool calls, limits and owner-approved delegation without reducing quality.
+**Description:** Controls tokens, time, tool calls, limits and owner-approved delegation without reducing quality; actual delegation boundaries require independent verification.
 
 **When to Use:** Use continuously under Project Manager for every AIPM-managed task.
 
@@ -167,7 +167,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `shared-project-state-manager`
 
-**Description:** Makes long-running project work resumable across sessions or AI agents using task state, verified checkpoints, handoffs, templates, and supporting tools.
+**Description:** Makes long-running project work resumable using task state, checkpoints, handoffs and guarded local tools; legacy quarantine records require manual review.
 
 **When to Use:** Use only when the owner explicitly requests the separate local PowerShell state tool; ordinary AIPM Core state operations remain separate.
 
@@ -181,7 +181,7 @@ Use the Skill's technical name when asking an AI agent to apply it, or load it t
 
 `task-scope-contract`
 
-**Description:** Defines task scope, read tracking, bounded retries and evidence-based quality gates.
+**Description:** Defines task scope, read tracking, bounded retries and evidence-based quality gates; path preflight is provisional and `REPORTED_PASS` requires independent verification.
 
 **When to Use:** Use continuously under Project Manager for every AIPM-managed task.
 

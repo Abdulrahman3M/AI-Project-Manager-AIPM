@@ -13,6 +13,8 @@
 - `handoff`: rewrites `Next-Agent-Handoff.md` and records current Git snapshot and exact next action.
 - `files`: delegates to `safe_file_ops.py`.
 
+Guarded state I/O requires Python 3.10+ as well as Node.js. Mutations currently require Windows; unsupported platforms fail closed. State-file updates retain a prior backup for recovery.
+
 ## Validator
 
 ```text

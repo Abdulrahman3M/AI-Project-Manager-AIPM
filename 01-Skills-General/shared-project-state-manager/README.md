@@ -23,12 +23,14 @@ PowerShell is the required entry point; report missing dependencies as UNVERIFIE
 | Capability | Requirement |
 |---|---|
 | Skill / Prompt protocol only | No runtime dependency |
-| `sps.mjs` CLI | Node.js 18+ |
+| `sps.mjs` CLI with guarded state I/O | Node.js 18+ and Python 3.10+ |
 | Safe file operations / validation | Python 3.10+ |
 | Windows ACL reset | Windows built-in `icacls` plus the user's existing OS permissions |
 | Git snapshot fields | Git, when the project uses Git |
 
 The JavaScript helpers use only Node.js built-in modules. **No `npm install` is required.** `package.json` exists for version metadata and convenient test commands.
+
+Guarded state writes, moves and deletion currently use Windows file handles and fail closed on other operating systems until an equivalent safe implementation is verified. Read-only protocol guidance remains portable. Paths and permissions are still controlled by the host and operating system.
 
 ### Install Node.js and Python from PowerShell
 
@@ -89,6 +91,8 @@ Restore from the generated record:
 ```powershell
 .\scripts\sps.ps1 files restore ".\Shared-Project-State\Quarantine\Records\<record>.json" --project-root .
 ```
+
+Records created before the path-binding format (`schema_version` `1.0`) require manual review and cannot be restored or purged automatically. Their contents are retained. New `1.1` records bind the original path to the quarantined item name; this detects record-only path changes but is not a signature against an actor who can alter both the record and item. Before a record update, the tool saves a prior copy alongside it for recovery.
 
 Clear read-only bits only when diagnosed and authorized:
 

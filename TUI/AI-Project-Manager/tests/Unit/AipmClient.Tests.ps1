@@ -65,8 +65,12 @@ $checkpointTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-checkpoint' -
 Assert-Equal 'task checkpoint updates through the whitelisted Core client' 'PASS' $checkpointTask.Status
 $blockedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-blocker-add' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Text 'Waiting for access confirmation.'
 Assert-Equal 'task blocker updates through the whitelisted Core client' 'PASS' $blockedTask.Status
-$verifiedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-verify' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Result 'PASS' -Evidence 'Manual review confirmed the task output.'
+$verifiedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-verify' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Result 'PASS' -Evidence 'Manual review confirmed the task output.' -AttestationSourceDigest ('a' * 40)
 Assert-Equal 'task verification evidence updates through the whitelisted Core client' 'PASS' $verifiedTask.Status
+$clearVerificationBlocker = Invoke-AipmCore -AppRoot $appRoot -Command 'task-blocker-clear' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-Equal 'task blockers clear through the whitelisted Core client' 'PASS' $clearVerificationBlocker.Status
+$unverifiedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-read' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId
+Assert-Equal 'caller PASS without a task-scoped signed receipt remains unverified' 'UNVERIFIED' $unverifiedTask.Data.task.task_status
 $reportedTask = Invoke-AipmCore -AppRoot $appRoot -Command 'task-report' -RegistryPath $taskRegistry -ProjectId $taskProjectId -TaskId $taskId -Text 'The task record was updated through the TUI client contract.'
 Assert-Equal 'task report updates through the whitelisted Core client' 'PASS' $reportedTask.Status
 $supportSource = Join-Path (Get-TestWork) 'Client Report.md'

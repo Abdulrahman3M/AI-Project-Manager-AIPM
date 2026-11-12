@@ -90,7 +90,7 @@ See `File-Operations-Safety.md` and `Permission-And-Lock-Recovery.md`.
 
 ## Shared Project State Helper Tooling
 
-The dependency-free Node.js CLI can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, delegate safe-file operations, and route transient state (`.\scripts\sps.ps1 route`).
+The Node.js CLI and its Python guarded-I/O helper can initialize state, inspect status, run doctor checks, create checkpoints, create handoffs, delegate safe-file operations, and route transient state (`.\scripts\sps.ps1 route`).
 
 Additionally, `scripts/route_transient_state.py` (and the PowerShell wrapper `scripts/Route-Transient-State.ps1`) provides:
 - `--env`: prints environment variable exports (`PYTHONPYCACHEPREFIX`, `TEMP`, `TMP`, `PYTEST_ADDOPTS`, etc.) for PowerShell, bash, or cmd;
@@ -99,7 +99,7 @@ Additionally, `scripts/route_transient_state.py` (and the PowerShell wrapper `sc
 - `--status`: displays storage size and file counts across Cache, Temporary-Files, and Test-Workspace;
 - `--clean`: safely cleans disposable temporary and test files.
 
-These tools are also copied to the root of `Shared-Project-State-Manager/` as `Route-Transient-State.py` and `Route-Transient-State.ps1` upon initialization for direct execution.
+On explicit initialization, the route script, PowerShell wrapper and `safe_move.py` are copied into `Shared-Project-State/` only if each destination is absent. The router recognizes an existing `Shared-Project-State-Manager/` for compatibility; if both roots exist it refuses to choose between them. Status, environment output and dry runs create no directories. Sweep preserves occupied destinations, and cleanup reports linked or unremovable items instead of silently claiming success.
 
 ## Cleanup
 

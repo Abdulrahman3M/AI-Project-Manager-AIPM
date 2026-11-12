@@ -172,8 +172,12 @@ class TaskOperations:
     def clear_blockers(self, task: Path) -> None:
         self._mutate('task.blocker.clear', task)
 
-    def verify(self, task: Path, result: str, evidence: str) -> None:
-        self._mutate('task.verify', task, result=result, evidence=evidence)
+    def verify(self, task: Path, result: str, evidence: str, *, attestation: dict[str, str] | None = None) -> None:
+        """Record reported results; PASS is accepted only with a verifiable task-scoped attestation."""
+        payload: dict[str, Any] = {'result': result, 'evidence': evidence}
+        if attestation is not None:
+            payload['attestation'] = attestation
+        self._mutate('task.verify', task, **payload)
 
     def report(self, task: Path, text: str) -> None:
         self._mutate('task.report', task, text=text)

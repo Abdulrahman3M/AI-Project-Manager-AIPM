@@ -1,4 +1,9 @@
-"""Evaluate caller-supplied scope records; never intercept or access files."""
+"""Evaluate scope records and provisional path metadata; never intercept edits."""
+
+import os
+from pathlib import Path
+import re
+import stat
 
 
 def edit_decision(path, authorized_paths):
@@ -10,6 +15,38 @@ def edit_decision(path, authorized_paths):
     if any(part in ("", ".", "..") for part in path.split("/")):
         return False
     return path in authorized_paths
+
+
+def edit_preflight(project_root, path, authorized_paths):
+    """Inspect an existing path provisionally; this cannot authorize or guard a later edit."""
+    if not edit_decision(path, authorized_paths) or re.search(r"%(?:2e|2f|5c)", path, re.IGNORECASE):
+        return "DENY"
+    if any(part.endswith((".", " "))
+           or re.match(r"^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)", part, re.IGNORECASE)
+           for part in path.split("/")):
+        return "DENY"
+    if not isinstance(project_root, (str, os.PathLike)):
+        return "UNVERIFIED"
+    try:
+        root = Path(project_root)
+        if not root.is_absolute() or not root.is_dir():
+            return "UNVERIFIED"
+        candidate = root.joinpath(*path.split("/"))
+        paths = [*reversed(root.parents), root]
+        current = root
+        for part in path.split("/"):
+            current = current / part
+            paths.append(current)
+        for current in paths:
+            info = current.lstat()
+            if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400):
+                return "DENY"
+        resolved = candidate.resolve(strict=True).relative_to(root.resolve(strict=True))
+        if os.name == "nt" and os.path.normcase(str(resolved)) != os.path.normcase(str(Path(*path.split("/")))):
+            return "DENY"
+    except (OSError, RuntimeError, ValueError, TypeError):
+        return "UNVERIFIED"
+    return "PROVISIONAL_MATCH"
 
 
 def read_decision(reason, revision, previous_revision, ranges=None, previous_ranges=None):
@@ -45,7 +82,7 @@ def retry_decision(new_hypothesis, attempt, limit, previous_hypothesis, previous
 
 
 def quality_gate(items, required_ids):
-    """Aggregate reported evidence statuses; callers must verify the evidence itself."""
+    """Aggregate reports without claiming that their evidence was verified."""
     if not isinstance(items, list) or not isinstance(required_ids, list) or not required_ids:
         return "UNVERIFIED"
     if any(isinstance(item, dict) and item.get("status") == "FAIL" for item in items):
@@ -64,4 +101,4 @@ def quality_gate(items, required_ids):
            or not isinstance(item.get("evidence"), str) or not item["evidence"].strip()
            for item in items):
         return "UNVERIFIED"
-    return "PASS"
+    return "REPORTED_PASS"

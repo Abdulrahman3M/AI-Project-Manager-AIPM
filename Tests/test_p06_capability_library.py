@@ -98,6 +98,26 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
         self.assertNotIn("morning", {item["slug"] for item in catalog["skills"]})
 
+    def test_capability_inventory_excludes_python_bytecode_and_cache_directories(self) -> None:
+        source = self.workspace / "skill-source"
+        cache = source / "scripts" / "__pycache__"
+        cache.mkdir(parents=True)
+        (source / "scripts" / "policy.py").write_text("# canonical source\n", encoding="utf-8")
+        (source / "scripts" / "policy.pyc").write_bytes(b"compiled cache")
+        (source / "scripts" / "policy.pyo").write_bytes(b"optimized cache")
+        (cache / "policy.cpython-314.pyc").write_bytes(b"bytecode")
+
+        files = capabilities._tree_files(source)
+        complete_tree = capabilities._tree_files(source, include_bytecode=True)
+
+        self.assertEqual(set(files), {"scripts/policy.py"})
+        self.assertEqual(set(complete_tree), {
+            "scripts/__pycache__/policy.cpython-314.pyc",
+            "scripts/policy.py",
+            "scripts/policy.pyc",
+            "scripts/policy.pyo",
+        })
+
     def test_aipm_owned_browser_environment_manager_is_not_byte_preserved_import(self) -> None:
         migration = json.loads((ROOT / "docs" / "project" / "Provenance" / "Skill-Migration-Record.json").read_text(encoding="utf-8"))
         first_party = json.loads((ROOT / "Capability-Library" / "First-Party-Skills.json").read_text(encoding="utf-8"))

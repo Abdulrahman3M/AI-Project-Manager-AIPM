@@ -13,6 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 from .storage import ManagedProject, StateError, _atomic_json, _canonical, _inside, validate_managed_project
+from .attestations import AttestationError, RECEIPT_RELATIVE_PATH, verify_completion_attestation
 
 
 @dataclass(frozen=True)
@@ -43,13 +44,49 @@ class CoreEngine:
         return 'AIPM could not prove that this state matches the supported safe-repair pattern.'
 
     @staticmethod
-    def task_status(task: dict[str, Any]) -> str:
+    def task_status(task: dict[str, Any], task_id: str | None = None, project: ManagedProject | None = None, expected_source_digest: str | None = None) -> str:
         if task['blockers']:
             return 'BLOCKED'
         if task.get('status_override') == 'COMPLETE':
-            return 'COMPLETE'
+            return 'UNVERIFIED'
         verification = task['verification']
-        return 'COMPLETE' if verification and verification['result'] == 'PASS' and verification['evidence'].strip() and task['report'].strip() else 'IN-PROGRESS'
+        if verification and verification.get('result') == 'PASS':
+            attestation = verification.get('attestation')
+            if project is None or task_id is None or not isinstance(attestation, dict):
+                return 'UNVERIFIED'
+            if attestation.get('receipt') != RECEIPT_RELATIVE_PATH:
+                return 'UNVERIFIED'
+            if not isinstance(expected_source_digest, str) or attestation.get('source_digest') != expected_source_digest:
+                return 'UNVERIFIED'
+            task_root = project.state_root / 'Operations' / 'Tasks' / task_id
+            receipt = task_root / 'References' / 'Completion-Receipt.json'
+            try:
+                if any(parent.is_symlink() or (hasattr(parent, 'is_junction') and parent.is_junction()) for parent in (project.state_root, project.state_root / 'Operations', project.state_root / 'Operations' / 'Tasks', task_root, receipt.parent, receipt)):
+                    return 'UNVERIFIED'
+                if not _inside(_canonical(receipt), _canonical(task_root)):
+                    return 'UNVERIFIED'
+                verified = verify_completion_attestation(
+                    receipt, task_id=task_id, source_digest=attestation.get('source_digest', '')
+                )
+            except (AttestationError, OSError, ValueError):
+                return 'UNVERIFIED'
+            return 'COMPLETE' if verified.get('result') == 'PASS' and task.get('report', '').strip() else 'UNVERIFIED'
+        if task.get('status_override') == 'CLOSED':
+            return 'CLOSED-UNVERIFIED'
+        if verification and verification.get('result') == 'UNVERIFIED':
+            return 'UNVERIFIED'
+        return 'IN-PROGRESS'
+
+    @staticmethod
+    def _task_read_projection(task: dict[str, Any], *, attestation_verified: bool = False) -> dict[str, Any]:
+        """Return a safe view without rewriting legacy/caller-owned records."""
+        visible = copy.deepcopy(task)
+        verification = visible.get('verification')
+        if isinstance(verification, dict) and verification.get('result') == 'PASS' and not attestation_verified:
+            verification['reported_result'] = 'PASS'
+            verification['result'] = 'UNVERIFIED'
+            verification.pop('verified', None)
+        return visible
 
     @classmethod
     def _apply_task(cls, manifest: dict[str, Any], command: str, payload: dict[str, Any]) -> None:
@@ -159,9 +196,12 @@ class CoreEngine:
                 result, evidence = payload.get('result'), payload.get('evidence')
                 if result not in ('PASS', 'FAIL', 'UNVERIFIED') or not isinstance(evidence, str) or not evidence.strip():
                     raise StateError('Invalid Task Evidence')
-                task['verification'] = {'result': result, 'evidence': evidence}
-                if result != 'PASS':
-                    task['status_override'] = None
+                attestation = payload.get('attestation')
+                if result == 'PASS' and isinstance(attestation, dict) and attestation.get('receipt') == RECEIPT_RELATIVE_PATH and isinstance(attestation.get('source_digest'), str):
+                    task['verification'] = {'result': 'PASS', 'evidence': evidence, 'attestation': {'receipt': RECEIPT_RELATIVE_PATH, 'source_digest': attestation['source_digest']}}
+                else:
+                    task['verification'] = {'result': 'UNVERIFIED' if result == 'PASS' else result, 'evidence': evidence}
+                task['status_override'] = None
             elif command == 'task.checkpoint':
                 last_verified = payload.get('last_verified_action')
                 next_action = payload.get('next_action')
@@ -180,7 +220,7 @@ class CoreEngine:
                     raise StateError('Invalid Task Close Note')
                 if task['blockers']:
                     raise StateError('Task Blockers Must Be Cleared Before Closing')
-                task['status_override'] = 'COMPLETE'
+                task['status_override'] = 'CLOSED'
                 task['report'] = text
             elif command == 'task.reopen':
                 text = payload.get('text')
@@ -219,7 +259,7 @@ class CoreEngine:
             if not isinstance(task_id, str) or not re.fullmatch(r'Task-[A-Za-z0-9][A-Za-z0-9_-]{0,159}', task_id) or not isinstance(task, dict):
                 raise StateError('Invalid Task State')
             CoreEngine._validate_task_record(task)
-        if manifest.get('task_status') not in ('NOT-STARTED', 'IN-PROGRESS', 'BLOCKED', 'COMPLETE') and isinstance(manifest.get('tasks'), dict):
+        if manifest.get('task_status') not in ('NOT-STARTED', 'IN-PROGRESS', 'BLOCKED', 'COMPLETE', 'CLOSED-UNVERIFIED') and isinstance(manifest.get('tasks'), dict):
             active_id = manifest.get('task_id')
             if active_id and active_id in manifest['tasks']:
                 manifest['task_status'] = CoreEngine.task_status(manifest['tasks'][active_id])
@@ -273,10 +313,10 @@ class CoreEngine:
             raise StateError('Invalid Task Evidence')
         if task.get('status_override') == 'COMPLETED':
             task['status_override'] = 'COMPLETE'
-        elif task.get('status_override') not in (None, 'COMPLETE'):
+        elif task.get('status_override') not in (None, 'COMPLETE', 'CLOSED'):
             task['status_override'] = None
         task.setdefault('status_override', None)
-        if task['status_override'] not in (None, 'COMPLETE'):
+        if task['status_override'] not in (None, 'COMPLETE', 'CLOSED'):
             raise StateError('Invalid Task Status Override')
         for field in ('last_verified_action', 'next_action'):
             if field in task and (not isinstance(task[field], str) or not task[field].strip()):
@@ -1273,19 +1313,39 @@ class CoreEngine:
         except (OSError, ValueError, KeyError, TypeError) as error:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "INVALID_HISTORY", "detail": self._error_detail(error, project)}
         if command.command == "state.read":
-            return {"schema_version": "1.0", "status": "PASS", "state": manifest, "revision": manifest["revision"]}
+            # Keep the persisted manifest/history untouched. The task status is a
+            # derived projection; old caller-reported COMPLETE values are not proof.
+            visible_state = copy.deepcopy(manifest)
+            visible_state['tasks'] = {}
+            verified_statuses: dict[str, str] = {}
+            for task_id, task in manifest['tasks'].items():
+                verified_statuses[task_id] = self.task_status(task, task_id, project, manifest.get('head_sha'))
+                visible_state['tasks'][task_id] = self._task_read_projection(
+                    task, attestation_verified=verified_statuses[task_id] == 'COMPLETE'
+                )
+            active_id = visible_state.get('task_id')
+            if active_id in visible_state['tasks']:
+                visible_state['task_status'] = verified_statuses[active_id]
+            elif visible_state['tasks']:
+                latest_id = sorted(visible_state['tasks'])[-1]
+                visible_state['task_id'] = latest_id
+                visible_state['task_status'] = verified_statuses[latest_id]
+            else:
+                visible_state['task_status'] = 'NOT-STARTED'
+            return {"schema_version": "1.0", "status": "PASS", "state": visible_state, "revision": manifest["revision"]}
         if command.command == 'task.read':
             task_id = command.input.get('task_id')
             task = manifest['tasks'].get(task_id) if isinstance(task_id, str) else None
             if task is None:
                 return {'schema_version': '1.0', 'status': 'BLOCKED', 'reason': 'TASK_NOT_FOUND'}
-            resumable = dict(task)
+            task_status = self.task_status(task, task_id, project, manifest.get('head_sha'))
+            resumable = self._task_read_projection(task, attestation_verified=task_status == 'COMPLETE')
             resumable.setdefault('last_verified_action', 'Task progress has not yet been recorded.')
             resumable.setdefault('next_action', 'Unknown; reconcile the task with current project evidence.')
             resumable.setdefault('completed_work', [])
             resumable.setdefault('changed_files', [])
             resumable.setdefault('test_results', [])
-            return {'schema_version': '1.0', 'status': 'PASS', 'task': resumable, 'task_status': self.task_status(task), 'revision': manifest['revision']}
+            return {'schema_version': '1.0', 'status': 'PASS', 'task': resumable, 'task_status': task_status, 'revision': manifest['revision']}
         if command.command not in {"state.set-next-action", "state.record-git-observation", "state.upgrade-schema"} | self.TASK_COMMANDS:
             return {"schema_version": "1.0", "status": "BLOCKED", "reason": "COMMAND_UNSUPPORTED"}
         if command.idempotency_key:

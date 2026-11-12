@@ -2,6 +2,8 @@
 
 import importlib.util
 import unittest
+import os
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +31,12 @@ class ResourcePolicyTests(unittest.TestCase):
         overlap = {**plan, "count": 2, "roles": ["one", "two"],
                    "boundaries": ["src/", "src/components/"]}
         self.assertEqual(gate("HUGE", True, overlap), "DENY")
+        unicode_overlap = {**plan, "count": 2, "roles": ["one", "two"],
+                           "boundaries": ["src/caf\u00e9", "src/cafe\u0301"]}
+        self.assertEqual(gate("HUGE", True, unicode_overlap), "DENY")
+        windows_alias = {**plan, "count": 2, "roles": ["one", "two"],
+                         "boundaries": ["src/cache", "src/cache."]}
+        self.assertEqual(gate("HUGE", True, windows_alias), "DENY")
 
     def test_missing_quota_is_not_measured_and_required_tests_remain_required(self):
         self.assertEqual(self.policy.telemetry(None), {"status": "NOT_MEASURED", "value": None})
@@ -37,6 +45,25 @@ class ResourcePolicyTests(unittest.TestCase):
         self.assertEqual(self.policy.telemetry(float("nan")), {"status": "NOT_MEASURED", "value": None})
         self.assertEqual(self.policy.telemetry(True), {"status": "NOT_MEASURED", "value": None})
         self.assertTrue(self.policy.required_checks_continue(budget_exhausted=True))
+
+    @unittest.skipUnless(os.name == "nt", "Windows short-name semantics")
+    def test_delegation_rejects_real_short_name_boundary_alias(self):
+        import ctypes
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            target = root / "long canonical directory name"
+            target.mkdir()
+            short = ctypes.create_unicode_buffer(32768)
+            if not ctypes.windll.kernel32.GetShortPathNameW(str(target), short, len(short)):
+                self.skipTest("Windows short names unavailable")
+            alias = Path(short.value).name
+            if alias.casefold() == target.name.casefold():
+                self.skipTest("Windows short names not enabled on this volume")
+            plan = {"reason": "independent work", "roles": ["one", "two"],
+                    "boundaries": [target.name, alias], "collision_avoidance": "separate paths",
+                    "overhead": "extra context", "serial_alternative": "sequential",
+                    "count": 2, "verification": "review results"}
+            self.assertEqual(self.policy.delegation_decision("HUGE", True, plan), "DENY")
 
     def test_revision_preserves_required_checks_and_measurements(self):
         self.assertTrue(hasattr(self.policy, "revise_budget"), "Budget reconciliation is missing")

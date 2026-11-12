@@ -24,6 +24,23 @@ def load_builder():
 
 
 class PluginDistributionTests(unittest.TestCase):
+    def test_plugin_distribution_version_is_independent_from_platform_version(self) -> None:
+        builder = load_builder()
+        catalog = {"platform_version": "1.11.14", "plugin_version": "1.11.13"}
+
+        self.assertEqual(builder._distribution_version(catalog), "1.11.13")
+
+    def test_distribution_status_is_explicitly_build_time_only(self) -> None:
+        builder = load_builder()
+        profile = {"id": "chatgpt", "display_name": "ChatGPT", "format_status": "FORMAT_VERIFIED",
+                   "runtime_status": "UNVERIFIED", "host_notes": []}
+        catalog = {"platform_version": "1.0.0", "source": {"commit_sha": "test", "repository": "owner/upstream"},
+                   "skills": [], "standalone_prompts": []}
+        manifest = builder._manifest_payload(profile, catalog)
+        self.assertEqual(manifest["status_scope"], "BUILD_TIME_ONLY")
+        self.assertEqual(manifest["source_commit_repository"], "owner/upstream")
+        self.assertEqual(manifest["source_commit_scope"], "UPSTREAM_CAPABILITY_PROVENANCE")
+
     def test_profile_contracts(self) -> None:
         builder = load_builder()
         profiles = {item["id"]: item for item in builder.load_profiles(ROOT)}

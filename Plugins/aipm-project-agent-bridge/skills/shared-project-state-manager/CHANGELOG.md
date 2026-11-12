@@ -1,3 +1,16 @@
+## [2.0.4] — 2026-11-11
+
+- Keep generated Python bytecode and `__pycache__` out of capability records and all generated Skill/Plugin distributions.
+
+## [2.0.3] — 2026-11-11
+
+- Normalize Windows case when verifying explicit project-root display in transient routing tests.
+
+## [2.0.2] — 2026-11-11
+
+- Bind quarantine restore records to original paths; harden guarded moves, project-root identity, nested protected directories, and dry-run state routing.
+- Add Windows handle-bound mutation checks and explicit refusal of legacy records without source binding.
+
 ## [2.0.1] — 2026-11-10
 
 - Route active operational examples and validation through PowerShell entry points.
