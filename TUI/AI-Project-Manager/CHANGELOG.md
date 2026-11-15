@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.11.16] — Project Registration Diagnostics
+
+- Report registration failures with actionable details and safely initialize empty existing state folders.
+- Preserve unrecognized state and reject missing or malformed manifests without registering incomplete projects.
+- Keep Plugin distribution versions independent at 1.11.15; align product version synchronization and archive builder validation with that policy.
+
 ## [1.11.15] — Synchronized AIPM, TUI, And Plugin Release
 
 - Set one shared release version across AIPM Platform, PowerShell TUI, the generated legacy bridge, and ChatGPT/Codex, Claude Code, and Google Antigravity Plugin distributions.

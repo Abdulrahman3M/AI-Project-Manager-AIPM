@@ -1,9 +1,9 @@
-# Support Matrix — v1.11.15 Repository Update (Unpublished)
+# Support Matrix — v1.11.16 Repository Update (Unpublished)
 
 | Component | Version | Release Source |
 |---|---:|---|
-| AIPM Platform | 1.11.15 | `Versioning/VERSION` |
-| PowerShell TUI | 1.11.15 | Generated compatibility mirror |
+| AIPM Platform | 1.11.16 | `Versioning/VERSION` |
+| PowerShell TUI | 1.11.16 | Generated compatibility mirror |
 | Legacy Project Agent Bridge | 1.11.15 | Capability Library generated package |
 | ChatGPT, Claude, Antigravity Plugins | 1.11.15 | Shared release version, built from the governed capability sources |
 | Independently versioned Skills | Per-Skill SemVer | Each Skill `VERSION` |
