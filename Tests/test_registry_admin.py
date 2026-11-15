@@ -10,12 +10,87 @@ import unittest
 from test_support import CORE_ROOT, CORE_SCRIPT, RUNTIME_ROOT, TEST_WORKSPACE
 sys.path.insert(0, str(CORE_ROOT))
 from aipm_core.domain import CommandEnvelope, CoreEngine
-from aipm_core.storage import ManagedProject, ProjectRegistry, StateError, initialize_project_state
+from aipm_core.storage import ManagedProject, ProjectRegistry, StateError, initialize_project_state, initialize_empty_state_root
+from unittest.mock import patch
 
 
 class RegistryAdminTests(unittest.TestCase):
     def cli(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run([sys.executable, str(CORE_SCRIPT), *arguments], cwd=RUNTIME_ROOT, capture_output=True, text=True)
+
+    def test_registration_completes_existing_empty_state_directories(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            root = base / 'Project'
+            state = root / 'Shared-Project-State-Manager'
+            (state / 'Temporary-Files').mkdir(parents=True)
+            (state / 'Cache').mkdir()
+            registry = base / 'registry.json'
+            result = self.cli('registry-register', '--registry', str(registry), '--project-root', str(root), '--project-id', 'test-project', '--alias', 'Test Project')
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((state / 'Project-Manifest.json').is_file())
+            self.assertTrue((state / 'Cache').is_dir())
+            self.assertEqual(len(json.loads(registry.read_text())['projects']), 1)
+
+    def test_registration_preserves_unrecognized_existing_state(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            root = base / 'Project'
+            state = root / 'Shared-Project-State-Manager'
+            state.mkdir(parents=True)
+            marker = state / 'important.txt'
+            marker.write_text('keep', encoding='utf-8')
+            registry = base / 'registry.json'
+            result = self.cli('registry-register', '--registry', str(registry), '--project-root', str(root), '--project-id', 'test-project', '--alias', 'Test Project')
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('PROJECT_STATE_MANIFEST_MISSING', json.loads(result.stdout)['reason'])
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'keep')
+            self.assertEqual(json.loads(registry.read_text())['projects'], [])
+
+    def test_registration_rejects_missing_state_manifest_with_detail(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            project = initialize_project_state(base / 'Project', 'test-project', 'Test Project')
+            (project.state_root / 'State-Manifest.json').unlink()
+            registry = base / 'registry.json'
+            result = self.cli('registry-register', '--registry', str(registry), '--project-root', str(project.root), '--project-id', 'test-project', '--alias', 'Test Project')
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('State-Manifest.json', json.loads(result.stdout)['reason'])
+            self.assertEqual(json.loads(registry.read_text())['projects'], [])
+
+    def test_registration_reports_invalid_project_manifest(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            project = initialize_project_state(base / 'Project', 'test-project', 'Test Project')
+            (project.state_root / 'Project-Manifest.json').write_text('{', encoding='utf-8')
+            registry = base / 'registry.json'
+            result = self.cli('registry-register', '--registry', str(registry), '--project-root', str(project.root), '--project-id', 'test-project', '--alias', 'Test Project')
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('PROJECT_STATE_MANIFEST_INVALID', json.loads(result.stdout)['reason'])
+            self.assertEqual(json.loads(registry.read_text())['projects'], [])
+
+    def test_registration_rejects_missing_history_directory(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            base = Path(temporary)
+            project = initialize_project_state(base / 'Project', 'test-project', 'Test Project')
+            (project.state_root / 'History' / 'Events').rmdir()
+            registry = base / 'registry.json'
+            result = self.cli('registry-register', '--registry', str(registry), '--project-root', str(project.root), '--project-id', 'test-project', '--alias', 'Test Project')
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('History', json.loads(result.stdout)['reason'])
+            self.assertEqual(json.loads(registry.read_text())['projects'], [])
+
+    def test_interrupted_initialization_does_not_publish_identity_or_remove_existing_content(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_WORKSPACE) as temporary:
+            root = Path(temporary) / 'Project'
+            state = root / 'Shared-Project-State-Manager'
+            (state / 'Cache').mkdir(parents=True)
+            with patch('aipm_core.storage.shutil.copyfileobj', side_effect=OSError('simulated write failure')):
+                with self.assertRaises(OSError):
+                    initialize_empty_state_root(root, 'test-project', 'Test Project')
+            self.assertTrue((state / 'Cache').is_dir())
+            self.assertFalse((state / 'Project-Manifest.json').exists())
+            self.assertEqual(list(state.glob('.aipm-initialize-*')), [])
 
     def test_core_rejects_managed_state_that_overlaps_its_own_installation(self) -> None:
         project = ManagedProject("aipm-self", "AIPM", RUNTIME_ROOT, RUNTIME_ROOT / "Shared-Project-State-Manager")

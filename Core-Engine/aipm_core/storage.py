@@ -203,6 +203,43 @@ def initialize_project_state(project_root: Path, project_id: str, alias: str, *,
     return project
 
 
+def initialize_empty_state_root(project_root: Path, project_id: str, alias: str) -> ManagedProject:
+    """Initialize only an existing, empty scratch-directory skeleton."""
+    root = _protect_platform_path(project_root, operation="project registration")
+    state = _canonical(root / STATE_ROOT_NAME)
+    permitted = {"Cache", "Test-Workspace", "Temporary-Files"}
+    for child in state.iterdir():
+        _canonical(child)
+        if child.name not in permitted or not child.is_dir() or any(child.iterdir()):
+            raise StateError(f"PROJECT_STATE_MANIFEST_MISSING: {state}; existing state was preserved")
+
+    # Create a complete state tree away from existing content, then publish
+    # its entries using exclusive operations. Never overwrite unknown content.
+    staging = state / f".aipm-initialize-{uuid4().hex}"
+    staging.mkdir()
+    try:
+        generated = initialize_project_state(staging, project_id, alias).state_root
+        # Create files exclusively, which fails if a destination exists.
+        # Publish the identity manifest last so interrupted initialization is
+        # never mistaken for a complete managed state.
+        entries = sorted(generated.rglob("*"), key=lambda p: (p.name == "Project-Manifest.json", len(p.relative_to(generated).parts)))
+        for item in entries:
+            target = state / item.relative_to(generated)
+            _canonical(target)
+            if item.is_dir():
+                try:
+                    target.mkdir()
+                except FileExistsError:
+                    if target.name != "Temporary-Files" or target.parent != state or not target.is_dir():
+                        raise
+            else:
+                with item.open("rb") as source, target.open("xb") as destination:
+                    shutil.copyfileobj(source, destination)
+    finally:
+        shutil.rmtree(staging)
+    return ManagedProject(project_id, alias, root, state)
+
+
 class ProjectRegistry:
     """Pointer-only registry stored outside the platform source tree."""
 

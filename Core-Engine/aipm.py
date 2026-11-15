@@ -10,7 +10,7 @@ from typing import Sequence
 
 from aipm_core.domain import CommandEnvelope, CoreEngine
 from aipm_core.host_adapters import load_capability_matrix
-from aipm_core.storage import ManagedProject, ProjectRegistry, STATE_ROOT_NAME, StateError, _canonical, _protect_platform_path, default_registry_path, initialize_project_state
+from aipm_core.storage import ManagedProject, ProjectRegistry, STATE_ROOT_NAME, StateError, _canonical, _protect_platform_path, default_registry_path, initialize_project_state, initialize_empty_state_root
 from aipm_core.task_ops import MAX_TASK_ARTIFACT_BYTES, TaskOperations
 from aipm_core.project_setup import inspect_project, initialize_git, install_firg, install_firg_hook, repair_firg_files, repair_firg_rule, save_preferences, update_firg, update_project_layout
 
@@ -382,17 +382,33 @@ def main(argv: Sequence[str] | None = None) -> int:
                 registry.initialize()
                 state_root = _canonical(root / STATE_ROOT_NAME)
                 if state_root.exists():
-                    manifest = json.loads((state_root / "Project-Manifest.json").read_text(encoding="utf-8"))
+                    manifest_path = _canonical(state_root / "Project-Manifest.json")
+                    if not manifest_path.is_file():
+                        project = initialize_empty_state_root(root, args.project_id, args.alias)
+                        manifest_path = project.state_root / "Project-Manifest.json"
+                    try:
+                        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                    except (UnicodeError, json.JSONDecodeError) as error:
+                        raise StateError(f"PROJECT_STATE_MANIFEST_INVALID: {manifest_path}") from error
                     if not isinstance(manifest, dict):
                         raise StateError("INVALID_PROJECT_STATE")
                     if manifest.get("project_id") != args.project_id or manifest.get("state_root_name") != STATE_ROOT_NAME:
                         raise StateError("PROJECT_STATE_IDENTITY_CONFLICT")
+                    state_manifest = _canonical(state_root / "State-Manifest.json")
+                    if not state_manifest.is_file():
+                        raise StateError(f"PROJECT_STATE_MANIFEST_MISSING: {state_manifest}; existing state was preserved")
+                    for relative in ("History/Events", "Operations/Tasks", "Operations/Locks"):
+                        required_directory = _canonical(state_root / relative)
+                        if not required_directory.is_dir():
+                            raise StateError(f"PROJECT_STATE_DIRECTORY_MISSING: {required_directory}; existing state was preserved")
                     project = ManagedProject(args.project_id, args.alias.strip(), _canonical(root), state_root)
                     state_check = CoreEngine({project.project_id: project}).execute(
                         CommandEnvelope("registry-register-check", "state.read", "aipm-cli", project.project_id, 0, None, {})
                     )
                     if state_check.get("status") != "PASS":
-                        raise StateError(state_check.get("reason", "INVALID_PROJECT_STATE"))
+                        reason = state_check.get("reason", "INVALID_PROJECT_STATE")
+                        detail = state_check.get("detail")
+                        raise StateError(f"{reason}: {detail}" if detail else reason)
                 else:
                     project = initialize_project_state(root, args.project_id, args.alias)
                 entry = registry.register(project)
@@ -413,7 +429,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 safety_copy = registry.restore(Path(args.source))
                 result = {"schema_version": "1.0", "status": "PASS", "restored": str(Path(args.source).resolve()), "pre_restore_backup": str(safety_copy) if safety_copy else None}
         except (OSError, ValueError, TypeError, AttributeError, json.JSONDecodeError) as error:
-            reason = str(error) if isinstance(error, StateError) else "REGISTRY_OPERATION_FAILED"
+            reason = str(error) if isinstance(error, StateError) else f"{type(error).__name__}: {error}"
             if reason.startswith("AIPM_PLATFORM_PROTECTED"):
                 reason = "AIPM_PLATFORM_PROTECTED"
             result = {"schema_version": "1.0", "status": "BLOCKED", "reason": reason}
