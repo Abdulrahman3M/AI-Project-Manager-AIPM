@@ -108,8 +108,6 @@ def _distribution_version(catalog: dict[str, Any]) -> str:
     version = catalog.get("plugin_version", catalog.get("platform_version"))
     if not isinstance(version, str) or not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version):
         raise PluginBuildError("Plugin distribution version must be a valid three-part SemVer")
-    if version != catalog.get("platform_version"):
-        raise PluginBuildError("Plugin distribution version must match the synchronized platform release")
     return version
 
 

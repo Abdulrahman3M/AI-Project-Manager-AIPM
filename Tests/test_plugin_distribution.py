@@ -24,13 +24,12 @@ def load_builder():
 
 
 class PluginDistributionTests(unittest.TestCase):
-    def test_plugin_distribution_version_must_match_the_platform_release(self) -> None:
+    def test_plugin_distribution_version_is_independent_of_platform_release(self) -> None:
         builder = load_builder()
         catalog = {"platform_version": "1.11.15", "plugin_version": "1.11.15"}
 
         self.assertEqual(builder._distribution_version(catalog), "1.11.15")
-        with self.assertRaises(builder.PluginBuildError):
-            builder._distribution_version({"platform_version": "1.11.15", "plugin_version": "1.11.14"})
+        self.assertEqual(builder._distribution_version({"platform_version": "1.11.15", "plugin_version": "1.11.14"}), "1.11.14")
 
     def test_distribution_status_is_explicitly_build_time_only(self) -> None:
         builder = load_builder()

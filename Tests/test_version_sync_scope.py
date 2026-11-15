@@ -11,7 +11,7 @@ from test_support import TEST_WORKSPACE
 
 
 class ProductVersionSyncScopeTests(unittest.TestCase):
-    def test_product_version_sync_updates_shared_platform_tui_and_plugin_release(self) -> None:
+    def test_product_version_sync_preserves_independent_plugin_release(self) -> None:
         with tempfile.TemporaryDirectory(prefix='aipm-version-sync-', dir=TEST_WORKSPACE) as temporary:
             root = Path(temporary)
             for relative in (
@@ -34,9 +34,9 @@ class ProductVersionSyncScopeTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((root / 'VERSION').read_text(encoding='utf-8').strip(), '1.11.14')
             self.assertEqual((root / 'TUI/AI-Project-Manager/VERSION').read_text(encoding='utf-8').strip(), '1.11.14')
-            self.assertEqual((root / 'Plugins/VERSION').read_text(encoding='utf-8').strip(), '1.11.14')
+            self.assertEqual((root / 'Plugins/VERSION').read_text(encoding='utf-8').strip(), '1.11.13')
             self.assertEqual((root / 'Plugins/aipm-project-agent-bridge/VERSION').read_text(encoding='utf-8').strip(), '1.11.13')
-            self.assertIn('## [1.11.14]', (root / 'Plugins/CHANGELOG.md').read_text(encoding='utf-8'))
+            self.assertNotIn('## [1.11.14]', (root / 'Plugins/CHANGELOG.md').read_text(encoding='utf-8'))
             self.assertEqual((root / 'docs/project/Release-Notes/Release-Notes-v1.11.14.md').read_bytes(), (root / 'Versioning/Release-Notes/v1.11.14.md').read_bytes())
 
 
