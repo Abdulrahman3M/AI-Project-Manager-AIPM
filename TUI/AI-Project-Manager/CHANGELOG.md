@@ -1,5 +1,11 @@
 # AI Project Manager TUI Change Log
 
+## [1.11.17] — General Prompt Library Expansion
+
+- Register the AIPM Universal Activation & Execution Prompt and update Autonomous Task Execution to v2.0.0.
+- Synchronize the General Prompts index, prompt library documentation, capability registry, and provenance ledger.
+- Rebuild and validate local ChatGPT/Codex, Claude Code, and Google Antigravity Plugin distributions at 1.11.17; no package is installed or published.
+
 ## [1.11.16] — Project Registration Diagnostics
 
 - Report registration failures with actionable details and safely initialize empty existing state folders.

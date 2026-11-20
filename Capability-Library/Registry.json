@@ -6,7 +6,7 @@
       "morning"
     ]
   },
-  "platform_version": "1.11.16",
+  "platform_version": "1.11.17",
   "schema_version": "1.0",
   "skill_owned_prompts": {
     "browser-environment-manager": [
@@ -839,10 +839,17 @@
   "standalone_prompts": [
     {
       "license_scope": "Apache License 2.0 applies",
+      "name": "AIPM Universal Activation & Execution Prompt",
+      "path": "02-Prompt-General/AIPM-Universal-Activation-Prompt.md",
+      "sha256": "7b0c4df5e3297bdda5c50affb832a9500e4cf36092efdcf30fa0f76ec9502a42",
+      "version": "1.0.0"
+    },
+    {
+      "license_scope": "Apache License 2.0 applies",
       "name": "Autonomous Task Execution",
       "path": "02-Prompt-General/Autonomous-Task-Execution.md",
-      "sha256": "0b4c2ed5a1d27a39072306f59ba725e1a40712f6702f733a85e93fb2c5526001",
-      "version": "1.0.0"
+      "sha256": "c65a4b0f6a9b5dd33535b340da5db34d290bcc1566cf80c24253a8bba3e044bf",
+      "version": "2.0.0"
     }
   ]
 }

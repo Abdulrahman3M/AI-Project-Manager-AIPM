@@ -80,9 +80,9 @@ class GeneralCapabilityDocumentationTests(unittest.TestCase):
         page_text = PROMPTS_PAGE.read_text(encoding="utf-8")
         entries = _entries(PROMPTS_PAGE)
 
-        self.assertEqual(len(entries), 1)
+        self.assertEqual(len(entries), 2)
         self.assertEqual(len(entries), len(sources))
-        self.assertIn(f"Browse the **{len(sources)} standalone Prompt**", page_text)
+        self.assertIn(f"Browse the **{len(sources)} standalone Prompts**", page_text)
         titles = [entry["title"] for entry in entries]
         technical_names = [entry["technical"] for entry in entries]
         self.assertEqual(titles, sorted(titles, key=str.casefold))

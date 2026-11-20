@@ -1,5 +1,10 @@
 # Plugin Distribution Changelog
 
+## [1.11.17] — General Prompt Library Expansion
+
+- Include the newly registered AIPM Universal Activation & Execution Prompt and updated Autonomous Task Execution Prompt in local host distributions.
+- Rebuild and validate ChatGPT/Codex, Claude Code, and Google Antigravity archives and SHA-256 sidecars; no package is installed or published.
+
 ## [1.11.15] — Synchronized AIPM, TUI, And Plugin Release
 
 - Set one shared release version across AIPM Platform, PowerShell TUI, the generated legacy bridge, and ChatGPT/Codex, Claude Code, and Google Antigravity Plugin distributions.

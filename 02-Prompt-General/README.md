@@ -17,7 +17,7 @@ If a standalone Prompt later gains an owning Skill, migrate it into that Skill f
 
 ## Current Contents
 
-There is currently **1 standalone Prompt** in this library: [Autonomous Task Execution](Autonomous-Task-Execution.md) (v1.0.0, English and Arabic). The Prompts that previously lived in the old shared Prompt root were Skill-owned and have been colocated with their owning Skills.
+There are currently **2 standalone Prompts** in this library: [AIPM Universal Activation & Execution Prompt](AIPM-Universal-Activation-Prompt.md) (v1.0.0, English and Arabic) and [Autonomous Task Execution](Autonomous-Task-Execution.md) (v2.0.0, English and Arabic). The Prompts that previously lived in the old shared Prompt root were Skill-owned and have been colocated with their owning Skills.
 
 ## Versioning
 

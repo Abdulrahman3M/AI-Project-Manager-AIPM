@@ -2,6 +2,12 @@
 
 This is the canonical product release history. Change `Versioning/VERSION` and this file first; run `python Maintenance-Tools/Sync-Product-Version.py` to update compatibility version files and release records. Skill versions remain independently governed by their own `VERSION` files.
 
+## [1.11.17] — General Prompt Library Expansion
+
+- Register the AIPM Universal Activation & Execution Prompt and update Autonomous Task Execution to v2.0.0.
+- Synchronize the General Prompts index, prompt library documentation, capability registry, and provenance ledger.
+- Rebuild and validate local ChatGPT/Codex, Claude Code, and Google Antigravity Plugin distributions at 1.11.17; no package is installed or published.
+
 ## [1.11.16] — Project Registration Diagnostics
 
 - Report registration failures with actionable details and safely initialize empty existing state folders.

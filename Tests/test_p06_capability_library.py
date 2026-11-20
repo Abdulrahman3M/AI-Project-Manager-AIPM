@@ -94,7 +94,10 @@ class CapabilityLibraryTests(unittest.TestCase):
         self.assertEqual({item["slug"] for item in catalog["skills"]}, EXPECTED_SKILLS)
         self.assertEqual(len(catalog["skills"]), 14)
         self.assertEqual(catalog["skill_owned_prompts"], EXPECTED_OWNED_PROMPTS)
-        self.assertEqual([item["name"] for item in catalog["standalone_prompts"]], ["Autonomous Task Execution"])
+        self.assertEqual(
+            [item["name"] for item in catalog["standalone_prompts"]],
+            ["AIPM Universal Activation & Execution Prompt", "Autonomous Task Execution"],
+        )
         self.assertNotIn("import-memory", {item["slug"] for item in catalog["skills"]})
         self.assertNotIn("morning", {item["slug"] for item in catalog["skills"]})
 
@@ -136,7 +139,7 @@ class CapabilityLibraryTests(unittest.TestCase):
     def test_current_registry_and_generated_plugin_validate(self) -> None:
         registry = validate_registry(ROOT)
         self.assertEqual(registry["status"], "PASS")
-        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (14, 1))
+        self.assertEqual((registry["skill_count"], registry["standalone_prompt_count"]), (14, 2))
         plugin = validate_plugin(ROOT, ROOT / "Plugins" / "aipm-project-agent-bridge")
         self.assertEqual(plugin["status"], "PASS")
         self.assertEqual(plugin["skill_count"], 14)
